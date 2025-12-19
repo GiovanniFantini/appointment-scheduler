@@ -2,6 +2,38 @@
 
 Piattaforma di prenotazione multi-verticale (B2C e B2B) che centralizza l'esperienza di prenotazione per utenti finali e gestione business per merchant.
 
+## Documentazione
+
+- **[QUICK_START.md](QUICK_START.md)** - Setup rapido in 5 minuti (INIZIA QUI)
+- **[PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md)** - Coding standards e best practices
+- **[CONFIGURATION.md](backend/CONFIGURATION.md)** - Gestione configurazioni e secrets
+- **[.claude/instructions.md](.claude/instructions.md)** - Istruzioni per sviluppo AI-assisted
+
+## Inizio Rapido
+
+```bash
+# 1. Database con Docker
+docker run --name appointment-db -e POSTGRES_PASSWORD=dev123 -p 5432:5432 -d postgres
+
+# 2. Backend
+cd backend/AppointmentScheduler.API
+cp appsettings.Local.json.example appsettings.Local.json
+dotnet ef database update
+dotnet run
+
+# 3. Frontend Consumer (altra finestra)
+cd frontend/consumer-app
+npm install && npm run dev
+
+# 4. Frontend Merchant (altra finestra)
+cd frontend/merchant-app
+npm install && npm run dev
+```
+
+Vai su http://localhost:5173 (Consumer) o http://localhost:5174 (Merchant)
+
+Per istruzioni dettagliate: [QUICK_START.md](QUICK_START.md)
+
 ## 🎯 Obiettivo del Progetto
 
 Creare una Web App mobile-ready bidirezionale che:
@@ -73,65 +105,60 @@ appointment-scheduler/
 - NumberOfPeople, Notes
 - CreatedAt, ConfirmedAt, CancelledAt
 
-## 🚀 Come Iniziare
+## 🚀 Sviluppo
 
 ### Prerequisiti
 
-- .NET 8 SDK
-- Node.js 18+
-- PostgreSQL (o SQL Server)
+- .NET 8 SDK ([Download](https://dotnet.microsoft.com/download/dotnet/8.0))
+- Node.js 18+ ([Download](https://nodejs.org/))
+- PostgreSQL 16+ ([Download](https://www.postgresql.org/download/)) o Docker
+- Git
 
-### Backend Setup
+### Principi di Sviluppo
 
-1. Vai nella cartella backend:
+Questo progetto segue questi principi:
+- **User-Friendly**: Interfacce intuitive, messaggi chiari
+- **Dependency Injection**: Tutti i servizi usano DI
+- **Testabile**: Facile da testare in locale
+- **Documentato**: Commenti XML/JSDoc su tutti i metodi public
+- **Sicuro**: Secrets mai committati, password hashate con BCrypt
+
+Vedi [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md) per dettagli completi.
+
+### Setup Completo
+
+Vedi [QUICK_START.md](QUICK_START.md) per istruzioni passo-passo.
+
+**In breve:**
+1. Clone repository
+2. Avvia PostgreSQL (Docker o locale)
+3. Crea `appsettings.Local.json` con tue credenziali
+4. Esegui `dotnet ef database update`
+5. Avvia backend con `dotnet run`
+6. Avvia frontend con `npm install && npm run dev`
+
+### Comandi Utili
+
+**Backend:**
 ```bash
-cd backend
+dotnet run                    # Avvia API
+dotnet watch run              # Avvia con hot reload
+dotnet ef database update     # Applica migrations
+dotnet ef migrations add Name # Crea nuova migration
 ```
 
-2. Configura la connection string in `AppointmentScheduler.API/appsettings.json`:
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Host=localhost;Database=AppointmentScheduler;Username=postgres;Password=yourpassword"
-  }
-}
-```
-
-3. Crea il database (da AppointmentScheduler.API):
+**Frontend:**
 ```bash
-dotnet ef migrations add InitialCreate --project ../AppointmentScheduler.Data
-dotnet ef database update
+npm run dev      # Dev server
+npm run build    # Build produzione
+npm run preview  # Preview build
 ```
 
-4. Avvia l'API:
-```bash
-cd AppointmentScheduler.API
-dotnet run
-```
+### API Documentation
 
-L'API sarà disponibile su `https://localhost:5001` (o `http://localhost:5000`)
-
-### Frontend Setup
-
-#### Consumer App (Utenti)
-
-```bash
-cd frontend/consumer-app
-npm install
-npm run dev
-```
-
-Disponibile su `http://localhost:5173`
-
-#### Merchant App (Business)
-
-```bash
-cd frontend/merchant-app
-npm install
-npm run dev
-```
-
-Disponibile su `http://localhost:5174`
+Una volta avviato il backend, vai su:
+- Swagger UI: https://localhost:5001/swagger
+- Documentazione interattiva con possibilita' di testare endpoint
 
 ## 🔐 Autenticazione
 
@@ -179,22 +206,31 @@ Il sistema usa JWT Bearer Token:
 - `/register` - Registrazione merchant
 - `/` - Dashboard
 
-## 🔧 Configurazione JWT
+## 🔧 Configurazione
 
-In `appsettings.json`:
+### File di Configurazione
 
-```json
-{
-  "JwtSettings": {
-    "SecretKey": "your-super-secret-key-change-this-in-production-min-32-chars",
-    "Issuer": "AppointmentScheduler.API",
-    "Audience": "AppointmentScheduler.Client",
-    "ExpirationMinutes": 1440
-  }
-}
+Il progetto usa una gerarchia di configurazione:
+1. `appsettings.json` - Base (versionato)
+2. `appsettings.Development.json` - Development (versionato)
+3. `appsettings.Local.json` - Locale personale (NON versionato)
+
+**Mai committare:**
+- Password o API keys
+- `appsettings.Local.json`
+- Certificati o chiavi private
+
+**Setup locale:**
+```bash
+cp appsettings.Local.json.example appsettings.Local.json
+# Modifica con le tue credenziali
 ```
 
-**⚠️ IMPORTANTE**: Cambia la `SecretKey` in produzione!
+**Alternative sicure:**
+- User Secrets (consigliato): `dotnet user-secrets set "Key" "Value"`
+- Environment variables: `export Key__SubKey="Value"`
+
+Vedi [CONFIGURATION.md](backend/CONFIGURATION.md) per dettagli completi.
 
 ## 🌐 CORS
 
@@ -222,21 +258,77 @@ Modifica in `Program.cs` per ambiente di produzione.
 - **Mobile-first** responsive design
 - **Gradient backgrounds** per differenziare Consumer (blu/viola) e Merchant (verde/blu)
 
-## 🔜 Prossimi Sviluppi
+## 🔜 Roadmap
 
+### Fase 1: Core Features (In Progress)
+- [x] Setup progetto e architettura
+- [x] Autenticazione JWT con 3 ruoli
+- [x] Database multi-verticale
+- [x] Frontend Consumer e Merchant base
 - [ ] Admin panel per approvare merchant
-- [ ] CRUD completo per servizi (merchant)
-- [ ] Calendario prenotazioni con disponibilità
-- [ ] Sistema di notifiche (email/push)
-- [ ] Recensioni e rating
-- [ ] Pagamenti integrati
-- [ ] Analytics avanzate per merchant
-- [ ] App mobile native (React Native)
+- [ ] CRUD completo servizi merchant
+- [ ] Sistema prenotazioni completo
 
-## 📄 Licenza
+### Fase 2: Advanced Features
+- [ ] Calendario disponibilita' con slot orari
+- [ ] Sistema notifiche (email/push)
+- [ ] Recensioni e rating
+- [ ] Upload immagini servizi
+- [ ] Ricerca e filtri avanzati
+
+### Fase 3: Business Features
+- [ ] Pagamenti integrati (Stripe)
+- [ ] Analytics e report merchant
+- [ ] Sistema fedalta' utenti
+- [ ] Promozioni e sconti
+- [ ] Export dati (CSV, PDF)
+
+### Fase 4: Scale & Polish
+- [ ] App mobile (React Native)
+- [ ] Ottimizzazioni performance
+- [ ] Testing completo (unit + e2e)
+- [ ] CI/CD pipeline
+- [ ] Documentazione API completa
+
+## Contribuire
+
+1. Leggi [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md)
+2. Crea branch da `main`
+3. Segui coding standards (DI, comments, no emoji in codice)
+4. Testa in locale
+5. Crea Pull Request
+
+## Troubleshooting
+
+### Backend non si avvia
+- Verifica PostgreSQL in esecuzione
+- Controlla connection string in appsettings.Local.json
+- Verifica JWT SecretKey configurata (min 32 caratteri)
+
+### Frontend errori CORS
+- Verifica backend in esecuzione su porta corretta
+- Controlla configurazione CORS in Program.cs
+
+### Database errori
+```bash
+# Reset completo
+dotnet ef database drop -f
+dotnet ef database update
+```
+
+Vedi [QUICK_START.md](QUICK_START.md) per troubleshooting dettagliato.
+
+## Risorse
+
+- [ASP.NET Core Docs](https://docs.microsoft.com/aspnet/core)
+- [Entity Framework Core](https://docs.microsoft.com/ef/core)
+- [React Docs](https://react.dev)
+- [Tailwind CSS](https://tailwindcss.com)
+
+## Licenza
 
 Progetto privato.
 
-## 👨‍💻 Autore
+## Autore
 
 Giovanni Fantini
