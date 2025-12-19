@@ -1,0 +1,11 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Host=localhost;Database=AppointmentScheduler;Username=your_username;Password=your_password"
+  },
+  "JwtSettings": {
+    "SecretKey": "your-local-secret-key-minimum-32-characters-long-change-this",
+    "Issuer": "AppointmentScheduler.API",
+    "Audience": "AppointmentScheduler.Client",
+    "ExpirationMinutes": 1440
+  }
+}
