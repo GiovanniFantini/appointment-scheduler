@@ -6,5 +6,5 @@ public interface IAuthService
 {
     Task<AuthResponse?> LoginAsync(LoginRequest request);
     Task<AuthResponse?> RegisterAsync(RegisterRequest request);
-    string GenerateJwtToken(int userId, string email, string role);
+    string GenerateJwtToken(int userId, string email, string role, int? merchantId = null);
 }

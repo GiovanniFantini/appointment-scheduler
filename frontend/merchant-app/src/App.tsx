@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
+import AdminPanel from './pages/AdminPanel'
+import Services from './pages/Services'
+import Bookings from './pages/Bookings'
 
 interface User {
   userId: number
@@ -23,7 +26,6 @@ function App() {
 
     if (token && userData) {
       const parsedUser = JSON.parse(userData)
-      // Solo merchant e admin possono accedere
       if (parsedUser.role === 'Merchant' || parsedUser.role === 'Admin') {
         setUser(parsedUser)
       } else {
@@ -65,6 +67,15 @@ function App() {
         } />
         <Route path="/" element={
           user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/admin" element={
+          user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
+        } />
+        <Route path="/services" element={
+          user ? <Services user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/bookings" element={
+          user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>

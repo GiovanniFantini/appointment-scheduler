@@ -34,7 +34,7 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return null;
 
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id);
 
         return new AuthResponse
         {
@@ -85,7 +85,7 @@ public class AuthService : IAuthService
             user.Merchant = merchant;
         }
 
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString());
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id);
 
         return new AuthResponse
         {
@@ -99,20 +99,27 @@ public class AuthService : IAuthService
         };
     }
 
-    public string GenerateJwtToken(int userId, string email, string role)
+    public string GenerateJwtToken(int userId, string email, string role, int? merchantId = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claims = new[]
+        var claimsList = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
             new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        if (merchantId.HasValue)
+        {
+            claimsList.Add(new Claim("MerchantId", merchantId.Value.ToString()));
+        }
+
+        var claims = claimsList.ToArray();
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],

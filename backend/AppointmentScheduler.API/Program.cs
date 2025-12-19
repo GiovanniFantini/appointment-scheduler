@@ -60,6 +60,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 // Register Services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IMerchantService, MerchantService>();
+builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
+builder.Services.AddScoped<IBookingService, BookingService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

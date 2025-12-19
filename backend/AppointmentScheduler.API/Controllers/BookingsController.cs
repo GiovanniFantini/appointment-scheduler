@@ -1,82 +1,139 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using AppointmentScheduler.Data;
-using AppointmentScheduler.Shared.Models;
 using System.Security.Claims;
+using AppointmentScheduler.Core.Services;
+using AppointmentScheduler.Shared.DTOs;
 
 namespace AppointmentScheduler.API.Controllers;
 
+/// <summary>
+/// Controller per la gestione delle prenotazioni
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
 public class BookingsController : ControllerBase
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IBookingService _bookingService;
 
-    public BookingsController(ApplicationDbContext context)
+    public BookingsController(IBookingService bookingService)
     {
-        _context = context;
+        _bookingService = bookingService;
     }
 
-    // GET: api/bookings (le mie prenotazioni)
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Booking>>> GetMyBookings()
+    /// <summary>
+    /// Recupera le prenotazioni dell'utente corrente
+    /// </summary>
+    [HttpGet("my-bookings")]
+    public async Task<ActionResult<IEnumerable<BookingDto>>> GetMyBookings()
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-
-        var bookings = await _context.Bookings
-            .Include(b => b.Service)
-                .ThenInclude(s => s.Merchant)
-            .Where(b => b.UserId == userId)
-            .OrderByDescending(b => b.BookingDate)
-            .ToListAsync();
-
+        var bookings = await _bookingService.GetUserBookingsAsync(userId);
         return Ok(bookings);
     }
 
-    // GET: api/bookings/5
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Booking>> GetBooking(int id)
+    /// <summary>
+    /// Recupera le prenotazioni del merchant corrente
+    /// </summary>
+    [HttpGet("merchant-bookings")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<ActionResult<IEnumerable<BookingDto>>> GetMerchantBookings()
     {
-        var booking = await _context.Bookings
-            .Include(b => b.Service)
-            .Include(b => b.User)
-            .FirstOrDefaultAsync(b => b.Id == id);
+        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+
+        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato" });
+
+        var bookings = await _bookingService.GetMerchantBookingsAsync(merchantId);
+        return Ok(bookings);
+    }
+
+    /// <summary>
+    /// Recupera una prenotazione specifica
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<ActionResult<BookingDto>> GetBooking(int id)
+    {
+        var booking = await _bookingService.GetBookingByIdAsync(id);
 
         if (booking == null)
-            return NotFound();
+            return NotFound(new { message = "Prenotazione non trovata" });
 
         return Ok(booking);
     }
 
-    // POST: api/bookings
+    /// <summary>
+    /// Crea una nuova prenotazione
+    /// </summary>
     [HttpPost]
-    public async Task<ActionResult<Booking>> CreateBooking(Booking booking)
+    public async Task<ActionResult<BookingDto>> CreateBooking([FromBody] CreateBookingRequest request)
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
-        booking.UserId = userId;
-        booking.CreatedAt = DateTime.UtcNow;
 
-        _context.Bookings.Add(booking);
-        await _context.SaveChangesAsync();
-
-        return CreatedAtAction(nameof(GetBooking), new { id = booking.Id }, booking);
+        try
+        {
+            var booking = await _bookingService.CreateBookingAsync(userId, request);
+            return CreatedAtAction(nameof(GetBooking), new { id = booking.Id }, booking);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
-    // PATCH: api/bookings/5/cancel
-    [HttpPatch("{id}/cancel")]
+    /// <summary>
+    /// Conferma una prenotazione (solo merchant)
+    /// </summary>
+    [HttpPost("{id}/confirm")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> ConfirmBooking(int id)
+    {
+        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+
+        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato" });
+
+        var result = await _bookingService.ConfirmBookingAsync(id, merchantId);
+
+        if (!result)
+            return NotFound(new { message = "Prenotazione non trovata o non puo' essere confermata" });
+
+        return Ok(new { message = "Prenotazione confermata con successo" });
+    }
+
+    /// <summary>
+    /// Cancella una prenotazione
+    /// </summary>
+    [HttpPost("{id}/cancel")]
     public async Task<IActionResult> CancelBooking(int id)
     {
-        var booking = await _context.Bookings.FindAsync(id);
-        if (booking == null)
-            return NotFound();
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
 
-        booking.Status = Shared.Enums.BookingStatus.Cancelled;
-        booking.CancelledAt = DateTime.UtcNow;
+        var result = await _bookingService.CancelBookingAsync(id, userId);
 
-        await _context.SaveChangesAsync();
+        if (!result)
+            return NotFound(new { message = "Prenotazione non trovata o non puo' essere cancellata" });
 
-        return NoContent();
+        return Ok(new { message = "Prenotazione cancellata con successo" });
+    }
+
+    /// <summary>
+    /// Completa una prenotazione (solo merchant)
+    /// </summary>
+    [HttpPost("{id}/complete")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<IActionResult> CompleteBooking(int id)
+    {
+        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+
+        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato" });
+
+        var result = await _bookingService.CompleteBookingAsync(id, merchantId);
+
+        if (!result)
+            return NotFound(new { message = "Prenotazione non trovata o non puo' essere completata" });
+
+        return Ok(new { message = "Prenotazione completata con successo" });
     }
 }
