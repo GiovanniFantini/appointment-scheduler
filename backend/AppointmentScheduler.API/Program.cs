@@ -113,10 +113,15 @@ try
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.WithOrigins("http://localhost:5173", "http://localhost:5174") // Vite default ports
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
+            policy.WithOrigins(
+                "http://localhost:5173",  // Consumer app
+                "http://localhost:5174",  // Merchant app
+                "https://localhost:5173",
+                "https://localhost:5174"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
         });
     });
     Console.WriteLine("CORS configured");
@@ -132,8 +137,11 @@ try
         app.UseSwaggerUI();
         Console.WriteLine("Swagger UI enabled");
     }
+    else
+    {
+        app.UseHttpsRedirection();
+    }
 
-    app.UseHttpsRedirection();
     app.UseCors("AllowFrontend");
     app.UseAuthentication();
     app.UseAuthorization();
