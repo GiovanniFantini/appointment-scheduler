@@ -28,9 +28,16 @@ npm install && npm run dev
 # 4. Frontend Merchant (altra finestra)
 cd frontend/merchant-app
 npm install && npm run dev
+
+# 5. Frontend Admin (altra finestra)
+cd frontend/admin-app
+npm install && npm run dev
 ```
 
-Vai su http://localhost:5173 (Consumer) o http://localhost:5174 (Merchant)
+Vai su:
+- http://localhost:5173 (Consumer)
+- http://localhost:5174 (Merchant)
+- http://localhost:5175 (Admin)
 
 Per istruzioni dettagliate: [QUICK_START.md](QUICK_START.md)
 
@@ -69,7 +76,8 @@ appointment-scheduler/
 │   └── AppointmentScheduler.Shared/      # Models/DTOs/Enums
 └── frontend/
     ├── consumer-app/                      # App utenti (porta 5173)
-    └── merchant-app/                      # Dashboard merchant (porta 5174)
+    ├── merchant-app/                      # Dashboard merchant (porta 5174)
+    └── admin-app/                         # Admin panel (porta 5175)
 ```
 
 ## 👥 Ruoli Utente
@@ -206,6 +214,20 @@ Il sistema usa JWT Bearer Token:
 - `/register` - Registrazione merchant
 - `/` - Dashboard
 
+### Lato Admin
+
+**Funzionalità:**
+- Login riservato agli amministratori
+- Dashboard di gestione piattaforma
+- Approvazione/rifiuto merchant
+- Gestione utenti (in sviluppo)
+- Statistiche piattaforma (in sviluppo)
+
+**Pagine:**
+- `/login` - Login admin
+- `/` - Dashboard admin
+- `/merchants` - Gestione merchant
+
 ## 🔧 Configurazione
 
 ### File di Configurazione
@@ -237,6 +259,7 @@ Vedi [CONFIGURATION.md](backend/CONFIGURATION.md) per dettagli completi.
 Il backend è configurato per accettare richieste da:
 - `http://localhost:5173` (Consumer App)
 - `http://localhost:5174` (Merchant App)
+- `http://localhost:5175` (Admin App)
 
 Modifica in `Program.cs` per ambiente di produzione.
 
@@ -256,7 +279,10 @@ Modifica in `Program.cs` per ambiente di produzione.
 
 - **Tailwind CSS** per styling rapido
 - **Mobile-first** responsive design
-- **Gradient backgrounds** per differenziare Consumer (blu/viola) e Merchant (verde/blu)
+- **Gradient backgrounds** per differenziare:
+  - Consumer (blu/viola)
+  - Merchant (verde/blu)
+  - Admin (viola/rosso)
 
 ## 🔜 Roadmap
 
@@ -265,7 +291,7 @@ Modifica in `Program.cs` per ambiente di produzione.
 - [x] Autenticazione JWT con 3 ruoli
 - [x] Database multi-verticale
 - [x] Frontend Consumer e Merchant base
-- [ ] Admin panel per approvare merchant
+- [x] Admin panel per approvare merchant
 - [ ] CRUD completo servizi merchant
 - [ ] Sistema prenotazioni completo
 
