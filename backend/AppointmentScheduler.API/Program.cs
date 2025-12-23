@@ -120,8 +120,10 @@ try
             policy.WithOrigins(
                 "http://localhost:5173",  // Consumer app
                 "http://localhost:5174",  // Merchant app
+                "http://localhost:5175",  // Admin app
                 "https://localhost:5173",
-                "https://localhost:5174"
+                "https://localhost:5174",
+                "https://localhost:5175"
             )
             .AllowAnyHeader()
             .AllowAnyMethod()
