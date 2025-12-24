@@ -154,6 +154,24 @@ try
     var app = builder.Build();
     Console.WriteLine("Application built successfully");
 
+    // Inizializza il database con dati di seed (solo in Development)
+    if (app.Environment.IsDevelopment())
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                DbInitializer.Initialize(context);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+            }
+        }
+    }
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {
