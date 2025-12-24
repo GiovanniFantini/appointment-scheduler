@@ -95,6 +95,7 @@ try
     builder.Services.AddScoped<IMerchantService, MerchantService>();
     builder.Services.AddScoped<IServiceManagementService, ServiceManagementService>();
     builder.Services.AddScoped<IBookingService, BookingService>();
+    builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
     Console.WriteLine("Application services registered");
 
     // JWT Authentication

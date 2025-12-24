@@ -79,6 +79,9 @@ public class ServiceManagementService : IServiceManagementService
             Price = request.Price,
             DurationMinutes = request.DurationMinutes,
             Configuration = request.Configuration,
+            BookingMode = request.BookingMode,
+            SlotDurationMinutes = request.SlotDurationMinutes,
+            MaxCapacityPerSlot = request.MaxCapacityPerSlot,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -110,6 +113,9 @@ public class ServiceManagementService : IServiceManagementService
         service.DurationMinutes = request.DurationMinutes;
         service.IsActive = request.IsActive;
         service.Configuration = request.Configuration;
+        service.BookingMode = request.BookingMode;
+        service.SlotDurationMinutes = request.SlotDurationMinutes;
+        service.MaxCapacityPerSlot = request.MaxCapacityPerSlot;
 
         await _context.SaveChangesAsync();
 
@@ -148,7 +154,11 @@ public class ServiceManagementService : IServiceManagementService
             DurationMinutes = service.DurationMinutes,
             IsActive = service.IsActive,
             Configuration = service.Configuration,
-            CreatedAt = service.CreatedAt
+            CreatedAt = service.CreatedAt,
+            BookingMode = service.BookingMode,
+            BookingModeName = service.BookingMode.ToString(),
+            SlotDurationMinutes = service.SlotDurationMinutes,
+            MaxCapacityPerSlot = service.MaxCapacityPerSlot
         };
     }
 }

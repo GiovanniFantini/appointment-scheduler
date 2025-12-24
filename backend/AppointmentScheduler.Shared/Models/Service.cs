@@ -17,7 +17,23 @@ public class Service
     // Configurazione specifiche per verticale (JSON flessibile)
     public string? Configuration { get; set; } // Es: {"capacity": 4, "court": "Tennis"}
 
+    // Phase 2: Booking mode configuration
+    public BookingMode BookingMode { get; set; } = BookingMode.TimeSlot;
+
+    /// <summary>
+    /// For TimeSlot mode: duration of each slot in minutes
+    /// If null, uses DurationMinutes
+    /// </summary>
+    public int? SlotDurationMinutes { get; set; }
+
+    /// <summary>
+    /// Maximum capacity per slot/time period
+    /// If null, unlimited or managed at availability level
+    /// </summary>
+    public int? MaxCapacityPerSlot { get; set; }
+
     // Navigation properties
     public Merchant Merchant { get; set; } = null!;
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
 }

@@ -45,12 +45,11 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <p className="text-gray-600">Visualizza e gestisci le prenotazioni</p>
           </Link>
 
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <div className="text-4xl mb-4">📊</div>
-            <h2 className="text-xl font-bold mb-2">Statistiche</h2>
-            <p className="text-gray-600">Analizza le performance</p>
-            <p className="text-sm text-gray-400 mt-2">Prossimamente</p>
-          </div>
+          <Link to="/availabilities" className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition">
+            <div className="text-4xl mb-4">🗓️</div>
+            <h2 className="text-xl font-bold mb-2">Disponibilità</h2>
+            <p className="text-gray-600">Configura calendario e slot orari</p>
+          </Link>
         </div>
 
         <div className="bg-white rounded-lg shadow-lg p-6">
