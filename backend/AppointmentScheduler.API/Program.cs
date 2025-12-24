@@ -13,9 +13,12 @@ try
     // Rileva se siamo in design-time mode (EF Core Tools)
     // Questo check evita che l'applicazione tenti di avviarsi quando EF Tools cerca il DbContext
     var processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+    var commandLineArgs = Environment.GetCommandLineArgs();
     var isEfCommand = processName.Contains("ef", StringComparison.OrdinalIgnoreCase) ||
                       args.Any(arg => arg.Contains("ef", StringComparison.OrdinalIgnoreCase)) ||
-                      Environment.GetCommandLineArgs().Any(arg => arg.Contains("migrations", StringComparison.OrdinalIgnoreCase));
+                      commandLineArgs.Any(arg => arg.Contains("migrations", StringComparison.OrdinalIgnoreCase)) ||
+                      commandLineArgs.Any(arg => arg.Contains("database", StringComparison.OrdinalIgnoreCase)) ||
+                      commandLineArgs.Any(arg => arg.Contains("dbcontext", StringComparison.OrdinalIgnoreCase));
 
     if (isEfCommand)
     {
