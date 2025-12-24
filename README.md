@@ -286,14 +286,14 @@ Modifica in `Program.cs` per ambiente di produzione.
 
 ## 🔜 Roadmap
 
-### Fase 1: Core Features (In Progress)
+### Fase 1: Core Features ✅ COMPLETATA
 - [x] Setup progetto e architettura
 - [x] Autenticazione JWT con 3 ruoli
 - [x] Database multi-verticale
 - [x] Frontend Consumer e Merchant base
 - [x] Admin panel per approvare merchant
-- [ ] CRUD completo servizi merchant
-- [ ] Sistema prenotazioni completo
+- [x] CRUD completo servizi merchant
+- [x] Sistema prenotazioni completo
 
 ### Fase 2: Advanced Features
 - [ ] Calendario disponibilita' con slot orari

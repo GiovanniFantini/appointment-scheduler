@@ -10,6 +10,24 @@ try
 {
     Console.WriteLine("Starting application...");
 
+    // Rileva se siamo in design-time mode (EF Core Tools)
+    // Questo check evita che l'applicazione tenti di avviarsi quando EF Tools cerca il DbContext
+    var processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+    var commandLineArgs = Environment.GetCommandLineArgs();
+    var isEfCommand = processName.Contains("ef", StringComparison.OrdinalIgnoreCase) ||
+                      args.Any(arg => arg.Contains("ef", StringComparison.OrdinalIgnoreCase)) ||
+                      commandLineArgs.Any(arg => arg.Contains("migrations", StringComparison.OrdinalIgnoreCase)) ||
+                      commandLineArgs.Any(arg => arg.Contains("database", StringComparison.OrdinalIgnoreCase)) ||
+                      commandLineArgs.Any(arg => arg.Contains("dbcontext", StringComparison.OrdinalIgnoreCase));
+
+    if (isEfCommand)
+    {
+        Console.WriteLine($"EF Core Tools detected (process: {processName}).");
+        Console.WriteLine("The DesignTimeDbContextFactory should handle DbContext creation.");
+        Console.WriteLine("If you see this message, ensure ApplicationDbContextFactory exists in AppointmentScheduler.Data project.");
+        return;
+    }
+
     var builder = WebApplication.CreateBuilder(args);
     Console.WriteLine("Builder created successfully");
 
@@ -135,6 +153,24 @@ try
     Console.WriteLine("Building application...");
     var app = builder.Build();
     Console.WriteLine("Application built successfully");
+
+    // Inizializza il database con dati di seed (solo in Development)
+    if (app.Environment.IsDevelopment())
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var services = scope.ServiceProvider;
+            try
+            {
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                DbInitializer.Initialize(context);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+            }
+        }
+    }
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
