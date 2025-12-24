@@ -10,6 +10,21 @@ try
 {
     Console.WriteLine("Starting application...");
 
+    // Rileva se siamo in design-time mode (EF Core Tools)
+    // Questo check evita che l'applicazione tenti di avviarsi quando EF Tools cerca il DbContext
+    var processName = System.Diagnostics.Process.GetCurrentProcess().ProcessName;
+    var isEfCommand = processName.Contains("ef", StringComparison.OrdinalIgnoreCase) ||
+                      args.Any(arg => arg.Contains("ef", StringComparison.OrdinalIgnoreCase)) ||
+                      Environment.GetCommandLineArgs().Any(arg => arg.Contains("migrations", StringComparison.OrdinalIgnoreCase));
+
+    if (isEfCommand)
+    {
+        Console.WriteLine($"EF Core Tools detected (process: {processName}).");
+        Console.WriteLine("The DesignTimeDbContextFactory should handle DbContext creation.");
+        Console.WriteLine("If you see this message, ensure ApplicationDbContextFactory exists in AppointmentScheduler.Data project.");
+        return;
+    }
+
     var builder = WebApplication.CreateBuilder(args);
     Console.WriteLine("Builder created successfully");
 

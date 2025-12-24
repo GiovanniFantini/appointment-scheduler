@@ -17,8 +17,41 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
     /// <returns>Istanza di ApplicationDbContext configurata</returns>
     public ApplicationDbContext CreateDbContext(string[] args)
     {
-        // Build configuration dalla directory API (dove si trova appsettings.json)
-        var basePath = Path.Combine(Directory.GetCurrentDirectory(), "..", "AppointmentScheduler.API");
+        Console.WriteLine("=== DesignTimeDbContextFactory: Creating DbContext for migrations ===");
+        Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
+
+        // Cerca il file appsettings.json risalendo nella gerarchia delle directory
+        var currentDir = Directory.GetCurrentDirectory();
+        string? basePath = null;
+
+        // Prova diversi percorsi relativi
+        var possiblePaths = new[]
+        {
+            Path.Combine(currentDir, "..", "AppointmentScheduler.API"),
+            Path.Combine(currentDir, "AppointmentScheduler.API"),
+            Path.Combine(currentDir, "..", "..", "AppointmentScheduler.API"),
+            Path.Combine(currentDir, "..", "..", "backend", "AppointmentScheduler.API")
+        };
+
+        foreach (var path in possiblePaths)
+        {
+            var fullPath = Path.GetFullPath(path);
+            var settingsFile = Path.Combine(fullPath, "appsettings.json");
+            Console.WriteLine($"Trying: {settingsFile}");
+
+            if (File.Exists(settingsFile))
+            {
+                basePath = fullPath;
+                Console.WriteLine($"Found appsettings.json at: {basePath}");
+                break;
+            }
+        }
+
+        if (basePath == null)
+        {
+            throw new InvalidOperationException(
+                $"Could not find appsettings.json. Current directory: {currentDir}");
+        }
 
         var configuration = new ConfigurationBuilder()
             .SetBasePath(basePath)
@@ -28,8 +61,8 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
             .AddEnvironmentVariables()
             .Build();
 
-        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+        Console.WriteLine($"Connection string loaded: {!string.IsNullOrEmpty(connectionString)}");
 
         if (string.IsNullOrEmpty(connectionString))
         {
@@ -38,9 +71,10 @@ public class ApplicationDbContextFactory : IDesignTimeDbContextFactory<Applicati
                 "Make sure appsettings.json exists in the API project.");
         }
 
-        // Usa PostgreSQL (come configurato in Program.cs)
+        var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
 
+        Console.WriteLine("=== DbContext created successfully ===");
         return new ApplicationDbContext(optionsBuilder.Options);
     }
 }
