@@ -1,0 +1,36 @@
+name: Deploy Backend API to Azure App Service
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backend-api.yml'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Backend API
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build with dotnet
+        run: dotnet build backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj --configuration Release
+
+      - name: Publish with dotnet
+        run: dotnet publish backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj -c Release -o ${{github.workspace}}/publish
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{github.workspace}}/publish
