@@ -163,7 +163,7 @@ $RECYCLE.BIN/
 # Ignorare solo file locali e con dati sensibili
 appsettings.Local.json
 appsettings.*.local.json
-appsettings.Production.json
+# appsettings.Production.json - Ora versionato con placeholder per Azure
 **/appsettings.secrets.json
 .env
 .env.local
