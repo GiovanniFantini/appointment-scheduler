@@ -11,6 +11,10 @@ interface Service {
   price: number | null
   durationMinutes: number
   isActive: boolean
+  bookingMode: number
+  bookingModeName: string
+  slotDurationMinutes: number | null
+  maxCapacityPerSlot: number | null
 }
 
 interface ServicesProps {
@@ -32,7 +36,10 @@ function Services({ user, onLogout }: ServicesProps) {
     serviceType: 1,
     price: '',
     durationMinutes: 60,
-    isActive: true
+    isActive: true,
+    bookingMode: 1,
+    slotDurationMinutes: '',
+    maxCapacityPerSlot: ''
   })
 
   useEffect(() => {
@@ -83,7 +90,10 @@ function Services({ user, onLogout }: ServicesProps) {
       serviceType: service.serviceType,
       price: service.price?.toString() || '',
       durationMinutes: service.durationMinutes,
-      isActive: service.isActive
+      isActive: service.isActive,
+      bookingMode: service.bookingMode,
+      slotDurationMinutes: service.slotDurationMinutes?.toString() || '',
+      maxCapacityPerSlot: service.maxCapacityPerSlot?.toString() || ''
     })
     setEditingId(service.id)
     setShowForm(true)
@@ -110,7 +120,10 @@ function Services({ user, onLogout }: ServicesProps) {
       serviceType: 1,
       price: '',
       durationMinutes: 60,
-      isActive: true
+      isActive: true,
+      bookingMode: 1,
+      slotDurationMinutes: '',
+      maxCapacityPerSlot: ''
     })
   }
 
@@ -199,6 +212,68 @@ function Services({ user, onLogout }: ServicesProps) {
                   />
                 </div>
               </div>
+
+              <div className="border-t pt-4 mt-4">
+                <h3 className="text-md font-bold mb-3">Modalità Prenotazione</h3>
+                <div className="grid grid-cols-3 gap-4 mb-4">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={formData.bookingMode === 1}
+                      onChange={() => setFormData({ ...formData, bookingMode: 1 })}
+                      className="mr-2"
+                    />
+                    Slot Orari
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={formData.bookingMode === 2}
+                      onChange={() => setFormData({ ...formData, bookingMode: 2 })}
+                      className="mr-2"
+                    />
+                    Orario Flessibile
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={formData.bookingMode === 3}
+                      onChange={() => setFormData({ ...formData, bookingMode: 3 })}
+                      className="mr-2"
+                    />
+                    Solo Giorno
+                  </label>
+                </div>
+
+                {formData.bookingMode === 1 && (
+                  <div className="grid grid-cols-2 gap-4 bg-blue-50 p-4 rounded">
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Durata Slot (min)</label>
+                      <input
+                        type="number"
+                        value={formData.slotDurationMinutes}
+                        onChange={(e) => setFormData({ ...formData, slotDurationMinutes: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        placeholder="Es. 30"
+                      />
+                      <p className="text-xs text-gray-600 mt-1">Lascia vuoto per usare la durata generale</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-bold mb-2">Capacità per Slot</label>
+                      <input
+                        type="number"
+                        value={formData.maxCapacityPerSlot}
+                        onChange={(e) => setFormData({ ...formData, maxCapacityPerSlot: e.target.value })}
+                        className="w-full px-3 py-2 border rounded-lg"
+                        placeholder="Es. 20"
+                        min="1"
+                      />
+                      <p className="text-xs text-gray-600 mt-1">Numero max persone per slot</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <label className="flex items-center">
                   <input
@@ -235,6 +310,7 @@ function Services({ user, onLogout }: ServicesProps) {
                       <span>Tipo: {service.serviceTypeName}</span>
                       {service.price && <span>Prezzo: €{service.price}</span>}
                       <span>Durata: {service.durationMinutes} min</span>
+                      <span>📋 {service.bookingModeName}</span>
                     </div>
                   </div>
                   <div>

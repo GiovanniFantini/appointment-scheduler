@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Merchant> Merchants { get; set; }
     public DbSet<Service> Services { get; set; }
     public DbSet<Booking> Bookings { get; set; }
+    public DbSet<Availability> Availabilities { get; set; }
+    public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -68,6 +70,34 @@ public class ApplicationDbContext : DbContext
                 .WithMany(s => s.Bookings)
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // Availability configuration
+        modelBuilder.Entity<Availability>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Service)
+                .WithMany(s => s.Availabilities)
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ServiceId);
+            entity.HasIndex(e => e.DayOfWeek);
+            entity.HasIndex(e => e.SpecificDate);
+        });
+
+        // AvailabilitySlot configuration
+        modelBuilder.Entity<AvailabilitySlot>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Availability)
+                .WithMany(a => a.Slots)
+                .HasForeignKey(e => e.AvailabilityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.AvailabilityId);
         });
     }
 }

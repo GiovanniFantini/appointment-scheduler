@@ -13,6 +13,9 @@ public class CreateServiceRequest
     public decimal? Price { get; set; }
     public int DurationMinutes { get; set; }
     public string? Configuration { get; set; }
+    public BookingMode BookingMode { get; set; } = BookingMode.TimeSlot;
+    public int? SlotDurationMinutes { get; set; }
+    public int? MaxCapacityPerSlot { get; set; }
 }
 
 /// <summary>
@@ -27,6 +30,9 @@ public class UpdateServiceRequest
     public int DurationMinutes { get; set; }
     public bool IsActive { get; set; }
     public string? Configuration { get; set; }
+    public BookingMode BookingMode { get; set; }
+    public int? SlotDurationMinutes { get; set; }
+    public int? MaxCapacityPerSlot { get; set; }
 }
 
 /// <summary>
@@ -46,4 +52,8 @@ public class ServiceDto
     public bool IsActive { get; set; }
     public string? Configuration { get; set; }
     public DateTime CreatedAt { get; set; }
+    public BookingMode BookingMode { get; set; }
+    public string BookingModeName { get; set; } = string.Empty;
+    public int? SlotDurationMinutes { get; set; }
+    public int? MaxCapacityPerSlot { get; set; }
 }

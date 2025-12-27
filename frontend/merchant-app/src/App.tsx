@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import AdminPanel from './pages/AdminPanel'
 import Services from './pages/Services'
 import Bookings from './pages/Bookings'
+import Availabilities from './pages/Availabilities'
 
 interface User {
   userId: number
@@ -76,6 +77,9 @@ function App() {
         } />
         <Route path="/bookings" element={
           user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/availabilities" element={
+          user ? <Availabilities user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>
