@@ -174,13 +174,16 @@ try
     }
 
     // Configure the HTTP request pipeline.
-    if (app.Environment.IsDevelopment())
+    // Enable Swagger in all environments
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-        Console.WriteLine("Swagger UI enabled");
-    }
-    else
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Appointment Scheduler API v1");
+        c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
+    });
+    Console.WriteLine("Swagger UI enabled");
+
+    if (!app.Environment.IsDevelopment())
     {
         app.UseHttpsRedirection();
     }
