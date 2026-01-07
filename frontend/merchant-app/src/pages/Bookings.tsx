@@ -18,14 +18,13 @@ interface Booking {
 }
 
 interface BookingsProps {
-  user: any
   onLogout: () => void
 }
 
 /**
  * Pagina per gestire le prenotazioni del merchant
  */
-function Bookings({ user, onLogout }: BookingsProps) {
+function Bookings({ onLogout }: BookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 

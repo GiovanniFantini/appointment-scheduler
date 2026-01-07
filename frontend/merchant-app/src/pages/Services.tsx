@@ -18,14 +18,13 @@ interface Service {
 }
 
 interface ServicesProps {
-  user: any
   onLogout: () => void
 }
 
 /**
  * Pagina per gestire i servizi del merchant (CRUD completo)
  */
-function Services({ user, onLogout }: ServicesProps) {
+function Services({ onLogout }: ServicesProps) {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)

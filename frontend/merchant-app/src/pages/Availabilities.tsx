@@ -30,7 +30,6 @@ interface AvailabilitySlot {
 }
 
 interface AvailabilitiesProps {
-  user: any
   onLogout: () => void
 }
 
@@ -44,7 +43,7 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Sabato' }
 ]
 
-function Availabilities({ user, onLogout }: AvailabilitiesProps) {
+function Availabilities({ onLogout }: AvailabilitiesProps) {
   const [services, setServices] = useState<Service[]>([])
   const [availabilities, setAvailabilities] = useState<Availability[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,7 +186,6 @@ function Availabilities({ user, onLogout }: AvailabilitiesProps) {
             <Link to="/dashboard" className="text-blue-600 hover:text-blue-800">Dashboard</Link>
             <Link to="/services" className="text-blue-600 hover:text-blue-800">Servizi</Link>
             <Link to="/bookings" className="text-blue-600 hover:text-blue-800">Prenotazioni</Link>
-            <span className="text-gray-600">Ciao, {user.email}</span>
             <button onClick={onLogout} className="text-red-600 hover:text-red-800">Logout</button>
           </div>
         </div>
