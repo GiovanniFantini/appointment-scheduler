@@ -40,6 +40,11 @@ try
     builder.Services.AddEndpointsApiExplorer();
     Console.WriteLine("Controllers registered");
 
+    // Add health checks
+    builder.Services.AddHealthChecks()
+        .AddDbContextCheck<ApplicationDbContext>("database");
+    Console.WriteLine("Health checks configured");
+
     // Swagger con supporto JWT
     builder.Services.AddSwaggerGen(options =>
     {
@@ -230,6 +235,13 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
+
+    // Map health check endpoints
+    app.MapHealthChecks("/health");
+    app.MapHealthChecks("/health/ready");
+    app.MapHealthChecks("/health/live");
+    Console.WriteLine("Health check endpoints mapped");
+
     Console.WriteLine("Middleware pipeline configured");
 
     Console.WriteLine("Starting web server...");
