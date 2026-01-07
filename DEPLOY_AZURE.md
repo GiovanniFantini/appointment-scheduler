@@ -11,51 +11,53 @@ Questa guida ti porterà passo-passo nel deployment della tua applicazione su Az
 ## Architettura Finale
 
 ```
-Frontend (3 app React) → Azure Static Web Apps (GRATIS)
-Backend (ASP.NET Core) → Azure App Service (~12€/mese)
+Frontend (3 app React) → Azure Web App (App Service) (~12€/mese per app o piano condiviso)
+Backend (ASP.NET Core) → Azure Web App (App Service) (~12€/mese)
 Database → Azure PostgreSQL Flexible Server (~15€/mese)
 ```
+
+**Nota:** Con questa architettura tutti i frontend usano Azure Web App invece di Azure Static Web Apps, garantendo migliore compatibilità con le SPA React e il pieno controllo del routing.
 
 ---
 
 ## PARTE 1: Creare le Risorse Azure
 
-### Step 1: Creare 3 Azure Static Web Apps (Frontend)
+### Step 1: Creare 3 Azure Web Apps (Frontend)
 
 **Per CONSUMER APP:**
 
 1. Vai su https://portal.azure.com
-2. Cerca "Static Web Apps" nella barra di ricerca
+2. Cerca "App Services" nella barra di ricerca
 3. Clicca "+ Create"
 4. Compila:
    - **Subscription**: Seleziona la tua subscription
    - **Resource Group**: Crea nuovo → `appointment-scheduler-rg`
-   - **Name**: `appointment-consumer-app`
-   - **Plan type**: **Free**
+   - **Name**: `appointment-consumer-app` (deve essere univoco globalmente)
+   - **Publish**: Code
+   - **Runtime stack**: Node 20 LTS
+   - **Operating System**: Linux
    - **Region**: West Europe (o più vicino a te)
-   - **Deployment details**:
-     - Source: **GitHub**
-     - Organization: Il tuo username GitHub
-     - Repository: `appointment-scheduler`
-     - Branch: `main`
-     - Build Presets: **React**
-     - App location: `/frontend/consumer-app`
-     - Output location: `dist`
-5. Clicca **Review + Create**
-6. Clicca **Create**
-7. **IMPORTANTE**: Vai su "Deployment token" e COPIA il token (lo userai dopo)
+   - **Pricing plan**:
+     - Clicca "Explore pricing plans"
+     - Scegli **Basic B1** (~12€/mese) oppure **Free F1** per test
+     - **IMPORTANTE:** Puoi usare lo stesso piano per tutte e 3 le app frontend per risparmiare!
+5. Clicca **Review + Create** → **Create**
+6. **SCARICARE IL PUBLISH PROFILE:**
+   - Nella pagina principale dell'App Service
+   - Clicca **"Get publish profile"** in alto
+   - Si scaricherà un file XML → **SALVALO** come `consumer-publish-profile.xml`
 
 **Ripeti per MERCHANT APP:**
 - Name: `appointment-merchant-app`
-- App location: `/frontend/merchant-app`
-- Output location: `dist`
-- **SALVA il deployment token**
+- Usa lo **STESSO pricing plan** di Consumer App (per risparmiare)
+- **SALVA il publish profile** come `merchant-publish-profile.xml`
 
 **Ripeti per ADMIN APP:**
 - Name: `appointment-admin-app`
-- App location: `/frontend/admin-app`
-- Output location: `dist`
-- **SALVA il deployment token**
+- Usa lo **STESSO pricing plan** (per risparmiare)
+- **SALVA il publish profile** come `admin-publish-profile.xml`
+
+**Tip per risparmiare:** Quando crei la seconda e terza app, nel campo "Pricing plan" seleziona lo stesso piano della prima app. In questo modo paghi solo un piano B1 (~12€/mese) invece di tre!
 
 ---
 
@@ -90,7 +92,7 @@ Database → Azure PostgreSQL Flexible Server (~15€/mese)
 
 ---
 
-### Step 3: Creare Azure App Service (Backend)
+### Step 3: Creare Azure App Service (Backend API)
 
 1. Nel portale Azure, cerca "App Services"
 2. Clicca "+ Create"
@@ -121,7 +123,7 @@ Database → Azure PostgreSQL Flexible Server (~15€/mese)
 **SCARICARE IL PUBLISH PROFILE:**
 1. Nella pagina principale dell'App Service
 2. Clicca **"Get publish profile"** in alto
-3. Si scaricherà un file XML → **SALVALO** (lo userai dopo)
+3. Si scaricherà un file XML → **SALVALO** come `backend-publish-profile.xml`
 
 ---
 
@@ -138,58 +140,47 @@ Ora devi aggiungere i token/credenziali come secrets in GitHub.
 
 ### Step 2: Aggiungi questi Secrets
 
-Crea questi 5 secrets UNO PER UNO:
+Crea questi secrets UNO PER UNO:
 
 **Secret 1:**
-- Name: `AZURE_STATIC_WEB_APPS_API_TOKEN_CONSUMER`
-- Value: [Il deployment token della Consumer Static Web App]
+- Name: `AZURE_WEBAPP_NAME_CONSUMER`
+- Value: `appointment-consumer-app` (il nome della Web App)
 
 **Secret 2:**
-- Name: `AZURE_STATIC_WEB_APPS_API_TOKEN_MERCHANT`
-- Value: [Il deployment token della Merchant Static Web App]
+- Name: `AZURE_WEBAPP_PUBLISH_PROFILE_CONSUMER`
+- Value: [Apri consumer-publish-profile.xml e COPIA TUTTO il contenuto]
 
 **Secret 3:**
-- Name: `AZURE_STATIC_WEB_APPS_API_TOKEN_ADMIN`
-- Value: [Il deployment token della Admin Static Web App]
+- Name: `AZURE_WEBAPP_NAME_MERCHANT`
+- Value: `appointment-merchant-app`
 
 **Secret 4:**
-- Name: `AZURE_WEBAPP_NAME`
-- Value: `appointment-scheduler-api` (il nome che hai dato all'App Service)
+- Name: `AZURE_WEBAPP_PUBLISH_PROFILE_MERCHANT`
+- Value: [Apri merchant-publish-profile.xml e COPIA TUTTO il contenuto]
 
 **Secret 5:**
+- Name: `AZURE_WEBAPP_NAME_ADMIN`
+- Value: `appointment-admin-app`
+
+**Secret 6:**
+- Name: `AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN`
+- Value: [Apri admin-publish-profile.xml e COPIA TUTTO il contenuto]
+
+**Secret 7:**
+- Name: `AZURE_WEBAPP_NAME`
+- Value: `appointment-scheduler-api` (il nome dell'App Service backend)
+
+**Secret 8:**
 - Name: `AZURE_WEBAPP_PUBLISH_PROFILE`
-- Value: [Apri il file XML del publish profile e COPIA TUTTO il contenuto]
+- Value: [Apri backend-publish-profile.xml e COPIA TUTTO il contenuto]
+
+**Secret 9:**
+- Name: `VITE_API_URL`
+- Value: `https://appointment-scheduler-api.azurewebsites.net` (l'URL del backend)
 
 ---
 
-## PARTE 3: Configurare gli URL API nei Frontend
-
-Prima di fare il primo deploy, devi dire ai frontend dove si trova il backend.
-
-### Step 1: Trova l'URL del tuo App Service
-
-1. Vai nell'App Service `appointment-scheduler-api` nel portale Azure
-2. Nella pagina principale, trovi l'**URL**: `https://appointment-scheduler-api.azurewebsites.net`
-3. **COPIA** questo URL
-
-### Step 2: Configura le variabili d'ambiente nei frontend
-
-Per ogni Static Web App creata, aggiungi la configurazione dell'API:
-
-**Per Consumer App:**
-1. Nel portale Azure, vai su `appointment-consumer-app`
-2. Menu laterale → **Configuration**
-3. Clicca **"New application setting"**
-   - Name: `VITE_API_URL`
-   - Value: `https://appointment-scheduler-api.azurewebsites.net`
-4. Clicca **Save**
-
-**Ripeti per Merchant App** (`appointment-merchant-app`)
-**Ripeti per Admin App** (`appointment-admin-app`)
-
----
-
-## PARTE 4: Primo Deploy
+## PARTE 3: Primo Deploy
 
 Ora tutto è pronto! Fai il primo deploy.
 
@@ -199,7 +190,7 @@ I file sono già stati creati nella tua repository. Devi solo committare:
 
 ```bash
 git add .
-git commit -m "Add Azure deployment configuration"
+git commit -m "Migrate from Static Web Apps to Web App for frontend hosting"
 git push origin main
 ```
 
@@ -248,16 +239,16 @@ Il database è vuoto. Devi eseguire le migrations:
 
 ---
 
-## PARTE 5: Testa l'Applicazione
+## PARTE 4: Testa l'Applicazione
 
 ### URL Finali
 
 Dopo il deploy, le tue app saranno disponibili a:
 
 **Frontend:**
-- Consumer: `https://appointment-consumer-app.azurestaticapps.net`
-- Merchant: `https://appointment-merchant-app.azurestaticapps.net`
-- Admin: `https://appointment-admin-app.azurestaticapps.net`
+- Consumer: `https://appointment-consumer-app.azurewebsites.net`
+- Merchant: `https://appointment-merchant-app.azurewebsites.net`
+- Admin: `https://appointment-admin-app.azurewebsites.net`
 
 **Backend API:**
 - API: `https://appointment-scheduler-api.azurewebsites.net`
@@ -272,21 +263,15 @@ Dopo il deploy, le tue app saranno disponibili a:
 
 ---
 
-## PARTE 6: Domini Custom (Opzionale)
+## PARTE 5: Domini Custom (Opzionale)
 
 Se vuoi usare i tuoi domini:
 
-**Per Static Web Apps:**
-1. Vai sulla Static Web App nel portale Azure
-2. Menu laterale → **Custom domains**
-3. Clicca **"Add"**
-4. Segui le istruzioni per aggiungere il record CNAME nel tuo DNS
-
-**Per App Service:**
-1. Vai sull'App Service nel portale Azure
+**Per Web Apps:**
+1. Vai sulla Web App nel portale Azure
 2. Menu laterale → **Custom domains**
 3. Clicca **"Add custom domain"**
-4. Segui le istruzioni
+4. Segui le istruzioni per aggiungere il record CNAME nel tuo DNS
 
 ---
 
@@ -297,7 +282,7 @@ Se vuoi usare i tuoi domini:
 **Problema:** Errori CORS o "Network Error"
 
 **Soluzione:**
-1. Verifica che l'URL dell'API sia corretto in Configuration delle Static Web Apps
+1. Verifica che `VITE_API_URL` sia configurato correttamente nei secrets GitHub
 2. Nel backend, aggiorna il CORS in `Program.cs`:
    ```csharp
    builder.Services.AddCors(options =>
@@ -305,15 +290,31 @@ Se vuoi usare i tuoi domini:
        options.AddPolicy("AllowSpecificOrigins", policy =>
        {
            policy.WithOrigins(
-               "https://appointment-consumer-app.azurestaticapps.net",
-               "https://appointment-merchant-app.azurestaticapps.net",
-               "https://appointment-admin-app.azurestaticapps.net"
+               "https://appointment-consumer-app.azurewebsites.net",
+               "https://appointment-merchant-app.azurewebsites.net",
+               "https://appointment-admin-app.azurewebsites.net"
            )
            .AllowAnyMethod()
            .AllowAnyHeader();
        });
    });
    ```
+
+### Deploy Frontend Fallisce
+
+**Problema:** "Build failed" o errori durante npm install
+
+**Soluzione:**
+- Verifica che il path in `.github/workflows/deploy-*-app.yml` sia corretto
+- Controlla i log in GitHub Actions per vedere l'errore specifico
+
+### Pagina Bianca o 404 su Route
+
+**Problema:** La app mostra una pagina bianca o errori 404 quando navighi a una route
+
+**Soluzione:**
+- Verifica che il file `web.config` sia presente nella cartella `public` di ogni frontend
+- Il file `web.config` gestisce il routing SPA su IIS (il web server di Azure Web App)
 
 ### Deploy Backend Fallisce
 
@@ -342,20 +343,47 @@ Se vuoi usare i tuoi domini:
 
 ### Vedere i Log dei Frontend
 
-1. Vai su Static Web App → **Monitor** → **Application Insights**
+1. Vai su App Service → **Log stream** (menu laterale)
+2. Per log più dettagliati, vai su **Diagnose and solve problems**
 
 ---
 
 ## Costi Mensili Stimati
 
-- Static Web Apps (x3): **GRATIS** (piano Free)
-- App Service B1: **~12€/mese**
+**Con App Service Plan condiviso tra i 3 frontend:**
+- App Service B1 (condiviso per 3 frontend): **~12€/mese**
+- App Service B1 (backend): **~12€/mese**
 - PostgreSQL B1ms: **~15€/mese**
-- **TOTALE: ~27€/mese**
+- **TOTALE: ~39€/mese**
+
+**Con piano Free per sviluppo:**
+- App Service F1 (x4): **GRATIS** (con limitazioni)
+- PostgreSQL B1ms: **~15€/mese**
+- **TOTALE: ~15€/mese**
 
 Per risparmiare durante sviluppo:
 - Usa App Service F1 (Free) invece di B1
 - Ferma le risorse quando non le usi
+- Usa un solo piano B1 condiviso per tutti i frontend
+
+---
+
+## Vantaggi di Web App vs Static Web Apps
+
+**Perché abbiamo migrato a Web App:**
+- ✅ Pieno controllo sul routing delle SPA
+- ✅ Nessun problema con MIME types o file statici
+- ✅ Migliore gestione delle variabili d'ambiente
+- ✅ Compatibilità garantita con React Router
+- ✅ Facile debugging con log stream in tempo reale
+- ✅ Stesso tipo di risorsa del backend (più semplice da gestire)
+- ✅ Supporto completo per web.config e configurazioni IIS
+
+**Limitazioni di Static Web Apps che abbiamo risolto:**
+- ❌ Problemi con il routing client-side
+- ❌ Configurazione complessa per SPA
+- ❌ Limitazioni sul piano Free
+- ❌ Gestione complicata delle variabili d'ambiente build-time
 
 ---
 
@@ -372,8 +400,9 @@ Per risparmiare durante sviluppo:
 ## Supporto
 
 Se hai problemi:
-1. Controlla i log in Azure Portal
+1. Controlla i log in Azure Portal (Log Stream)
 2. Verifica i workflow su GitHub Actions
 3. Controlla che tutti i secrets siano configurati correttamente
+4. Verifica che il file `web.config` sia presente in ogni frontend
 
 Buon deployment! 🚀
