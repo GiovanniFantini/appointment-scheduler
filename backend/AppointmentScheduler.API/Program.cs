@@ -155,22 +155,60 @@ try
     var app = builder.Build();
     Console.WriteLine("Application built successfully");
 
-    // Inizializza il database con dati di seed (solo in Development)
-    if (app.Environment.IsDevelopment())
+    // Applica le migrazioni al database all'avvio
+    // ATTENZIONE: Questo viene eseguito anche in PRODUZIONE!
+    // Per disabilitare, impostare la variabile d'ambiente: RUN_MIGRATIONS=false
+    var runMigrations = builder.Configuration.GetValue<bool?>("RUN_MIGRATIONS") ?? true;
+
+    if (runMigrations)
     {
+        Console.WriteLine("Database migration is enabled (RUN_MIGRATIONS=true or not set)");
+
         using (var scope = app.Services.CreateScope())
         {
             var services = scope.ServiceProvider;
             try
             {
                 var context = services.GetRequiredService<ApplicationDbContext>();
-                DbInitializer.Initialize(context);
+
+                // Controlla se creare i dati di seed
+                // In produzione, di default NON crea i seed a meno che non sia esplicitamente richiesto
+                // Variabile d'ambiente: SEED_DATABASE=true|false
+                bool seedData;
+
+                if (app.Environment.IsDevelopment())
+                {
+                    // In Development, seed è true di default
+                    seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? true;
+                }
+                else
+                {
+                    // In Production, seed è false di default (per sicurezza)
+                    seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? false;
+                }
+
+                Console.WriteLine($"Database seeding is {(seedData ? "enabled" : "disabled")} (SEED_DATABASE={(seedData ? "true" : "false")})");
+
+                DbInitializer.Initialize(context, seedData);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+                Console.WriteLine($"CRITICAL ERROR during database initialization:");
+                Console.WriteLine($"Message: {ex.Message}");
+                Console.WriteLine($"StackTrace: {ex.StackTrace}");
+
+                // In produzione, un errore di migrazione dovrebbe bloccare l'avvio
+                if (!app.Environment.IsDevelopment())
+                {
+                    Console.WriteLine("Database initialization failed in production. Stopping application.");
+                    throw;
+                }
             }
         }
+    }
+    else
+    {
+        Console.WriteLine("Database migration is DISABLED (RUN_MIGRATIONS=false)");
     }
 
     // Configure the HTTP request pipeline.

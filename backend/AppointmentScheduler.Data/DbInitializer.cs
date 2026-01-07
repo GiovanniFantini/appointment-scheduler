@@ -1,21 +1,58 @@
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppointmentScheduler.Data;
 
 /// <summary>
-/// Inizializza il database con dati di seed per development/testing
+/// Inizializza il database con migrazione e dati di seed
 /// </summary>
 public static class DbInitializer
 {
     /// <summary>
-    /// Inizializza il database con un utente admin di default
+    /// Applica le migrazioni al database e opzionalmente inizializza con dati di seed
     /// </summary>
     /// <param name="context">Database context</param>
-    public static void Initialize(ApplicationDbContext context)
+    /// <param name="seedData">Se true, crea l'utente admin di default (default: true)</param>
+    public static void Initialize(ApplicationDbContext context, bool seedData = true)
     {
-        // Assicurati che il database sia creato
-        context.Database.EnsureCreated();
+        Console.WriteLine("Checking database migrations...");
+
+        try
+        {
+            // Applica tutte le migrazioni pending automaticamente
+            // Questo è sicuro da eseguire anche in produzione se il database esiste già
+            var pendingMigrations = context.Database.GetPendingMigrations().ToList();
+
+            if (pendingMigrations.Any())
+            {
+                Console.WriteLine($"Found {pendingMigrations.Count} pending migrations:");
+                foreach (var migration in pendingMigrations)
+                {
+                    Console.WriteLine($"  - {migration}");
+                }
+
+                Console.WriteLine("Applying migrations...");
+                context.Database.Migrate();
+                Console.WriteLine("Migrations applied successfully!");
+            }
+            else
+            {
+                Console.WriteLine("Database is up to date. No pending migrations.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during migration: {ex.Message}");
+            throw;
+        }
+
+        // Seed dei dati solo se richiesto
+        if (!seedData)
+        {
+            Console.WriteLine("Seed data creation skipped (seedData=false).");
+            return;
+        }
 
         // Controlla se esiste già un admin
         if (context.Users.Any(u => u.Role == UserRole.Admin))
