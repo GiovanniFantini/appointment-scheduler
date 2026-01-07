@@ -165,6 +165,14 @@ try
     // Per disabilitare, impostare la variabile d'ambiente: RUN_MIGRATIONS=false
     var runMigrations = builder.Configuration.GetValue<bool?>("RUN_MIGRATIONS") ?? true;
 
+    // Verifica che la connection string sia configurata prima di tentare le migrazioni
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        Console.WriteLine("WARNING: Database connection string is not configured.");
+        Console.WriteLine("Skipping database migration. Configure ConnectionStrings:DefaultConnection to enable database features.");
+        runMigrations = false;
+    }
+
     if (runMigrations)
     {
         Console.WriteLine("Database migration is enabled (RUN_MIGRATIONS=true or not set)");
@@ -213,7 +221,7 @@ try
     }
     else
     {
-        Console.WriteLine("Database migration is DISABLED (RUN_MIGRATIONS=false)");
+        Console.WriteLine("Database migration is DISABLED (RUN_MIGRATIONS=false or connection string not configured)");
     }
 
     // Configure the HTTP request pipeline.
