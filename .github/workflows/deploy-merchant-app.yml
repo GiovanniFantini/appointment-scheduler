@@ -1,4 +1,4 @@
-name: Deploy Merchant App to Azure Static Web Apps
+name: Deploy Merchant App to Azure Web App
 
 on:
   push:
@@ -13,18 +13,32 @@ jobs:
   build_and_deploy:
     runs-on: ubuntu-latest
     name: Build and Deploy Merchant App
+
     steps:
       - uses: actions/checkout@v3
-        with:
-          submodules: true
 
-      - name: Build And Deploy
-        id: builddeploy
-        uses: Azure/static-web-apps-deploy@v1
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_MERCHANT }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          action: "upload"
-          app_location: "frontend/merchant-app"
-          api_location: ""
-          output_location: "dist"
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/merchant-app/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend/merchant-app
+          npm ci
+
+      - name: Build application
+        run: |
+          cd frontend/merchant-app
+          npm run build
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_MERCHANT }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_MERCHANT }}
+          package: frontend/merchant-app/dist
