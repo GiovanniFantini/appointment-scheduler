@@ -146,7 +146,7 @@ Crea questi secrets UNO PER UNO:
 - Name: `AZURE_WEBAPP_NAME_CONSUMER`
 - Value: `appointment-consumer-app` (il nome della Web App)
 
-**Secret 2:**
+**Secret 2:** 
 - Name: `AZURE_WEBAPP_PUBLISH_PROFILE_CONSUMER`
 - Value: [Apri consumer-publish-profile.xml e COPIA TUTTO il contenuto]
 
