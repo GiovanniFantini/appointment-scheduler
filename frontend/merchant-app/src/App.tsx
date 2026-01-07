@@ -73,13 +73,13 @@ function App() {
           user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
         } />
         <Route path="/services" element={
-          user ? <Services user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/bookings" element={
-          user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/availabilities" element={
-          user ? <Availabilities user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>

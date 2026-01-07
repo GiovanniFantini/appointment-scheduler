@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 
 interface BookingsProps {
-  user: any
   onLogout: () => void
 }
 
@@ -22,7 +21,7 @@ interface Booking {
 /**
  * Pagina per visualizzare e gestire le proprie prenotazioni
  */
-function Bookings({ user, onLogout }: BookingsProps) {
+function Bookings({ onLogout }: BookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
