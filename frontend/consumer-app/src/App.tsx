@@ -57,7 +57,7 @@ function App() {
           user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/bookings" element={
-          user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>
