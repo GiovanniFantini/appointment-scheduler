@@ -60,6 +60,11 @@ jobs:
                 "slotSetting": false
               },
               {
+                "name": "NODE_ENV",
+                "value": "production",
+                "slotSetting": false
+              },
+              {
                 "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
                 "value": "true",
                 "slotSetting": false
@@ -70,3 +75,10 @@ jobs:
                 "slotSetting": false
               }
             ]
+
+      - name: Set Linux Startup Command
+        run: |
+          az webapp config set \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'appointment-scheduler-rg' }} \
+            --name ${{ secrets.AZURE_WEBAPP_NAME_ADMIN }} \
+            --startup-file "npm start"
