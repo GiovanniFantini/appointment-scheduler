@@ -23,6 +23,16 @@ app.get('/health/live', (req, res) => {
   res.status(200).json({ status: 'live', app: 'admin-app' });
 });
 
+// API Debug endpoint - returns configuration info
+app.get('/api-debug/config', (req, res) => {
+  res.status(200).json({
+    apiUrl: API_URL,
+    nodeEnv: process.env.NODE_ENV || 'development',
+    port: PORT,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Proxy API requests to backend
 app.use('/api', createProxyMiddleware({
   target: API_URL,

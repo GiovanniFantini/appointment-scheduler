@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import ApiDebugConsole from '../components/ApiDebugConsole'
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void
@@ -29,6 +30,7 @@ function Login({ onLogin }: LoginProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 to-red-600">
+      <ApiDebugConsole />
       <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-center mb-2 text-gray-800">
           Admin Panel
