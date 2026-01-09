@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface Service {
   id: number
@@ -47,10 +47,7 @@ function Services({ onLogout }: ServicesProps) {
 
   const fetchServices = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get('/api/services/my-services', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await apiClient.get('/services/my-services')
       setServices(response.data)
     } catch (err) {
       console.error(err)
@@ -61,17 +58,12 @@ function Services({ onLogout }: ServicesProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem('token')
 
     try {
       if (editingId) {
-        await axios.put(`/api/services/${editingId}`, formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        await apiClient.put(`/services/${editingId}`, formData)
       } else {
-        await axios.post('/api/services', formData, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        await apiClient.post('/services', formData)
       }
       fetchServices()
       setShowForm(false)
@@ -102,10 +94,7 @@ function Services({ onLogout }: ServicesProps) {
     if (!confirm('Sei sicuro di voler eliminare questo servizio?')) return
 
     try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`/api/services/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.delete(`/services/${id}`)
       fetchServices()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Errore nell\'eliminazione')

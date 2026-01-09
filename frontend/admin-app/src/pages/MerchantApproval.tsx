@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface Merchant {
   id: number
@@ -46,14 +46,11 @@ function MerchantApproval({ user, onLogout }: MerchantApprovalProps) {
     setError('')
 
     try {
-      const token = localStorage.getItem('token')
       const endpoint = filter === 'pending'
-        ? '/api/merchants/pending'
-        : '/api/merchants'
+        ? '/merchants/pending'
+        : '/merchants'
 
-      const response = await axios.get(endpoint, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await apiClient.get(endpoint)
 
       setMerchants(response.data)
     } catch (err: any) {
@@ -65,10 +62,7 @@ function MerchantApproval({ user, onLogout }: MerchantApprovalProps) {
 
   const handleApprove = async (id: number) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`/api/merchants/${id}/approve`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/merchants/${id}/approve`, {})
 
       setMerchants(merchants.filter(m => m.id !== id))
       alert('Merchant approvato con successo')
@@ -81,10 +75,7 @@ function MerchantApproval({ user, onLogout }: MerchantApprovalProps) {
     if (!confirm('Sei sicuro di voler rifiutare questo merchant?')) return
 
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`/api/merchants/${id}/reject`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/merchants/${id}/reject`, {})
 
       fetchMerchants()
       alert('Merchant rifiutato')

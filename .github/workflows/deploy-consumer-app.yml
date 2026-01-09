@@ -36,9 +36,49 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME_CONSUMER }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_CONSUMER }}
           package: frontend/consumer-app
+
+      - name: Configure Azure Web App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_CONSUMER }}
+          app-settings-json: |
+            [
+              {
+                "name": "API_URL",
+                "value": "${{ secrets.API_URL || 'https://appointment-scheduler-api.azurewebsites.net' }}",
+                "slotSetting": false
+              },
+              {
+                "name": "NODE_ENV",
+                "value": "production",
+                "slotSetting": false
+              },
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "true",
+                "slotSetting": false
+              },
+              {
+                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                "value": "~20",
+                "slotSetting": false
+              }
+            ]
+
+      - name: Set Linux Startup Command
+        run: |
+          az webapp config set \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'appointment-scheduler-rg' }} \
+            --name ${{ secrets.AZURE_WEBAPP_NAME_CONSUMER }} \
+            --startup-file "npm start"

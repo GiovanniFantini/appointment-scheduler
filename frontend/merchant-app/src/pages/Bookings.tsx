@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface Booking {
   id: number
@@ -34,10 +34,7 @@ function Bookings({ onLogout }: BookingsProps) {
 
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get('/api/bookings/merchant-bookings', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await apiClient.get('/bookings/merchant-bookings')
       setBookings(response.data)
     } catch (err) {
       console.error(err)
@@ -48,10 +45,7 @@ function Bookings({ onLogout }: BookingsProps) {
 
   const handleConfirm = async (id: number) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`/api/bookings/${id}/confirm`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/bookings/${id}/confirm`, {})
       fetchBookings()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Errore nella conferma')
@@ -60,10 +54,7 @@ function Bookings({ onLogout }: BookingsProps) {
 
   const handleComplete = async (id: number) => {
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`/api/bookings/${id}/complete`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/bookings/${id}/complete`, {})
       fetchBookings()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Errore nel completamento')
