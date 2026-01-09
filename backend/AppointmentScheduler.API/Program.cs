@@ -209,7 +209,7 @@ try
                     // In Production, seed è false di default (per sicurezza)
                     seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? false;
                 }
-
+                 
                 Console.WriteLine($"Database seeding is {(seedData ? "enabled" : "disabled")} (SEED_DATABASE={(seedData ? "true" : "false")})");
 
                 DbInitializer.Initialize(context, seedData);
