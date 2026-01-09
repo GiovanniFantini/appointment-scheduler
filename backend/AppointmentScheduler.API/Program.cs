@@ -172,9 +172,6 @@ try
     // Per disabilitare, impostare la variabile d'ambiente: RUN_MIGRATIONS=false
     var runMigrations = builder.Configuration.GetValue<bool?>("RUN_MIGRATIONS") ?? true;
 
-    Console.WriteLine($"RUN_MIGRATIONS: {runMigrations}");
-    Console.WriteLine($"connectionString: {connectionString}");
-
     // Verifica che la connection string sia configurata prima di tentare le migrazioni
     if (string.IsNullOrWhiteSpace(connectionString))
     {
@@ -209,7 +206,7 @@ try
                     // In Production, seed è false di default (per sicurezza)
                     seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? false;
                 }
-                 
+
                 Console.WriteLine($"Database seeding is {(seedData ? "enabled" : "disabled")} (SEED_DATABASE={(seedData ? "true" : "false")})");
 
                 DbInitializer.Initialize(context, seedData);
