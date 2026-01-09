@@ -6,6 +6,8 @@ const baseURL = import.meta.env.PROD
   ? (import.meta.env.VITE_API_URL || 'https://appointment-scheduler-api.azurewebsites.net')
   : '/api'
 
+console.log('API Base URL:', baseURL);
+
 const apiClient = axios.create({
   baseURL,
   headers: {
