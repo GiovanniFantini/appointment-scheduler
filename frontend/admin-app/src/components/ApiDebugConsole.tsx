@@ -104,7 +104,13 @@ function ApiDebugConsole() {
 
     try {
       // Test 2: Check backend API health
-      const apiHealthResponse = await apiClient.get('/health', {
+      // NOTA: /health è l'unico endpoint del backend che NON ha il prefisso /api
+      const baseURL = apiClient.defaults.baseURL || ''
+      const healthURL = import.meta.env.PROD
+        ? baseURL.replace(/\/api$/, '/health')  // Rimuove /api e aggiunge /health
+        : '/health'  // In dev, il proxy Vite gestisce correttamente /health
+
+      const apiHealthResponse = await axios.get(healthURL, {
         timeout: 5000
       })
 
