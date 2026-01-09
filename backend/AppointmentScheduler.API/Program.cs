@@ -31,15 +31,6 @@ try
     var builder = WebApplication.CreateBuilder(args);
     Console.WriteLine("Builder created successfully");
 
-    Console.WriteLine("=== ENV VARS CHECK ===");
-    foreach (var kv in Environment.GetEnvironmentVariables().Keys)
-    {
-        var key = kv?.ToString();
-        Console.WriteLine($"{key} = {Environment.GetEnvironmentVariable(key)}");
-
-    }
-    Console.WriteLine("=====================");
-
     // Add services to the container.
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -95,13 +86,12 @@ try
 
     var testSetting = builder.Configuration.GetValue<string>("TestSetting");
     Console.WriteLine($"TestSetting: {testSetting}");
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
-    var envConnectionString = Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrWhiteSpace(connectionString))
+    {
+        connectionString = Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
 
-
-    Console.WriteLine($"Connection string loaded: {connectionString}");
-    Console.WriteLine($"EnvconnectionString loaded: {envConnectionString}");
+    }
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
