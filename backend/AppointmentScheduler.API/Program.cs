@@ -97,8 +97,11 @@ try
     Console.WriteLine($"TestSetting: {testSetting}");
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
         ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
+    var envConnectionString = Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
 
-    Console.WriteLine($"Connection string loaded: {!string.IsNullOrEmpty(connectionString)}");
+
+    Console.WriteLine($"Connection string loaded: {connectionString}");
+    Console.WriteLine($"EnvconnectionString loaded: {envConnectionString}");
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
     {
