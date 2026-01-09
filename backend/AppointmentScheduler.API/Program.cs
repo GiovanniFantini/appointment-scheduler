@@ -31,6 +31,15 @@ try
     var builder = WebApplication.CreateBuilder(args);
     Console.WriteLine("Builder created successfully");
 
+    Console.WriteLine("=== ENV VARS CHECK ===");
+    foreach (var kv in Environment.GetEnvironmentVariables().Keys)
+    {
+        var key = kv?.ToString();
+        Console.WriteLine($"{key} = {Environment.GetEnvironmentVariable(key)}");
+
+    }
+    Console.WriteLine("=====================");
+
     // Add services to the container.
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
