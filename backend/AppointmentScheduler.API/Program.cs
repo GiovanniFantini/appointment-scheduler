@@ -144,21 +144,24 @@ try
     Console.WriteLine("Authorization configured");
 
     // CORS per frontend
+    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>() ?? Array.Empty<string>();
+    Console.WriteLine($"CORS Origins configured: {string.Join(", ", corsOrigins)}");
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.WithOrigins(
-                "http://localhost:5173",  // Consumer app
-                "http://localhost:5174",  // Merchant app
-                "http://localhost:5175",  // Admin app
-                "https://localhost:5173",
-                "https://localhost:5174",
-                "https://localhost:5175"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
+            if (corsOrigins.Length > 0)
+            {
+                policy.WithOrigins(corsOrigins)
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
+            }
+            else
+            {
+                Console.WriteLine("WARNING: No CORS origins configured. CORS will block all requests.");
+            }
         });
     });
     Console.WriteLine("CORS configured");
