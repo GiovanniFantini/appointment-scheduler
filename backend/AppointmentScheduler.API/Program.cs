@@ -83,6 +83,10 @@ try
     Console.WriteLine("Swagger configured");
 
     // Database Configuration
+
+    var testSetting = builder.Configuration.GetValue<string>("TestSetting");
+    Console.WriteLine($"TestSetting: {testSetting}");
+
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     Console.WriteLine($"Connection string loaded: {!string.IsNullOrEmpty(connectionString)}");
 
@@ -164,6 +168,9 @@ try
     // ATTENZIONE: Questo viene eseguito anche in PRODUZIONE!
     // Per disabilitare, impostare la variabile d'ambiente: RUN_MIGRATIONS=false
     var runMigrations = builder.Configuration.GetValue<bool?>("RUN_MIGRATIONS") ?? true;
+
+    Console.WriteLine($"RUN_MIGRATIONS: {runMigrations}");
+    Console.WriteLine($"connectionString: {connectionString}");
 
     // Verifica che la connection string sia configurata prima di tentare le migrazioni
     if (string.IsNullOrWhiteSpace(connectionString))
