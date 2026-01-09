@@ -104,7 +104,7 @@ function ApiDebugConsole() {
 
     try {
       // Test 2: Check backend API health
-      const apiHealthResponse = await axios.get('/api/health', {
+      const apiHealthResponse = await apiClient.get('/health', {
         timeout: 5000
       })
 
@@ -123,7 +123,7 @@ function ApiDebugConsole() {
 
     try {
       // Test 3: Test auth endpoint availability (without credentials)
-      await axios.post('/api/auth/login', {
+      await apiClient.post('/auth/login', {
         email: 'test@test.com',
         password: 'test'
       }, { timeout: 5000 })
