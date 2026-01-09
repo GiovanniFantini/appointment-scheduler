@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void
@@ -18,7 +18,7 @@ function Login({ onLogin }: LoginProps) {
     setLoading(true)
 
     try {
-      const response = await axios.post('/api/auth/login', { email, password })
+      const response = await apiClient.post('/auth/login', { email, password })
       const { token, ...userData } = response.data
       onLogin(userData, token)
     } catch (err: any) {

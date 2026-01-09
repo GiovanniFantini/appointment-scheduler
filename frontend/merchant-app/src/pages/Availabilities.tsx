@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface Service {
   id: number
@@ -70,14 +70,9 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token')
       const [servicesRes, availabilitiesRes] = await Promise.all([
-        axios.get('/api/services/my-services', {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get('/api/availability/my-availabilities', {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        apiClient.get('/services/my-services'),
+        apiClient.get('/availability/my-availabilities')
       ])
       setServices(servicesRes.data)
       setAvailabilities(availabilitiesRes.data)
@@ -91,7 +86,6 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const token = localStorage.getItem('token')
 
     const requestData = {
       serviceId: formData.serviceId,
@@ -104,9 +98,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
     }
 
     try {
-      await axios.post('/api/availability', requestData, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post('/availability', requestData)
       fetchData()
       setShowForm(false)
       resetForm()
@@ -120,16 +112,13 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
     e.preventDefault()
     if (!selectedAvailability) return
 
-    const token = localStorage.getItem('token')
     const slots = [{
       slotTime: slotFormData.slotTime,
       maxCapacity: slotFormData.maxCapacity ? parseInt(slotFormData.maxCapacity) : null
     }]
 
     try {
-      await axios.post(`/api/availability/${selectedAvailability.id}/slots`, slots, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/availability/${selectedAvailability.id}/slots`, slots)
       fetchData()
       setShowSlotForm(false)
       setSelectedAvailability(null)
@@ -144,10 +133,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
     if (!confirm('Sei sicuro di voler eliminare questa disponibilità?')) return
 
     try {
-      const token = localStorage.getItem('token')
-      await axios.delete(`/api/availability/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.delete(`/availability/${id}`)
       fetchData()
       alert('Disponibilità eliminata!')
     } catch (err: any) {

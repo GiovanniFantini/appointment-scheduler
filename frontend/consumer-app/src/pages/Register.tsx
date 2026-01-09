@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface RegisterProps {
   onRegister: (user: any, token: string) => void
@@ -23,7 +23,7 @@ function Register({ onRegister }: RegisterProps) {
     setLoading(true)
 
     try {
-      const response = await axios.post('/api/auth/register', {
+      const response = await apiClient.post('/auth/register', {
         ...formData,
         role: 1 // User role
       })

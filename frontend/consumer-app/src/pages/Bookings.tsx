@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface BookingsProps {
   onLogout: () => void
@@ -31,10 +31,7 @@ function Bookings({ onLogout }: BookingsProps) {
 
   const fetchBookings = async () => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await axios.get('/api/bookings/my-bookings', {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await apiClient.get('/bookings/my-bookings')
       setBookings(response.data)
     } catch (err) {
       console.error(err)
@@ -47,10 +44,7 @@ function Bookings({ onLogout }: BookingsProps) {
     if (!confirm('Sei sicuro di voler cancellare questa prenotazione?')) return
 
     try {
-      const token = localStorage.getItem('token')
-      await axios.post(`/api/bookings/${id}/cancel`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      await apiClient.post(`/bookings/${id}/cancel`, {})
       fetchBookings()
     } catch (err: any) {
       alert(err.response?.data?.message || 'Errore nella cancellazione')

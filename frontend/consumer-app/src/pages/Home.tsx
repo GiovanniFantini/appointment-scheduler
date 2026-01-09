@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import apiClient from '../lib/axios'
 
 interface HomeProps {
   user: any
@@ -67,9 +67,9 @@ function Home({ user, onLogout }: HomeProps) {
   const fetchServices = async () => {
     try {
       const url = selectedType
-        ? `/api/services?serviceType=${selectedType}`
-        : '/api/services'
-      const response = await axios.get(url)
+        ? `/services?serviceType=${selectedType}`
+        : '/services'
+      const response = await apiClient.get(url)
       setServices(response.data)
     } catch (err) {
       console.error(err)
@@ -81,7 +81,7 @@ function Home({ user, onLogout }: HomeProps) {
 
     setLoadingSlots(true)
     try {
-      const response = await axios.get('/api/availability/available-slots', {
+      const response = await apiClient.get('/availability/available-slots', {
         params: {
           serviceId: selectedService.id,
           date: bookingData.bookingDate
@@ -108,7 +108,6 @@ function Home({ user, onLogout }: HomeProps) {
     if (!selectedService) return
 
     try {
-      const token = localStorage.getItem('token')
       let startTime: Date
       let endTime: Date
 
@@ -127,15 +126,13 @@ function Home({ user, onLogout }: HomeProps) {
         endTime = new Date(`${bookingData.bookingDate}T23:59:59`)
       }
 
-      await axios.post('/api/bookings', {
+      await apiClient.post('/bookings', {
         serviceId: selectedService.id,
         bookingDate: startTime.toISOString(),
         startTime: startTime.toISOString(),
         endTime: endTime.toISOString(),
         numberOfPeople: bookingData.numberOfPeople,
         notes: bookingData.notes
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       })
 
       alert('Prenotazione effettuata con successo! In attesa di conferma dal merchant.')
