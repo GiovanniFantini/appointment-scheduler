@@ -39,7 +39,7 @@ jobs:
           cd frontend/admin-app
           npm run build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: https://appointment-scheduler-api.azurewebsites.net
 
       - name: Prepare deployment package
         run: |
@@ -64,7 +64,7 @@ jobs:
             [
               {
                 "name": "API_URL",
-                "value": "${{ secrets.API_URL || 'https://appointment-scheduler-api.azurewebsites.net' }}",
+                "value": "https://appointment-scheduler-api.azurewebsites.net",
                 "slotSetting": false
               },
               {

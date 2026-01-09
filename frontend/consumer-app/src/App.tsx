@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import Bookings from './pages/Bookings'
+import ApiDebugConsole from './components/ApiDebugConsole'
 
 interface User {
   userId: number
@@ -45,22 +46,25 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={
-          user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/register" element={
-          user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
-        } />
-        <Route path="/" element={
-          user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/bookings" element={
-          user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-      </Routes>
-    </Router>
+    <>
+      <ApiDebugConsole />
+      <Router>
+        <Routes>
+          <Route path="/login" element={
+            user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+          } />
+          <Route path="/register" element={
+            user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
+          } />
+          <Route path="/" element={
+            user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/bookings" element={
+            user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+        </Routes>
+      </Router>
+    </>
   )
 }
 
