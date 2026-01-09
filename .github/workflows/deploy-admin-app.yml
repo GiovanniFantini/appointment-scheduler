@@ -43,6 +43,11 @@ jobs:
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
           package: frontend/admin-app
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Set API_URL environment variable
         uses: azure/appservice-settings@v1
         with:
@@ -55,4 +60,4 @@ jobs:
                 "slotSetting": false
               }
             ]
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
+          mask-inputs: true
