@@ -7,6 +7,7 @@ import AdminPanel from './pages/AdminPanel'
 import Services from './pages/Services'
 import Bookings from './pages/Bookings'
 import Availabilities from './pages/Availabilities'
+import ApiDebugConsole from './components/ApiDebugConsole'
 
 interface User {
   userId: number
@@ -58,31 +59,34 @@ function App() {
   }
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={
-          user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/register" element={
-          user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
-        } />
-        <Route path="/" element={
-          user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/admin" element={
-          user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
-        } />
-        <Route path="/services" element={
-          user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/bookings" element={
-          user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/availabilities" element={
-          user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-      </Routes>
-    </Router>
+    <>
+      <ApiDebugConsole />
+      <Router>
+        <Routes>
+          <Route path="/login" element={
+            user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+          } />
+          <Route path="/register" element={
+            user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
+          } />
+          <Route path="/" element={
+            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/admin" element={
+            user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
+          } />
+          <Route path="/services" element={
+            user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/bookings" element={
+            user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/availabilities" element={
+            user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+        </Routes>
+      </Router>
+    </>
   )
 }
 
