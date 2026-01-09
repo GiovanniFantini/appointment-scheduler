@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-// In produzione, usa l'URL dell'API backend direttamente
+// In produzione, usa l'URL dell'API backend dalla variabile d'ambiente o fallback
 // In sviluppo, usa il percorso relativo che passa attraverso il proxy di Vite
 const baseURL = import.meta.env.PROD
-  ? 'https://appointment-scheduler-api.azurewebsites.net'
+  ? (import.meta.env.VITE_API_URL || 'https://appointment-scheduler-api.azurewebsites.net')
   : '/api'
 
 const apiClient = axios.create({
