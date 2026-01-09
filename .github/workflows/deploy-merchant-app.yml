@@ -36,6 +36,14 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
+      - name: Prepare deployment package
+        run: |
+          cd frontend/merchant-app
+          chmod +x prepare-deploy.sh
+          ./prepare-deploy.sh
+          cd deploy
+          npm install --production
+
       - name: Azure Login
         uses: azure/login@v1
         with:
@@ -46,7 +54,7 @@ jobs:
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME_MERCHANT }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_MERCHANT }}
-          package: frontend/merchant-app
+          package: frontend/merchant-app/deploy
 
       - name: Configure Azure Web App Settings
         uses: azure/appservice-settings@v1

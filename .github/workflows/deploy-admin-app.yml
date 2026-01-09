@@ -41,12 +41,20 @@ jobs:
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
+      - name: Prepare deployment package
+        run: |
+          cd frontend/admin-app
+          chmod +x prepare-deploy.sh
+          ./prepare-deploy.sh
+          cd deploy
+          npm install --production
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME_ADMIN }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
-          package: frontend/admin-app
+          package: frontend/admin-app/deploy
 
       - name: Configure Azure Web App Settings
         uses: azure/appservice-settings@v1
