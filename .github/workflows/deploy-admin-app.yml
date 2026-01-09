@@ -42,3 +42,17 @@ jobs:
           app-name: ${{ secrets.AZURE_WEBAPP_NAME_ADMIN }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
           package: frontend/admin-app
+
+      - name: Set API_URL environment variable
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_ADMIN }}
+          app-settings-json: |
+            [
+              {
+                "name": "API_URL",
+                "value": "${{ secrets.VITE_API_URL }}",
+                "slotSetting": false
+              }
+            ]
+          connection-string: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_ADMIN }}
