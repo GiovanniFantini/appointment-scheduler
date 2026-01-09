@@ -207,7 +207,7 @@ try
                 else
                 {
                     // In Production, seed è false di default (per sicurezza)
-                    seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? false;
+                    seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? true;
                 }
 
                 Console.WriteLine($"Database seeding is {(seedData ? "enabled" : "disabled")} (SEED_DATABASE={(seedData ? "true" : "false")})");
