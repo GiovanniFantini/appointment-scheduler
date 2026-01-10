@@ -295,8 +295,8 @@ Modifica in `Program.cs` per ambiente di produzione.
 - [x] CRUD completo servizi merchant
 - [x] Sistema prenotazioni completo
 
-### Fase 2: Advanced Features
-- [ ] Calendario disponibilita' con slot orari
+### Fase 2: Advanced Features ✅ COMPLETATA
+- [x] Calendario disponibilita' con slot orari (3 modalità: TimeSlot, TimeRange, DayOnly)
 - [ ] Sistema notifiche (email/push)
 - [ ] Recensioni e rating
 - [ ] Upload immagini servizi
