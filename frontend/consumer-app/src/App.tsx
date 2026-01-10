@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Home from './pages/Home'
 import Bookings from './pages/Bookings'
 import ApiDebugConsole from './components/ApiDebugConsole'
+import { STORAGE_KEYS, ROUTES } from './constants'
 
 interface User {
   userId: number
@@ -20,8 +21,8 @@ function App() {
 
   useEffect(() => {
     // Controlla se c'è un token salvato
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+    const userData = localStorage.getItem(STORAGE_KEYS.USER)
 
     if (token && userData) {
       setUser(JSON.parse(userData))
@@ -30,14 +31,14 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token)
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData))
     setUser(userData)
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER)
     setUser(null)
   }
 
@@ -50,17 +51,17 @@ function App() {
       <ApiDebugConsole />
       <Router>
         <Routes>
-          <Route path="/login" element={
-            user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+          <Route path={ROUTES.LOGIN} element={
+            user ? <Navigate to={ROUTES.HOME} /> : <Login onLogin={handleLogin} />
           } />
-          <Route path="/register" element={
-            user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
+          <Route path={ROUTES.REGISTER} element={
+            user ? <Navigate to={ROUTES.HOME} /> : <Register onRegister={handleLogin} />
           } />
-          <Route path="/" element={
-            user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          <Route path={ROUTES.HOME} element={
+            user ? <Home user={user} onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
-          <Route path="/bookings" element={
-            user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
+          <Route path={ROUTES.BOOKINGS} element={
+            user ? <Bookings onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
         </Routes>
       </Router>

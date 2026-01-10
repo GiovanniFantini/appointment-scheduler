@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MerchantApproval from './pages/MerchantApproval'
+import { STORAGE_KEYS, ROUTES, USER_ROLE_NAMES } from './constants'
 
 interface User {
   userId: number
@@ -17,34 +18,34 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+    const userData = localStorage.getItem(STORAGE_KEYS.USER)
 
     if (token && userData) {
       const parsedUser = JSON.parse(userData)
-      if (parsedUser.role === 'Admin') {
+      if (parsedUser.role === USER_ROLE_NAMES[0]) {
         setUser(parsedUser)
       } else {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        localStorage.removeItem(STORAGE_KEYS.TOKEN)
+        localStorage.removeItem(STORAGE_KEYS.USER)
       }
     }
     setLoading(false)
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (userData.role !== 'Admin') {
+    if (userData.role !== USER_ROLE_NAMES[0]) {
       alert('Accesso riservato solo agli amministratori')
       return
     }
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token)
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData))
     setUser(userData)
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER)
     setUser(null)
   }
 
@@ -55,14 +56,14 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={
-          user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+        <Route path={ROUTES.LOGIN} element={
+          user ? <Navigate to={ROUTES.HOME} /> : <Login onLogin={handleLogin} />
         } />
-        <Route path="/" element={
-          user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        <Route path={ROUTES.HOME} element={
+          user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
         } />
-        <Route path="/merchants" element={
-          user ? <MerchantApproval user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        <Route path={ROUTES.MERCHANTS} element={
+          user ? <MerchantApproval user={user} onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
         } />
       </Routes>
     </Router>

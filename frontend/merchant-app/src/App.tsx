@@ -8,6 +8,7 @@ import Services from './pages/Services'
 import Bookings from './pages/Bookings'
 import Availabilities from './pages/Availabilities'
 import ApiDebugConsole from './components/ApiDebugConsole'
+import { STORAGE_KEYS, ROUTES, USER_ROLE_NAMES } from './constants'
 
 interface User {
   userId: number
@@ -23,34 +24,34 @@ function App() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
+    const token = localStorage.getItem(STORAGE_KEYS.TOKEN)
+    const userData = localStorage.getItem(STORAGE_KEYS.USER)
 
     if (token && userData) {
       const parsedUser = JSON.parse(userData)
-      if (parsedUser.role === 'Merchant' || parsedUser.role === 'Admin') {
+      if (parsedUser.role === USER_ROLE_NAMES[2] || parsedUser.role === USER_ROLE_NAMES[0]) {
         setUser(parsedUser)
       } else {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
+        localStorage.removeItem(STORAGE_KEYS.TOKEN)
+        localStorage.removeItem(STORAGE_KEYS.USER)
       }
     }
     setLoading(false)
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (userData.role !== 'Merchant' && userData.role !== 'Admin') {
+    if (userData.role !== USER_ROLE_NAMES[2] && userData.role !== USER_ROLE_NAMES[0]) {
       alert('Accesso riservato solo a merchant e admin')
       return
     }
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token)
+    localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData))
     setUser(userData)
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
+    localStorage.removeItem(STORAGE_KEYS.TOKEN)
+    localStorage.removeItem(STORAGE_KEYS.USER)
     setUser(null)
   }
 
@@ -63,26 +64,26 @@ function App() {
       <ApiDebugConsole />
       <Router>
         <Routes>
-          <Route path="/login" element={
-            user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+          <Route path={ROUTES.LOGIN} element={
+            user ? <Navigate to={ROUTES.HOME} /> : <Login onLogin={handleLogin} />
           } />
-          <Route path="/register" element={
-            user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
+          <Route path={ROUTES.REGISTER} element={
+            user ? <Navigate to={ROUTES.HOME} /> : <Register onRegister={handleLogin} />
           } />
-          <Route path="/" element={
-            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          <Route path={ROUTES.HOME} element={
+            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
           <Route path="/admin" element={
-            user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
+            user && user.role === USER_ROLE_NAMES[0] ? <AdminPanel onLogout={handleLogout} /> : <Navigate to={ROUTES.HOME} />
           } />
-          <Route path="/services" element={
-            user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
+          <Route path={ROUTES.SERVICES} element={
+            user ? <Services onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
-          <Route path="/bookings" element={
-            user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
+          <Route path={ROUTES.BOOKINGS} element={
+            user ? <Bookings onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
           <Route path="/availabilities" element={
-            user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Availabilities onLogout={handleLogout} /> : <Navigate to={ROUTES.LOGIN} />
           } />
         </Routes>
       </Router>

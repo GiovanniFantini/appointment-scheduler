@@ -1,6 +1,7 @@
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.API.Constants;
 
 namespace AppointmentScheduler.Data;
 
@@ -63,13 +64,23 @@ public static class DbInitializer
 
         Console.WriteLine("Creating default admin user...");
 
+        // Leggi credenziali admin dalle variabili d'ambiente o usa i valori di default
+        var adminEmail = Environment.GetEnvironmentVariable(ConfigKeys.Environment.AdminDefaultEmail)
+            ?? Defaults.Admin.Email;
+        var adminPassword = Environment.GetEnvironmentVariable(ConfigKeys.Environment.AdminDefaultPassword)
+            ?? Defaults.Admin.Password;
+        var adminFirstName = Environment.GetEnvironmentVariable(ConfigKeys.Environment.AdminDefaultFirstName)
+            ?? Defaults.Admin.FirstName;
+        var adminLastName = Environment.GetEnvironmentVariable(ConfigKeys.Environment.AdminDefaultLastName)
+            ?? Defaults.Admin.LastName;
+
         // Crea utente admin di default
         var adminUser = new User
         {
-            Email = "admin@admin.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"), // Password: "password"
-            FirstName = "Admin",
-            LastName = "User",
+            Email = adminEmail,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+            FirstName = adminFirstName,
+            LastName = adminLastName,
             PhoneNumber = null,
             Role = UserRole.Admin,
             IsActive = true,
@@ -80,8 +91,8 @@ public static class DbInitializer
         context.SaveChanges();
 
         Console.WriteLine("Default admin user created successfully!");
-        Console.WriteLine("  Email: admin@admin.com");
-        Console.WriteLine("  Password: password");
+        Console.WriteLine($"  Email: {adminEmail}");
+        Console.WriteLine($"  Password: {new string('*', adminPassword.Length)} (hidden for security)");
         Console.WriteLine("  Role: Admin");
     }
 }

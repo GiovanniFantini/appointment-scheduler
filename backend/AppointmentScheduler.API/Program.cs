@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Core.Services;
+using AppointmentScheduler.API.Constants;
 
 try
 {
@@ -48,10 +49,10 @@ try
     // Swagger con supporto JWT
     builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new OpenApiInfo
+        options.SwaggerDoc(ApiEndpoints.Swagger.Version, new OpenApiInfo
         {
-            Title = "Appointment Scheduler API",
-            Version = "v1",
+            Title = ApiEndpoints.Swagger.Title,
+            Version = ApiEndpoints.Swagger.Version,
             Description = "API per la gestione di prenotazioni multi-verticale (B2C e B2B)"
         });
 
@@ -83,14 +84,16 @@ try
     Console.WriteLine("Swagger configured");
 
     // Database Configuration
-
     var testSetting = builder.Configuration.GetValue<string>("TestSetting");
     Console.WriteLine($"TestSetting: {testSetting}");
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+    // Prova prima la variabile d'ambiente, poi il file di configurazione
+    var connectionString = Environment.GetEnvironmentVariable(ConfigKeys.Environment.PostgresConnectionString)
+        ?? builder.Configuration.GetConnectionString(ConfigKeys.ConnectionStrings.DefaultConnection);
+
     if (string.IsNullOrWhiteSpace(connectionString))
     {
-        connectionString = Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
-
+        Console.WriteLine("WARNING: No database connection string found in environment variables or configuration.");
     }
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -111,9 +114,20 @@ try
     Console.WriteLine("Application services registered");
 
     // JWT Authentication
-    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-    var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
-    Console.WriteLine("JWT settings loaded");
+    // Prova prima le variabili d'ambiente, poi la configurazione, infine i valori di default
+    var secretKey = Environment.GetEnvironmentVariable(ConfigKeys.Environment.JwtSecretKey)
+        ?? builder.Configuration.GetSection(ConfigKeys.Jwt.SectionName)[ConfigKeys.Jwt.SecretKey]
+        ?? throw new InvalidOperationException("JWT SecretKey not configured. Set JWT_SECRET_KEY environment variable.");
+
+    var issuer = Environment.GetEnvironmentVariable(ConfigKeys.Environment.JwtIssuer)
+        ?? builder.Configuration.GetSection(ConfigKeys.Jwt.SectionName)[ConfigKeys.Jwt.Issuer]
+        ?? Defaults.Jwt.Issuer;
+
+    var audience = Environment.GetEnvironmentVariable(ConfigKeys.Environment.JwtAudience)
+        ?? builder.Configuration.GetSection(ConfigKeys.Jwt.SectionName)[ConfigKeys.Jwt.Audience]
+        ?? Defaults.Jwt.Audience;
+
+    Console.WriteLine($"JWT settings loaded - Issuer: {issuer}, Audience: {audience}");
 
     builder.Services.AddAuthentication(options =>
     {
@@ -128,8 +142,8 @@ try
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
+            ValidIssuer = issuer,
+            ValidAudience = audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
         };
     });
@@ -137,19 +151,27 @@ try
 
     builder.Services.AddAuthorization(options =>
     {
-        options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
-        options.AddPolicy("MerchantOnly", policy => policy.RequireRole("Merchant", "Admin"));
-        options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Merchant", "Admin"));
+        options.AddPolicy(AuthConstants.Policies.AdminOnly,
+            policy => policy.RequireRole(AuthConstants.Roles.Admin));
+        options.AddPolicy(AuthConstants.Policies.MerchantOnly,
+            policy => policy.RequireRole(AuthConstants.Roles.Merchant, AuthConstants.Roles.Admin));
+        options.AddPolicy(AuthConstants.Policies.UserOnly,
+            policy => policy.RequireRole(AuthConstants.Roles.User, AuthConstants.Roles.Merchant, AuthConstants.Roles.Admin));
     });
     Console.WriteLine("Authorization configured");
 
     // CORS per frontend
-    var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>() ?? Array.Empty<string>();
+    // Prova prima la variabile d'ambiente (separata da virgole), poi la configurazione
+    var corsOriginsEnv = Environment.GetEnvironmentVariable(ConfigKeys.Environment.CorsOrigins);
+    var corsOrigins = !string.IsNullOrWhiteSpace(corsOriginsEnv)
+        ? corsOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+        : builder.Configuration.GetSection(ConfigKeys.Cors.AllowedOrigins).Get<string[]>() ?? Array.Empty<string>();
+
     Console.WriteLine($"CORS Origins configured: {string.Join(", ", corsOrigins)}");
 
     builder.Services.AddCors(options =>
     {
-        options.AddPolicy("AllowFrontend", policy =>
+        options.AddPolicy(ConfigKeys.Cors.PolicyName, policy =>
         {
             if (corsOrigins.Length > 0)
             {
@@ -239,8 +261,8 @@ try
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Appointment Scheduler API v1");
-        c.RoutePrefix = "swagger"; // Serve Swagger UI at /swagger
+        c.SwaggerEndpoint(ApiEndpoints.Swagger.JsonEndpoint, $"{ApiEndpoints.Swagger.Title} {ApiEndpoints.Swagger.Version}");
+        c.RoutePrefix = ApiEndpoints.Swagger.RoutePrefix; // Serve Swagger UI at /swagger
     });
     Console.WriteLine("Swagger UI enabled");
 
@@ -249,15 +271,15 @@ try
         app.UseHttpsRedirection();
     }
 
-    app.UseCors("AllowFrontend");
+    app.UseCors(ConfigKeys.Cors.PolicyName);
     app.UseAuthentication();
     app.UseAuthorization();
     app.MapControllers();
 
     // Map health check endpoints
-    app.MapHealthChecks("/health");
-    app.MapHealthChecks("/health/ready");
-    app.MapHealthChecks("/health/live");
+    app.MapHealthChecks(ApiEndpoints.HealthChecks.Health);
+    app.MapHealthChecks(ApiEndpoints.HealthChecks.Ready);
+    app.MapHealthChecks(ApiEndpoints.HealthChecks.Live);
     Console.WriteLine("Health check endpoints mapped");
 
     Console.WriteLine("Middleware pipeline configured");
