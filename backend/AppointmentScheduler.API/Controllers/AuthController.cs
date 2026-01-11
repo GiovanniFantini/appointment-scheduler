@@ -29,11 +29,22 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
     {
-        var response = await _authService.RegisterAsync(request);
+        try
+        {
+            var response = await _authService.RegisterAsync(request);
 
-        if (response == null)
-            return BadRequest(new { message = "Email già registrata" });
+            if (response == null)
+                return BadRequest(new { message = "Email già registrata" });
 
-        return Ok(response);
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Errore durante la registrazione. Riprova più tardi." });
+        }
     }
 }
