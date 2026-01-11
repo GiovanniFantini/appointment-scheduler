@@ -16,6 +16,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Booking> Bookings { get; set; }
     public DbSet<Availability> Availabilities { get; set; }
     public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
+    public DbSet<Employee> Employees { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +71,11 @@ public class ApplicationDbContext : DbContext
                 .WithMany(s => s.Bookings)
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.Bookings)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // Availability configuration
@@ -98,6 +104,24 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.AvailabilityId);
+        });
+
+        // Employee configuration
+        modelBuilder.Entity<Employee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
+            entity.HasIndex(e => e.Email);
+            entity.Property(e => e.BadgeCode).HasMaxLength(50);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.Employees)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.MerchantId);
         });
     }
 }
