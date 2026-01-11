@@ -4,7 +4,6 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import Bookings from './pages/Bookings'
-import ApiDebugConsole from './components/ApiDebugConsole'
 
 interface User {
   userId: number
@@ -46,9 +45,7 @@ function App() {
   }
 
   return (
-    <>
-      <ApiDebugConsole />
-      <Router>
+    <Router>
         <Routes>
           <Route path="/login" element={
             user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
@@ -64,7 +61,6 @@ function App() {
           } />
         </Routes>
       </Router>
-    </>
   )
 }
 
