@@ -54,6 +54,10 @@ public class AuthService : IAuthService
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return null;
 
+        // Verifica che BusinessName sia presente per i Merchant
+        if (request.Role == UserRole.Merchant && string.IsNullOrWhiteSpace(request.BusinessName))
+            throw new ArgumentException("BusinessName è obbligatorio per i Merchant");
+
         var user = new User
         {
             Email = request.Email,
@@ -76,7 +80,8 @@ public class AuthService : IAuthService
                 UserId = user.Id,
                 BusinessName = request.BusinessName,
                 VatNumber = request.VatNumber,
-                IsApproved = false // Deve essere approvato dall'admin
+                IsApproved = false, // Deve essere approvato dall'admin
+                User = user // Imposta la navigation property per evitare errori di salvataggio
             };
 
             _context.Merchants.Add(merchant);
