@@ -7,6 +7,7 @@ import AdminPanel from './pages/AdminPanel'
 import Services from './pages/Services'
 import Bookings from './pages/Bookings'
 import Availabilities from './pages/Availabilities'
+import Employees from './pages/Employees'
 
 interface User {
   userId: number
@@ -80,6 +81,9 @@ function App() {
           } />
           <Route path="/availabilities" element={
             user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/employees" element={
+            user ? <Employees onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
         </Routes>
       </Router>

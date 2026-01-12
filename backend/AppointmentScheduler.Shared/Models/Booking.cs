@@ -7,6 +7,7 @@ public class Booking
     public int Id { get; set; }
     public int UserId { get; set; } // FK a User (cliente)
     public int ServiceId { get; set; } // FK a Service
+    public int? EmployeeId { get; set; } // FK opzionale a Employee (dipendente assegnato)
     public DateTime BookingDate { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
@@ -20,4 +21,5 @@ public class Booking
     // Navigation properties
     public User User { get; set; } = null!;
     public Service Service { get; set; } = null!;
+    public Employee? Employee { get; set; }
 }

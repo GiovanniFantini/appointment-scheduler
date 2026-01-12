@@ -1,0 +1,38 @@
+namespace AppointmentScheduler.Shared.Models;
+
+/// <summary>
+/// Rappresenta un dipendente di un merchant
+/// </summary>
+public class Employee
+{
+    public int Id { get; set; }
+    public int MerchantId { get; set; } // FK a Merchant
+    public string FirstName { get; set; } = string.Empty;
+    public string LastName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Codice badge/identificativo del dipendente (es: "EMP001")
+    /// </summary>
+    public string? BadgeCode { get; set; }
+
+    /// <summary>
+    /// Ruolo del dipendente (es: "Receptionist", "Stylist", "Trainer", etc.)
+    /// </summary>
+    public string? Role { get; set; }
+
+    /// <summary>
+    /// Configurazione turni e disponibilità (JSON flessibile)
+    /// Es: {"shifts": [{"day": "Monday", "start": "09:00", "end": "17:00"}]}
+    /// </summary>
+    public string? ShiftsConfiguration { get; set; }
+
+    public bool IsActive { get; set; } = true;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+
+    // Navigation properties
+    public Merchant Merchant { get; set; } = null!;
+    public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+}
