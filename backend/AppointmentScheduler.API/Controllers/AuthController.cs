@@ -42,7 +42,7 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { message = "Errore durante la registrazione. Riprova più tardi." });
         }
