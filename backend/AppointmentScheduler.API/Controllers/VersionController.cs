@@ -114,9 +114,9 @@ public class VersionController : ControllerBase
         var assembly = Assembly.GetExecutingAssembly();
         var location = assembly.Location;
 
-        if (!string.IsNullOrEmpty(location) && System.IO.File.Exists(location))
+        if (!string.IsNullOrEmpty(location) && global::System.IO.File.Exists(location))
         {
-            return System.IO.File.GetLastWriteTimeUtc(location);
+            return global::System.IO.File.GetLastWriteTimeUtc(location);
         }
 
         return DateTime.UtcNow;
