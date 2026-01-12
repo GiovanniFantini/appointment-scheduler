@@ -59,11 +59,19 @@ function Services({ onLogout }: ServicesProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Prepara i dati convertendo stringhe vuote in null e stringhe numeriche in numeri
+    const payload = {
+      ...formData,
+      price: formData.price === '' ? null : parseFloat(formData.price),
+      slotDurationMinutes: formData.slotDurationMinutes === '' ? null : parseInt(formData.slotDurationMinutes),
+      maxCapacityPerSlot: formData.maxCapacityPerSlot === '' ? null : parseInt(formData.maxCapacityPerSlot)
+    }
+
     try {
       if (editingId) {
-        await apiClient.put(`/services/${editingId}`, formData)
+        await apiClient.put(`/services/${editingId}`, payload)
       } else {
-        await apiClient.post('/services', formData)
+        await apiClient.post('/services', payload)
       }
       fetchServices()
       setShowForm(false)
