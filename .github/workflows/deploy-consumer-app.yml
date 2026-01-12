@@ -29,12 +29,37 @@ jobs:
           cd frontend/consumer-app
           npm ci
 
+      - name: Extract version info
+        id: version
+        run: |
+          # Get git tag (semantic version)
+          GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.1")
+          VERSION=${GIT_TAG#v}
+
+          # Get commit SHA (short)
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+
+          # Build number from run number
+          BUILD_NUMBER=${{ github.run_number }}
+
+          # Build time
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "GIT_COMMIT=$GIT_COMMIT" >> $GITHUB_OUTPUT
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_OUTPUT
+
       - name: Build application
         run: |
           cd frontend/consumer-app
           npm run build
         env:
           VITE_API_URL: https://appointment-scheduler-api.azurewebsites.net
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
+          BUILD_NUMBER: ${{ steps.version.outputs.BUILD_NUMBER }}
+          BUILD_TIME: ${{ steps.version.outputs.BUILD_TIME }}
 
       - name: Prepare deployment package
         run: |

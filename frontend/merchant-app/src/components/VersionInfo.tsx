@@ -8,8 +8,12 @@ interface VersionData {
 }
 
 function VersionInfo() {
+  // Use build-time injected version info
+  const frontendVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.1';
+  const gitCommit = typeof __GIT_COMMIT__ !== 'undefined' ? __GIT_COMMIT__ : 'dev';
+
   const [version, setVersion] = useState<VersionData>({
-    frontend: '0.0.1', // Default from package.json
+    frontend: `${frontendVersion}+${gitCommit}`,
     backend: 'Loading...',
     environment: import.meta.env.MODE || 'development'
   })

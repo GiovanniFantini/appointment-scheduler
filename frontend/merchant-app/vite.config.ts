@@ -1,8 +1,9 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { viteVersionPlugin } from './vite-version-plugin'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), viteVersionPlugin()],
   server: {
     port: 5174,
     proxy: {
