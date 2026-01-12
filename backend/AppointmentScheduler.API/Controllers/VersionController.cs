@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace AppointmentScheduler.API.Controllers;
 
+/// <summary>
+/// Controller per informazioni sulla versione dell'API
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class VersionController : ControllerBase
