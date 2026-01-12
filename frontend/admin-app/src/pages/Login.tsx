@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import apiClient from '../lib/axios'
 import ApiDebugConsole from '../components/ApiDebugConsole'
+import VersionInfo from '../components/VersionInfo'
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void
@@ -82,6 +83,8 @@ function Login({ onLogin }: LoginProps) {
         <p className="mt-4 text-center text-gray-500 text-sm">
           Accesso riservato agli amministratori
         </p>
+
+        <VersionInfo />
       </div>
     </div>
   )
