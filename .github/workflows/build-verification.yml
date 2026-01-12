@@ -1,0 +1,42 @@
+name: Build Verification
+
+on:
+  push:
+    branches:
+      - 'claude/**'
+    paths:
+      - 'backend/**'
+  pull_request:
+    paths:
+      - 'backend/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Build and Verify Backend API
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj
+
+      - name: Build in Release mode
+        run: dotnet build backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj --configuration Release --no-restore
+
+      - name: Publish (verify releasability)
+        run: dotnet publish backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj -c Release -o ./publish --no-build
+
+      - name: Verify publish artifacts
+        run: |
+          echo "✓ Build completato con successo!"
+          echo "✓ Pubblicazione completata con successo!"
+          echo ""
+          echo "Artifact pubblicati:"
+          ls -lh ./publish/
