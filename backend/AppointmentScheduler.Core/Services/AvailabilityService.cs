@@ -23,7 +23,7 @@ public class AvailabilityService : IAvailabilityService
         var availabilities = await _context.Availabilities
             .Include(a => a.Service)
             .Include(a => a.Slots)
-            .Where(a => a.Service.MerchantId == merchantId)
+            .Where(a => a.Service!.MerchantId == merchantId)
             .OrderBy(a => a.IsRecurring ? a.DayOfWeek : 0)
             .ThenBy(a => a.SpecificDate)
             .ThenBy(a => a.StartTime)
@@ -106,7 +106,7 @@ public class AvailabilityService : IAvailabilityService
         var availability = await _context.Availabilities
             .Include(a => a.Service)
             .Include(a => a.Slots)
-            .FirstOrDefaultAsync(a => a.Id == id && a.Service.MerchantId == merchantId);
+            .FirstOrDefaultAsync(a => a.Id == id && a.Service!.MerchantId == merchantId);
 
         if (availability == null)
             return null;
@@ -125,7 +125,7 @@ public class AvailabilityService : IAvailabilityService
     {
         var availability = await _context.Availabilities
             .Include(a => a.Service)
-            .FirstOrDefaultAsync(a => a.Id == id && a.Service.MerchantId == merchantId);
+            .FirstOrDefaultAsync(a => a.Id == id && a.Service!.MerchantId == merchantId);
 
         if (availability == null)
             return false;
@@ -141,12 +141,12 @@ public class AvailabilityService : IAvailabilityService
         var availability = await _context.Availabilities
             .Include(a => a.Service)
             .Include(a => a.Slots)
-            .FirstOrDefaultAsync(a => a.Id == availabilityId && a.Service.MerchantId == merchantId);
+            .FirstOrDefaultAsync(a => a.Id == availabilityId && a.Service!.MerchantId == merchantId);
 
         if (availability == null)
             return null;
 
-        if (availability.Service.BookingMode != BookingMode.TimeSlot)
+        if (availability.Service!.BookingMode != BookingMode.TimeSlot)
             throw new InvalidOperationException("Slots can only be added to services with TimeSlot booking mode");
 
         var newSlots = slotsRequest.Select(s => new AvailabilitySlot

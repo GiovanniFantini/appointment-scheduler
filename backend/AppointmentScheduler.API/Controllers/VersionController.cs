@@ -4,6 +4,9 @@ using System.Reflection;
 
 namespace AppointmentScheduler.API.Controllers;
 
+/// <summary>
+/// Controller per informazioni sulla versione dell'API
+/// </summary>
 [ApiController]
 [Route("api/[controller]")]
 public class VersionController : ControllerBase
@@ -114,9 +117,9 @@ public class VersionController : ControllerBase
         var assembly = Assembly.GetExecutingAssembly();
         var location = assembly.Location;
 
-        if (!string.IsNullOrEmpty(location) && System.IO.File.Exists(location))
+        if (!string.IsNullOrEmpty(location) && global::System.IO.File.Exists(location))
         {
-            return System.IO.File.GetLastWriteTimeUtc(location);
+            return global::System.IO.File.GetLastWriteTimeUtc(location);
         }
 
         return DateTime.UtcNow;
