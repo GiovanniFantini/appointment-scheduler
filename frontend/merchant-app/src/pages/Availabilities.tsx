@@ -76,9 +76,24 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
       ])
       setServices(servicesRes.data)
       setAvailabilities(availabilitiesRes.data)
-    } catch (err) {
-      console.error(err)
-      alert('Errore nel caricamento dei dati')
+    } catch (err: any) {
+      console.error('Errore nel caricamento dei dati:', err)
+
+      // Gestione errori più dettagliata
+      if (err.response?.status === 401) {
+        const errorMessage = err.response?.data?.message || err.response?.data || 'Non autorizzato'
+        alert(`Errore di autenticazione: ${errorMessage}\n\nAssicurati di essere loggato come merchant.`)
+      } else if (err.response?.status === 400) {
+        const errorMessage = err.response?.data?.message || err.response?.data || 'Richiesta non valida'
+        alert(`Errore: ${errorMessage}`)
+      } else if (err.response) {
+        const errorMessage = err.response?.data?.message || err.response?.data || 'Errore sconosciuto'
+        alert(`Errore nel caricamento dei dati: ${errorMessage}`)
+      } else if (err.request) {
+        alert('Errore di rete: impossibile contattare il server. Verifica la tua connessione.')
+      } else {
+        alert(`Errore: ${err.message || 'Errore sconosciuto'}`)
+      }
     } finally {
       setLoading(false)
     }
