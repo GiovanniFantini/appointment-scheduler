@@ -33,4 +33,37 @@ apiClient.interceptors.request.use(
   }
 )
 
+// Interceptor per gestire gli errori di risposta
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Log dell'errore per debug
+    console.error('API Error:', {
+      status: error.response?.status,
+      data: error.response?.data,
+      url: error.config?.url
+    })
+
+    // Se ricevi 401 Unauthorized, probabilmente il token è scaduto o non valido
+    if (error.response?.status === 401) {
+      // Rimuovi il token scaduto
+      const currentPath = window.location.pathname
+
+      // Solo se non siamo già sulla pagina di login, mostra un alert e redirect
+      if (!currentPath.includes('/login')) {
+        console.warn('Token scaduto o non valido, redirect al login')
+
+        // Mostra un messaggio più dettagliato se disponibile
+        const errorMessage = error.response?.data?.message || error.response?.data || 'Sessione scaduta'
+
+        // Non fare alert qui, lascia gestire al componente
+        // ma logga per debug
+        console.error('Errore 401:', errorMessage)
+      }
+    }
+
+    return Promise.reject(error)
+  }
+)
+
 export default apiClient
