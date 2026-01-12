@@ -203,6 +203,168 @@ test: Aggiunge test per BookingService
 - node_modules/, bin/, obj/, dist/
 - File personali IDE
 
+## Versioning Automatico
+
+Questo progetto usa **Git-based semantic versioning** automatico. Le versioni sono gestite tramite Git tags e NON devono essere modificate manualmente.
+
+### Sistema di Versioning
+
+**Formato versione:** `{tag}+{commit}` (es. `0.0.1+abc1234`)
+
+**Fonti:**
+- **Version number**: Git tag (es. `v0.0.1`, `v1.2.3`)
+- **Commit SHA**: Git commit hash corto (es. `abc1234`)
+- **Build number**: GitHub Actions run number
+- **Build time**: Timestamp UTC del build
+
+### Regole CRITICHE
+
+#### ❌ NON FARE MAI:
+1. **NON** modificare manualmente versioni in `package.json`
+2. **NON** modificare manualmente versioni in `.csproj`
+3. **NON** hardcodare versioni nel codice
+4. **NON** rimuovere o modificare `vite-version-plugin.ts`
+5. **NON** rimuovere injection di env vars nei workflow GitHub Actions
+
+#### ✅ FARE SEMPRE:
+1. **USA Git tags** per incrementare le versioni:
+   ```bash
+   # Patch (0.0.1 → 0.0.2)
+   git tag v0.0.2
+   git push origin v0.0.2
+
+   # Minor (0.0.2 → 0.1.0)
+   git tag v0.1.0
+   git push origin v0.1.0
+
+   # Major (0.1.0 → 1.0.0)
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **Verifica versioning** dopo modifiche ai frontend/backend:
+   ```bash
+   # Test build frontend
+   cd frontend/consumer-app && npm run build
+
+   # Verifica che vite-version-plugin.ts sia incluso
+   # Verifica che vite.config.ts usi viteVersionPlugin()
+   ```
+
+### File Critici per Versioning
+
+**NON MODIFICARE questi file senza consultare la documentazione:**
+
+```
+Backend:
+✓ backend/AppointmentScheduler.API/Controllers/VersionController.cs
+  - Legge VERSION, GIT_COMMIT_SHA da environment variables
+  - Fallback a git commands per sviluppo locale
+
+Frontend (tutti e 3: consumer, merchant, admin):
+✓ vite-version-plugin.ts
+  - Inietta versione Git durante build
+✓ vite.config.ts
+  - DEVE includere viteVersionPlugin() nei plugins
+✓ src/vite-env.d.ts
+  - Definisce tipi TypeScript per __APP_VERSION__, __GIT_COMMIT__
+✓ src/components/VersionInfo.tsx
+  - Mostra versioni frontend e backend
+
+GitHub Actions:
+✓ .github/workflows/deploy-*.yml
+  - Step "Extract version info" OBBLIGATORIO
+  - Injection env vars durante build OBBLIGATORIA
+```
+
+### Come Funziona
+
+**Sviluppo Locale:**
+```bash
+# Il vite-version-plugin esegue automaticamente:
+git describe --tags --abbrev=0  # → v0.0.1
+git rev-parse --short HEAD      # → abc1234
+
+# Risultato: versione "0.0.1+abc1234"
+```
+
+**GitHub Actions (Production):**
+```yaml
+# Workflow estrae Git info
+- name: Extract version info
+  run: |
+    GIT_TAG=$(git describe --tags --abbrev=0)
+    GIT_COMMIT=$(git rev-parse --short HEAD)
+    # ...
+
+# Build con env vars
+- name: Build
+  env:
+    VERSION: ${{ steps.version.outputs.VERSION }}
+    GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
+```
+
+### Quando Creare un Tag
+
+Crea un nuovo Git tag quando:
+- ✅ Feature completa pronta per rilascio
+- ✅ Bugfix critico in produzione
+- ✅ Breaking changes (major version)
+- ✅ Prima del merge in `main`
+
+**Procedura:**
+```bash
+# 1. Verifica che tutto sia committato
+git status
+
+# 2. Crea tag annotato con messaggio
+git tag -a v0.1.0 -m "Release 0.1.0: Aggiunge sistema prenotazioni"
+
+# 3. Push del tag
+git push origin v0.1.0
+
+# 4. GitHub Actions userà automaticamente questo tag
+```
+
+### Troubleshooting Versioning
+
+**Problema:** Frontend mostra "0.0.1+dev" invece del commit SHA
+**Soluzione:**
+```bash
+# Verifica che vite-version-plugin.ts esista
+ls frontend/consumer-app/vite-version-plugin.ts
+
+# Verifica che vite.config.ts lo importi
+grep "viteVersionPlugin" frontend/consumer-app/vite.config.ts
+
+# Rebuild
+npm run build
+```
+
+**Problema:** Backend mostra "0.0.0+dev"
+**Soluzione:**
+```bash
+# Verifica Git tags
+git tag -l
+
+# Se nessun tag esiste, creane uno
+git tag v0.0.1
+git push origin v0.0.1
+
+# Verifica VersionController.cs
+grep "GetGitTag" backend/AppointmentScheduler.API/Controllers/VersionController.cs
+```
+
+**Problema:** GitHub Actions non inietta versioni
+**Soluzione:**
+```yaml
+# Verifica che il workflow abbia lo step "Extract version info"
+# Verifica che le env vars siano passate al build:
+env:
+  VERSION: ${{ steps.version.outputs.VERSION }}
+  GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
+```
+
 ## Code Review Checklist
 
 Prima di ogni commit verificare:
@@ -214,6 +376,9 @@ Prima di ogni commit verificare:
 - [ ] Async/await per operazioni DB
 - [ ] Loading states nel frontend
 - [ ] Gestione errori user-friendly
+- [ ] **Versioning automatico NON modificato manualmente**
+- [ ] **vite-version-plugin.ts presente in tutti i frontend**
+- [ ] **GitHub Actions workflows includono "Extract version info" step**
 
 ## Testing Locale - Setup Standard
 

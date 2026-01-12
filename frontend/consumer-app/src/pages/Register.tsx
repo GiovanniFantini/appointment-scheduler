@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import VersionInfo from '../components/VersionInfo'
 
 interface RegisterProps {
   onRegister: (user: any, token: string) => void
@@ -132,6 +133,8 @@ function Register({ onRegister }: RegisterProps) {
             Accedi
           </Link>
         </p>
+
+        <VersionInfo />
       </div>
     </div>
   )

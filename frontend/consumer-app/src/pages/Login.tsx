@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import VersionInfo from '../components/VersionInfo'
 
 interface LoginProps {
   onLogin: (user: any, token: string) => void
@@ -84,6 +85,8 @@ function Login({ onLogin }: LoginProps) {
             Registrati
           </Link>
         </p>
+
+        <VersionInfo />
       </div>
     </div>
   )
