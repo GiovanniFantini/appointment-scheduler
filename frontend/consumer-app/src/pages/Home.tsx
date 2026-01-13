@@ -158,68 +158,126 @@ function Home({ user, onLogout }: HomeProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Appointment Scheduler</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">Ciao, {user.firstName}!</span>
-            <Link to="/bookings" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-              Le mie prenotazioni
-            </Link>
-            <button onClick={onLogout} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">
-              Esci
-            </button>
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Appointment Scheduler
+            </h1>
+            <div className="flex items-center gap-3">
+              <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-blue/30">
+                <span className="text-gray-300">👋 Ciao, <span className="text-neon-cyan font-semibold">{user.firstName}</span>!</span>
+              </div>
+              <Link to="/bookings" className="bg-gradient-to-r from-neon-blue to-neon-purple text-white px-5 py-2.5 rounded-xl hover:shadow-glow-blue transition-all font-semibold transform hover:scale-105">
+                📅 Prenotazioni
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-20">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-5xl font-bold mb-4">Prenota i tuoi servizi preferiti</h2>
-          <p className="text-xl mb-8">Un'unica piattaforma per ristoranti, sport, wellness e molto altro</p>
+      {/* Hero Section Futuristic */}
+      <section className="relative overflow-hidden py-24">
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-neon-blue opacity-20 rounded-full blur-3xl animate-float"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-neon-purple opacity-20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <h2 className="text-6xl font-bold gradient-text mb-6 animate-fade-in">
+            Prenota il Futuro
+          </h2>
+          <p className="text-xl text-gray-300 mb-8 animate-slide-up">
+            Sistema di prenotazioni intelligente per ristoranti, sport, wellness e molto altro
+          </p>
+          <div className="flex justify-center gap-4 animate-scale-in">
+            <div className="glass-card px-6 py-3 rounded-2xl border border-neon-blue/30">
+              <div className="text-neon-cyan font-bold text-2xl">{services.length}</div>
+              <div className="text-gray-400 text-sm">Servizi Disponibili</div>
+            </div>
+            <div className="glass-card px-6 py-3 rounded-2xl border border-neon-purple/30">
+              <div className="text-neon-purple font-bold text-2xl">24/7</div>
+              <div className="text-gray-400 text-sm">Sempre Online</div>
+            </div>
+          </div>
         </div>
       </section>
 
+      {/* Categories Section */}
       <section className="container mx-auto px-4 py-12">
-        <h3 className="text-3xl font-bold text-gray-800 mb-8">Esplora per categoria</h3>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <h3 className="text-4xl font-bold gradient-text mb-8 text-center">Esplora per Categoria</h3>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-12">
           <button
             onClick={() => setSelectedType(null)}
-            className={`p-4 rounded-lg font-semibold ${!selectedType ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
+            className={`p-6 rounded-2xl font-semibold transition-all transform hover:scale-105 ${
+              !selectedType
+                ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white shadow-glow-blue'
+                : 'glass-card hover-glow border border-white/10 text-gray-300'
+            }`}
           >
-            Tutti
+            <div className="text-3xl mb-2">✨</div>
+            <div className="text-sm">Tutti</div>
           </button>
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedType(cat.id)}
-              className={`p-4 rounded-lg font-semibold ${selectedType === cat.id ? 'bg-blue-600 text-white' : 'bg-white text-gray-800'}`}
+              className={`p-6 rounded-2xl font-semibold transition-all transform hover:scale-105 ${
+                selectedType === cat.id
+                  ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white shadow-glow-blue'
+                  : 'glass-card hover-glow border border-white/10 text-gray-300'
+              }`}
             >
-              {cat.icon} {cat.name}
+              <div className="text-3xl mb-2">{cat.icon}</div>
+              <div className="text-sm">{cat.name}</div>
             </button>
           ))}
         </div>
 
-        {/* Modal di prenotazione dinamico */}
+        {/* Modal di prenotazione futuristico */}
         {showBookingForm && selectedService && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto">
-              <h3 className="text-2xl font-bold mb-2">{selectedService.name}</h3>
-              <p className="text-gray-600 mb-4">{selectedService.merchantName}</p>
-              <div className="bg-blue-50 p-3 rounded mb-4 text-sm">
-                {getBookingModeDescription(selectedService.bookingMode)}
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="glass-card rounded-3xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto border border-white/20 shadow-glow-purple animate-scale-in">
+              <div className="flex items-start justify-between mb-6">
+                <div>
+                  <h3 className="text-3xl font-bold gradient-text mb-2">{selectedService.name}</h3>
+                  <p className="text-gray-400">{selectedService.merchantName}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowBookingForm(false)
+                    setBookingData({ bookingDate: '', startTime: '', endTime: '', numberOfPeople: 1, notes: '' })
+                    setAvailableSlots([])
+                  }}
+                  className="glass-card-dark p-2 rounded-xl hover:bg-red-500/20 transition-all"
+                >
+                  <svg className="w-6 h-6 text-gray-400 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="glass-card-dark p-4 rounded-xl mb-6 border border-neon-blue/20">
+                <div className="text-neon-cyan text-sm font-semibold">
+                  {getBookingModeDescription(selectedService.bookingMode)}
+                </div>
               </div>
 
-              <form onSubmit={submitBooking} className="space-y-4">
+              <form onSubmit={submitBooking} className="space-y-5">
                 {/* Data (sempre presente) */}
                 <div>
-                  <label className="block text-sm font-bold mb-2">Data *</label>
+                  <label className="block text-white/90 text-sm font-semibold mb-2">Data *</label>
                   <input
                     type="date"
                     value={bookingData.bookingDate}
                     onChange={(e) => setBookingData({ ...bookingData, bookingDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-blue focus:shadow-glow-blue transition-all"
                     required
                     min={new Date().toISOString().split('T')[0]}
                   />
@@ -230,27 +288,33 @@ function Home({ user, onLogout }: HomeProps) {
                   <>
                     {bookingData.bookingDate && (
                       <div>
-                        <label className="block text-sm font-bold mb-2">Seleziona Slot *</label>
+                        <label className="block text-white/90 text-sm font-semibold mb-3">Seleziona Slot *</label>
                         {loadingSlots ? (
-                          <div className="text-center py-4 text-gray-600">Caricamento slot...</div>
+                          <div className="text-center py-8 text-gray-400 flex items-center justify-center gap-2">
+                            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Caricamento slot...
+                          </div>
                         ) : availableSlots.length === 0 ? (
-                          <div className="bg-yellow-50 border border-yellow-200 rounded p-4 text-sm text-yellow-800">
-                            Nessuno slot disponibile per questa data. Prova un'altra data.
+                          <div className="glass-card-dark border border-yellow-500/30 rounded-xl p-4 text-sm text-yellow-400">
+                            ⚠️ Nessuno slot disponibile per questa data. Prova un'altra data.
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto">
+                          <div className="grid grid-cols-3 gap-2 max-h-60 overflow-y-auto pr-2">
                             {availableSlots.map((slot, idx) => (
                               <button
                                 key={idx}
                                 type="button"
                                 onClick={() => setBookingData({ ...bookingData, startTime: slot.slotTime })}
                                 disabled={!slot.isAvailable}
-                                className={`p-3 rounded border text-sm ${
+                                className={`p-3 rounded-xl text-sm font-semibold transition-all transform ${
                                   bookingData.startTime === slot.slotTime
-                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    ? 'bg-gradient-to-br from-neon-blue to-neon-purple text-white shadow-glow-blue scale-105'
                                     : slot.isAvailable
-                                    ? 'bg-white hover:bg-gray-50 border-gray-300'
-                                    : 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                                    ? 'glass-card hover:scale-105 border border-white/10 text-gray-300 hover:border-neon-blue/50'
+                                    : 'bg-gray-800/30 text-gray-600 cursor-not-allowed border border-gray-700/30'
                                 }`}
                               >
                                 <div className="font-bold">{slot.slotTime.substring(0, 5)}</div>
@@ -270,22 +334,22 @@ function Home({ user, onLogout }: HomeProps) {
                 {selectedService.bookingMode === 2 && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-bold mb-2">Orario Inizio *</label>
+                      <label className="block text-white/90 text-sm font-semibold mb-2">Orario Inizio *</label>
                       <input
                         type="time"
                         value={bookingData.startTime}
                         onChange={(e) => setBookingData({ ...bookingData, startTime: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-purple focus:shadow-glow-purple transition-all"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-bold mb-2">Orario Fine *</label>
+                      <label className="block text-white/90 text-sm font-semibold mb-2">Orario Fine *</label>
                       <input
                         type="time"
                         value={bookingData.endTime}
                         onChange={(e) => setBookingData({ ...bookingData, endTime: e.target.value })}
-                        className="w-full px-3 py-2 border rounded-lg"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-purple focus:shadow-glow-purple transition-all"
                         required
                       />
                     </div>
@@ -294,43 +358,43 @@ function Home({ user, onLogout }: HomeProps) {
 
                 {/* DayOnly Mode - Nessun campo orario */}
                 {selectedService.bookingMode === 3 && (
-                  <div className="bg-green-50 p-4 rounded text-sm text-green-800">
+                  <div className="glass-card-dark border border-green-500/30 rounded-xl p-4 text-sm text-green-400">
                     ✓ Prenotazione per l'intera giornata selezionata
                   </div>
                 )}
 
                 {/* Numero persone */}
                 <div>
-                  <label className="block text-sm font-bold mb-2">Numero persone *</label>
+                  <label className="block text-white/90 text-sm font-semibold mb-2">Numero persone *</label>
                   <input
                     type="number"
                     min="1"
                     value={bookingData.numberOfPeople}
                     onChange={(e) => setBookingData({ ...bookingData, numberOfPeople: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all"
                     required
                   />
                 </div>
 
                 {/* Note */}
                 <div>
-                  <label className="block text-sm font-bold mb-2">Note (opzionale)</label>
+                  <label className="block text-white/90 text-sm font-semibold mb-2">Note <span className="text-gray-500 text-xs">(opzionale)</span></label>
                   <textarea
                     value={bookingData.notes}
                     onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-blue focus:shadow-glow-blue transition-all resize-none"
                     rows={3}
                     placeholder="Eventuali richieste speciali..."
                   />
                 </div>
 
-                <div className="flex gap-2 pt-4">
+                <div className="flex gap-3 pt-4">
                   <button
                     type="submit"
                     disabled={selectedService.bookingMode === 1 && !bookingData.startTime}
-                    className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-gradient-to-r from-neon-green to-neon-cyan text-white py-3.5 rounded-xl hover:shadow-glow-cyan font-semibold disabled:opacity-30 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95"
                   >
-                    Conferma Prenotazione
+                    ✓ Conferma Prenotazione
                   </button>
                   <button
                     type="button"
@@ -339,9 +403,9 @@ function Home({ user, onLogout }: HomeProps) {
                       setBookingData({ bookingDate: '', startTime: '', endTime: '', numberOfPeople: 1, notes: '' })
                       setAvailableSlots([])
                     }}
-                    className="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg hover:bg-gray-300 font-semibold"
+                    className="flex-1 glass-card-dark py-3.5 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 transition-all"
                   >
-                    Annulla
+                    ✕ Annulla
                   </button>
                 </div>
               </form>
@@ -349,32 +413,56 @@ function Home({ user, onLogout }: HomeProps) {
           </div>
         )}
 
-        {/* Lista servizi */}
-        <div className="grid gap-6">
+        {/* Lista servizi futuristica */}
+        <div className="grid gap-6 pb-12">
           {services.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <p className="text-xl text-gray-600">Nessun servizio disponibile in questa categoria</p>
+            <div className="glass-card rounded-3xl shadow-glow-purple p-16 text-center border border-white/10 animate-fade-in">
+              <svg className="w-20 h-20 text-gray-600 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+              </svg>
+              <p className="text-xl text-gray-400">Nessun servizio disponibile in questa categoria</p>
             </div>
           ) : (
-            services.map((service) => (
-              <div key={service.id} className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition">
-                <div className="flex justify-between items-start">
+            services.map((service, index) => (
+              <div
+                key={service.id}
+                className="glass-card rounded-3xl p-6 hover:shadow-glow-blue transition-all border border-white/10 hover:border-neon-blue/50 transform hover:scale-[1.02] animate-slide-up"
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
+                <div className="flex justify-between items-start gap-6">
                   <div className="flex-1">
-                    <h4 className="text-2xl font-bold text-gray-800">{service.name}</h4>
-                    <p className="text-gray-600 mb-2">{service.merchantName}</p>
-                    {service.description && <p className="text-gray-700 mb-3">{service.description}</p>}
-                    <div className="flex gap-4 text-sm text-gray-500 mb-2">
-                      {service.price && <span>💰 €{service.price}</span>}
-                      <span>⏱️ {service.durationMinutes} min</span>
+                    <h4 className="text-3xl font-bold gradient-text mb-2">{service.name}</h4>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="glass-card-dark px-3 py-1 rounded-lg border border-neon-purple/30">
+                        <span className="text-neon-purple text-sm font-semibold">🏪 {service.merchantName}</span>
+                      </div>
                     </div>
-                    <div className="text-sm text-blue-600">
-                      {getBookingModeDescription(service.bookingMode)}
+                    {service.description && (
+                      <p className="text-gray-300 mb-4 leading-relaxed">{service.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-3 mb-3">
+                      {service.price && (
+                        <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-cyan/20">
+                          <span className="text-neon-cyan font-bold">💰 €{service.price}</span>
+                        </div>
+                      )}
+                      <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-blue/20">
+                        <span className="text-neon-blue font-bold">⏱️ {service.durationMinutes} min</span>
+                      </div>
+                    </div>
+                    <div className="glass-card-dark inline-block px-4 py-2 rounded-xl border border-neon-purple/20">
+                      <span className="text-neon-purple text-sm font-semibold">
+                        {getBookingModeDescription(service.bookingMode)}
+                      </span>
                     </div>
                   </div>
                   <button
                     onClick={() => handleBooking(service)}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 font-semibold"
+                    className="bg-gradient-to-r from-neon-blue to-neon-purple text-white px-8 py-4 rounded-2xl hover:shadow-glow-blue font-bold transition-all transform hover:scale-110 active:scale-95 flex items-center gap-2 whitespace-nowrap"
                   >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
                     Prenota
                   </button>
                 </div>
