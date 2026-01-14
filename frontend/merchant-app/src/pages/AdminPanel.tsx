@@ -78,54 +78,84 @@ function AdminPanel({ onLogout }: AdminPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
-          <button
-            onClick={onLogout}
-            className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
-          >
-            Esci
-          </button>
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+              Admin Panel
+            </h1>
+            <button
+              onClick={onLogout}
+              className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10"
+            >
+              Esci
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-purple opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-pink opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="mb-6 flex gap-4">
           <button
             onClick={() => setFilter('pending')}
-            className={`px-6 py-2 rounded-lg font-semibold ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${
               filter === 'pending'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700'
+                ? 'bg-gradient-to-r from-neon-purple to-neon-pink text-white shadow-glow-purple'
+                : 'glass-card-dark text-gray-300 border border-white/10'
             }`}
           >
-            In attesa ({merchants.length})
+            ⏳ In attesa ({merchants.length})
           </button>
           <button
             onClick={() => setFilter('all')}
-            className={`px-6 py-2 rounded-lg font-semibold ${
+            className={`px-6 py-3 rounded-xl font-semibold transition-all transform hover:scale-105 ${
               filter === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white text-gray-700'
+                ? 'bg-gradient-to-r from-neon-purple to-neon-pink text-white shadow-glow-purple'
+                : 'glass-card-dark text-gray-300 border border-white/10'
             }`}
           >
-            Tutti i merchant
+            📊 Tutti i merchant
           </button>
         </div>
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-            {error}
+          <div className="bg-red-500/10 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl mb-4 backdrop-blur-sm animate-slide-down">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {error}
+            </div>
           </div>
         )}
 
         {loading ? (
-          <div className="text-center py-12">Caricamento...</div>
+          <div className="glass-card rounded-3xl p-16 text-center border border-white/10 animate-scale-in">
+            <div className="flex items-center justify-center gap-3 text-neon-purple">
+              <svg className="animate-spin h-8 w-8" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-xl font-semibold">Caricamento...</span>
+            </div>
+          </div>
         ) : merchants.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-xl text-gray-600">
+          <div className="glass-card rounded-3xl p-16 text-center border border-white/10 shadow-glow-purple animate-fade-in">
+            <svg className="w-24 h-24 text-gray-600 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <p className="text-2xl text-gray-400">
               {filter === 'pending'
                 ? 'Nessun merchant in attesa di approvazione'
                 : 'Nessun merchant trovato'}
@@ -133,93 +163,93 @@ function AdminPanel({ onLogout }: AdminPanelProps) {
           </div>
         ) : (
           <div className="grid gap-6">
-            {merchants.map((merchant) => (
-              <div key={merchant.id} className="bg-white rounded-lg shadow-lg p-6">
+            {merchants.map((merchant, index) => (
+              <div key={merchant.id} className="glass-card rounded-3xl shadow-lg p-6 border border-white/10 hover:border-neon-purple/50 transition-all hover:shadow-glow-purple animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                    <h3 className="text-3xl font-bold gradient-text mb-3">
                       {merchant.businessName}
                     </h3>
                     <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm text-gray-500">Proprietario</p>
-                        <p className="font-semibold">
+                      <div className="glass-card-dark p-3 rounded-xl border border-neon-cyan/20">
+                        <p className="text-xs text-gray-500 mb-1">👤 Proprietario</p>
+                        <p className="font-semibold text-neon-cyan">
                           {merchant.user.firstName} {merchant.user.lastName}
                         </p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Email</p>
-                        <p className="font-semibold">{merchant.user.email}</p>
+                      <div className="glass-card-dark p-3 rounded-xl border border-neon-blue/20">
+                        <p className="text-xs text-gray-500 mb-1">📧 Email</p>
+                        <p className="font-semibold text-neon-blue">{merchant.user.email}</p>
                       </div>
                       {merchant.user.phoneNumber && (
-                        <div>
-                          <p className="text-sm text-gray-500">Telefono</p>
-                          <p className="font-semibold">{merchant.user.phoneNumber}</p>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-purple/20">
+                          <p className="text-xs text-gray-500 mb-1">📱 Telefono</p>
+                          <p className="font-semibold text-neon-purple">{merchant.user.phoneNumber}</p>
                         </div>
                       )}
                       {merchant.vatNumber && (
-                        <div>
-                          <p className="text-sm text-gray-500">Partita IVA</p>
-                          <p className="font-semibold">{merchant.vatNumber}</p>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-green/20">
+                          <p className="text-xs text-gray-500 mb-1">🏢 Partita IVA</p>
+                          <p className="font-semibold text-neon-green font-mono">{merchant.vatNumber}</p>
                         </div>
                       )}
                       {merchant.city && (
-                        <div>
-                          <p className="text-sm text-gray-500">Citta</p>
-                          <p className="font-semibold">{merchant.city}</p>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-pink/20">
+                          <p className="text-xs text-gray-500 mb-1">📍 Città</p>
+                          <p className="font-semibold text-neon-pink">{merchant.city}</p>
                         </div>
                       )}
-                      <div>
-                        <p className="text-sm text-gray-500">Registrato il</p>
-                        <p className="font-semibold">
+                      <div className="glass-card-dark p-3 rounded-xl border border-neon-cyan/20">
+                        <p className="text-xs text-gray-500 mb-1">📅 Registrato il</p>
+                        <p className="font-semibold text-neon-cyan">
                           {new Date(merchant.createdAt).toLocaleDateString('it-IT')}
                         </p>
                       </div>
                     </div>
                     {merchant.description && (
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-500">Descrizione</p>
-                        <p className="text-gray-700">{merchant.description}</p>
+                      <div className="glass-card-dark p-4 rounded-xl mb-4 border border-white/5">
+                        <p className="text-xs text-gray-500 mb-2">📝 Descrizione</p>
+                        <p className="text-gray-300">{merchant.description}</p>
                       </div>
                     )}
                   </div>
                   <div className="ml-6">
                     {merchant.isApproved ? (
-                      <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full font-semibold">
-                        Approvato
+                      <span className="px-4 py-2 bg-neon-green/20 text-neon-green rounded-xl font-semibold border border-neon-green/30">
+                        ✅ Approvato
                       </span>
                     ) : (
-                      <span className="px-4 py-2 bg-yellow-100 text-yellow-800 rounded-full font-semibold">
-                        In attesa
+                      <span className="px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-xl font-semibold border border-yellow-500/30">
+                        ⏳ In attesa
                       </span>
                     )}
                   </div>
                 </div>
 
                 {!merchant.isApproved && (
-                  <div className="mt-6 flex gap-4">
+                  <div className="mt-6 pt-6 border-t border-white/10 flex gap-4">
                     <button
                       onClick={() => handleApprove(merchant.id)}
-                      className="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold"
+                      className="flex-1 bg-gradient-to-r from-neon-green to-neon-cyan text-white py-3 rounded-xl hover:shadow-glow-cyan font-semibold transition-all transform hover:scale-105"
                     >
-                      Approva Merchant
+                      ✅ Approva Merchant
                     </button>
                     <button
                       onClick={() => handleReject(merchant.id)}
-                      className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-semibold"
+                      className="flex-1 glass-card-dark py-3 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105"
                     >
-                      Rifiuta
+                      ❌ Rifiuta
                     </button>
                   </div>
                 )}
 
                 {merchant.isApproved && (
-                  <div className="mt-6">
+                  <div className="mt-6 pt-6 border-t border-white/10">
                     <button
                       onClick={() => handleReject(merchant.id)}
-                      className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+                      className="glass-card-dark px-6 py-3 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105"
                     >
-                      Disabilita Merchant
+                      🚫 Disabilita Merchant
                     </button>
                   </div>
                 )}

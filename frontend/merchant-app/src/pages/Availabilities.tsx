@@ -176,46 +176,82 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
     return services.find(s => s.id === serviceId)?.bookingMode || 1
   }
 
-  if (loading) return <div className="p-4">Caricamento...</div>
-
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">Gestione Disponibilità</h1>
-          <div className="flex items-center gap-4">
-            <Link to="/dashboard" className="text-blue-600 hover:text-blue-800">Dashboard</Link>
-            <Link to="/services" className="text-blue-600 hover:text-blue-800">Servizi</Link>
-            <Link to="/bookings" className="text-blue-600 hover:text-blue-800">Prenotazioni</Link>
-            <button onClick={onLogout} className="text-red-600 hover:text-red-800">Logout</button>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="glass-card rounded-3xl p-16 text-center border border-white/10 animate-scale-in">
+          <div className="flex items-center justify-center gap-3 text-neon-cyan">
+            <svg className="animate-spin h-8 w-8" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span className="text-xl font-semibold">Caricamento...</span>
           </div>
         </div>
-      </nav>
+      </div>
+    )
+  }
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  return (
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Gestione Disponibilità
+            </h1>
+            <div className="flex items-center gap-3">
+              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                🏠 Dashboard
+              </Link>
+              <Link to="/services" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                📋 Servizi
+              </Link>
+              <Link to="/bookings" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                📅 Prenotazioni
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-blue opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900">Le tue disponibilità</h2>
+          <h2 className="text-3xl font-bold gradient-text">Le tue disponibilità</h2>
           <button
             onClick={() => setShowForm(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+            className="bg-gradient-to-r from-neon-green to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
           >
-            + Nuova Disponibilità
+            ➕ Nuova Disponibilità
           </button>
         </div>
 
         {/* Form creazione availability */}
         {showForm && (
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Crea Nuova Disponibilità
+          <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10 shadow-glow-blue animate-scale-in">
+            <h3 className="text-2xl font-bold gradient-text mb-6">
+              ✨ Crea Nuova Disponibilità
             </h3>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-white/90">
                   Servizio *
                 </label>
                 <select
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   value={formData.serviceId}
                   onChange={(e) => setFormData({ ...formData, serviceId: parseInt(e.target.value) })}
                   required
@@ -229,39 +265,39 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-white/90">
                   Tipo Disponibilità
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex items-center">
+                  <label className="glass-card-dark p-3 rounded-xl cursor-pointer hover:border-neon-blue/50 transition-all border border-white/10 flex items-center">
                     <input
                       type="radio"
                       checked={formData.isRecurring}
                       onChange={() => setFormData({ ...formData, isRecurring: true })}
                       className="mr-2"
                     />
-                    Ricorrente (settimanale)
+                    <span className="text-gray-300">🔄 Ricorrente (settimanale)</span>
                   </label>
-                  <label className="flex items-center">
+                  <label className="glass-card-dark p-3 rounded-xl cursor-pointer hover:border-neon-blue/50 transition-all border border-white/10 flex items-center">
                     <input
                       type="radio"
                       checked={!formData.isRecurring}
                       onChange={() => setFormData({ ...formData, isRecurring: false })}
                       className="mr-2"
                     />
-                    Data specifica
+                    <span className="text-gray-300">📅 Data specifica</span>
                   </label>
                 </div>
               </div>
 
               {formData.isRecurring ? (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-white/90">
                     Giorno della settimana *
                   </label>
                   <select
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     value={formData.dayOfWeek}
                     onChange={(e) => setFormData({ ...formData, dayOfWeek: parseInt(e.target.value) })}
                     required
@@ -272,13 +308,13 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                   </select>
                 </div>
               ) : (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-white/90">
                     Data *
                   </label>
                   <input
                     type="date"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     value={formData.specificDate}
                     onChange={(e) => setFormData({ ...formData, specificDate: e.target.value })}
                     required
@@ -287,25 +323,25 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
               )}
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-white/90">
                     Orario inizio *
                   </label>
                   <input
                     type="time"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     value={formData.startTime}
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-white/90">
                     Orario fine *
                   </label>
                   <input
                     type="time"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     value={formData.endTime}
                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                     required
@@ -313,13 +349,13 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-white/90">
                   Capacità massima (opzionale)
                 </label>
                 <input
                   type="number"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   value={formData.maxCapacity}
                   onChange={(e) => setFormData({ ...formData, maxCapacity: e.target.value })}
                   placeholder="Lascia vuoto per illimitato"
@@ -327,19 +363,19 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); resetForm() }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="glass-card-dark px-6 py-3 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10"
                 >
-                  Annulla
+                  ❌ Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="bg-gradient-to-r from-neon-blue to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
                 >
-                  Crea Disponibilità
+                  💾 Crea Disponibilità
                 </button>
               </div>
             </form>
@@ -348,38 +384,38 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
 
         {/* Form aggiunta slot */}
         {showSlotForm && selectedAvailability && (
-          <div className="bg-white p-6 rounded-lg shadow mb-6">
-            <h3 className="text-lg font-semibold mb-4">
-              Aggiungi Slot Orario
+          <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10 shadow-glow-purple animate-scale-in">
+            <h3 className="text-2xl font-bold gradient-text mb-4">
+              ⏰ Aggiungi Slot Orario
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Servizio: {getServiceName(selectedAvailability.serviceId)} -
+            <p className="text-gray-400 mb-6">
+              <span className="text-neon-cyan font-semibold">Servizio:</span> {getServiceName(selectedAvailability.serviceId)} -
               {selectedAvailability.isRecurring
                 ? ` ${selectedAvailability.dayOfWeekName}`
                 : ` ${new Date(selectedAvailability.specificDate!).toLocaleDateString()}`}
               {' '}({selectedAvailability.startTime} - {selectedAvailability.endTime})
             </p>
             <form onSubmit={handleAddSlot} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-white/90">
                   Orario Slot *
                 </label>
                 <input
                   type="time"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   value={slotFormData.slotTime}
                   onChange={(e) => setSlotFormData({ ...slotFormData, slotTime: e.target.value })}
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+              <div className="space-y-2">
+                <label className="block text-sm font-semibold text-white/90">
                   Capacità massima slot (opzionale)
                 </label>
                 <input
                   type="number"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   value={slotFormData.maxCapacity}
                   onChange={(e) => setSlotFormData({ ...slotFormData, maxCapacity: e.target.value })}
                   placeholder="Usa capacità availability"
@@ -387,7 +423,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                 />
               </div>
 
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-3 mt-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -395,15 +431,15 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                     setSelectedAvailability(null)
                     setSlotFormData({ slotTime: '09:00', maxCapacity: '' })
                   }}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="glass-card-dark px-6 py-3 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10"
                 >
-                  Annulla
+                  ❌ Annulla
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  className="bg-gradient-to-r from-neon-blue to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
                 >
-                  Aggiungi Slot
+                  ➕ Aggiungi Slot
                 </button>
               </div>
             </form>
@@ -411,68 +447,81 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
         )}
 
         {/* Lista availabilities */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {availabilities.length === 0 ? (
-            <div className="bg-white p-8 rounded-lg shadow text-center text-gray-500">
-              Nessuna disponibilità configurata. Creane una per iniziare!
+            <div className="glass-card rounded-3xl p-16 text-center border border-white/10 shadow-glow-purple animate-fade-in">
+              <svg className="w-24 h-24 text-gray-600 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-2xl text-gray-400">Nessuna disponibilità configurata. Creane una per iniziare!</p>
             </div>
           ) : (
-            availabilities.map(avail => (
-              <div key={avail.id} className="bg-white p-6 rounded-lg shadow">
+            availabilities.map((avail, index) => (
+              <div key={avail.id} className="glass-card rounded-3xl p-6 border border-white/10 hover:border-neon-cyan/50 transition-all hover:shadow-glow-cyan animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-2xl font-bold gradient-text mb-2">
                       {getServiceName(avail.serviceId)}
                     </h3>
-                    <div className="text-sm text-gray-600 space-y-1 mt-2">
-                      <p>
-                        {avail.isRecurring
-                          ? `🔄 Ogni ${avail.dayOfWeekName}`
-                          : `📅 ${new Date(avail.specificDate!).toLocaleDateString()}`}
-                      </p>
-                      <p>
-                        🕐 {avail.startTime} - {avail.endTime}
-                      </p>
-                      {avail.maxCapacity && (
-                        <p>👥 Capacità massima: {avail.maxCapacity}</p>
-                      )}
-                      <p>
-                        <span className={`px-2 py-1 rounded text-xs ${avail.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                          {avail.isActive ? 'Attivo' : 'Disattivo'}
+                    <div className="space-y-2 text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <span className="glass-card-dark px-3 py-1 rounded-lg border border-neon-purple/30">
+                          <span className="text-neon-purple">
+                            {avail.isRecurring
+                              ? `🔄 Ogni ${avail.dayOfWeekName}`
+                              : `📅 ${new Date(avail.specificDate!).toLocaleDateString()}`}
+                          </span>
                         </span>
-                      </p>
+                        <span className="glass-card-dark px-3 py-1 rounded-lg border border-neon-blue/30">
+                          <span className="text-neon-blue">
+                            🕐 {avail.startTime} - {avail.endTime}
+                          </span>
+                        </span>
+                      </div>
+                      {avail.maxCapacity && (
+                        <div className="glass-card-dark inline-block px-3 py-1 rounded-lg border border-neon-green/30">
+                          <span className="text-neon-green">👥 Capacità massima: {avail.maxCapacity}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${avail.isActive ? 'bg-neon-green/20 text-neon-green border-neon-green/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+                          {avail.isActive ? '✅ Attivo' : '⏸️ Disattivo'}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     {getServiceBookingMode(avail.serviceId) === 1 && (
                       <button
                         onClick={() => {
                           setSelectedAvailability(avail)
                           setShowSlotForm(true)
                         }}
-                        className="text-blue-600 hover:text-blue-800 text-sm"
+                        className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10"
                       >
-                        + Slot
+                        ➕ Slot
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(avail.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
+                      className="glass-card-dark px-5 py-2.5 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 hover:border-red-500/50 transition-all"
                     >
-                      Elimina
+                      🗑️ Elimina
                     </button>
                   </div>
                 </div>
 
                 {/* Mostra slot se presenti */}
                 {avail.slots.length > 0 && (
-                  <div className="mt-4 border-t pt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Slot Orari:</p>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mt-6 pt-6 border-t border-white/10">
+                    <p className="text-sm font-semibold text-neon-cyan mb-3">⏰ Slot Orari:</p>
+                    <div className="flex flex-wrap gap-3">
                       {avail.slots.map(slot => (
-                        <span key={slot.id} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                          {slot.slotTime}
-                          {slot.maxCapacity && ` (max ${slot.maxCapacity})`}
+                        <span key={slot.id} className="glass-card-dark px-4 py-2 rounded-xl border border-neon-blue/30">
+                          <span className="text-neon-blue font-semibold">
+                            {slot.slotTime}
+                            {slot.maxCapacity && ` (max ${slot.maxCapacity})`}
+                          </span>
                         </span>
                       ))}
                     </div>
@@ -482,7 +531,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
             ))
           )}
         </div>
-      </main>
+      </div>
     </div>
   )
 }
