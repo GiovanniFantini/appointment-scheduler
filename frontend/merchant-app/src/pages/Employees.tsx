@@ -112,183 +112,214 @@ function Employees({ onLogout }: EmployeesProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Gestione Dipendenti</h1>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-gray-600 hover:text-gray-800">Dashboard</Link>
-            <button onClick={onLogout} className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300">
-              Esci
-            </button>
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Gestione Dipendenti
+            </h1>
+            <div className="flex items-center gap-3">
+              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                🏠 Dashboard
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-green opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="mb-6">
           <button
             onClick={() => { setShowForm(!showForm); setEditingId(null); resetForm(); }}
-            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold"
+            className="bg-gradient-to-r from-neon-green to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
           >
-            {showForm ? 'Annulla' : '+ Nuovo Dipendente'}
+            {showForm ? '❌ Annulla' : '➕ Nuovo Dipendente'}
           </button>
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-            <h2 className="text-xl font-bold mb-4">{editingId ? 'Modifica Dipendente' : 'Nuovo Dipendente'}</h2>
+          <div className="glass-card rounded-3xl shadow-lg p-6 mb-6 border border-white/10 animate-scale-in">
+            <h2 className="text-2xl font-bold gradient-text mb-6">{editingId ? '✏️ Modifica Dipendente' : '✨ Nuovo Dipendente'}</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Nome *</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Nome *</label>
                   <input
                     type="text"
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
+                    placeholder="Mario"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Cognome *</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Cognome *</label>
                   <input
                     type="text"
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
+                    placeholder="Rossi"
                     required
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Email *</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Email *</label>
                   <input
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
+                    placeholder="mario.rossi@esempio.com"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Telefono</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Telefono</label>
                   <input
                     type="tel"
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
+                    placeholder="+39 123 456 7890"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Codice Badge</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Codice Badge</label>
                   <input
                     type="text"
                     value={formData.badgeCode}
                     onChange={(e) => setFormData({ ...formData, badgeCode: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     placeholder="Es: EMP001"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-bold mb-2">Ruolo</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Ruolo</label>
                   <input
                     type="text"
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="w-full px-3 py-2 border rounded-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     placeholder="Es: Receptionist, Stylist"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-bold mb-2">Configurazione Turni (JSON)</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-white/90">Configurazione Turni (JSON)</label>
                 <textarea
                   value={formData.shiftsConfiguration}
                   onChange={(e) => setFormData({ ...formData, shiftsConfiguration: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg font-mono text-sm"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300 font-mono text-sm"
                   rows={5}
                   placeholder='{"shifts": [{"day": "Monday", "start": "09:00", "end": "17:00"}]}'
                 />
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-gray-400 mt-1">
                   Formato JSON per configurare i turni del dipendente
                 </p>
               </div>
 
               <div>
-                <label className="flex items-center">
+                <label className="flex items-center glass-card-dark p-3 rounded-xl cursor-pointer border border-white/10">
                   <input
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
                     className="mr-2"
                   />
-                  Dipendente attivo
+                  <span className="text-gray-300">✅ Dipendente attivo</span>
                 </label>
               </div>
-              <button type="submit" className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
-                Salva
+              <button type="submit" className="bg-gradient-to-r from-neon-blue to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold">
+                💾 Salva
               </button>
             </form>
           </div>
         )}
 
         {loading ? (
-          <div className="text-center py-12">Caricamento...</div>
+          <div className="glass-card rounded-3xl p-16 text-center border border-white/10 animate-scale-in">
+            <div className="flex items-center justify-center gap-3 text-neon-cyan">
+              <svg className="animate-spin h-8 w-8" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span className="text-xl font-semibold">Caricamento...</span>
+            </div>
+          </div>
         ) : employees.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <p className="text-xl text-gray-600">Nessun dipendente ancora creato</p>
-            <p className="text-gray-500 mt-2">Clicca su "Nuovo Dipendente" per iniziare</p>
+          <div className="glass-card rounded-3xl p-16 text-center border border-white/10 shadow-glow-purple animate-fade-in">
+            <svg className="w-24 h-24 text-gray-600 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <p className="text-2xl text-gray-400 mb-2">Nessun dipendente ancora creato</p>
+            <p className="text-gray-500">Clicca su "Nuovo Dipendente" per iniziare</p>
           </div>
         ) : (
           <div className="grid gap-6">
-            {employees.map((employee) => (
-              <div key={employee.id} className="bg-white rounded-lg shadow-lg p-6">
+            {employees.map((employee, index) => (
+              <div key={employee.id} className="glass-card rounded-3xl shadow-lg p-6 border border-white/10 hover:border-neon-green/50 transition-all hover:shadow-glow-green animate-slide-up" style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-xl font-bold">{employee.fullName}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${employee.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
-                        {employee.isActive ? 'Attivo' : 'Non attivo'}
+                    <div className="flex items-center gap-3 mb-3">
+                      <h3 className="text-2xl font-bold gradient-text">{employee.fullName}</h3>
+                      <span className={`px-4 py-1.5 rounded-xl text-xs font-semibold border ${employee.isActive ? 'bg-neon-green/20 text-neon-green border-neon-green/30' : 'bg-gray-500/20 text-gray-400 border-gray-500/30'}`}>
+                        {employee.isActive ? '✅ Attivo' : '⏸️ Non attivo'}
                       </span>
                     </div>
-                    <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Email:</span>
-                        <span className="ml-2 text-gray-700">{employee.email}</span>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div className="glass-card-dark p-3 rounded-xl border border-neon-cyan/20">
+                        <span className="text-gray-500 block mb-1">📧 Email:</span>
+                        <span className="text-neon-cyan font-semibold">{employee.email}</span>
                       </div>
                       {employee.phoneNumber && (
-                        <div>
-                          <span className="text-gray-500">Telefono:</span>
-                          <span className="ml-2 text-gray-700">{employee.phoneNumber}</span>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-blue/20">
+                          <span className="text-gray-500 block mb-1">📱 Telefono:</span>
+                          <span className="text-neon-blue font-semibold">{employee.phoneNumber}</span>
                         </div>
                       )}
                       {employee.badgeCode && (
-                        <div>
-                          <span className="text-gray-500">Badge:</span>
-                          <span className="ml-2 font-mono text-gray-700">{employee.badgeCode}</span>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-purple/20">
+                          <span className="text-gray-500 block mb-1">🎫 Badge:</span>
+                          <span className="text-neon-purple font-semibold font-mono">{employee.badgeCode}</span>
                         </div>
                       )}
                       {employee.role && (
-                        <div>
-                          <span className="text-gray-500">Ruolo:</span>
-                          <span className="ml-2 text-gray-700">{employee.role}</span>
+                        <div className="glass-card-dark p-3 rounded-xl border border-neon-green/20">
+                          <span className="text-gray-500 block mb-1">💼 Ruolo:</span>
+                          <span className="text-neon-green font-semibold">{employee.role}</span>
                         </div>
                       )}
                     </div>
                     {employee.shiftsConfiguration && (
-                      <div className="mt-3">
-                        <details className="bg-gray-50 rounded p-3">
-                          <summary className="cursor-pointer text-sm font-semibold text-gray-700">
-                            Visualizza Turni
+                      <div className="mt-4">
+                        <details className="glass-card-dark rounded-xl p-4 border border-white/5">
+                          <summary className="cursor-pointer text-sm font-semibold text-neon-cyan hover:text-neon-blue transition-colors">
+                            📅 Visualizza Turni
                           </summary>
-                          <pre className="mt-2 text-xs font-mono text-gray-600 overflow-x-auto">
+                          <pre className="mt-3 text-xs font-mono text-gray-400 overflow-x-auto bg-black/30 p-3 rounded-lg">
                             {JSON.stringify(JSON.parse(employee.shiftsConfiguration), null, 2)}
                           </pre>
                         </details>
@@ -296,18 +327,18 @@ function Employees({ onLogout }: EmployeesProps) {
                     )}
                   </div>
                 </div>
-                <div className="mt-4 flex gap-2">
+                <div className="mt-6 pt-6 border-t border-white/10 flex gap-3">
                   <button
                     onClick={() => handleEdit(employee)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                    className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10 transform hover:scale-105"
                   >
-                    Modifica
+                    ✏️ Modifica
                   </button>
                   <button
                     onClick={() => handleDelete(employee.id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
+                    className="glass-card-dark px-5 py-2.5 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105"
                   >
-                    Elimina
+                    🗑️ Elimina
                   </button>
                 </div>
               </div>
