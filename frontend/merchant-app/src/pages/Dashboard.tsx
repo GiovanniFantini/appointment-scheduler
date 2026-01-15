@@ -55,7 +55,7 @@ function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
 
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Link
             to="/services"
             className="glass-card p-8 rounded-3xl hover:shadow-glow-blue transition-all border border-white/10 hover:border-neon-blue/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
@@ -84,7 +84,7 @@ function Dashboard({ user, onLogout }: DashboardProps) {
           </Link>
 
           <Link
-            to="/availabilities"
+            to="/business-hours"
             className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-cyan/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
             style={{ animationDelay: '0.2s' }}
           >
@@ -93,22 +93,50 @@ function Dashboard({ user, onLogout }: DashboardProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Disponibilità</h2>
-            <p className="text-gray-400">Configura calendario e slot orari</p>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Orari</h2>
+            <p className="text-gray-400">Configura orari settimanali</p>
+          </Link>
+
+          <Link
+            to="/closures"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-pink transition-all border border-white/10 hover:border-red-500/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.3s' }}
+          >
+            <div className="bg-gradient-to-br from-red-500/20 to-neon-pink/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-red-500/30 group-hover:shadow-glow-pink transition-all">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-red-400 transition-colors">Chiusure</h2>
+            <p className="text-gray-400">Gestisci ferie e festività</p>
+          </Link>
+
+          <Link
+            to="/availabilities"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-green transition-all border border-white/10 hover:border-neon-green/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.4s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-green/20 to-neon-cyan/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-green/30 group-hover:shadow-glow-green transition-all">
+              <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-green transition-colors">Disponibilità</h2>
+            <p className="text-gray-400">Override personalizzati</p>
           </Link>
 
           <Link
             to="/employees"
-            className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-green/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
-            style={{ animationDelay: '0.3s' }}
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-purple transition-all border border-white/10 hover:border-neon-purple/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.5s' }}
           >
-            <div className="bg-gradient-to-br from-neon-green/20 to-neon-cyan/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-green/30 group-hover:shadow-glow-cyan transition-all">
-              <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-gradient-to-br from-neon-purple/20 to-neon-pink/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-purple/30 group-hover:shadow-glow-purple transition-all">
+              <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-green transition-colors">Dipendenti</h2>
-            <p className="text-gray-400">Gestisci turni, badge e staff</p>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-purple transition-colors">Dipendenti</h2>
+            <p className="text-gray-400">Gestisci turni e staff</p>
           </Link>
         </div>
 
@@ -129,13 +157,16 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <div className="glass-card-dark p-6 rounded-2xl border border-white/5">
               <h3 className="text-lg font-bold text-neon-cyan mb-2">🚀 Quick Start</h3>
               <p className="text-gray-400">
-                Inizia configurando i tuoi servizi e la disponibilità. Poi gestisci le prenotazioni in arrivo.
+                1. Configura gli <strong>Orari</strong> standard del tuo business<br/>
+                2. Aggiungi le tue <strong>Chiusure</strong> (ferie, festività)<br/>
+                3. Crea i tuoi <strong>Servizi</strong><br/>
+                4. I servizi erediteranno automaticamente gli orari!
               </p>
             </div>
             <div className="glass-card-dark p-6 rounded-2xl border border-white/5">
-              <h3 className="text-lg font-bold text-neon-purple mb-2">💡 Suggerimento</h3>
+              <h3 className="text-lg font-bold text-neon-purple mb-2">💡 Nuovo Sistema</h3>
               <p className="text-gray-400">
-                Mantieni aggiornata la tua disponibilità per massimizzare le prenotazioni.
+                Gli orari sono ora centralizzati! Configura una sola volta gli orari settimanali e si applicheranno automaticamente a tutti i servizi. Usa <strong>Disponibilità</strong> solo per override specifici.
               </p>
             </div>
           </div>
