@@ -93,8 +93,8 @@ function Dashboard({ user, onLogout }: DashboardProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Orari di Apertura</h2>
-            <p className="text-gray-400">Configura orari settimanali fissi</p>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Gestione Disponibilità</h2>
+            <p className="text-gray-400">Orari settimanali, eccezioni e chiusure</p>
           </Link>
 
           <Link

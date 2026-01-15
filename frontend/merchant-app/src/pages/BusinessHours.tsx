@@ -280,7 +280,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold">Orari di Apertura</h1>
+          <h1 className="text-4xl font-bold">Gestione Disponibilità</h1>
           <div className="flex gap-4">
             <Link to="/" className="px-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg hover:bg-white/20 transition-all">
               Dashboard
