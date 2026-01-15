@@ -256,6 +256,7 @@ public class AvailabilityService : IAvailabilityService
     {
         // First, check for exceptions on this specific date
         var exception = await _context.BusinessHoursExceptions
+            .Include(ex => ex.Shifts.OrderBy(s => s.SortOrder))
             .FirstOrDefaultAsync(ex => ex.ServiceId == service.Id && ex.Date.Date == date.Date);
 
         if (exception != null)
@@ -263,8 +264,7 @@ public class AvailabilityService : IAvailabilityService
             if (exception.IsClosed)
                 return Enumerable.Empty<AvailableSlotDto>();
 
-            return await GenerateSlotsFromBusinessHours(service, date, exception.OpeningTime1, exception.ClosingTime1,
-                exception.OpeningTime2, exception.ClosingTime2, exception.MaxCapacity);
+            return await GenerateSlotsFromShifts(service, date, exception.Shifts, exception.MaxCapacity);
         }
 
         // No exception, check business hours for this day of week
@@ -274,95 +274,64 @@ public class AvailabilityService : IAvailabilityService
         dayOfWeek = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
 
         var businessHours = await _context.BusinessHours
+            .Include(bh => bh.Shifts.OrderBy(s => s.SortOrder))
             .FirstOrDefaultAsync(bh => bh.ServiceId == service.Id && bh.DayOfWeek == dayOfWeek);
 
         if (businessHours == null || businessHours.IsClosed)
             return Enumerable.Empty<AvailableSlotDto>();
 
-        return await GenerateSlotsFromBusinessHours(service, date, businessHours.OpeningTime1, businessHours.ClosingTime1,
-            businessHours.OpeningTime2, businessHours.ClosingTime2, businessHours.MaxCapacity);
+        return await GenerateSlotsFromShifts(service, date, businessHours.Shifts, businessHours.MaxCapacity);
     }
 
-    private async Task<IEnumerable<AvailableSlotDto>> GenerateSlotsFromBusinessHours(
+    private async Task<IEnumerable<AvailableSlotDto>> GenerateSlotsFromShifts(
         Service service, DateTime date,
-        TimeSpan? openingTime1, TimeSpan? closingTime1,
-        TimeSpan? openingTime2, TimeSpan? closingTime2,
-        int? maxCapacity)
+        IEnumerable<BusinessHoursShift> shifts,
+        int? defaultMaxCapacity)
     {
-        var slots = new List<AvailableSlotDto>();
+        var allSlots = new List<AvailableSlotDto>();
 
-        if (service.BookingMode != BookingMode.TimeSlot)
+        if (!shifts.Any())
+            return allSlots;
+
+        foreach (var shift in shifts.OrderBy(s => s.SortOrder))
         {
-            // For non-TimeSlot modes, return availability windows instead of specific slots
-            if (openingTime1.HasValue && closingTime1.HasValue)
+            if (service.BookingMode == BookingMode.TimeSlot)
             {
-                slots.Add(new AvailableSlotDto
+                // Generate individual slots for this shift
+                var slotDuration = service.SlotDurationMinutes ?? service.DurationMinutes;
+                var timeSlots = GenerateTimeSlots(shift.OpeningTime, shift.ClosingTime, slotDuration);
+
+                var shiftSlots = timeSlots.Select(time => new AvailableSlotDto
                 {
                     Date = date,
-                    SlotTime = openingTime1.Value,
-                    TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
+                    SlotTime = time,
+                    TotalCapacity = shift.MaxCapacity ?? defaultMaxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
+                    AvailableCapacity = 0 // Will be calculated
+                }).ToList();
+
+                allSlots.AddRange(shiftSlots);
+            }
+            else
+            {
+                // For TimeRange/DayOnly modes, return shift as availability window
+                allSlots.Add(new AvailableSlotDto
+                {
+                    Date = date,
+                    SlotTime = shift.OpeningTime,
+                    TotalCapacity = shift.MaxCapacity ?? defaultMaxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
                     AvailableCapacity = 0 // Will be calculated
                 });
             }
-
-            if (openingTime2.HasValue && closingTime2.HasValue)
-            {
-                slots.Add(new AvailableSlotDto
-                {
-                    Date = date,
-                    SlotTime = openingTime2.Value,
-                    TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                    AvailableCapacity = 0
-                });
-            }
-
-            // Calculate available capacity for each window
-            foreach (var slot in slots)
-            {
-                var bookedCount = await GetBookedCountForSlot(service.Id, date, slot.SlotTime);
-                slot.AvailableCapacity = Math.Max(0, slot.TotalCapacity - bookedCount);
-            }
-
-            return slots;
-        }
-
-        // For TimeSlot mode, generate individual slots
-        var slotDuration = service.SlotDurationMinutes ?? service.DurationMinutes;
-
-        // Generate slots for first shift
-        if (openingTime1.HasValue && closingTime1.HasValue)
-        {
-            var shiftSlots = GenerateTimeSlots(openingTime1.Value, closingTime1.Value, slotDuration);
-            slots.AddRange(shiftSlots.Select(time => new AvailableSlotDto
-            {
-                Date = date,
-                SlotTime = time,
-                TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                AvailableCapacity = 0
-            }));
-        }
-
-        // Generate slots for second shift
-        if (openingTime2.HasValue && closingTime2.HasValue)
-        {
-            var shiftSlots = GenerateTimeSlots(openingTime2.Value, closingTime2.Value, slotDuration);
-            slots.AddRange(shiftSlots.Select(time => new AvailableSlotDto
-            {
-                Date = date,
-                SlotTime = time,
-                TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                AvailableCapacity = 0
-            }));
         }
 
         // Calculate available capacity for each slot
-        foreach (var slot in slots)
+        foreach (var slot in allSlots)
         {
             var bookedCount = await GetBookedCountForSlot(service.Id, date, slot.SlotTime);
             slot.AvailableCapacity = Math.Max(0, slot.TotalCapacity - bookedCount);
         }
 
-        return slots.OrderBy(s => s.SlotTime);
+        return allSlots.OrderBy(s => s.SlotTime);
     }
 
     private List<TimeSpan> GenerateTimeSlots(TimeSpan startTime, TimeSpan endTime, int slotDurationMinutes)
