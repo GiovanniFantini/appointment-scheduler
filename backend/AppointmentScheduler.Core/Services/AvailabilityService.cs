@@ -169,16 +169,26 @@ public class AvailabilityService : IAvailabilityService
     public async Task<IEnumerable<AvailableSlotDto>> GetAvailableSlotsAsync(int serviceId, DateTime date)
     {
         var service = await _context.Services
+            .Include(s => s.Merchant)
             .FirstOrDefaultAsync(s => s.Id == serviceId);
 
         if (service == null)
             return Enumerable.Empty<AvailableSlotDto>();
 
-        // Get availability for the date
         var dayOfWeek = (int)date.DayOfWeek;
         var dateOnly = date.Date;
 
-        // Prefer specific date over recurring
+        // STEP 1: Check for closure periods (highest priority)
+        var isClosed = await _context.ClosurePeriods
+            .AnyAsync(cp => cp.MerchantId == service.MerchantId
+                && cp.IsActive
+                && cp.StartDate <= dateOnly
+                && cp.EndDate >= dateOnly);
+
+        if (isClosed)
+            return Enumerable.Empty<AvailableSlotDto>(); // Business is closed
+
+        // STEP 2: Check for service-specific availability (overrides business hours)
         var availability = await _context.Availabilities
             .Include(a => a.Slots)
             .Where(a => a.ServiceId == serviceId && a.IsActive)
@@ -187,6 +197,22 @@ public class AvailabilityService : IAvailabilityService
                 (a.IsRecurring == true && a.DayOfWeek == dayOfWeek))
             .OrderBy(a => a.IsRecurring) // Specific dates first
             .FirstOrDefaultAsync();
+
+        // STEP 3: If no service-specific availability, check merchant business hours
+        if (availability == null)
+        {
+            var businessHours = await _context.BusinessHours
+                .FirstOrDefaultAsync(bh => bh.MerchantId == service.MerchantId
+                    && bh.DayOfWeek == dayOfWeek
+                    && bh.IsActive);
+
+            // If no business hours or closed on this day, return empty
+            if (businessHours == null || !businessHours.OpeningTime.HasValue)
+                return Enumerable.Empty<AvailableSlotDto>();
+
+            // Create virtual availability from business hours
+            availability = CreateVirtualAvailabilityFromBusinessHours(businessHours, service);
+        }
 
         if (availability == null)
             return Enumerable.Empty<AvailableSlotDto>();
@@ -235,6 +261,67 @@ public class AvailabilityService : IAvailabilityService
                 TotalCapacity = availability.MaxCapacity ?? int.MaxValue
             }
         };
+    }
+
+    /// <summary>
+    /// Creates a virtual availability object from merchant business hours
+    /// This allows services to inherit the merchant's standard operating hours
+    /// </summary>
+    private Availability CreateVirtualAvailabilityFromBusinessHours(BusinessHours businessHours, Service service)
+    {
+        var virtualAvailability = new Availability
+        {
+            ServiceId = service.Id,
+            StartTime = businessHours.OpeningTime!.Value,
+            EndTime = businessHours.ClosingTime!.Value,
+            IsRecurring = true,
+            DayOfWeek = businessHours.DayOfWeek,
+            MaxCapacity = service.MaxCapacityPerSlot,
+            IsActive = true,
+            Slots = new List<AvailabilitySlot>()
+        };
+
+        // For TimeSlot mode, generate slots based on business hours and slot duration
+        if (service.BookingMode == BookingMode.TimeSlot && service.SlotDurationMinutes.HasValue)
+        {
+            var slots = new List<AvailabilitySlot>();
+            var slotDuration = TimeSpan.FromMinutes(service.SlotDurationMinutes.Value);
+
+            // Generate slots for first shift
+            var currentTime = businessHours.OpeningTime!.Value;
+            var endTime = businessHours.ClosingTime!.Value;
+
+            while (currentTime.Add(slotDuration) <= endTime)
+            {
+                slots.Add(new AvailabilitySlot
+                {
+                    SlotTime = currentTime,
+                    MaxCapacity = service.MaxCapacityPerSlot
+                });
+                currentTime = currentTime.Add(slotDuration);
+            }
+
+            // Generate slots for second shift if exists
+            if (businessHours.SecondOpeningTime.HasValue && businessHours.SecondClosingTime.HasValue)
+            {
+                currentTime = businessHours.SecondOpeningTime.Value;
+                endTime = businessHours.SecondClosingTime.Value;
+
+                while (currentTime.Add(slotDuration) <= endTime)
+                {
+                    slots.Add(new AvailabilitySlot
+                    {
+                        SlotTime = currentTime,
+                        MaxCapacity = service.MaxCapacityPerSlot
+                    });
+                    currentTime = currentTime.Add(slotDuration);
+                }
+            }
+
+            virtualAvailability.Slots = slots;
+        }
+
+        return virtualAvailability;
     }
 
     private void ValidateAvailabilityRequest(CreateAvailabilityRequest request)

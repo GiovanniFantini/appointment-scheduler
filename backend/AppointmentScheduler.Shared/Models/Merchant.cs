@@ -19,4 +19,6 @@ public class Merchant
     public User User { get; set; } = null!;
     public ICollection<Service> Services { get; set; } = new List<Service>();
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
+    public ICollection<BusinessHours> BusinessHours { get; set; } = new List<BusinessHours>();
+    public ICollection<ClosurePeriod> ClosurePeriods { get; set; } = new List<ClosurePeriod>();
 }

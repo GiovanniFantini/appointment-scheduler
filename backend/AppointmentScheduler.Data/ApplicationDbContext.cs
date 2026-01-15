@@ -17,6 +17,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Availability> Availabilities { get; set; }
     public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
     public DbSet<Employee> Employees { get; set; }
+    public DbSet<BusinessHours> BusinessHours { get; set; }
+    public DbSet<ClosurePeriod> ClosurePeriods { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -122,6 +124,36 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.MerchantId);
+        });
+
+        // BusinessHours configuration
+        modelBuilder.Entity<BusinessHours>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.BusinessHours)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.MerchantId, e.DayOfWeek });
+            entity.Property(e => e.DayOfWeek).IsRequired();
+        });
+
+        // ClosurePeriod configuration
+        modelBuilder.Entity<ClosurePeriod>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(500);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.ClosurePeriods)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.StartDate, e.EndDate });
         });
     }
 }
