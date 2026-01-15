@@ -4,5 +4,6 @@ public enum UserRole
 {
     User = 1,      // Consumer - può solo prenotare
     Merchant = 2,  // Business owner - gestisce le proprie attività
-    Admin = 3      // Admin - gestisce permessi e approva merchant
+    Admin = 3,     // Admin - gestisce permessi e approva merchant
+    Employee = 4   // Employee - dipendente di un merchant
 }

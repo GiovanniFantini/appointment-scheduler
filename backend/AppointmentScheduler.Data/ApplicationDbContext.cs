@@ -37,6 +37,11 @@ public class ApplicationDbContext : DbContext
                 .WithOne(m => m.User)
                 .HasForeignKey<Merchant>(m => m.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithOne(emp => emp.User)
+                .HasForeignKey<Employee>(emp => emp.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         // Merchant configuration

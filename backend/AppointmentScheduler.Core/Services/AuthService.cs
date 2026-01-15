@@ -26,6 +26,7 @@ public class AuthService : IAuthService
     {
         var user = await _context.Users
             .Include(u => u.Merchant)
+            .Include(u => u.Employee)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
@@ -34,7 +35,7 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return null;
 
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id);
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id, user.Employee?.Id);
 
         return new AuthResponse
         {
@@ -44,7 +45,8 @@ public class AuthService : IAuthService
             FirstName = user.FirstName,
             LastName = user.LastName,
             Role = user.Role,
-            MerchantId = user.Merchant?.Id
+            MerchantId = user.Merchant?.Id,
+            EmployeeId = user.Employee?.Id
         };
     }
 
@@ -104,7 +106,64 @@ public class AuthService : IAuthService
         };
     }
 
-    public string GenerateJwtToken(int userId, string email, string role, int? merchantId = null)
+    public async Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request)
+    {
+        // Verifica che l'email corrisponda a un employee esistente
+        var employee = await _context.Employees
+            .Include(e => e.Merchant)
+            .FirstOrDefaultAsync(e => e.Email == request.Email && e.IsActive);
+
+        if (employee == null)
+            throw new ArgumentException("Nessun dipendente trovato con questa email. Contatta il tuo datore di lavoro.");
+
+        // Verifica che l'employee non abbia già un account
+        if (employee.UserId.HasValue)
+            throw new ArgumentException("Hai già un account registrato. Usa la funzione di login.");
+
+        // Verifica se l'email esiste già nella tabella Users (non dovrebbe mai succedere, ma per sicurezza)
+        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            throw new ArgumentException("Email già registrata nel sistema.");
+
+        // Crea un nuovo User per l'employee
+        var user = new User
+        {
+            Email = request.Email,
+            PasswordHash = HashPassword(request.Password),
+            FirstName = employee.FirstName,
+            LastName = employee.LastName,
+            PhoneNumber = employee.PhoneNumber,
+            Role = UserRole.Employee,
+            IsActive = true
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        // Collega l'employee al nuovo user
+        employee.UserId = user.Id;
+        employee.User = user;
+        employee.UpdatedAt = DateTime.UtcNow;
+
+        _context.Employees.Update(employee);
+        await _context.SaveChangesAsync();
+
+        // Genera il token con EmployeeId e MerchantId
+        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), employee.MerchantId, employee.Id);
+
+        return new AuthResponse
+        {
+            Token = token,
+            UserId = user.Id,
+            Email = user.Email,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Role = user.Role,
+            EmployeeId = employee.Id,
+            MerchantId = employee.MerchantId
+        };
+    }
+
+    public string GenerateJwtToken(int userId, string email, string role, int? merchantId = null, int? employeeId = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
@@ -122,6 +181,11 @@ public class AuthService : IAuthService
         if (merchantId.HasValue)
         {
             claimsList.Add(new Claim("MerchantId", merchantId.Value.ToString()));
+        }
+
+        if (employeeId.HasValue)
+        {
+            claimsList.Add(new Claim("EmployeeId", employeeId.Value.ToString()));
         }
 
         var claims = claimsList.ToArray();
