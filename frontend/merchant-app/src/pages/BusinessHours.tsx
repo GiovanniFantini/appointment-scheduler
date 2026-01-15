@@ -54,7 +54,6 @@ const DAYS = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Saba
 function BusinessHours({ onLogout }: BusinessHoursProps) {
   const [services, setServices] = useState<Service[]>([])
   const [selectedServiceId, setSelectedServiceId] = useState<number | null>(null)
-  const [businessHours, setBusinessHours] = useState<BusinessHours[]>([])
   const [exceptions, setExceptions] = useState<BusinessHoursException[]>([])
   const [loading, setLoading] = useState(true)
   const [showExceptionForm, setShowExceptionForm] = useState(false)
@@ -130,8 +129,6 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
         })
         setWeekConfig(newWeekConfig)
       }
-
-      setBusinessHours(hours)
     } catch (err) {
       console.error(err)
     }
