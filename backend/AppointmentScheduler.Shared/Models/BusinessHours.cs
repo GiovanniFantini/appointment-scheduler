@@ -21,16 +21,14 @@ public class BusinessHours
     /// </summary>
     public bool IsClosed { get; set; }
 
-    // First shift (e.g., lunch)
-    public TimeSpan? OpeningTime1 { get; set; }
-    public TimeSpan? ClosingTime1 { get; set; }
-
-    // Second shift (e.g., dinner) - optional
-    public TimeSpan? OpeningTime2 { get; set; }
-    public TimeSpan? ClosingTime2 { get; set; }
+    /// <summary>
+    /// Collection of shifts (opening/closing periods) for this day.
+    /// Can have multiple shifts (e.g., breakfast 8-11, lunch 12-15, dinner 19-23)
+    /// </summary>
+    public ICollection<BusinessHoursShift> Shifts { get; set; } = new List<BusinessHoursShift>();
 
     /// <summary>
-    /// Maximum capacity for this day (optional, can be overridden at slot level)
+    /// Default maximum capacity for this day (can be overridden at shift level)
     /// </summary>
     public int? MaxCapacity { get; set; }
 

@@ -7,7 +7,7 @@ using AppointmentScheduler.Shared.Enums;
 namespace AppointmentScheduler.Core.Services;
 
 /// <summary>
-/// Service for managing business hours, exceptions, and generating available slots
+/// Service for managing business hours with multiple shifts, exceptions, and generating available slots
 /// </summary>
 public class BusinessHoursService : IBusinessHoursService
 {
@@ -23,6 +23,7 @@ public class BusinessHoursService : IBusinessHoursService
     public async Task<IEnumerable<BusinessHoursDto>> GetServiceBusinessHoursAsync(int serviceId)
     {
         var businessHours = await _context.BusinessHours
+            .Include(bh => bh.Shifts.OrderBy(s => s.SortOrder))
             .Where(bh => bh.ServiceId == serviceId)
             .OrderBy(bh => bh.DayOfWeek)
             .ToListAsync();
@@ -32,7 +33,10 @@ public class BusinessHoursService : IBusinessHoursService
 
     public async Task<BusinessHoursDto?> GetBusinessHoursByIdAsync(int id)
     {
-        var businessHours = await _context.BusinessHours.FindAsync(id);
+        var businessHours = await _context.BusinessHours
+            .Include(bh => bh.Shifts.OrderBy(s => s.SortOrder))
+            .FirstOrDefaultAsync(bh => bh.Id == id);
+
         return businessHours == null ? null : MapToDto(businessHours);
     }
 
@@ -60,16 +64,31 @@ public class BusinessHoursService : IBusinessHoursService
             ServiceId = dto.ServiceId,
             DayOfWeek = dto.DayOfWeek,
             IsClosed = dto.IsClosed,
-            OpeningTime1 = dto.OpeningTime1,
-            ClosingTime1 = dto.ClosingTime1,
-            OpeningTime2 = dto.OpeningTime2,
-            ClosingTime2 = dto.ClosingTime2,
             MaxCapacity = dto.MaxCapacity,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.BusinessHours.Add(businessHours);
         await _context.SaveChangesAsync();
+
+        // Add shifts if not closed
+        if (!dto.IsClosed && dto.Shifts?.Any() == true)
+        {
+            var shifts = dto.Shifts.Select(s => new BusinessHoursShift
+            {
+                BusinessHoursId = businessHours.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            _context.BusinessHoursShifts.AddRange(shifts);
+            await _context.SaveChangesAsync();
+
+            businessHours.Shifts = shifts;
+        }
 
         return MapToDto(businessHours);
     }
@@ -78,6 +97,7 @@ public class BusinessHoursService : IBusinessHoursService
     {
         var businessHours = await _context.BusinessHours
             .Include(bh => bh.Service)
+            .Include(bh => bh.Shifts)
             .FirstOrDefaultAsync(bh => bh.Id == id);
 
         if (businessHours == null)
@@ -90,12 +110,32 @@ public class BusinessHoursService : IBusinessHoursService
         ValidateBusinessHoursUpdate(dto);
 
         businessHours.IsClosed = dto.IsClosed;
-        businessHours.OpeningTime1 = dto.OpeningTime1;
-        businessHours.ClosingTime1 = dto.ClosingTime1;
-        businessHours.OpeningTime2 = dto.OpeningTime2;
-        businessHours.ClosingTime2 = dto.ClosingTime2;
         businessHours.MaxCapacity = dto.MaxCapacity;
         businessHours.UpdatedAt = DateTime.UtcNow;
+
+        // Remove old shifts
+        _context.BusinessHoursShifts.RemoveRange(businessHours.Shifts);
+
+        // Add new shifts if not closed
+        if (!dto.IsClosed && dto.Shifts?.Any() == true)
+        {
+            var newShifts = dto.Shifts.Select(s => new BusinessHoursShift
+            {
+                BusinessHoursId = businessHours.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            _context.BusinessHoursShifts.AddRange(newShifts);
+            businessHours.Shifts = newShifts;
+        }
+        else
+        {
+            businessHours.Shifts.Clear();
+        }
 
         await _context.SaveChangesAsync();
 
@@ -129,32 +169,56 @@ public class BusinessHoursService : IBusinessHoursService
         if (service == null)
             throw new UnauthorizedAccessException("Service not found or doesn't belong to merchant");
 
-        // Delete existing business hours
+        // Delete existing business hours and their shifts (cascade will handle shifts)
         var existing = await _context.BusinessHours
             .Where(bh => bh.ServiceId == serviceId)
             .ToListAsync();
 
         _context.BusinessHours.RemoveRange(existing);
+        await _context.SaveChangesAsync();
 
         // Create new business hours
-        var newBusinessHours = weeklyHours.Select(dto =>
+        var newBusinessHours = new List<BusinessHours>();
+
+        foreach (var dto in weeklyHours)
         {
             ValidateBusinessHours(dto);
-            return new BusinessHours
+
+            var businessHours = new BusinessHours
             {
                 ServiceId = serviceId,
                 DayOfWeek = dto.DayOfWeek,
                 IsClosed = dto.IsClosed,
-                OpeningTime1 = dto.OpeningTime1,
-                ClosingTime1 = dto.ClosingTime1,
-                OpeningTime2 = dto.OpeningTime2,
-                ClosingTime2 = dto.ClosingTime2,
                 MaxCapacity = dto.MaxCapacity,
                 CreatedAt = DateTime.UtcNow
             };
-        }).ToList();
+
+            newBusinessHours.Add(businessHours);
+        }
 
         _context.BusinessHours.AddRange(newBusinessHours);
+        await _context.SaveChangesAsync();
+
+        // Add shifts for each day
+        foreach (var (businessHours, dto) in newBusinessHours.Zip(weeklyHours))
+        {
+            if (!dto.IsClosed && dto.Shifts?.Any() == true)
+            {
+                var shifts = dto.Shifts.Select(s => new BusinessHoursShift
+                {
+                    BusinessHoursId = businessHours.Id,
+                    OpeningTime = s.OpeningTime,
+                    ClosingTime = s.ClosingTime,
+                    Label = s.Label,
+                    MaxCapacity = s.MaxCapacity,
+                    SortOrder = s.SortOrder
+                }).ToList();
+
+                _context.BusinessHoursShifts.AddRange(shifts);
+                businessHours.Shifts = shifts;
+            }
+        }
+
         await _context.SaveChangesAsync();
 
         return newBusinessHours.Select(MapToDto);
@@ -167,6 +231,7 @@ public class BusinessHoursService : IBusinessHoursService
     public async Task<IEnumerable<BusinessHoursExceptionDto>> GetServiceExceptionsAsync(int serviceId, DateTime? fromDate = null, DateTime? toDate = null)
     {
         var query = _context.BusinessHoursExceptions
+            .Include(ex => ex.Shifts.OrderBy(s => s.SortOrder))
             .Where(ex => ex.ServiceId == serviceId);
 
         if (fromDate.HasValue)
@@ -184,7 +249,10 @@ public class BusinessHoursService : IBusinessHoursService
 
     public async Task<BusinessHoursExceptionDto?> GetExceptionByIdAsync(int id)
     {
-        var exception = await _context.BusinessHoursExceptions.FindAsync(id);
+        var exception = await _context.BusinessHoursExceptions
+            .Include(ex => ex.Shifts.OrderBy(s => s.SortOrder))
+            .FirstOrDefaultAsync(ex => ex.Id == id);
+
         return exception == null ? null : MapToExceptionDto(exception);
     }
 
@@ -213,16 +281,31 @@ public class BusinessHoursService : IBusinessHoursService
             Date = dto.Date.Date,
             IsClosed = dto.IsClosed,
             Reason = dto.Reason,
-            OpeningTime1 = dto.OpeningTime1,
-            ClosingTime1 = dto.ClosingTime1,
-            OpeningTime2 = dto.OpeningTime2,
-            ClosingTime2 = dto.ClosingTime2,
             MaxCapacity = dto.MaxCapacity,
             CreatedAt = DateTime.UtcNow
         };
 
         _context.BusinessHoursExceptions.Add(exception);
         await _context.SaveChangesAsync();
+
+        // Add shifts if not closed
+        if (!dto.IsClosed && dto.Shifts?.Any() == true)
+        {
+            var shifts = dto.Shifts.Select(s => new BusinessHoursShift
+            {
+                BusinessHoursExceptionId = exception.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            _context.BusinessHoursShifts.AddRange(shifts);
+            await _context.SaveChangesAsync();
+
+            exception.Shifts = shifts;
+        }
 
         return MapToExceptionDto(exception);
     }
@@ -231,6 +314,7 @@ public class BusinessHoursService : IBusinessHoursService
     {
         var exception = await _context.BusinessHoursExceptions
             .Include(ex => ex.Service)
+            .Include(ex => ex.Shifts)
             .FirstOrDefaultAsync(ex => ex.Id == id);
 
         if (exception == null)
@@ -244,12 +328,32 @@ public class BusinessHoursService : IBusinessHoursService
 
         exception.IsClosed = dto.IsClosed;
         exception.Reason = dto.Reason;
-        exception.OpeningTime1 = dto.OpeningTime1;
-        exception.ClosingTime1 = dto.ClosingTime1;
-        exception.OpeningTime2 = dto.OpeningTime2;
-        exception.ClosingTime2 = dto.ClosingTime2;
         exception.MaxCapacity = dto.MaxCapacity;
         exception.UpdatedAt = DateTime.UtcNow;
+
+        // Remove old shifts
+        _context.BusinessHoursShifts.RemoveRange(exception.Shifts);
+
+        // Add new shifts if not closed
+        if (!dto.IsClosed && dto.Shifts?.Any() == true)
+        {
+            var newShifts = dto.Shifts.Select(s => new BusinessHoursShift
+            {
+                BusinessHoursExceptionId = exception.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList();
+
+            _context.BusinessHoursShifts.AddRange(newShifts);
+            exception.Shifts = newShifts;
+        }
+        else
+        {
+            exception.Shifts.Clear();
+        }
 
         await _context.SaveChangesAsync();
 
@@ -286,6 +390,7 @@ public class BusinessHoursService : IBusinessHoursService
 
         // First, check for exceptions on this specific date
         var exception = await _context.BusinessHoursExceptions
+            .Include(ex => ex.Shifts.OrderBy(s => s.SortOrder))
             .FirstOrDefaultAsync(ex => ex.ServiceId == serviceId && ex.Date.Date == date.Date);
 
         if (exception != null)
@@ -293,8 +398,7 @@ public class BusinessHoursService : IBusinessHoursService
             if (exception.IsClosed)
                 return Array.Empty<AvailableSlotDto>();
 
-            return await GenerateSlotsFromHours(service, date, exception.OpeningTime1, exception.ClosingTime1,
-                exception.OpeningTime2, exception.ClosingTime2, exception.MaxCapacity);
+            return await GenerateSlotsFromShifts(service, date, exception.Shifts, exception.MaxCapacity);
         }
 
         // No exception, check business hours for this day of week
@@ -304,95 +408,64 @@ public class BusinessHoursService : IBusinessHoursService
         dayOfWeek = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
 
         var businessHours = await _context.BusinessHours
+            .Include(bh => bh.Shifts.OrderBy(s => s.SortOrder))
             .FirstOrDefaultAsync(bh => bh.ServiceId == serviceId && bh.DayOfWeek == dayOfWeek);
 
         if (businessHours == null || businessHours.IsClosed)
             return Array.Empty<AvailableSlotDto>();
 
-        return await GenerateSlotsFromHours(service, date, businessHours.OpeningTime1, businessHours.ClosingTime1,
-            businessHours.OpeningTime2, businessHours.ClosingTime2, businessHours.MaxCapacity);
+        return await GenerateSlotsFromShifts(service, date, businessHours.Shifts, businessHours.MaxCapacity);
     }
 
-    private async Task<IEnumerable<AvailableSlotDto>> GenerateSlotsFromHours(
+    private async Task<IEnumerable<AvailableSlotDto>> GenerateSlotsFromShifts(
         Service service, DateTime date,
-        TimeSpan? openingTime1, TimeSpan? closingTime1,
-        TimeSpan? openingTime2, TimeSpan? closingTime2,
-        int? maxCapacity)
+        IEnumerable<BusinessHoursShift> shifts,
+        int? defaultMaxCapacity)
     {
-        var slots = new List<AvailableSlotDto>();
+        var allSlots = new List<AvailableSlotDto>();
 
-        if (service.BookingMode != BookingMode.TimeSlot)
+        if (!shifts.Any())
+            return allSlots;
+
+        foreach (var shift in shifts.OrderBy(s => s.SortOrder))
         {
-            // For non-TimeSlot modes, return availability windows instead of specific slots
-            if (openingTime1.HasValue && closingTime1.HasValue)
+            if (service.BookingMode == BookingMode.TimeSlot)
             {
-                slots.Add(new AvailableSlotDto
+                // Generate individual slots for this shift
+                var slotDuration = service.SlotDurationMinutes ?? service.DurationMinutes;
+                var timeSlots = GenerateTimeSlots(shift.OpeningTime, shift.ClosingTime, slotDuration);
+
+                var shiftSlots = timeSlots.Select(time => new AvailableSlotDto
                 {
                     Date = date,
-                    SlotTime = openingTime1.Value,
-                    TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
+                    SlotTime = time,
+                    TotalCapacity = shift.MaxCapacity ?? defaultMaxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
+                    AvailableCapacity = 0 // Will be calculated
+                }).ToList();
+
+                allSlots.AddRange(shiftSlots);
+            }
+            else
+            {
+                // For TimeRange/DayOnly modes, return shift as availability window
+                allSlots.Add(new AvailableSlotDto
+                {
+                    Date = date,
+                    SlotTime = shift.OpeningTime,
+                    TotalCapacity = shift.MaxCapacity ?? defaultMaxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
                     AvailableCapacity = 0 // Will be calculated
                 });
             }
-
-            if (openingTime2.HasValue && closingTime2.HasValue)
-            {
-                slots.Add(new AvailableSlotDto
-                {
-                    Date = date,
-                    SlotTime = openingTime2.Value,
-                    TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                    AvailableCapacity = 0
-                });
-            }
-
-            // Calculate available capacity for each window
-            foreach (var slot in slots)
-            {
-                var bookedCount = await GetBookedCountForSlot(service.Id, date, slot.SlotTime);
-                slot.AvailableCapacity = Math.Max(0, slot.TotalCapacity - bookedCount);
-            }
-
-            return slots;
-        }
-
-        // For TimeSlot mode, generate individual slots
-        var slotDuration = service.SlotDurationMinutes ?? service.DurationMinutes;
-
-        // Generate slots for first shift
-        if (openingTime1.HasValue && closingTime1.HasValue)
-        {
-            var shiftSlots = GenerateTimeSlots(openingTime1.Value, closingTime1.Value, slotDuration);
-            slots.AddRange(shiftSlots.Select(time => new AvailableSlotDto
-            {
-                Date = date,
-                SlotTime = time,
-                TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                AvailableCapacity = 0
-            }));
-        }
-
-        // Generate slots for second shift
-        if (openingTime2.HasValue && closingTime2.HasValue)
-        {
-            var shiftSlots = GenerateTimeSlots(openingTime2.Value, closingTime2.Value, slotDuration);
-            slots.AddRange(shiftSlots.Select(time => new AvailableSlotDto
-            {
-                Date = date,
-                SlotTime = time,
-                TotalCapacity = maxCapacity ?? service.MaxCapacityPerSlot ?? int.MaxValue,
-                AvailableCapacity = 0
-            }));
         }
 
         // Calculate available capacity for each slot
-        foreach (var slot in slots)
+        foreach (var slot in allSlots)
         {
             var bookedCount = await GetBookedCountForSlot(service.Id, date, slot.SlotTime);
             slot.AvailableCapacity = Math.Max(0, slot.TotalCapacity - bookedCount);
         }
 
-        return slots.OrderBy(s => s.SlotTime);
+        return allSlots.OrderBy(s => s.SlotTime);
     }
 
     private List<TimeSpan> GenerateTimeSlots(TimeSpan startTime, TimeSpan endTime, int slotDurationMinutes)
@@ -411,8 +484,6 @@ public class BusinessHoursService : IBusinessHoursService
 
     private async Task<int> GetBookedCountForSlot(int serviceId, DateTime date, TimeSpan slotTime)
     {
-        var slotDateTime = date.Date.Add(slotTime);
-
         var bookedCount = await _context.Bookings
             .Where(b => b.ServiceId == serviceId &&
                        b.BookingDate.Date == date.Date &&
@@ -435,19 +506,13 @@ public class BusinessHoursService : IBusinessHoursService
         if (dto.IsClosed)
             return;
 
-        if (!dto.OpeningTime1.HasValue || !dto.ClosingTime1.HasValue)
-            throw new ArgumentException("Opening and closing times are required when not closed");
+        if (dto.Shifts == null || !dto.Shifts.Any())
+            throw new ArgumentException("At least one shift is required when not closed");
 
-        if (dto.OpeningTime1 >= dto.ClosingTime1)
-            throw new ArgumentException("Opening time must be before closing time (shift 1)");
-
-        if (dto.OpeningTime2.HasValue && dto.ClosingTime2.HasValue)
+        foreach (var shift in dto.Shifts)
         {
-            if (dto.OpeningTime2 >= dto.ClosingTime2)
-                throw new ArgumentException("Opening time must be before closing time (shift 2)");
-
-            if (dto.OpeningTime2 < dto.ClosingTime1)
-                throw new ArgumentException("Second shift must start after first shift ends");
+            if (shift.OpeningTime >= shift.ClosingTime)
+                throw new ArgumentException("Opening time must be before closing time for all shifts");
         }
     }
 
@@ -456,19 +521,13 @@ public class BusinessHoursService : IBusinessHoursService
         if (dto.IsClosed)
             return;
 
-        if (!dto.OpeningTime1.HasValue || !dto.ClosingTime1.HasValue)
-            throw new ArgumentException("Opening and closing times are required when not closed");
+        if (dto.Shifts == null || !dto.Shifts.Any())
+            throw new ArgumentException("At least one shift is required when not closed");
 
-        if (dto.OpeningTime1 >= dto.ClosingTime1)
-            throw new ArgumentException("Opening time must be before closing time (shift 1)");
-
-        if (dto.OpeningTime2.HasValue && dto.ClosingTime2.HasValue)
+        foreach (var shift in dto.Shifts)
         {
-            if (dto.OpeningTime2 >= dto.ClosingTime2)
-                throw new ArgumentException("Opening time must be before closing time (shift 2)");
-
-            if (dto.OpeningTime2 < dto.ClosingTime1)
-                throw new ArgumentException("Second shift must start after first shift ends");
+            if (shift.OpeningTime >= shift.ClosingTime)
+                throw new ArgumentException("Opening time must be before closing time for all shifts");
         }
     }
 
@@ -477,19 +536,13 @@ public class BusinessHoursService : IBusinessHoursService
         if (dto.IsClosed)
             return;
 
-        if (!dto.OpeningTime1.HasValue || !dto.ClosingTime1.HasValue)
-            throw new ArgumentException("Opening and closing times are required when not closed");
+        if (dto.Shifts == null || !dto.Shifts.Any())
+            throw new ArgumentException("At least one shift is required when not closed");
 
-        if (dto.OpeningTime1 >= dto.ClosingTime1)
-            throw new ArgumentException("Opening time must be before closing time (shift 1)");
-
-        if (dto.OpeningTime2.HasValue && dto.ClosingTime2.HasValue)
+        foreach (var shift in dto.Shifts)
         {
-            if (dto.OpeningTime2 >= dto.ClosingTime2)
-                throw new ArgumentException("Opening time must be before closing time (shift 2)");
-
-            if (dto.OpeningTime2 < dto.ClosingTime1)
-                throw new ArgumentException("Second shift must start after first shift ends");
+            if (shift.OpeningTime >= shift.ClosingTime)
+                throw new ArgumentException("Opening time must be before closing time for all shifts");
         }
     }
 
@@ -498,19 +551,13 @@ public class BusinessHoursService : IBusinessHoursService
         if (dto.IsClosed)
             return;
 
-        if (!dto.OpeningTime1.HasValue || !dto.ClosingTime1.HasValue)
-            throw new ArgumentException("Opening and closing times are required when not closed");
+        if (dto.Shifts == null || !dto.Shifts.Any())
+            throw new ArgumentException("At least one shift is required when not closed");
 
-        if (dto.OpeningTime1 >= dto.ClosingTime1)
-            throw new ArgumentException("Opening time must be before closing time (shift 1)");
-
-        if (dto.OpeningTime2.HasValue && dto.ClosingTime2.HasValue)
+        foreach (var shift in dto.Shifts)
         {
-            if (dto.OpeningTime2 >= dto.ClosingTime2)
-                throw new ArgumentException("Opening time must be before closing time (shift 2)");
-
-            if (dto.OpeningTime2 < dto.ClosingTime1)
-                throw new ArgumentException("Second shift must start after first shift ends");
+            if (shift.OpeningTime >= shift.ClosingTime)
+                throw new ArgumentException("Opening time must be before closing time for all shifts");
         }
     }
 
@@ -526,11 +573,16 @@ public class BusinessHoursService : IBusinessHoursService
             ServiceId = businessHours.ServiceId,
             DayOfWeek = businessHours.DayOfWeek,
             IsClosed = businessHours.IsClosed,
-            OpeningTime1 = businessHours.OpeningTime1,
-            ClosingTime1 = businessHours.ClosingTime1,
-            OpeningTime2 = businessHours.OpeningTime2,
-            ClosingTime2 = businessHours.ClosingTime2,
-            MaxCapacity = businessHours.MaxCapacity
+            MaxCapacity = businessHours.MaxCapacity,
+            Shifts = businessHours.Shifts?.OrderBy(s => s.SortOrder).Select(s => new BusinessHoursShiftDto
+            {
+                Id = s.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList() ?? new List<BusinessHoursShiftDto>()
         };
     }
 
@@ -543,11 +595,16 @@ public class BusinessHoursService : IBusinessHoursService
             Date = exception.Date,
             IsClosed = exception.IsClosed,
             Reason = exception.Reason,
-            OpeningTime1 = exception.OpeningTime1,
-            ClosingTime1 = exception.ClosingTime1,
-            OpeningTime2 = exception.OpeningTime2,
-            ClosingTime2 = exception.ClosingTime2,
-            MaxCapacity = exception.MaxCapacity
+            MaxCapacity = exception.MaxCapacity,
+            Shifts = exception.Shifts?.OrderBy(s => s.SortOrder).Select(s => new BusinessHoursShiftDto
+            {
+                Id = s.Id,
+                OpeningTime = s.OpeningTime,
+                ClosingTime = s.ClosingTime,
+                Label = s.Label,
+                MaxCapacity = s.MaxCapacity,
+                SortOrder = s.SortOrder
+            }).ToList() ?? new List<BusinessHoursShiftDto>()
         };
     }
 

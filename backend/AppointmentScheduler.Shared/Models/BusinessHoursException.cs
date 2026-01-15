@@ -26,15 +26,14 @@ public class BusinessHoursException
     /// </summary>
     public string? Reason { get; set; }
 
-    // Special hours for this date (if not closed)
-    public TimeSpan? OpeningTime1 { get; set; }
-    public TimeSpan? ClosingTime1 { get; set; }
-
-    public TimeSpan? OpeningTime2 { get; set; }
-    public TimeSpan? ClosingTime2 { get; set; }
+    /// <summary>
+    /// Collection of shifts for this exception date (if not closed).
+    /// Allows defining custom hours for special days.
+    /// </summary>
+    public ICollection<BusinessHoursShift> Shifts { get; set; } = new List<BusinessHoursShift>();
 
     /// <summary>
-    /// Maximum capacity for this specific date (optional)
+    /// Maximum capacity for this specific date (can be overridden at shift level)
     /// </summary>
     public int? MaxCapacity { get; set; }
 

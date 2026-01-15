@@ -19,6 +19,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Employee> Employees { get; set; }
     public DbSet<BusinessHours> BusinessHours { get; set; }
     public DbSet<BusinessHoursException> BusinessHoursExceptions { get; set; }
+    public DbSet<BusinessHoursShift> BusinessHoursShifts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -152,6 +153,29 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.ServiceId, e.Date });
+        });
+
+        // BusinessHoursShift configuration
+        modelBuilder.Entity<BusinessHoursShift>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Label).HasMaxLength(100);
+
+            // A shift belongs to either BusinessHours or BusinessHoursException (not both)
+            entity.HasOne(e => e.BusinessHours)
+                .WithMany(bh => bh.Shifts)
+                .HasForeignKey(e => e.BusinessHoursId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.BusinessHoursException)
+                .WithMany(ex => ex.Shifts)
+                .HasForeignKey(e => e.BusinessHoursExceptionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.BusinessHoursId);
+            entity.HasIndex(e => e.BusinessHoursExceptionId);
+            entity.HasIndex(e => e.SortOrder);
         });
     }
 }

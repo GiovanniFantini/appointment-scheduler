@@ -10,16 +10,22 @@ interface Service {
   bookingModeName: string
 }
 
+interface BusinessHoursShift {
+  id?: number
+  openingTime: string
+  closingTime: string
+  label?: string
+  maxCapacity?: number
+  sortOrder: number
+}
+
 interface BusinessHours {
   id: number
   serviceId: number
   dayOfWeek: number
   isClosed: boolean
-  openingTime1: string | null
-  closingTime1: string | null
-  openingTime2: string | null
-  closingTime2: string | null
-  maxCapacity: number | null
+  shifts: BusinessHoursShift[]
+  maxCapacity?: number
 }
 
 interface BusinessHoursException {
@@ -27,21 +33,15 @@ interface BusinessHoursException {
   serviceId: number
   date: string
   isClosed: boolean
-  reason: string | null
-  openingTime1: string | null
-  closingTime1: string | null
-  openingTime2: string | null
-  closingTime2: string | null
-  maxCapacity: number | null
+  reason?: string
+  shifts: BusinessHoursShift[]
+  maxCapacity?: number
 }
 
 interface DayConfig {
   dayOfWeek: number
   isClosed: boolean
-  openingTime1: string
-  closingTime1: string
-  openingTime2: string
-  closingTime2: string
+  shifts: BusinessHoursShift[]
   maxCapacity: string
 }
 
@@ -61,10 +61,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
     date: '',
     isClosed: false,
     reason: '',
-    openingTime1: '12:00',
-    closingTime1: '15:00',
-    openingTime2: '19:00',
-    closingTime2: '23:00',
+    shifts: [] as BusinessHoursShift[],
     maxCapacity: ''
   })
 
@@ -73,10 +70,10 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
     DAYS.map((_, index) => ({
       dayOfWeek: index,
       isClosed: index === 0, // Lunedì chiuso di default
-      openingTime1: '12:00',
-      closingTime1: '15:00',
-      openingTime2: '19:00',
-      closingTime2: '23:00',
+      shifts: [
+        { openingTime: '12:00', closingTime: '15:00', label: 'Pranzo', sortOrder: 0 },
+        { openingTime: '19:00', closingTime: '23:00', label: 'Cena', sortOrder: 1 }
+      ],
       maxCapacity: ''
     }))
   )
@@ -118,10 +115,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
             return {
               dayOfWeek: index,
               isClosed: existing.isClosed,
-              openingTime1: existing.openingTime1 || '12:00',
-              closingTime1: existing.closingTime1 || '15:00',
-              openingTime2: existing.openingTime2 || '19:00',
-              closingTime2: existing.closingTime2 || '23:00',
+              shifts: existing.shifts || [],
               maxCapacity: existing.maxCapacity?.toString() || ''
             }
           }
@@ -153,10 +147,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
         serviceId: selectedServiceId,
         dayOfWeek: day.dayOfWeek,
         isClosed: day.isClosed,
-        openingTime1: day.isClosed ? null : day.openingTime1,
-        closingTime1: day.isClosed ? null : day.closingTime1,
-        openingTime2: day.isClosed || !day.openingTime2 ? null : day.openingTime2,
-        closingTime2: day.isClosed || !day.closingTime2 ? null : day.closingTime2,
+        shifts: day.isClosed ? [] : day.shifts,
         maxCapacity: day.maxCapacity === '' ? null : parseInt(day.maxCapacity)
       }))
 
@@ -174,6 +165,33 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
     setWeekConfig(newConfig)
   }
 
+  const handleAddShift = (dayIndex: number) => {
+    const newConfig = [...weekConfig]
+    const newShift: BusinessHoursShift = {
+      openingTime: '09:00',
+      closingTime: '18:00',
+      label: '',
+      sortOrder: newConfig[dayIndex].shifts.length
+    }
+    newConfig[dayIndex].shifts = [...newConfig[dayIndex].shifts, newShift]
+    setWeekConfig(newConfig)
+  }
+
+  const handleRemoveShift = (dayIndex: number, shiftIndex: number) => {
+    const newConfig = [...weekConfig]
+    newConfig[dayIndex].shifts = newConfig[dayIndex].shifts.filter((_, i) => i !== shiftIndex)
+    // Renumber sortOrder
+    newConfig[dayIndex].shifts.forEach((shift, i) => shift.sortOrder = i)
+    setWeekConfig(newConfig)
+  }
+
+  const handleShiftChange = (dayIndex: number, shiftIndex: number, field: keyof BusinessHoursShift, value: any) => {
+    const newConfig = [...weekConfig]
+    const shift = newConfig[dayIndex].shifts[shiftIndex]
+    newConfig[dayIndex].shifts[shiftIndex] = { ...shift, [field]: value }
+    setWeekConfig(newConfig)
+  }
+
   const handleAddException = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedServiceId) return
@@ -184,10 +202,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
         date: exceptionFormData.date,
         isClosed: exceptionFormData.isClosed,
         reason: exceptionFormData.reason || null,
-        openingTime1: exceptionFormData.isClosed ? null : exceptionFormData.openingTime1,
-        closingTime1: exceptionFormData.isClosed ? null : exceptionFormData.closingTime1,
-        openingTime2: exceptionFormData.isClosed || !exceptionFormData.openingTime2 ? null : exceptionFormData.openingTime2,
-        closingTime2: exceptionFormData.isClosed || !exceptionFormData.closingTime2 ? null : exceptionFormData.closingTime2,
+        shifts: exceptionFormData.isClosed ? [] : exceptionFormData.shifts,
         maxCapacity: exceptionFormData.maxCapacity === '' ? null : parseInt(exceptionFormData.maxCapacity)
       }
 
@@ -198,10 +213,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
         date: '',
         isClosed: false,
         reason: '',
-        openingTime1: '12:00',
-        closingTime1: '15:00',
-        openingTime2: '19:00',
-        closingTime2: '23:00',
+        shifts: [],
         maxCapacity: ''
       })
       fetchExceptions()
@@ -224,8 +236,39 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
 
   const copyDay = (fromDay: number, toDay: number) => {
     const newConfig = [...weekConfig]
-    newConfig[toDay] = { ...weekConfig[fromDay], dayOfWeek: toDay }
+    newConfig[toDay] = {
+      ...weekConfig[fromDay],
+      dayOfWeek: toDay,
+      shifts: weekConfig[fromDay].shifts.map(s => ({ ...s })) // Deep copy shifts
+    }
     setWeekConfig(newConfig)
+  }
+
+  const addExceptionShift = () => {
+    setExceptionFormData({
+      ...exceptionFormData,
+      shifts: [
+        ...exceptionFormData.shifts,
+        {
+          openingTime: '09:00',
+          closingTime: '18:00',
+          label: '',
+          sortOrder: exceptionFormData.shifts.length
+        }
+      ]
+    })
+  }
+
+  const removeExceptionShift = (index: number) => {
+    const newShifts = exceptionFormData.shifts.filter((_, i) => i !== index)
+    newShifts.forEach((shift, i) => shift.sortOrder = i)
+    setExceptionFormData({ ...exceptionFormData, shifts: newShifts })
+  }
+
+  const updateExceptionShift = (index: number, field: keyof BusinessHoursShift, value: any) => {
+    const newShifts = [...exceptionFormData.shifts]
+    newShifts[index] = { ...newShifts[index], [field]: value }
+    setExceptionFormData({ ...exceptionFormData, shifts: newShifts })
   }
 
   if (loading) {
@@ -280,89 +323,98 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
               </div>
 
               <div className="space-y-4">
-                {weekConfig.map((day, index) => (
-                  <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-4">
+                {weekConfig.map((day, dayIndex) => (
+                  <div key={dayIndex} className="bg-white/5 border border-white/10 rounded-xl p-4">
                     <div className="flex items-center gap-4 mb-3">
-                      <div className="w-32 font-semibold">{DAYS[index]}</div>
+                      <div className="w-32 font-semibold">{DAYS[dayIndex]}</div>
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
                           checked={day.isClosed}
-                          onChange={(e) => handleDayChange(index, 'isClosed', e.target.checked)}
+                          onChange={(e) => handleDayChange(dayIndex, 'isClosed', e.target.checked)}
                           className="w-5 h-5"
                         />
                         <span>Chiuso</span>
                       </label>
-                      {index > 0 && (
+                      {dayIndex > 0 && (
                         <button
-                          onClick={() => copyDay(index - 1, index)}
+                          onClick={() => copyDay(dayIndex - 1, dayIndex)}
                           className="ml-auto px-3 py-1 bg-white/10 rounded-lg hover:bg-white/20 text-sm"
                         >
-                          Copia da {DAYS[index - 1]}
+                          Copia da {DAYS[dayIndex - 1]}
                         </button>
                       )}
                     </div>
 
                     {!day.isClosed && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Primo turno */}
-                        <div className="space-y-2">
-                          <div className="text-sm font-semibold text-purple-300">Primo Turno (es. Pranzo)</div>
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <label className="text-xs text-white/60">Apertura</label>
+                      <div className="space-y-3">
+                        {/* Shifts */}
+                        {day.shifts.map((shift, shiftIndex) => (
+                          <div key={shiftIndex} className="bg-white/5 border border-white/10 rounded-lg p-3">
+                            <div className="flex items-center gap-2 mb-2">
                               <input
-                                type="time"
-                                value={day.openingTime1}
-                                onChange={(e) => handleDayChange(index, 'openingTime1', e.target.value)}
-                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                                type="text"
+                                placeholder="Etichetta (es. Pranzo)"
+                                value={shift.label || ''}
+                                onChange={(e) => handleShiftChange(dayIndex, shiftIndex, 'label', e.target.value)}
+                                className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50"
                               />
+                              <button
+                                onClick={() => handleRemoveShift(dayIndex, shiftIndex)}
+                                className="px-3 py-2 bg-red-500/80 rounded-lg hover:bg-red-600 transition-all"
+                                disabled={day.shifts.length === 1}
+                              >
+                                Rimuovi
+                              </button>
                             </div>
-                            <div className="flex-1">
-                              <label className="text-xs text-white/60">Chiusura</label>
-                              <input
-                                type="time"
-                                value={day.closingTime1}
-                                onChange={(e) => handleDayChange(index, 'closingTime1', e.target.value)}
-                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                              />
+                            <div className="grid grid-cols-3 gap-2">
+                              <div>
+                                <label className="text-xs text-white/60">Apertura</label>
+                                <input
+                                  type="time"
+                                  value={shift.openingTime}
+                                  onChange={(e) => handleShiftChange(dayIndex, shiftIndex, 'openingTime', e.target.value)}
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-white/60">Chiusura</label>
+                                <input
+                                  type="time"
+                                  value={shift.closingTime}
+                                  onChange={(e) => handleShiftChange(dayIndex, shiftIndex, 'closingTime', e.target.value)}
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-white/60">Capacità (opz.)</label>
+                                <input
+                                  type="number"
+                                  placeholder="Auto"
+                                  value={shift.maxCapacity || ''}
+                                  onChange={(e) => handleShiftChange(dayIndex, shiftIndex, 'maxCapacity', e.target.value ? parseInt(e.target.value) : undefined)}
+                                  className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                                />
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        ))}
 
-                        {/* Secondo turno */}
-                        <div className="space-y-2">
-                          <div className="text-sm font-semibold text-pink-300">Secondo Turno (es. Cena)</div>
-                          <div className="flex gap-2">
-                            <div className="flex-1">
-                              <label className="text-xs text-white/60">Apertura</label>
-                              <input
-                                type="time"
-                                value={day.openingTime2}
-                                onChange={(e) => handleDayChange(index, 'openingTime2', e.target.value)}
-                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                              />
-                            </div>
-                            <div className="flex-1">
-                              <label className="text-xs text-white/60">Chiusura</label>
-                              <input
-                                type="time"
-                                value={day.closingTime2}
-                                onChange={(e) => handleDayChange(index, 'closingTime2', e.target.value)}
-                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                              />
-                            </div>
-                          </div>
-                        </div>
+                        <button
+                          onClick={() => handleAddShift(dayIndex)}
+                          className="w-full px-3 py-2 bg-green-500/80 rounded-lg hover:bg-green-600 transition-all"
+                        >
+                          + Aggiungi Turno
+                        </button>
 
-                        {/* Capacità massima */}
+                        {/* Default Capacity */}
                         <div>
-                          <label className="text-xs text-white/60">Capacità Massima (opzionale)</label>
+                          <label className="text-xs text-white/60">Capacità Massima Giornaliera (opzionale)</label>
                           <input
                             type="number"
                             placeholder="Illimitata"
                             value={day.maxCapacity}
-                            onChange={(e) => handleDayChange(index, 'maxCapacity', e.target.value)}
+                            onChange={(e) => handleDayChange(dayIndex, 'maxCapacity', e.target.value)}
                             className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
                           />
                         </div>
@@ -415,7 +467,7 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
                       <input
                         type="checkbox"
                         checked={exceptionFormData.isClosed}
-                        onChange={(e) => setExceptionFormData({ ...exceptionFormData, isClosed: e.target.checked })}
+                        onChange={(e) => setExceptionFormData({ ...exceptionFormData, isClosed: e.target.checked, shifts: [] })}
                         className="w-5 h-5"
                       />
                       <span>Chiuso questo giorno</span>
@@ -423,25 +475,54 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
                   </div>
 
                   {!exceptionFormData.isClosed && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm mb-1">Apertura 1° turno</label>
-                        <input
-                          type="time"
-                          value={exceptionFormData.openingTime1}
-                          onChange={(e) => setExceptionFormData({ ...exceptionFormData, openingTime1: e.target.value })}
-                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Chiusura 1° turno</label>
-                        <input
-                          type="time"
-                          value={exceptionFormData.closingTime1}
-                          onChange={(e) => setExceptionFormData({ ...exceptionFormData, closingTime1: e.target.value })}
-                          className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
-                        />
-                      </div>
+                    <div className="space-y-3 mb-4">
+                      {exceptionFormData.shifts.map((shift, index) => (
+                        <div key={index} className="bg-white/5 border border-white/10 rounded-lg p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <input
+                              type="text"
+                              placeholder="Etichetta"
+                              value={shift.label || ''}
+                              onChange={(e) => updateExceptionShift(index, 'label', e.target.value)}
+                              className="flex-1 px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => removeExceptionShift(index)}
+                              className="px-3 py-2 bg-red-500/80 rounded-lg hover:bg-red-600"
+                            >
+                              Rimuovi
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="text-xs text-white/60">Apertura</label>
+                              <input
+                                type="time"
+                                value={shift.openingTime}
+                                onChange={(e) => updateExceptionShift(index, 'openingTime', e.target.value)}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs text-white/60">Chiusura</label>
+                              <input
+                                type="time"
+                                value={shift.closingTime}
+                                onChange={(e) => updateExceptionShift(index, 'closingTime', e.target.value)}
+                                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addExceptionShift}
+                        className="w-full px-3 py-2 bg-green-500/80 rounded-lg hover:bg-green-600"
+                      >
+                        + Aggiungi Turno
+                      </button>
                     </div>
                   )}
 
@@ -460,16 +541,23 @@ function BusinessHours({ onLogout }: BusinessHoursProps) {
                   <p className="text-white/60 text-center py-4">Nessuna eccezione configurata</p>
                 ) : (
                   exceptions.map(exc => (
-                    <div key={exc.id} className="bg-white/5 border border-white/10 rounded-lg p-3 flex justify-between items-center">
+                    <div key={exc.id} className="bg-white/5 border border-white/10 rounded-lg p-3 flex justify-between items-start">
                       <div>
                         <div className="font-semibold">{new Date(exc.date).toLocaleDateString('it-IT')}</div>
                         <div className="text-sm text-white/60">
                           {exc.isClosed ? (
                             <span className="text-red-400">Chiuso</span>
                           ) : (
-                            <span>{exc.openingTime1} - {exc.closingTime1}</span>
+                            <div>
+                              {exc.shifts.map((shift, i) => (
+                                <div key={i}>
+                                  {shift.label && `${shift.label}: `}
+                                  {shift.openingTime} - {shift.closingTime}
+                                </div>
+                              ))}
+                            </div>
                           )}
-                          {exc.reason && <span className="ml-2">- {exc.reason}</span>}
+                          {exc.reason && <div className="mt-1">- {exc.reason}</div>}
                         </div>
                       </div>
                       <button

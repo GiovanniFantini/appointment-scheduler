@@ -7,10 +7,7 @@ public class BusinessHoursExceptionDto
     public DateTime Date { get; set; }
     public bool IsClosed { get; set; }
     public string? Reason { get; set; }
-    public TimeSpan? OpeningTime1 { get; set; }
-    public TimeSpan? ClosingTime1 { get; set; }
-    public TimeSpan? OpeningTime2 { get; set; }
-    public TimeSpan? ClosingTime2 { get; set; }
+    public List<BusinessHoursShiftDto> Shifts { get; set; } = new();
     public int? MaxCapacity { get; set; }
 }
 
@@ -20,10 +17,7 @@ public class CreateBusinessHoursExceptionDto
     public DateTime Date { get; set; }
     public bool IsClosed { get; set; }
     public string? Reason { get; set; }
-    public TimeSpan? OpeningTime1 { get; set; }
-    public TimeSpan? ClosingTime1 { get; set; }
-    public TimeSpan? OpeningTime2 { get; set; }
-    public TimeSpan? ClosingTime2 { get; set; }
+    public List<CreateBusinessHoursShiftDto> Shifts { get; set; } = new();
     public int? MaxCapacity { get; set; }
 }
 
@@ -31,9 +25,6 @@ public class UpdateBusinessHoursExceptionDto
 {
     public bool IsClosed { get; set; }
     public string? Reason { get; set; }
-    public TimeSpan? OpeningTime1 { get; set; }
-    public TimeSpan? ClosingTime1 { get; set; }
-    public TimeSpan? OpeningTime2 { get; set; }
-    public TimeSpan? ClosingTime2 { get; set; }
+    public List<CreateBusinessHoursShiftDto> Shifts { get; set; } = new();
     public int? MaxCapacity { get; set; }
 }
