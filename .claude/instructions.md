@@ -11,6 +11,14 @@ Queste sono le istruzioni permanenti per lo sviluppo di questo progetto. Seguile
 
 ## Principi di Sviluppo
 
+### 0. Build Verification (PRIORITÀ MASSIMA)
+**SEMPRE verificare build e integrazione dopo ogni modifica al codice.**
+- Backend modificato → `dotnet build` DEVE passare
+- Frontend modificato → `npm run build` DEVE passare
+- Models/DTOs condivisi modificati → Verifica ENTRAMBI backend E frontend
+- **NON committare MAI codice che non builda**
+- Vedi sezione "Build & Run Verification Protocol" per dettagli completi
+
 ### 1. User-Friendly
 - L'applicazione deve essere intuitiva e facile da usare
 - Messaggi di errore chiari e comprensibili (non tecnici)
@@ -365,9 +373,129 @@ env:
   GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
 ```
 
+## Build & Run Verification Protocol
+
+**CRITICO:** Ad ogni modifica di codice, DEVI sempre verificare che l'applicazione buildi e funzioni correttamente.
+
+### Workflow Obbligatorio
+
+Dopo OGNI modifica al codice, segui questi step:
+
+1. **Verifica Build Backend** (se hai modificato backend)
+   ```bash
+   cd backend/AppointmentScheduler.API
+   dotnet build
+
+   # Se il build fallisce:
+   # - Leggi gli errori di compilazione
+   # - Correggi TUTTI gli errori
+   # - Riprova il build
+   # - Non procedere fino a build SUCCESS
+   ```
+
+2. **Verifica Build Frontend** (se hai modificato frontend)
+   ```bash
+   # Per merchant-app
+   cd frontend/merchant-app
+   npm run build
+
+   # Per consumer-app
+   cd frontend/consumer-app
+   npm run build
+
+   # Per admin-app
+   cd frontend/admin-app
+   npm run build
+
+   # Se il build fallisce:
+   # - Leggi gli errori TypeScript/Vite
+   # - Correggi TUTTI gli errori e warning
+   # - Riprova il build
+   # - Non procedere fino a build SUCCESS
+   ```
+
+3. **Verifica Integrazione** (sempre)
+   - Dopo aver fixato tutti i build errors, verifica che:
+     - Backend compila senza errori
+     - Frontend(s) modificato/i buildano senza errori
+     - Non ci sono import mancanti o riferimenti a file/componenti rimossi
+     - Le modifiche al backend sono compatibili con il frontend
+     - Le modifiche al frontend usano correttamente le API backend
+
+4. **Test Runtime (quando possibile)**
+   - Se .NET SDK è disponibile: avvia il backend e verifica che parta
+   - Se Node è disponibile: avvia il frontend in dev mode e verifica UI
+   - Testa il flusso modificato end-to-end
+
+### Quando Verificare
+
+✅ **SEMPRE verificare build dopo:**
+- Modifica a Models/DTOs condivisi tra backend e frontend
+- Aggiunta/rimozione di proprietà da classi esistenti
+- Refactoring che tocca più file
+- Cambio di interfacce o contratti API
+- Rimozione di file, componenti, o servizi
+- Modifica a dependency injection registrations
+- Aggiunta di nuove dependencies/imports
+
+⚠️ **Verifica DOPPIA (backend + frontend) quando:**
+- Modifichi DTOs (es. BusinessHoursDto)
+- Modifichi Models condivisi (es. BusinessHours, BusinessHoursShift)
+- Aggiungi/rimuovi proprietà da entità database
+- Modifichi API endpoints o request/response format
+
+### Errori Comuni da Prevenire
+
+❌ **NON fare:**
+- Modificare Models senza verificare che il frontend ancora compili
+- Rimuovere proprietà da DTOs senza aggiornare tutti i file che le usano
+- Committare codice che non builda
+- Assumere che "probabilmente funziona" senza verificare
+
+✅ **FARE sempre:**
+- Build verification PRIMA di ogni commit
+- Correggere TUTTI gli errori di compilazione
+- Verificare che TUTTI i frontend buildino se hai toccato codice condiviso
+- Testare che backend e frontend siano sincronizzati
+
+### Procedura di Commit Corretta
+
+```bash
+# 1. Fai le tue modifiche al codice
+# ...
+
+# 2. VERIFICA BUILD (OBBLIGATORIO)
+# Backend
+cd backend/AppointmentScheduler.API
+dotnet build
+# ✅ Deve dire "Build succeeded"
+
+# Frontend (tutti quelli modificati)
+cd frontend/merchant-app
+npm run build
+# ✅ Deve completare senza errori
+
+# 3. Solo SE tutti i build passano → Commit
+git add .
+git commit -m "..."
+git push
+
+# 4. Se il build fallisce → NON committare, fixa prima!
+```
+
+### Note Importanti
+
+- **Non usare `dotnet` se non disponibile**: Se .NET SDK non è installato, verifica manualmente la sintassi e i riferimenti
+- **Build errors = blocco totale**: Mai ignorare errori di build
+- **Warning ≠ Errori**: I warning vanno valutati, ma non bloccano necessariamente
+- **Integrazione > Sintassi**: Verificare che backend e frontend parlino la stessa lingua
+
 ## Code Review Checklist
 
 Prima di ogni commit verificare:
+- [ ] **✅ BUILD VERIFICATION COMPLETATA (backend + frontend modificati)**
+- [ ] **✅ Nessun errore di compilazione**
+- [ ] **✅ Integrazione backend-frontend verificata**
 - [ ] XML/JSDoc comments su metodi public
 - [ ] Dependency injection usata correttamente
 - [ ] Nessun secret hardcoded

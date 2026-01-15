@@ -55,7 +55,7 @@ function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
 
         {/* Dashboard Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Link
             to="/services"
             className="glass-card p-8 rounded-3xl hover:shadow-glow-blue transition-all border border-white/10 hover:border-neon-blue/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
@@ -84,7 +84,7 @@ function Dashboard({ user, onLogout }: DashboardProps) {
           </Link>
 
           <Link
-            to="/availabilities"
+            to="/business-hours"
             className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-cyan/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
             style={{ animationDelay: '0.2s' }}
           >
@@ -93,8 +93,8 @@ function Dashboard({ user, onLogout }: DashboardProps) {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Disponibilità</h2>
-            <p className="text-gray-400">Configura calendario e slot orari</p>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Gestione Disponibilità</h2>
+            <p className="text-gray-400">Orari settimanali, eccezioni e chiusure</p>
           </Link>
 
           <Link

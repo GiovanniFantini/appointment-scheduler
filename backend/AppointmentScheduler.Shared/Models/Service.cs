@@ -36,4 +36,6 @@ public class Service
     public Merchant Merchant { get; set; } = null!;
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     public ICollection<Availability> Availabilities { get; set; } = new List<Availability>();
+    public ICollection<BusinessHours> BusinessHours { get; set; } = new List<BusinessHours>();
+    public ICollection<BusinessHoursException> BusinessHoursExceptions { get; set; } = new List<BusinessHoursException>();
 }

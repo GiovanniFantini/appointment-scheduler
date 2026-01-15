@@ -109,6 +109,7 @@ try
     builder.Services.AddScoped<IBookingService, BookingService>();
     builder.Services.AddScoped<IAvailabilityService, AvailabilityService>();
     builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+    builder.Services.AddScoped<IBusinessHoursService, BusinessHoursService>();
     Console.WriteLine("Application services registered");
 
     // JWT Authentication
