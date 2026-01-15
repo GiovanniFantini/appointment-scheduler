@@ -17,6 +17,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Availability> Availabilities { get; set; }
     public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
     public DbSet<Employee> Employees { get; set; }
+    public DbSet<BusinessHours> BusinessHours { get; set; }
+    public DbSet<BusinessHoursException> BusinessHoursExceptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -122,6 +124,34 @@ public class ApplicationDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.MerchantId);
+        });
+
+        // BusinessHours configuration
+        modelBuilder.Entity<BusinessHours>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Service)
+                .WithMany(s => s.BusinessHours)
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ServiceId, e.DayOfWeek });
+        });
+
+        // BusinessHoursException configuration
+        modelBuilder.Entity<BusinessHoursException>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.Property(e => e.Reason).HasMaxLength(500);
+
+            entity.HasOne(e => e.Service)
+                .WithMany(s => s.BusinessHoursExceptions)
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.ServiceId, e.Date });
         });
     }
 }

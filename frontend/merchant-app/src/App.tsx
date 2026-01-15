@@ -8,6 +8,7 @@ import Services from './pages/Services'
 import Bookings from './pages/Bookings'
 import Availabilities from './pages/Availabilities'
 import Employees from './pages/Employees'
+import BusinessHours from './pages/BusinessHours'
 
 interface User {
   userId: number
@@ -84,6 +85,9 @@ function App() {
           } />
           <Route path="/employees" element={
             user ? <Employees onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/business-hours" element={
+            user ? <BusinessHours onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
         </Routes>
       </Router>
