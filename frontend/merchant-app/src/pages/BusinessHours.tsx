@@ -68,7 +68,6 @@ const BUSINESS_TEMPLATES = {
 }
 
 function BusinessHoursPage({ onLogout }: BusinessHoursProps) {
-  const [businessHours, setBusinessHours] = useState<BusinessHours[]>([])
   const [loading, setLoading] = useState(true)
   const [weekFormData, setWeekFormData] = useState<any[]>(
     DAYS_OF_WEEK.map(day => ({
@@ -87,7 +86,6 @@ function BusinessHoursPage({ onLogout }: BusinessHoursProps) {
   const fetchBusinessHours = async () => {
     try {
       const res = await apiClient.get('/businesshours/my-business-hours')
-      setBusinessHours(res.data)
 
       // Popola il form con i dati esistenti
       const formData = DAYS_OF_WEEK.map(day => {
