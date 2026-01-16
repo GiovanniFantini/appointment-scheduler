@@ -22,5 +22,5 @@ public class User
     // Navigation properties
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     public Merchant? Merchant { get; set; } // Se è un merchant, ha un profilo business
-    public Employee? Employee { get; set; } // Se è un employee, ha un profilo dipendente
+    public ICollection<Employee> Employees { get; set; } = new List<Employee>(); // Un employee può lavorare per multipli merchant
 }

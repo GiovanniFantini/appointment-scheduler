@@ -10,7 +10,10 @@ interface RegisterProps {
 function Register({ onRegister }: RegisterProps) {
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    firstName: '',
+    lastName: '',
+    phoneNumber: ''
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -53,7 +56,7 @@ function Register({ onRegister }: RegisterProps) {
             <h1 className="text-4xl font-bold gradient-text mb-2">
               Registra il tuo account Employee
             </h1>
-            <p className="text-gray-400 text-sm">Utilizza l'email con cui sei stato censito dal tuo datore di lavoro</p>
+            <p className="text-gray-400 text-sm">Crea il tuo account per lavorare come dipendente</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -74,8 +77,38 @@ function Register({ onRegister }: RegisterProps) {
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
                 </svg>
                 <p className="text-sm text-gray-300">
-                  <strong className="text-neon-cyan">Importante:</strong> Utilizza l'email con cui sei stato registrato dal tuo datore di lavoro. I tuoi dati personali saranno recuperati automaticamente.
+                  <strong className="text-neon-cyan">Nota:</strong> Dopo la registrazione, i merchant potranno aggiungerti come dipendente usando la tua email. Potrai lavorare per multipli datori di lavoro con un unico account.
                 </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="block text-white/90 text-sm font-semibold">
+                  Nome
+                </label>
+                <input
+                  type="text"
+                  value={formData.firstName}
+                  onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:shadow-glow-cyan transition-all duration-300"
+                  placeholder="Mario"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="block text-white/90 text-sm font-semibold">
+                  Cognome
+                </label>
+                <input
+                  type="text"
+                  value={formData.lastName}
+                  onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:shadow-glow-cyan transition-all duration-300"
+                  placeholder="Rossi"
+                  required
+                />
               </div>
             </div>
 
@@ -90,6 +123,19 @@ function Register({ onRegister }: RegisterProps) {
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:shadow-glow-cyan transition-all duration-300"
                 placeholder="tua.email@azienda.com"
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-white/90 text-sm font-semibold">
+                Telefono <span className="text-gray-500 text-xs">(opzionale)</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.phoneNumber}
+                onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-green focus:shadow-glow-cyan transition-all duration-300"
+                placeholder="+39 123 456 7890"
               />
             </div>
 

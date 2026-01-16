@@ -45,12 +45,19 @@ public class EmployeeService : IEmployeeService
 
     /// <summary>
     /// Crea un nuovo dipendente
+    /// Se l'email corrisponde a un User già registrato come Employee, lo collega automaticamente
+    /// Altrimenti crea un "pending employee" che verrà collegato quando l'employee si registrerà
     /// </summary>
     public async Task<EmployeeDto> CreateEmployeeAsync(int merchantId, CreateEmployeeRequest request)
     {
+        // Cerca se esiste già un User registrato con questa email come Employee
+        var existingUser = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsEmployee && u.IsActive);
+
         var employee = new Employee
         {
             MerchantId = merchantId,
+            UserId = existingUser?.Id, // Se esiste, collega; altrimenti null (pending)
             FirstName = request.FirstName,
             LastName = request.LastName,
             Email = request.Email,

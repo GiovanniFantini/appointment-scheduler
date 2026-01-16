@@ -25,7 +25,7 @@ public class AuthService : IAuthService
     {
         var user = await _context.Users
             .Include(u => u.Merchant)
-            .Include(u => u.Employee)
+            .Include(u => u.Employees)
             .FirstOrDefaultAsync(u => u.Email == request.Email);
 
         if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
@@ -36,7 +36,7 @@ public class AuthService : IAuthService
 
         // Costruisci la lista di ruoli basata sui flags
         var roles = GetUserRoles(user);
-        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id, user.Employee?.Id);
+        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id);
 
         return new AuthResponse
         {
@@ -50,8 +50,8 @@ public class AuthService : IAuthService
             IsConsumer = user.IsConsumer,
             IsMerchant = user.IsMerchant,
             IsEmployee = user.IsEmployee,
-            MerchantId = user.Merchant?.Id,
-            EmployeeId = user.Employee?.Id
+            MerchantId = user.Merchant?.Id
+            // Note: EmployeeId rimosso perché un employee può lavorare per multipli merchant
         };
     }
 
@@ -122,30 +122,18 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request)
     {
-        // Verifica che l'email corrisponda a un employee esistente
-        var employee = await _context.Employees
-            .Include(e => e.Merchant)
-            .FirstOrDefaultAsync(e => e.Email == request.Email && e.IsActive);
-
-        if (employee == null)
-            throw new ArgumentException("Nessun dipendente trovato con questa email. Contatta il tuo datore di lavoro.");
-
-        // Verifica che l'employee non abbia già un account
-        if (employee.UserId.HasValue)
-            throw new ArgumentException("Hai già un account registrato. Usa la funzione di login.");
-
-        // Verifica se l'email esiste già nella tabella Users (non dovrebbe mai succedere, ma per sicurezza)
+        // Verifica se l'email esiste già nella tabella Users
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             throw new ArgumentException("Email già registrata nel sistema.");
 
-        // Crea un nuovo User per l'employee
+        // Crea un nuovo User come Employee
         var user = new User
         {
             Email = request.Email,
             PasswordHash = HashPassword(request.Password),
-            FirstName = employee.FirstName,
-            LastName = employee.LastName,
-            PhoneNumber = employee.PhoneNumber,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            PhoneNumber = request.PhoneNumber,
             IsEmployee = true,
             IsConsumer = true, // Può anche fare booking come consumer
             IsMerchant = false,
@@ -156,17 +144,26 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Collega l'employee al nuovo user
-        employee.UserId = user.Id;
-        employee.User = user;
-        employee.UpdatedAt = DateTime.UtcNow;
+        // Cerca tutti gli Employee "pending" (UserId = null) con questa email
+        // e collegali automaticamente al nuovo user
+        var pendingEmployees = await _context.Employees
+            .Where(e => e.Email == request.Email && !e.UserId.HasValue && e.IsActive)
+            .ToListAsync();
 
-        _context.Employees.Update(employee);
-        await _context.SaveChangesAsync();
+        if (pendingEmployees.Any())
+        {
+            foreach (var emp in pendingEmployees)
+            {
+                emp.UserId = user.Id;
+                emp.UpdatedAt = DateTime.UtcNow;
+            }
+            _context.Employees.UpdateRange(pendingEmployees);
+            await _context.SaveChangesAsync();
+        }
 
-        // Genera il token con EmployeeId e MerchantId
+        // Genera il token (senza EmployeeId/MerchantId specifici se multipli)
         var roles = GetUserRoles(user);
-        var token = GenerateJwtToken(user.Id, user.Email, roles, employee.MerchantId, employee.Id);
+        var token = GenerateJwtToken(user.Id, user.Email, roles);
 
         return new AuthResponse
         {
@@ -179,9 +176,7 @@ public class AuthService : IAuthService
             IsAdmin = user.IsAdmin,
             IsConsumer = user.IsConsumer,
             IsMerchant = user.IsMerchant,
-            IsEmployee = user.IsEmployee,
-            EmployeeId = employee.Id,
-            MerchantId = employee.MerchantId
+            IsEmployee = user.IsEmployee
         };
     }
 

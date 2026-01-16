@@ -17,6 +17,7 @@ public class AuthResponse
     public bool IsMerchant { get; set; }
     public bool IsEmployee { get; set; }
 
-    public int? MerchantId { get; set; } // Se è un merchant
-    public int? EmployeeId { get; set; } // Se è un employee
+    public int? MerchantId { get; set; } // Se è un merchant (one-to-one)
+    // Note: EmployeeId rimosso perché un employee può lavorare per multipli merchant
+    // Frontend employee-app userà un endpoint dedicato per ottenere la lista merchant
 }
