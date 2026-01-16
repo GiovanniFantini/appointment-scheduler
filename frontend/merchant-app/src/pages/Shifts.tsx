@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
-import { Shift, ShiftTemplate, CreateShiftRequest, CreateShiftsFromTemplateRequest } from '../types/shift';
+import { Shift, ShiftTemplate } from '../types/shift';
 
 interface Employee {
   id: number;
@@ -16,14 +16,14 @@ type ViewMode = 'week' | 'month';
 
 export default function Shifts() {
   const [shifts, setShifts] = useState<Shift[]>([]);
-  const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [_templates, setTemplates] = useState<ShiftTemplate[]>([]);
+  const [_employees, setEmployees] = useState<Employee[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [_showCreateModal, setShowCreateModal] = useState(false);
+  const [_showTemplateModal, setShowTemplateModal] = useState(false);
 
   useEffect(() => {
     fetchShifts();
