@@ -63,12 +63,15 @@ public class ShiftService : IShiftService
 
     public async Task<ShiftDto> CreateShiftAsync(int merchantId, CreateShiftRequest request)
     {
+        // Ensure date is in UTC to avoid PostgreSQL timezone issues
+        var shiftDate = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
+
         // Verifica conflitti se c'è un dipendente assegnato
         if (request.EmployeeId.HasValue)
         {
             var hasConflict = await HasShiftConflictAsync(
                 request.EmployeeId.Value,
-                request.Date,
+                shiftDate,
                 request.StartTime,
                 request.EndTime);
 
@@ -77,7 +80,7 @@ public class ShiftService : IShiftService
 
             // Verifica limiti orari
             var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
-            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, request.Date, hours);
+            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, shiftDate, hours);
 
             if (exceedsLimit)
                 throw new InvalidOperationException("Il turno supera i limiti orari del dipendente");
@@ -88,7 +91,7 @@ public class ShiftService : IShiftService
             MerchantId = merchantId,
             ShiftTemplateId = request.ShiftTemplateId,
             EmployeeId = request.EmployeeId,
-            Date = request.Date.Date,
+            Date = shiftDate,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
             BreakDurationMinutes = request.BreakDurationMinutes,
@@ -117,9 +120,13 @@ public class ShiftService : IShiftService
             throw new InvalidOperationException("Template non trovato");
 
         var shifts = new List<Shift>();
-        var currentDate = request.StartDate.Date;
 
-        while (currentDate <= request.EndDate.Date)
+        // Ensure dates are in UTC to avoid PostgreSQL timezone issues
+        var startDate = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Utc);
+        var endDate = DateTime.SpecifyKind(request.EndDate.Date, DateTimeKind.Utc);
+        var currentDate = startDate;
+
+        while (currentDate <= endDate)
         {
             // Controlla se il giorno della settimana è incluso
             if (request.DaysOfWeek == null || request.DaysOfWeek.Contains(currentDate.DayOfWeek))
@@ -197,12 +204,15 @@ public class ShiftService : IShiftService
         if (shift == null)
             return null;
 
+        // Ensure date is in UTC to avoid PostgreSQL timezone issues
+        var shiftDate = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
+
         // Verifica conflitti se c'è un dipendente
         if (request.EmployeeId.HasValue)
         {
             var hasConflict = await HasShiftConflictAsync(
                 request.EmployeeId.Value,
-                request.Date,
+                shiftDate,
                 request.StartTime,
                 request.EndTime,
                 shiftId);
@@ -212,14 +222,14 @@ public class ShiftService : IShiftService
 
             // Verifica limiti orari
             var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
-            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, request.Date, hours);
+            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, shiftDate, hours);
 
             if (exceedsLimit)
                 throw new InvalidOperationException("Il turno supera i limiti orari del dipendente");
         }
 
         shift.EmployeeId = request.EmployeeId;
-        shift.Date = request.Date.Date;
+        shift.Date = shiftDate;
         shift.StartTime = request.StartTime;
         shift.EndTime = request.EndTime;
         shift.BreakDurationMinutes = request.BreakDurationMinutes;
