@@ -138,6 +138,34 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-purple transition-colors">Dipendenti</h2>
             <p className="text-gray-400">Gestisci turni e staff</p>
           </Link>
+
+          <Link
+            to="/shifts"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-blue transition-all border border-white/10 hover:border-neon-blue/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.6s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-blue/20 to-neon-cyan/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-blue/30 group-hover:shadow-glow-blue transition-all">
+              <svg className="w-8 h-8 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-blue transition-colors">Turni</h2>
+            <p className="text-gray-400">Pianifica turni dipendenti</p>
+          </Link>
+
+          <Link
+            to="/shift-templates"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-cyan/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.7s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-cyan/20 to-neon-green/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-cyan/30 group-hover:shadow-glow-cyan transition-all">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Template Turni</h2>
+            <p className="text-gray-400">Modelli turni riutilizzabili</p>
+          </Link>
         </div>
 
         {/* Info Panel */}
