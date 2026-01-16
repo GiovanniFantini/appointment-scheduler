@@ -56,7 +56,7 @@ function ShiftTemplates({ onLogout }: ShiftTemplatesProps) {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/shifttemplates');
+      const response = await axios.get('/shifttemplates');
       setTemplates(response.data);
     } catch (error: any) {
       console.error('Errore nel caricamento template:', error);
@@ -80,10 +80,10 @@ function ShiftTemplates({ onLogout }: ShiftTemplatesProps) {
 
     try {
       if (editingId) {
-        await axios.put(`/api/shifttemplates/${editingId}`, { ...payload, isActive: true });
+        await axios.put(`/shifttemplates/${editingId}`, { ...payload, isActive: true });
         alert('Template aggiornato con successo');
       } else {
-        await axios.post('/api/shifttemplates', payload);
+        await axios.post('/shifttemplates', payload);
         alert('Template creato con successo');
       }
 
@@ -116,7 +116,7 @@ function ShiftTemplates({ onLogout }: ShiftTemplatesProps) {
     if (!confirm('Sei sicuro di voler eliminare questo template?')) return;
 
     try {
-      await axios.delete(`/api/shifttemplates/${id}`);
+      await axios.delete(`/shifttemplates/${id}`);
       fetchTemplates();
       alert('Template eliminato con successo');
     } catch (error: any) {
