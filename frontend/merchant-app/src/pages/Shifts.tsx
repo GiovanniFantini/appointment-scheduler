@@ -373,6 +373,38 @@ function Shifts({ onLogout }: ShiftsProps) {
     });
   };
 
+  const convertRecurrenceDaysToDaysOfWeek = (recurrenceDays?: string): number[] => {
+    if (!recurrenceDays) return [];
+
+    const dayMap: Record<string, number> = {
+      'Sunday': 0,
+      'Monday': 1,
+      'Tuesday': 2,
+      'Wednesday': 3,
+      'Thursday': 4,
+      'Friday': 5,
+      'Saturday': 6,
+    };
+
+    return recurrenceDays
+      .split(',')
+      .map(day => day.trim())
+      .map(day => dayMap[day])
+      .filter(day => day !== undefined);
+  };
+
+  const handleTemplateSelectionChange = (templateId: number) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      const presetDays = convertRecurrenceDaysToDaysOfWeek(template.recurrenceDays);
+      setTemplateForm({
+        ...templateForm,
+        shiftTemplateId: templateId,
+        daysOfWeek: presetDays,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-dark">
       {/* Futuristic Header */}
@@ -772,7 +804,7 @@ function Shifts({ onLogout }: ShiftsProps) {
                   <label className="block text-gray-300 mb-2">Template *</label>
                   <select
                     value={templateForm.shiftTemplateId}
-                    onChange={(e) => setTemplateForm({ ...templateForm, shiftTemplateId: Number(e.target.value) })}
+                    onChange={(e) => handleTemplateSelectionChange(Number(e.target.value))}
                     className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-cyan-500 focus:outline-none"
                     required
                   >

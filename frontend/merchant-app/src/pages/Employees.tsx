@@ -35,7 +35,6 @@ function Employees({ onLogout }: EmployeesProps) {
     phoneNumber: '',
     badgeCode: '',
     role: '',
-    shiftsConfiguration: '',
     isActive: true
   })
 
@@ -80,7 +79,6 @@ function Employees({ onLogout }: EmployeesProps) {
       phoneNumber: employee.phoneNumber || '',
       badgeCode: employee.badgeCode || '',
       role: employee.role || '',
-      shiftsConfiguration: employee.shiftsConfiguration || '',
       isActive: employee.isActive
     })
     setEditingId(employee.id)
@@ -106,7 +104,6 @@ function Employees({ onLogout }: EmployeesProps) {
       phoneNumber: '',
       badgeCode: '',
       role: '',
-      shiftsConfiguration: '',
       isActive: true
     })
   }
@@ -227,20 +224,6 @@ function Employees({ onLogout }: EmployeesProps) {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="block text-sm font-bold text-white/90">Configurazione Turni (JSON)</label>
-                <textarea
-                  value={formData.shiftsConfiguration}
-                  onChange={(e) => setFormData({ ...formData, shiftsConfiguration: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300 font-mono text-sm"
-                  rows={5}
-                  placeholder='{"shifts": [{"day": "Monday", "start": "09:00", "end": "17:00"}]}'
-                />
-                <p className="text-xs text-gray-400 mt-1">
-                  Formato JSON per configurare i turni del dipendente
-                </p>
-              </div>
-
               <div>
                 <label className="flex items-center glass-card-dark p-3 rounded-xl cursor-pointer border border-white/10">
                   <input
@@ -313,18 +296,6 @@ function Employees({ onLogout }: EmployeesProps) {
                         </div>
                       )}
                     </div>
-                    {employee.shiftsConfiguration && (
-                      <div className="mt-4">
-                        <details className="glass-card-dark rounded-xl p-4 border border-white/5">
-                          <summary className="cursor-pointer text-sm font-semibold text-neon-cyan hover:text-neon-blue transition-colors">
-                            📅 Visualizza Turni
-                          </summary>
-                          <pre className="mt-3 text-xs font-mono text-gray-400 overflow-x-auto bg-black/30 p-3 rounded-lg">
-                            {JSON.stringify(JSON.parse(employee.shiftsConfiguration), null, 2)}
-                          </pre>
-                        </details>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div className="mt-6 pt-6 border-t border-white/10 flex gap-3">
