@@ -43,4 +43,6 @@ public class Employee
     public Merchant Merchant { get; set; } = null!;
     public User? User { get; set; } // User associato quando l'employee si registra
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+    public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+    public ICollection<EmployeeWorkingHoursLimit> WorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
 }

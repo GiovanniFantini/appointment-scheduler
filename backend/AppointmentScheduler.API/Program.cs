@@ -111,6 +111,13 @@ try
     builder.Services.AddScoped<IEmployeeService, EmployeeService>();
     builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IBusinessHoursService, BusinessHoursService>();
     builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IClosurePeriodService, ClosurePeriodService>();
+
+    // Shift Management Services
+    builder.Services.AddScoped<IShiftTemplateService, ShiftTemplateService>();
+    builder.Services.AddScoped<IShiftService, ShiftService>();
+    builder.Services.AddScoped<IShiftSwapService, ShiftSwapService>();
+    builder.Services.AddScoped<IEmployeeWorkingHoursLimitService, EmployeeWorkingHoursLimitService>();
+
     Console.WriteLine("Application services registered");
 
     // JWT Authentication

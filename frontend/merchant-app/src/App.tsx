@@ -10,6 +10,8 @@ import Availabilities from './pages/Availabilities'
 import Employees from './pages/Employees'
 import BusinessHours from './pages/BusinessHours'
 import ClosurePeriods from './pages/ClosurePeriods'
+import Shifts from './pages/Shifts'
+import ShiftTemplates from './pages/ShiftTemplates'
 
 interface User {
   userId: number
@@ -98,6 +100,12 @@ function App() {
           } />
           <Route path="/closures" element={
             user ? <ClosurePeriods onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/shifts" element={
+            user ? <Shifts /> : <Navigate to="/login" />
+          } />
+          <Route path="/shift-templates" element={
+            user ? <ShiftTemplates /> : <Navigate to="/login" />
           } />
           <Route path="/dashboard" element={
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
