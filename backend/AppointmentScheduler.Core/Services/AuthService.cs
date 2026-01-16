@@ -6,7 +6,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
-using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -35,7 +34,9 @@ public class AuthService : IAuthService
         if (!user.IsActive)
             return null;
 
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id, user.Employee?.Id);
+        // Costruisci la lista di ruoli basata sui flags
+        var roles = GetUserRoles(user);
+        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id, user.Employee?.Id);
 
         return new AuthResponse
         {
@@ -44,7 +45,11 @@ public class AuthService : IAuthService
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role,
+            Roles = roles,
+            IsAdmin = user.IsAdmin,
+            IsConsumer = user.IsConsumer,
+            IsMerchant = user.IsMerchant,
+            IsEmployee = user.IsEmployee,
             MerchantId = user.Merchant?.Id,
             EmployeeId = user.Employee?.Id
         };
@@ -56,8 +61,8 @@ public class AuthService : IAuthService
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return null;
 
-        // Verifica che BusinessName sia presente per i Merchant
-        if (request.Role == UserRole.Merchant && string.IsNullOrWhiteSpace(request.BusinessName))
+        // Verifica che BusinessName sia presente se vuole registrarsi come Merchant
+        if (request.RegisterAsMerchant && string.IsNullOrWhiteSpace(request.BusinessName))
             throw new ArgumentException("BusinessName è obbligatorio per i Merchant");
 
         var user = new User
@@ -67,15 +72,19 @@ public class AuthService : IAuthService
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            Role = request.Role,
+            // Tutti partono come consumer di default
+            IsConsumer = true,
+            IsMerchant = request.RegisterAsMerchant,
+            IsEmployee = false,
+            IsAdmin = false,
             IsActive = true
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Se si registra come Merchant, crea il profilo business
-        if (request.Role == UserRole.Merchant && !string.IsNullOrEmpty(request.BusinessName))
+        // Se si registra anche come Merchant, crea il profilo business
+        if (request.RegisterAsMerchant && !string.IsNullOrEmpty(request.BusinessName))
         {
             var merchant = new Merchant
             {
@@ -92,7 +101,8 @@ public class AuthService : IAuthService
             user.Merchant = merchant;
         }
 
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), user.Merchant?.Id);
+        var roles = GetUserRoles(user);
+        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id);
 
         return new AuthResponse
         {
@@ -101,7 +111,11 @@ public class AuthService : IAuthService
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role,
+            Roles = roles,
+            IsAdmin = user.IsAdmin,
+            IsConsumer = user.IsConsumer,
+            IsMerchant = user.IsMerchant,
+            IsEmployee = user.IsEmployee,
             MerchantId = user.Merchant?.Id
         };
     }
@@ -132,7 +146,10 @@ public class AuthService : IAuthService
             FirstName = employee.FirstName,
             LastName = employee.LastName,
             PhoneNumber = employee.PhoneNumber,
-            Role = UserRole.Employee,
+            IsEmployee = true,
+            IsConsumer = true, // Può anche fare booking come consumer
+            IsMerchant = false,
+            IsAdmin = false,
             IsActive = true
         };
 
@@ -148,7 +165,8 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         // Genera il token con EmployeeId e MerchantId
-        var token = GenerateJwtToken(user.Id, user.Email, user.Role.ToString(), employee.MerchantId, employee.Id);
+        var roles = GetUserRoles(user);
+        var token = GenerateJwtToken(user.Id, user.Email, roles, employee.MerchantId, employee.Id);
 
         return new AuthResponse
         {
@@ -157,13 +175,17 @@ public class AuthService : IAuthService
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role,
+            Roles = roles,
+            IsAdmin = user.IsAdmin,
+            IsConsumer = user.IsConsumer,
+            IsMerchant = user.IsMerchant,
+            IsEmployee = user.IsEmployee,
             EmployeeId = employee.Id,
             MerchantId = employee.MerchantId
         };
     }
 
-    public string GenerateJwtToken(int userId, string email, string role, int? merchantId = null, int? employeeId = null)
+    public string GenerateJwtToken(int userId, string email, List<string> roles, int? merchantId = null, int? employeeId = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
@@ -174,9 +196,14 @@ public class AuthService : IAuthService
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(ClaimTypes.Role, role),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        // Aggiungi un claim per ogni ruolo
+        foreach (var role in roles)
+        {
+            claimsList.Add(new Claim(ClaimTypes.Role, role));
+        }
 
         if (merchantId.HasValue)
         {
@@ -199,6 +226,18 @@ public class AuthService : IAuthService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private List<string> GetUserRoles(User user)
+    {
+        var roles = new List<string>();
+
+        if (user.IsAdmin) roles.Add("Admin");
+        if (user.IsConsumer) roles.Add("Consumer");
+        if (user.IsMerchant) roles.Add("Merchant");
+        if (user.IsEmployee) roles.Add("Employee");
+
+        return roles;
     }
 
     private string HashPassword(string password)

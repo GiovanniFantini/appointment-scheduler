@@ -424,6 +424,18 @@ namespace AppointmentScheduler.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsAdmin")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsConsumer")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsMerchant")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEmployee")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -435,9 +447,6 @@ namespace AppointmentScheduler.Data.Migrations
 
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("text");
-
-                    b.Property<int>("Role")
-                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");

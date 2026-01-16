@@ -10,7 +10,11 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: string
+  roles: string[]
+  isAdmin: boolean
+  isConsumer: boolean
+  isMerchant: boolean
+  isEmployee: boolean
   employeeId?: number
   merchantId?: number
 }
@@ -24,8 +28,9 @@ function App() {
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
-      const parsedUser = JSON.parse(userData)
-      if (parsedUser.role === 'Employee') {
+      const parsedUser = JSON.parse(userData) as User
+      // Employee app: permette accesso solo a Employee o Admin
+      if (parsedUser.isEmployee || parsedUser.isAdmin) {
         setUser(parsedUser)
       } else {
         localStorage.removeItem('token')
@@ -36,7 +41,7 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (userData.role !== 'Employee') {
+    if (!userData.isEmployee && !userData.isAdmin) {
       alert('Accesso riservato solo ai dipendenti')
       return
     }

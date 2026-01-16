@@ -1,4 +1,3 @@
-using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,7 +54,7 @@ public static class DbInitializer
         }
 
         // Controlla se esiste già un admin
-        if (context.Users.Any(u => u.Role == UserRole.Admin))
+        if (context.Users.Any(u => u.IsAdmin))
         {
             Console.WriteLine("Admin user already exists. Skipping seed.");
             return; // Il database è già inizializzato
@@ -71,7 +70,10 @@ public static class DbInitializer
             FirstName = "Admin",
             LastName = "User",
             PhoneNumber = null,
-            Role = UserRole.Admin,
+            IsAdmin = true,
+            IsConsumer = true, // Admin può fare tutto
+            IsMerchant = true,
+            IsEmployee = true,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -82,6 +84,6 @@ public static class DbInitializer
         Console.WriteLine("Default admin user created successfully!");
         Console.WriteLine("  Email: admin@admin.com");
         Console.WriteLine("  Password: password");
-        Console.WriteLine("  Role: Admin");
+        Console.WriteLine("  Roles: Admin, Consumer, Merchant, Employee (full access)");
     }
 }

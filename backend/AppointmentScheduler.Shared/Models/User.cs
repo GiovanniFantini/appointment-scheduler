@@ -1,5 +1,3 @@
-using AppointmentScheduler.Shared.Enums;
-
 namespace AppointmentScheduler.Shared.Models;
 
 public class User
@@ -10,7 +8,13 @@ public class User
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
-    public UserRole Role { get; set; } = UserRole.User;
+
+    // Multi-role system: un utente può avere multipli ruoli contemporaneamente
+    public bool IsAdmin { get; set; } = false;
+    public bool IsConsumer { get; set; } = true; // Default: tutti sono consumer
+    public bool IsMerchant { get; set; } = false;
+    public bool IsEmployee { get; set; } = false;
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }

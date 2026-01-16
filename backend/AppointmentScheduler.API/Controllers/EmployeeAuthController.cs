@@ -46,7 +46,7 @@ public class EmployeeAuthController : ControllerBase
             return Unauthorized(new { message = "Email o password non validi" });
 
         // Verifica che sia effettivamente un employee
-        if (response.Role != Shared.Enums.UserRole.Employee)
+        if (!response.IsEmployee)
             return Unauthorized(new { message = "Accesso riservato ai dipendenti" });
 
         return Ok(response);

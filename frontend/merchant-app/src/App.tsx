@@ -16,8 +16,13 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: string
+  roles: string[]
+  isAdmin: boolean
+  isConsumer: boolean
+  isMerchant: boolean
+  isEmployee: boolean
   merchantId?: number
+  employeeId?: number
 }
 
 function App() {
@@ -29,8 +34,9 @@ function App() {
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
-      const parsedUser = JSON.parse(userData)
-      if (parsedUser.role === 'Merchant' || parsedUser.role === 'Admin') {
+      const parsedUser = JSON.parse(userData) as User
+      // Merchant app: permette accesso solo a Merchant o Admin
+      if (parsedUser.isMerchant || parsedUser.isAdmin) {
         setUser(parsedUser)
       } else {
         localStorage.removeItem('token')
@@ -41,7 +47,7 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (userData.role !== 'Merchant' && userData.role !== 'Admin') {
+    if (!userData.isMerchant && !userData.isAdmin) {
       alert('Accesso riservato solo a merchant e admin')
       return
     }
@@ -73,7 +79,7 @@ function App() {
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/admin" element={
-            user && user.role === 'Admin' ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
+            user && user.isAdmin ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
           } />
           <Route path="/services" element={
             user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
