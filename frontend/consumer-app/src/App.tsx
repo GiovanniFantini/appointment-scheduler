@@ -16,7 +16,7 @@ interface User {
   isMerchant: boolean
   isEmployee: boolean
   merchantId?: number
-  employeeId?: number
+  // Note: employeeId rimosso - employee può lavorare per multipli merchant
 }
 
 function App() {

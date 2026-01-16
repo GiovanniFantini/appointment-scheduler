@@ -3,10 +3,15 @@ import VersionInfo from '../components/VersionInfo'
 
 interface DashboardProps {
   user: {
+    userId: number
     firstName: string
     lastName: string
     email: string
-    role: string
+    roles: string[]
+    isAdmin: boolean
+    isConsumer: boolean
+    isMerchant: boolean
+    isEmployee: boolean
   }
   onLogout: () => void
 }

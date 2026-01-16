@@ -15,8 +15,8 @@ interface User {
   isConsumer: boolean
   isMerchant: boolean
   isEmployee: boolean
-  employeeId?: number
-  merchantId?: number
+  // Note: employeeId e merchantId rimossi - employee può lavorare per multipli merchant
+  // Usa /api/employee-colleagues/my-merchants per ottenere la lista
 }
 
 function App() {
