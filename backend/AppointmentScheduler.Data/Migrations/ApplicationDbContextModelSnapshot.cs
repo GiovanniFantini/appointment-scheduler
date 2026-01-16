@@ -195,11 +195,17 @@ namespace AppointmentScheduler.Data.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Email");
 
                     b.HasIndex("MerchantId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Employees");
                 });
@@ -414,7 +420,14 @@ namespace AppointmentScheduler.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AppointmentScheduler.Shared.Models.User", "User")
+                        .WithOne()
+                        .HasForeignKey("AppointmentScheduler.Shared.Models.Employee", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("Merchant");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("AppointmentScheduler.Shared.Models.Merchant", b =>
