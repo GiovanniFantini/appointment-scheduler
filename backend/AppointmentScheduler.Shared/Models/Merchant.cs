@@ -21,4 +21,7 @@ public class Merchant
     public ICollection<Employee> Employees { get; set; } = new List<Employee>();
     public ICollection<BusinessHours> BusinessHours { get; set; } = new List<BusinessHours>();
     public ICollection<ClosurePeriod> ClosurePeriods { get; set; } = new List<ClosurePeriod>();
+    public ICollection<ShiftTemplate> ShiftTemplates { get; set; } = new List<ShiftTemplate>();
+    public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+    public ICollection<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
 }

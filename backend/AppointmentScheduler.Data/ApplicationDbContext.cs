@@ -19,6 +19,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<Employee> Employees { get; set; }
     public DbSet<BusinessHours> BusinessHours { get; set; }
     public DbSet<ClosurePeriod> ClosurePeriods { get; set; }
+    public DbSet<ShiftTemplate> ShiftTemplates { get; set; }
+    public DbSet<Shift> Shifts { get; set; }
+    public DbSet<ShiftSwapRequest> ShiftSwapRequests { get; set; }
+    public DbSet<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -159,6 +163,108 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.MerchantId);
             entity.HasIndex(e => new { e.StartDate, e.EndDate });
+        });
+
+        // ShiftTemplate configuration
+        modelBuilder.Entity<ShiftTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Color).HasMaxLength(7);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.ShiftTemplates)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.MerchantId);
+        });
+
+        // Shift configuration
+        modelBuilder.Entity<Shift>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Color).HasMaxLength(7);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.Shifts)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ShiftTemplate)
+                .WithMany(st => st.Shifts)
+                .HasForeignKey(e => e.ShiftTemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.Shifts)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => e.Date);
+            entity.HasIndex(e => new { e.EmployeeId, e.Date });
+        });
+
+        // ShiftSwapRequest configuration
+        modelBuilder.Entity<ShiftSwapRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Message).HasMaxLength(1000);
+            entity.Property(e => e.ResponseMessage).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.SwapRequests)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.RequestingEmployee)
+                .WithMany()
+                .HasForeignKey(e => e.RequestingEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.TargetEmployee)
+                .WithMany()
+                .HasForeignKey(e => e.TargetEmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.OfferedShift)
+                .WithMany()
+                .HasForeignKey(e => e.OfferedShiftId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => e.RequestingEmployeeId);
+            entity.HasIndex(e => e.Status);
+        });
+
+        // EmployeeWorkingHoursLimit configuration
+        modelBuilder.Entity<EmployeeWorkingHoursLimit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.MaxHoursPerDay).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.MaxHoursPerWeek).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.MaxHoursPerMonth).HasColumnType("decimal(6,2)");
+            entity.Property(e => e.MinHoursPerWeek).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.MinHoursPerMonth).HasColumnType("decimal(6,2)");
+            entity.Property(e => e.MaxOvertimeHoursPerWeek).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.MaxOvertimeHoursPerMonth).HasColumnType("decimal(6,2)");
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.WorkingHoursLimits)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.EmployeeWorkingHoursLimits)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => new { e.EmployeeId, e.ValidFrom, e.ValidTo });
         });
     }
 }

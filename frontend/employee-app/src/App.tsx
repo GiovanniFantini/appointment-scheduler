@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
+import MyShifts from './pages/MyShifts'
 
 interface User {
   userId: number
@@ -74,6 +75,9 @@ function App() {
         } />
         <Route path="/colleagues" element={
           user ? <Colleagues onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/my-shifts" element={
+          user ? <MyShifts /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>
