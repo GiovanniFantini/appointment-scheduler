@@ -7,6 +7,13 @@ public class Employee
 {
     public int Id { get; set; }
     public int MerchantId { get; set; } // FK a Merchant
+
+    /// <summary>
+    /// FK a User - nullable per backward compatibility con employee già esistenti
+    /// Quando l'employee si registra nell'app, viene creato un User collegato
+    /// </summary>
+    public int? UserId { get; set; }
+
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
@@ -34,5 +41,6 @@ public class Employee
 
     // Navigation properties
     public Merchant Merchant { get; set; } = null!;
+    public User? User { get; set; } // User associato quando l'employee si registra
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
 }

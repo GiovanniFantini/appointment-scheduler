@@ -1,0 +1,117 @@
+name: Deploy Employee App to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/employee-app/**'
+      - '.github/workflows/deploy-employee-app.yml'
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    name: Build and Deploy Employee App
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/employee-app/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend/employee-app
+          npm ci
+
+      - name: Extract version info
+        id: version
+        run: |
+          # Get git tag (semantic version)
+          GIT_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.1")
+          VERSION=${GIT_TAG#v}
+
+          # Get commit SHA (short)
+          GIT_COMMIT=$(git rev-parse --short HEAD)
+
+          # Build number from run number
+          BUILD_NUMBER=${{ github.run_number }}
+
+          # Build time
+          BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "GIT_COMMIT=$GIT_COMMIT" >> $GITHUB_OUTPUT
+          echo "BUILD_NUMBER=$BUILD_NUMBER" >> $GITHUB_OUTPUT
+          echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_OUTPUT
+
+      - name: Build application
+        run: |
+          cd frontend/employee-app
+          npm run build
+        env:
+          VITE_API_URL: https://appointment-scheduler-api.azurewebsites.net
+          VERSION: ${{ steps.version.outputs.VERSION }}
+          GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
+          BUILD_NUMBER: ${{ steps.version.outputs.BUILD_NUMBER }}
+          BUILD_TIME: ${{ steps.version.outputs.BUILD_TIME }}
+
+      - name: Prepare deployment package
+        run: |
+          cd frontend/employee-app
+          chmod +x prepare-deploy.sh
+          ./prepare-deploy.sh
+          cd deploy
+          npm install --production
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_EMPLOYEE }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE_EMPLOYEE }}
+          package: frontend/employee-app/deploy
+
+      - name: Configure Azure Web App Settings
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME_EMPLOYEE }}
+          app-settings-json: |
+            [
+              {
+                "name": "API_URL",
+                "value": "https://appointment-scheduler-api.azurewebsites.net",
+                "slotSetting": false
+              },
+              {
+                "name": "NODE_ENV",
+                "value": "production",
+                "slotSetting": false
+              },
+              {
+                "name": "SCM_DO_BUILD_DURING_DEPLOYMENT",
+                "value": "false",
+                "slotSetting": false
+              },
+              {
+                "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                "value": "~20",
+                "slotSetting": false
+              }
+            ]
+
+      - name: Set Linux Startup Command
+        run: |
+          az webapp config set \
+            --resource-group ${{ secrets.AZURE_RESOURCE_GROUP || 'appointment-scheduler-rg' }} \
+            --name ${{ secrets.AZURE_WEBAPP_NAME_EMPLOYEE }} \
+            --startup-file "npm start"

@@ -142,6 +142,7 @@ try
     {
         options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
         options.AddPolicy("MerchantOnly", policy => policy.RequireRole("Merchant", "Admin"));
+        options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee", "Admin"));
         options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Merchant", "Admin"));
     });
     Console.WriteLine("Authorization configured");
