@@ -26,7 +26,7 @@ function Register({ onRegister }: RegisterProps) {
     try {
       const response = await apiClient.post('/auth/register', {
         ...formData,
-        role: 1 // User role
+        registerAsMerchant: false // Consumer registration
       })
       const { token, ...userData } = response.data
       onRegister(userData, token)

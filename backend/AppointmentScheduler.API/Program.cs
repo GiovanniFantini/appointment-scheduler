@@ -140,10 +140,11 @@ try
 
     builder.Services.AddAuthorization(options =>
     {
+        // Admin bypassa tutti i controlli (ha tutti i ruoli)
         options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
         options.AddPolicy("MerchantOnly", policy => policy.RequireRole("Merchant", "Admin"));
         options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee", "Admin"));
-        options.AddPolicy("UserOnly", policy => policy.RequireRole("User", "Merchant", "Admin"));
+        options.AddPolicy("ConsumerOnly", policy => policy.RequireRole("Consumer", "Admin"));
     });
     Console.WriteLine("Authorization configured");
 

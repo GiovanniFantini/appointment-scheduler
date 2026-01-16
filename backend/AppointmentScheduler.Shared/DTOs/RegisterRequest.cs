@@ -1,5 +1,3 @@
-using AppointmentScheduler.Shared.Enums;
-
 namespace AppointmentScheduler.Shared.DTOs;
 
 public class RegisterRequest
@@ -9,9 +7,12 @@ public class RegisterRequest
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
-    public UserRole Role { get; set; } = UserRole.User;
 
-    // Se Role = Merchant, questi campi sono necessari
+    // Registrazione base come User (consumer)
+    // I ruoli merchant/employee vengono attivati in seguito
+
+    // Se vuole registrarsi anche come Merchant
+    public bool RegisterAsMerchant { get; set; } = false;
     public string? BusinessName { get; set; }
     public string? VatNumber { get; set; }
 }

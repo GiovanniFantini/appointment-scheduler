@@ -10,7 +10,13 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: string
+  roles: string[]
+  isAdmin: boolean
+  isConsumer: boolean
+  isMerchant: boolean
+  isEmployee: boolean
+  merchantId?: number
+  // Note: employeeId rimosso - employee può lavorare per multipli merchant
 }
 
 function App() {
@@ -23,7 +29,15 @@ function App() {
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
-      setUser(JSON.parse(userData))
+      const parsedUser = JSON.parse(userData) as User
+      // Consumer app: permette accesso solo a Consumer o Admin
+      if (parsedUser.isConsumer || parsedUser.isAdmin) {
+        setUser(parsedUser)
+      } else {
+        // Se non è consumer né admin, pulisce il localStorage
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
     }
     setLoading(false)
   }, [])

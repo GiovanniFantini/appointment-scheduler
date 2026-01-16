@@ -10,9 +10,13 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: string
-  employeeId?: number
-  merchantId?: number
+  roles: string[]
+  isAdmin: boolean
+  isConsumer: boolean
+  isMerchant: boolean
+  isEmployee: boolean
+  // Note: employeeId e merchantId rimossi - employee può lavorare per multipli merchant
+  // Usa /api/employee-colleagues/my-merchants per ottenere la lista
 }
 
 function App() {
@@ -24,8 +28,9 @@ function App() {
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
-      const parsedUser = JSON.parse(userData)
-      if (parsedUser.role === 'Employee') {
+      const parsedUser = JSON.parse(userData) as User
+      // Employee app: permette accesso solo a Employee o Admin
+      if (parsedUser.isEmployee || parsedUser.isAdmin) {
         setUser(parsedUser)
       } else {
         localStorage.removeItem('token')
@@ -36,7 +41,7 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (userData.role !== 'Employee') {
+    if (!userData.isEmployee && !userData.isAdmin) {
       alert('Accesso riservato solo ai dipendenti')
       return
     }
