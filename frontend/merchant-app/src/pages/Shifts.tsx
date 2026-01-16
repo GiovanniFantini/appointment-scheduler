@@ -91,7 +91,7 @@ function Shifts({ onLogout }: ShiftsProps) {
     try {
       setLoading(true);
       const { startDate, endDate } = getDateRange();
-      const response = await axios.get('/api/shifts/merchant', {
+      const response = await axios.get('/shifts/merchant', {
         params: {
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
@@ -108,7 +108,7 @@ function Shifts({ onLogout }: ShiftsProps) {
 
   const fetchTemplates = async () => {
     try {
-      const response = await axios.get('/api/shifttemplates');
+      const response = await axios.get('/shifttemplates');
       setTemplates(response.data);
     } catch (error) {
       console.error('Errore nel caricamento template:', error);
@@ -117,7 +117,7 @@ function Shifts({ onLogout }: ShiftsProps) {
 
   const fetchEmployees = async () => {
     try {
-      const response = await axios.get('/api/employees/my-employees');
+      const response = await axios.get('/employees/my-employees');
       setEmployees(response.data);
     } catch (error) {
       console.error('Errore nel caricamento dipendenti:', error);
@@ -219,7 +219,7 @@ function Shifts({ onLogout }: ShiftsProps) {
     if (!confirm('Sei sicuro di voler eliminare questo turno?')) return;
 
     try {
-      await axios.delete(`/api/shifts/${shiftId}`);
+      await axios.delete(`/shifts/${shiftId}`);
       setSelectedShift(null);
       fetchShifts();
       alert('Turno eliminato con successo');
@@ -240,7 +240,7 @@ function Shifts({ onLogout }: ShiftsProps) {
 
   const handleCreateShift = async () => {
     try {
-      await axios.post('/api/shifts', createForm);
+      await axios.post('/shifts', createForm);
       setShowCreateModal(false);
       fetchShifts();
       alert('Turno creato con successo');
@@ -274,7 +274,7 @@ function Shifts({ onLogout }: ShiftsProps) {
         daysOfWeek: templateForm.daysOfWeek.length > 0 ? templateForm.daysOfWeek : undefined,
       };
 
-      await axios.post('/api/shifts/from-template', request);
+      await axios.post('/shifts/from-template', request);
       setShowTemplateModal(false);
       fetchShifts();
       alert('Turni creati con successo dal template');
@@ -312,7 +312,7 @@ function Shifts({ onLogout }: ShiftsProps) {
     if (!selectedShift) return;
 
     try {
-      await axios.put(`/api/shifts/${selectedShift.id}`, editForm);
+      await axios.put(`/shifts/${selectedShift.id}`, editForm);
       setShowEditModal(false);
       setSelectedShift(null);
       fetchShifts();
@@ -338,7 +338,7 @@ function Shifts({ onLogout }: ShiftsProps) {
     }
 
     try {
-      await axios.post(`/api/shifts/${selectedShift.id}/assign`, assignForm);
+      await axios.post(`/shifts/${selectedShift.id}/assign`, assignForm);
       setShowAssignModal(false);
       setSelectedShift(null);
       fetchShifts();
