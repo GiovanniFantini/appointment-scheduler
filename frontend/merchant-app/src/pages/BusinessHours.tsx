@@ -32,37 +32,37 @@ const BUSINESS_TEMPLATES = {
   pizzeria: {
     name: 'Pizzeria (Lun-Dom 12-15, 19-23, Lunedì chiuso)',
     hours: [
-      { dayOfWeek: 0, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }, // Dom
-      { dayOfWeek: 1, openingTime: null, closingTime: null, secondOpeningTime: null, secondClosingTime: null }, // Lun (chiuso)
-      { dayOfWeek: 2, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }, // Mar
-      { dayOfWeek: 3, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }, // Mer
-      { dayOfWeek: 4, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }, // Gio
-      { dayOfWeek: 5, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }, // Ven
-      { dayOfWeek: 6, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }  // Sab
+      { dayOfWeek: 0, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' },
+      { dayOfWeek: 1, openingTime: null, closingTime: null, secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 2, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' },
+      { dayOfWeek: 3, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' },
+      { dayOfWeek: 4, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' },
+      { dayOfWeek: 5, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' },
+      { dayOfWeek: 6, openingTime: '12:00', closingTime: '15:00', secondOpeningTime: '19:00', secondClosingTime: '23:00' }
     ]
   },
   parrucchiere: {
     name: 'Parrucchiere (Lun-Sab 9-19, Domenica chiuso)',
     hours: [
-      { dayOfWeek: 0, openingTime: null, closingTime: null, secondOpeningTime: null, secondClosingTime: null }, // Dom (chiuso)
-      { dayOfWeek: 1, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }, // Lun
-      { dayOfWeek: 2, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }, // Mar
-      { dayOfWeek: 3, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }, // Mer
-      { dayOfWeek: 4, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }, // Gio
-      { dayOfWeek: 5, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }, // Ven
-      { dayOfWeek: 6, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }  // Sab
+      { dayOfWeek: 0, openingTime: null, closingTime: null, secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 1, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 2, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 3, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 4, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 5, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 6, openingTime: '09:00', closingTime: '19:00', secondOpeningTime: null, secondClosingTime: null }
     ]
   },
   palestra: {
     name: 'Palestra (Lun-Ven 6-22, Sab-Dom 8-20)',
     hours: [
-      { dayOfWeek: 0, openingTime: '08:00', closingTime: '20:00', secondOpeningTime: null, secondClosingTime: null }, // Dom
-      { dayOfWeek: 1, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null }, // Lun
-      { dayOfWeek: 2, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null }, // Mar
-      { dayOfWeek: 3, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null }, // Mer
-      { dayOfWeek: 4, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null }, // Gio
-      { dayOfWeek: 5, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null }, // Ven
-      { dayOfWeek: 6, openingTime: '08:00', closingTime: '20:00', secondOpeningTime: null, secondClosingTime: null }  // Sab
+      { dayOfWeek: 0, openingTime: '08:00', closingTime: '20:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 1, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 2, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 3, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 4, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 5, openingTime: '06:00', closingTime: '22:00', secondOpeningTime: null, secondClosingTime: null },
+      { dayOfWeek: 6, openingTime: '08:00', closingTime: '20:00', secondOpeningTime: null, secondClosingTime: null }
     ]
   }
 }
@@ -87,7 +87,6 @@ function BusinessHoursPage({ onLogout }: BusinessHoursProps) {
     try {
       const res = await apiClient.get('/businesshours/my-business-hours')
 
-      // Popola il form con i dati esistenti
       const formData = DAYS_OF_WEEK.map(day => {
         const existing = res.data.find((bh: BusinessHours) => bh.dayOfWeek === day.value)
         if (existing) {
@@ -150,158 +149,176 @@ function BusinessHoursPage({ onLogout }: BusinessHoursProps) {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-indigo-600 text-white p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
-          </div>
-        </nav>
-        <div className="container mx-auto p-4">
-          <div className="text-center py-8">Caricamento...</div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-indigo-600 text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
-          <div className="space-x-4">
-            <Link to="/dashboard" className="hover:underline">Dashboard</Link>
-            <Link to="/services" className="hover:underline">Servizi</Link>
-            <Link to="/business-hours" className="hover:underline font-semibold">Orari</Link>
-            <Link to="/closures" className="hover:underline">Chiusure</Link>
-            <Link to="/availabilities" className="hover:underline">Disponibilità</Link>
-            <Link to="/employees" className="hover:underline">Dipendenti</Link>
-            <Link to="/bookings" className="hover:underline">Prenotazioni</Link>
-            <button onClick={onLogout} className="hover:underline">Logout</button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="container mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-2xl font-bold mb-4">🕒 Orari di Apertura</h2>
-          <p className="text-gray-600 mb-4">
-            Configura gli orari standard del tuo business. Questi orari saranno automaticamente
-            applicati a tutti i tuoi servizi, a meno che non imposti disponibilità specifiche.
-          </p>
-
-          {/* Templates */}
-          <div className="mb-6">
-            <h3 className="font-semibold mb-2">Template Veloci:</h3>
-            <div className="flex gap-2">
-              <button
-                onClick={() => applyTemplate('pizzeria')}
-                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
-              >
-                🍕 Pizzeria
-              </button>
-              <button
-                onClick={() => applyTemplate('parrucchiere')}
-                className="px-4 py-2 bg-pink-500 text-white rounded hover:bg-pink-600"
-              >
-                ✂️ Parrucchiere
-              </button>
-              <button
-                onClick={() => applyTemplate('palestra')}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                💪 Palestra
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Orari di Apertura
+            </h1>
+            <div className="flex items-center gap-3">
+              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                🏠 Dashboard
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
               </button>
             </div>
           </div>
-
-          {/* Weekly Form */}
-          <div className="space-y-4">
-            {DAYS_OF_WEEK.map((day, index) => (
-              <div key={day.value} className="border rounded p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-32 font-semibold">{day.label}</div>
-
-                  <div className="flex-1 grid grid-cols-4 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-600">Apertura</label>
-                      <input
-                        type="time"
-                        value={weekFormData[index].openingTime}
-                        onChange={(e) => updateDayData(index, 'openingTime', e.target.value)}
-                        className="w-full px-2 py-1 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600">Chiusura</label>
-                      <input
-                        type="time"
-                        value={weekFormData[index].closingTime}
-                        onChange={(e) => updateDayData(index, 'closingTime', e.target.value)}
-                        className="w-full px-2 py-1 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600">2° Apertura</label>
-                      <input
-                        type="time"
-                        value={weekFormData[index].secondOpeningTime}
-                        onChange={(e) => updateDayData(index, 'secondOpeningTime', e.target.value)}
-                        className="w-full px-2 py-1 border rounded"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-600">2° Chiusura</label>
-                      <input
-                        type="time"
-                        value={weekFormData[index].secondClosingTime}
-                        onChange={(e) => updateDayData(index, 'secondClosingTime', e.target.value)}
-                        className="w-full px-2 py-1 border rounded"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      const newData = [...weekFormData]
-                      newData[index] = {
-                        dayOfWeek: day.value,
-                        openingTime: '',
-                        closingTime: '',
-                        secondOpeningTime: '',
-                        secondClosingTime: ''
-                      }
-                      setWeekFormData(newData)
-                    }}
-                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    Chiuso
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <button
-              onClick={saveWeek}
-              className="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
-            >
-              💾 Salva Settimana
-            </button>
-          </div>
-
-          <div className="mt-4 p-4 bg-blue-50 rounded">
-            <h4 className="font-semibold mb-2">ℹ️ Suggerimenti:</h4>
-            <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
-              <li>Lascia vuoti i campi per indicare un giorno di chiusura</li>
-              <li>Usa "2° Apertura" e "2° Chiusura" per turni spezzati (es. pranzo e cena)</li>
-              <li>I template sono preconfigurati per facilitare la configurazione</li>
-              <li>Questi orari si applicano automaticamente a tutti i servizi</li>
-            </ul>
-          </div>
         </div>
+      </header>
+
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-blue opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        {loading ? (
+          <div className="text-center py-12 text-neon-cyan text-xl">Caricamento...</div>
+        ) : (
+          <div className="glass-card rounded-3xl p-8 mb-6 border border-white/10">
+            <h2 className="text-3xl font-bold gradient-text mb-4">🕒 Orari di Apertura</h2>
+            <p className="text-gray-300 mb-6">
+              Configura gli orari standard del tuo business. Questi orari saranno automaticamente
+              applicati a tutti i tuoi servizi, a meno che non imposti disponibilità specifiche.
+            </p>
+
+            {/* Templates */}
+            <div className="mb-6">
+              <h3 className="font-semibold mb-3 text-neon-cyan">Template Veloci:</h3>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => applyTemplate('pizzeria')}
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-xl hover:shadow-glow-purple transition-all transform hover:scale-105 font-semibold"
+                >
+                  🍕 Pizzeria
+                </button>
+                <button
+                  onClick={() => applyTemplate('parrucchiere')}
+                  className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-xl hover:shadow-glow-purple transition-all transform hover:scale-105 font-semibold"
+                >
+                  ✂️ Parrucchiere
+                </button>
+                <button
+                  onClick={() => applyTemplate('palestra')}
+                  className="px-6 py-3 bg-gradient-to-r from-neon-blue to-neon-cyan text-white rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
+                >
+                  💪 Palestra
+                </button>
+              </div>
+            </div>
+
+            {/* Weekly Form */}
+            <div className="space-y-4">
+              {DAYS_OF_WEEK.map((day, index) => (
+                <div key={day.value} className="glass-card-dark rounded-xl p-4 border border-white/10">
+                  <div className="flex items-center gap-4">
+                    <div className="w-32 font-semibold text-neon-cyan">{day.label}</div>
+
+                    <div className="flex-1 grid grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Apertura</label>
+                        <input
+                          type="time"
+                          value={weekFormData[index].openingTime}
+                          onChange={(e) => updateDayData(index, 'openingTime', e.target.value)}
+                          className="w-full px-3 py-2 bg-white/5 text-white rounded-lg border border-white/10 focus:border-neon-cyan focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">Chiusura</label>
+                        <input
+                          type="time"
+                          value={weekFormData[index].closingTime}
+                          onChange={(e) => updateDayData(index, 'closingTime', e.target.value)}
+                          className="w-full px-3 py-2 bg-white/5 text-white rounded-lg border border-white/10 focus:border-neon-cyan focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">2° Apertura</label>
+                        <input
+                          type="time"
+                          value={weekFormData[index].secondOpeningTime}
+                          onChange={(e) => updateDayData(index, 'secondOpeningTime', e.target.value)}
+                          className="w-full px-3 py-2 bg-white/5 text-white rounded-lg border border-white/10 focus:border-neon-cyan focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-400 mb-1">2° Chiusura</label>
+                        <input
+                          type="time"
+                          value={weekFormData[index].secondClosingTime}
+                          onChange={(e) => updateDayData(index, 'secondClosingTime', e.target.value)}
+                          className="w-full px-3 py-2 bg-white/5 text-white rounded-lg border border-white/10 focus:border-neon-cyan focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const newData = [...weekFormData]
+                        newData[index] = {
+                          dayOfWeek: day.value,
+                          openingTime: '',
+                          closingTime: '',
+                          secondOpeningTime: '',
+                          secondClosingTime: ''
+                        }
+                        setWeekFormData(newData)
+                      }}
+                      className="px-4 py-2 bg-red-500/20 text-red-400 rounded-xl hover:bg-red-500/30 transition-all font-semibold"
+                    >
+                      Chiuso
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-8">
+              <button
+                onClick={saveWeek}
+                className="w-full px-6 py-4 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-bold text-lg"
+              >
+                💾 Salva Settimana
+              </button>
+            </div>
+
+            <div className="mt-6 glass-card-dark rounded-xl p-6 border border-neon-blue/30">
+              <h4 className="font-semibold mb-3 text-neon-blue flex items-center gap-2">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Suggerimenti
+              </h4>
+              <ul className="text-sm text-gray-300 space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-neon-cyan">•</span>
+                  <span>Lascia vuoti i campi per indicare un giorno di chiusura</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-neon-cyan">•</span>
+                  <span>Usa "2° Apertura" e "2° Chiusura" per turni spezzati (es. pranzo e cena)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-neon-cyan">•</span>
+                  <span>I template sono preconfigurati per facilitare la configurazione</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-neon-cyan">•</span>
+                  <span>Questi orari si applicano automaticamente a tutti i servizi</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

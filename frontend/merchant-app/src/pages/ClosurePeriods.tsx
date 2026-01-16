@@ -118,8 +118,8 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100">
-        <nav className="bg-indigo-600 text-white p-4">
+      <div className="min-h-screen bg-gradient-dark">
+        <nav className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white p-4">
           <div className="container mx-auto flex justify-between items-center">
             <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
           </div>
@@ -132,8 +132,8 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <nav className="bg-indigo-600 text-white p-4">
+    <div className="min-h-screen bg-gradient-dark">
+      <nav className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white p-4">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
           <div className="space-x-4">
@@ -150,7 +150,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
       </nav>
 
       <div className="container mx-auto p-4">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="glass-card rounded-xl shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
               <h2 className="text-2xl font-bold">🚫 Chiusure Straordinarie</h2>
@@ -158,7 +158,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
             </div>
             <button
               onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+              className="px-4 py-2 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded hover:bg-indigo-700"
             >
               {showForm ? 'Annulla' : '+ Nuova Chiusura'}
             </button>
@@ -215,7 +215,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
 
               <button
                 type="submit"
-                className="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                className="w-full px-4 py-2 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded hover:bg-indigo-700"
               >
                 Crea Chiusura
               </button>
@@ -240,7 +240,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
                   return (
                     <div
                       key={closure.id}
-                      className={`border rounded-lg p-4 ${
+                      className={`border rounded-xl p-4 ${
                         current ? 'border-red-500 bg-red-50' :
                         upcoming ? 'border-orange-300 bg-orange-50' :
                         'border-gray-300 bg-gray-50'
@@ -251,12 +251,12 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-semibold text-lg">{closure.reason}</h3>
                             {current && (
-                              <span className="px-2 py-1 bg-red-500 text-white text-xs rounded">
+                              <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded">
                                 IN CORSO
                               </span>
                             )}
                             {upcoming && (
-                              <span className="px-2 py-1 bg-orange-500 text-white text-xs rounded">
+                              <span className="px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded">
                                 PROGRAMMATA
                               </span>
                             )}
@@ -281,7 +281,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
 
                         <button
                           onClick={() => deleteClosure(closure.id)}
-                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
+                          className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded hover:bg-red-600 text-sm"
                         >
                           Elimina
                         </button>
