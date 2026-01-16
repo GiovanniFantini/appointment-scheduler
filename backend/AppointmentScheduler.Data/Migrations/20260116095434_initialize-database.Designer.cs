@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AppointmentScheduler.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260116091439_business-hour-and-closur-period")]
-    partial class businesshourandclosurperiod
+    [Migration("20260116095434_initialize-database")]
+    partial class initializedatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
