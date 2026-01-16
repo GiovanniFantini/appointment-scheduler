@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from '../lib/axios';
 import { Shift, ShiftTemplate, ShiftType, CreateShiftRequest, CreateShiftsFromTemplateRequest, UpdateShiftRequest, AssignShiftRequest } from '../types/shift';
 
@@ -10,6 +11,10 @@ interface Employee {
   email: string;
   role?: string;
   isActive: boolean;
+}
+
+interface ShiftsProps {
+  onLogout: () => void;
 }
 
 type ViewMode = 'week' | 'month';
@@ -28,7 +33,7 @@ const COLORS = [
   '#00BCD4', '#8BC34A', '#FFC107', '#E91E63', '#3F51B5'
 ];
 
-export default function Shifts() {
+function Shifts({ onLogout }: ShiftsProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -369,52 +374,79 @@ export default function Shifts() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-cyan-500/30">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
               Gestione Turni
             </h1>
-            <div className="flex gap-3">
-              <button
-                onClick={() => openCreateModal()}
-                className="px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all"
-              >
-                + Nuovo Turno
-              </button>
-              <button
-                onClick={() => setShowTemplateModal(true)}
-                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
-              >
-                Applica Template
+            <div className="flex items-center gap-3">
+              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                🏠 Dashboard
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
               </button>
             </div>
           </div>
+        </div>
+      </header>
+
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-blue opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        {/* Action Buttons */}
+        <div className="mb-6">
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => openCreateModal()}
+              className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
+            >
+              + Nuovo Turno
+            </button>
+            <button
+              onClick={() => setShowTemplateModal(true)}
+              className="bg-gradient-to-r from-neon-purple to-neon-pink text-white px-6 py-3 rounded-xl hover:shadow-glow-purple transition-all transform hover:scale-105 font-semibold"
+            >
+              Applica Template
+            </button>
+          </div>
+        </div>
+
+        {/* Calendar Controls */}
+        <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10">
 
           {/* Navigation Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={handlePrevious}
-                className="px-4 py-2 bg-gray-700/50 text-cyan-400 rounded-lg hover:bg-gray-700 transition-all"
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
               >
                 ← Precedente
               </button>
               <button
                 onClick={handleToday}
-                className="px-4 py-2 bg-gray-700/50 text-cyan-400 rounded-lg hover:bg-gray-700 transition-all"
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
               >
                 Oggi
               </button>
               <button
                 onClick={handleNext}
-                className="px-4 py-2 bg-gray-700/50 text-cyan-400 rounded-lg hover:bg-gray-700 transition-all"
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
               >
                 Successivo →
               </button>
-              <span className="text-xl font-semibold text-cyan-400">
+              <span className="text-xl font-semibold text-neon-cyan">
                 {getCurrentPeriodLabel()}
               </span>
             </div>
@@ -422,20 +454,20 @@ export default function Shifts() {
             <div className="flex gap-2">
               <button
                 onClick={() => setViewMode('week')}
-                className={`px-4 py-2 rounded-lg transition-all ${
+                className={`px-4 py-2 rounded-xl transition-all font-semibold ${
                   viewMode === 'week'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-gradient-to-r from-neon-cyan to-neon-blue text-white shadow-glow-cyan'
+                    : 'glass-card-dark text-gray-300 hover:border-neon-blue/50 border border-white/10'
                 }`}
               >
                 Settimana
               </button>
               <button
                 onClick={() => setViewMode('month')}
-                className={`px-4 py-2 rounded-lg transition-all ${
+                className={`px-4 py-2 rounded-xl transition-all font-semibold ${
                   viewMode === 'month'
-                    ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white'
-                    : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'
+                    ? 'bg-gradient-to-r from-neon-cyan to-neon-blue text-white shadow-glow-cyan'
+                    : 'glass-card-dark text-gray-300 hover:border-neon-blue/50 border border-white/10'
                 }`}
               >
                 Mese
@@ -445,13 +477,13 @@ export default function Shifts() {
         </div>
 
         {/* Calendar Grid */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl border border-cyan-500/30 overflow-hidden">
+        <div className="glass-card rounded-3xl border border-white/10 overflow-hidden">
           {loading ? (
-            <div className="p-12 text-center text-cyan-400">
+            <div className="p-12 text-center text-neon-cyan">
               Caricamento turni...
             </div>
           ) : (
-            <div className={`grid ${viewMode === 'week' ? 'grid-cols-7' : 'grid-cols-7'} gap-px bg-gray-700/50`}>
+            <div className={`grid ${viewMode === 'week' ? 'grid-cols-7' : 'grid-cols-7'} gap-px bg-white/5`}>
               {getDaysInView().map((day, index) => {
                 const dayShifts = getShiftsForDay(day);
                 const isToday = day.toDateString() === new Date().toDateString();
@@ -459,12 +491,12 @@ export default function Shifts() {
                 return (
                   <div
                     key={index}
-                    className={`bg-gray-800/80 min-h-32 p-3 ${
-                      isToday ? 'ring-2 ring-cyan-500' : ''
+                    className={`glass-card-dark min-h-32 p-3 ${
+                      isToday ? 'ring-2 ring-neon-cyan' : ''
                     }`}
                   >
                     <div className={`font-semibold mb-2 ${
-                      isToday ? 'text-cyan-400' : 'text-gray-300'
+                      isToday ? 'text-neon-cyan' : 'text-gray-300'
                     }`}>
                       {formatDate(day)}
                     </div>
@@ -473,7 +505,7 @@ export default function Shifts() {
                       {dayShifts.map(shift => (
                         <div
                           key={shift.id}
-                          className="text-xs p-2 rounded cursor-pointer hover:opacity-80 transition-opacity"
+                          className="text-xs p-2 rounded-lg cursor-pointer hover:opacity-80 transition-all transform hover:scale-105"
                           style={{ backgroundColor: shift.color + '40', borderLeft: `3px solid ${shift.color}` }}
                           onClick={() => setSelectedShift(shift)}
                         >
@@ -491,7 +523,7 @@ export default function Shifts() {
                     {viewMode === 'week' && (
                       <button
                         onClick={() => openCreateModal(day)}
-                        className="mt-2 w-full text-xs py-1 text-cyan-400 hover:bg-cyan-500/20 rounded transition-all"
+                        className="mt-2 w-full text-xs py-1 text-neon-cyan hover:bg-neon-cyan/20 rounded-lg transition-all border border-neon-cyan/30"
                       >
                         + Aggiungi
                       </button>
@@ -1060,3 +1092,5 @@ export default function Shifts() {
     </div>
   );
 }
+
+export default Shifts;

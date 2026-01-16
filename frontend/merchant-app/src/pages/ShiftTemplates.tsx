@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from '../lib/axios';
 import { ShiftTemplate, ShiftType, RecurrencePattern, CreateShiftTemplateRequest } from '../types/shift';
+
+interface ShiftTemplatesProps {
+  onLogout: () => void;
+}
 
 const SHIFT_COLORS = [
   '#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#F44336',
@@ -24,7 +29,7 @@ const DAYS_OF_WEEK_IT = [
   'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'
 ];
 
-export default function ShiftTemplates() {
+function ShiftTemplates({ onLogout }: ShiftTemplatesProps) {
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -144,27 +149,50 @@ export default function ShiftTemplates() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-cyan-500/30">
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Futuristic Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
               Template Turni
             </h1>
-            <button
-              onClick={() => setShowForm(true)}
-              className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all"
-            >
-              + Nuovo Template
-            </button>
+            <div className="flex items-center gap-3">
+              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
+                🏠 Dashboard
+              </Link>
+              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
+                Esci
+              </button>
+            </div>
           </div>
+        </div>
+      </header>
+
+      {/* Background Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float"></div>
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-purple opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
+      </div>
+
+      <div className="container mx-auto px-4 py-12 relative z-10">
+        {/* Action Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
+          >
+            + Nuovo Template
+          </button>
         </div>
 
         {/* Templates Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading ? (
-            <div className="col-span-full text-center text-cyan-400 py-12">
+            <div className="col-span-full text-center text-neon-cyan py-12">
               Caricamento...
             </div>
           ) : templates.length === 0 ? (
@@ -175,7 +203,7 @@ export default function ShiftTemplates() {
             templates.map(template => (
               <div
                 key={template.id}
-                className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-cyan-500/30 hover:border-cyan-500/50 transition-all"
+                className="glass-card p-6 rounded-3xl border border-white/10 hover:border-neon-cyan/50 transition-all transform hover:scale-105 hover:-translate-y-2"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div
@@ -393,3 +421,5 @@ export default function ShiftTemplates() {
     </div>
   );
 }
+
+export default ShiftTemplates;
