@@ -23,7 +23,12 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  role: string
+  roles: string[]
+  isAdmin: boolean
+  isConsumer: boolean
+  isMerchant: boolean
+  isEmployee: boolean
+  merchantId?: number
 }
 
 interface MerchantApprovalProps {
