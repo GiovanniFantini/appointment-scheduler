@@ -50,9 +50,11 @@ public class EmployeeService : IEmployeeService
     /// </summary>
     public async Task<EmployeeDto> CreateEmployeeAsync(int merchantId, CreateEmployeeRequest request)
     {
+        var normalizedEmail = request.Email.ToLower();
+
         // Cerca se esiste già un User registrato con questa email come Employee
         var existingUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == request.Email && u.IsEmployee && u.IsActive);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.IsEmployee && u.IsActive);
 
         var employee = new Employee
         {
@@ -60,7 +62,7 @@ public class EmployeeService : IEmployeeService
             UserId = existingUser?.Id, // Se esiste, collega; altrimenti null (pending)
             FirstName = request.FirstName,
             LastName = request.LastName,
-            Email = request.Email,
+            Email = normalizedEmail,
             PhoneNumber = request.PhoneNumber,
             BadgeCode = request.BadgeCode,
             Role = request.Role,
@@ -91,7 +93,7 @@ public class EmployeeService : IEmployeeService
 
         employee.FirstName = request.FirstName;
         employee.LastName = request.LastName;
-        employee.Email = request.Email;
+        employee.Email = request.Email.ToLower();
         employee.PhoneNumber = request.PhoneNumber;
         employee.BadgeCode = request.BadgeCode;
         employee.Role = request.Role;
