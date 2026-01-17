@@ -65,7 +65,7 @@ public static class DbInitializer
         // Crea utente admin di default
         var adminUser = new User
         {
-            Email = "admin@admin.com",
+            Email = "admin@admin.com".ToLower(),
             PasswordHash = BCrypt.Net.BCrypt.HashPassword("password"), // Password: "password"
             FirstName = "Admin",
             LastName = "User",

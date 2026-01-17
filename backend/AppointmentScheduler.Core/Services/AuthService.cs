@@ -23,10 +23,11 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> LoginAsync(LoginRequest request)
     {
+        var normalizedEmail = request.Email.ToLower();
         var user = await _context.Users
             .Include(u => u.Merchant)
             .Include(u => u.Employees)
-            .FirstOrDefaultAsync(u => u.Email == request.Email);
+            .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
 
         if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
             return null;
@@ -57,8 +58,10 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> RegisterAsync(RegisterRequest request)
     {
+        var normalizedEmail = request.Email.ToLower();
+
         // Verifica se l'email esiste già
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+        if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
             return null;
 
         // Verifica che BusinessName sia presente se vuole registrarsi come Merchant
@@ -67,7 +70,7 @@ public class AuthService : IAuthService
 
         var user = new User
         {
-            Email = request.Email,
+            Email = normalizedEmail,
             PasswordHash = HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
@@ -122,14 +125,16 @@ public class AuthService : IAuthService
 
     public async Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request)
     {
+        var normalizedEmail = request.Email.ToLower();
+
         // Verifica se l'email esiste già nella tabella Users
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+        if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
             throw new ArgumentException("Email già registrata nel sistema.");
 
         // Crea un nuovo User come Employee
         var user = new User
         {
-            Email = request.Email,
+            Email = normalizedEmail,
             PasswordHash = HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
@@ -147,7 +152,7 @@ public class AuthService : IAuthService
         // Cerca tutti gli Employee "pending" (UserId = null) con questa email
         // e collegali automaticamente al nuovo user
         var pendingEmployees = await _context.Employees
-            .Where(e => e.Email == request.Email && !e.UserId.HasValue && e.IsActive)
+            .Where(e => e.Email == normalizedEmail && !e.UserId.HasValue && e.IsActive)
             .ToListAsync();
 
         if (pendingEmployees.Any())
