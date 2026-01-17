@@ -469,6 +469,9 @@ public class ShiftService : IShiftService
             CheckInTime = shift.CheckInTime,
             IsCheckedOut = shift.IsCheckedOut,
             CheckOutTime = shift.CheckOutTime,
+            ValidationStatus = shift.ValidationStatus,
+            ValidatedAt = shift.ValidatedAt,
+            ValidatedBy = shift.ValidatedBy,
             IsActive = shift.IsActive,
             CreatedAt = shift.CreatedAt,
             UpdatedAt = shift.UpdatedAt
