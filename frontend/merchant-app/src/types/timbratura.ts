@@ -1,10 +1,10 @@
 export enum ValidationStatus {
-  Pending = 1,
-  AutoApproved = 2,
-  ManuallyApproved = 3,
-  RequiresReview = 4,
-  Rejected = 5,
-  SelfCorrected = 6,
+  Pending = 0,
+  AutoApproved = 1,
+  ManuallyApproved = 2,
+  RequiresReview = 3,
+  Rejected = 4,
+  SelfCorrected = 5,
 }
 
 export interface ShiftWithValidation {

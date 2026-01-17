@@ -1,33 +1,33 @@
 export enum AnomalyType {
-  LateCheckIn = 1,
-  EarlyCheckIn = 2,
-  LateCheckOut = 3,
-  EarlyCheckOut = 4,
-  MissingCheckIn = 5,
-  MissingCheckOut = 6,
-  ExtendedBreak = 7,
-  UnusualPattern = 8,
-  LocationMismatch = 9,
+  LateCheckIn = 0,
+  EarlyCheckIn = 1,
+  LateCheckOut = 2,
+  EarlyCheckOut = 3,
+  MissingCheckIn = 4,
+  MissingCheckOut = 5,
+  ExtendedBreak = 6,
+  UnusualPattern = 7,
+  LocationMismatch = 8,
 }
 
 export enum AnomalyReason {
-  Traffic = 1,
-  AuthorizedLeave = 2,
-  TimeRecovery = 3,
-  PersonalEmergency = 4,
-  Forgotten = 5,
-  TechnicalIssue = 6,
-  SmartWorking = 7,
-  Other = 8,
-  NotSpecified = 9,
+  Traffic = 0,
+  AuthorizedLeave = 1,
+  TimeRecovery = 2,
+  PersonalEmergency = 3,
+  Forgotten = 4,
+  TechnicalIssue = 5,
+  SmartWorking = 6,
+  Other = 7,
+  NotSpecified = 8,
 }
 
 export enum OvertimeType {
-  Paid = 1,
-  BankedHours = 2,
-  TimeRecovery = 3,
-  Voluntary = 4,
-  Pending = 5,
+  Paid = 0,
+  BankedHours = 1,
+  TimeRecovery = 2,
+  Voluntary = 3,
+  Pending = 4,
 }
 
 export interface TimbratureResponse {
