@@ -24,6 +24,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<ShiftSwapRequest> ShiftSwapRequests { get; set; }
     public DbSet<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; }
 
+    // Smart Timbratura System
+    public DbSet<ShiftBreak> ShiftBreaks { get; set; }
+    public DbSet<ShiftAnomaly> ShiftAnomalies { get; set; }
+    public DbSet<OvertimeRecord> OvertimeRecords { get; set; }
+    public DbSet<ShiftCorrection> ShiftCorrections { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -265,6 +271,96 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => e.EmployeeId);
             entity.HasIndex(e => new { e.EmployeeId, e.ValidFrom, e.ValidTo });
+        });
+
+        // ShiftBreak configuration
+        modelBuilder.Entity<ShiftBreak>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BreakType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.Breaks)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ShiftId);
+        });
+
+        // ShiftAnomaly configuration
+        modelBuilder.Entity<ShiftAnomaly>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EmpatheticMessage).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.EmployeeNotes).HasMaxLength(1000);
+            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
+            entity.Property(e => e.ResolutionMethod).HasMaxLength(100);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.Anomalies)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => e.IsResolved);
+            entity.HasIndex(e => e.RequiresMerchantReview);
+        });
+
+        // OvertimeRecord configuration
+        modelBuilder.Entity<OvertimeRecord>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ApprovedBy).HasMaxLength(100);
+            entity.Property(e => e.EmployeeNotes).HasMaxLength(1000);
+            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.OvertimeRecords)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.OvertimeRecords)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.OvertimeRecords)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => e.Date);
+            entity.HasIndex(e => new { e.EmployeeId, e.Date });
+            entity.HasIndex(e => e.IsApproved);
+        });
+
+        // ShiftCorrection configuration
+        modelBuilder.Entity<ShiftCorrection>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CorrectedField).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.OriginalValue).HasMaxLength(500);
+            entity.Property(e => e.NewValue).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.Reason).HasMaxLength(1000);
+            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.Corrections)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.ShiftCorrections)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => e.IsWithin24Hours);
+            entity.HasIndex(e => e.RequiresMerchantApproval);
         });
     }
 }

@@ -42,6 +42,30 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card Timbratura - FEATURED */}
+          <button
+            onClick={() => navigate('/timbratura')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-green transition-all duration-300 transform hover:scale-105 text-left border border-neon-green/30"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-green/20 to-emerald-500/20 border border-neon-green/50">
+                <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Timbratura</h3>
+                <p className="text-gray-400 text-sm">Entra/Esci - Sistema intelligente</p>
+              </div>
+            </div>
+            <div className="flex items-center text-neon-green text-sm font-semibold">
+              Vai alla timbratura
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
           {/* Card Colleghi */}
           <button
             onClick={() => navigate('/colleagues')}
@@ -103,6 +127,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             Questa è la tua area personale dove puoi:
           </p>
           <ul className="list-disc list-inside text-gray-300 space-y-2">
+            <li><strong className="text-neon-green">Timbratura intelligente</strong> - Check-in/out con sistema empatico e auto-validazione</li>
             <li>Visualizzare i tuoi colleghi</li>
             <li>Vedere le informazioni di contatto dei tuoi colleghi</li>
             <li>Gestire il tuo profilo (prossimamente)</li>

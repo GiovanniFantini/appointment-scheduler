@@ -24,4 +24,5 @@ public class Merchant
     public ICollection<ShiftTemplate> ShiftTemplates { get; set; } = new List<ShiftTemplate>();
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
     public ICollection<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
+    public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
 }

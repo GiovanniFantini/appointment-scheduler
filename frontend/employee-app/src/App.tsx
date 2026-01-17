@@ -5,6 +5,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
 import MyShifts from './pages/MyShifts'
+import Timbratura from './pages/Timbratura'
 
 interface User {
   userId: number
@@ -78,6 +79,9 @@ function App() {
         } />
         <Route path="/my-shifts" element={
           user ? <MyShifts /> : <Navigate to="/login" />
+        } />
+        <Route path="/timbratura" element={
+          user ? <Timbratura /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>

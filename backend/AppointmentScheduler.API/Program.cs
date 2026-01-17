@@ -118,6 +118,9 @@ try
     builder.Services.AddScoped<IShiftSwapService, ShiftSwapService>();
     builder.Services.AddScoped<IEmployeeWorkingHoursLimitService, EmployeeWorkingHoursLimitService>();
 
+    // Smart Timbratura System
+    builder.Services.AddScoped<ITimbratureService, TimbratureService>();
+
     Console.WriteLine("Application services registered");
 
     // JWT Authentication

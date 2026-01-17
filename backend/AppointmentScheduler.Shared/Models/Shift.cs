@@ -80,6 +80,31 @@ public class Shift
     /// </summary>
     public DateTime? CheckOutTime { get; set; }
 
+    /// <summary>
+    /// Stato di validazione del turno (auto-approvazione 95%)
+    /// </summary>
+    public ValidationStatus ValidationStatus { get; set; } = ValidationStatus.Pending;
+
+    /// <summary>
+    /// Timestamp validazione
+    /// </summary>
+    public DateTime? ValidatedAt { get; set; }
+
+    /// <summary>
+    /// Chi ha validato (MerchantId o "System" per auto-validazione)
+    /// </summary>
+    public string? ValidatedBy { get; set; }
+
+    /// <summary>
+    /// Posizione GPS al check-in (opzionale, formato JSON)
+    /// </summary>
+    public string? CheckInLocation { get; set; }
+
+    /// <summary>
+    /// Posizione GPS al check-out (opzionale, formato JSON)
+    /// </summary>
+    public string? CheckOutLocation { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
@@ -89,4 +114,8 @@ public class Shift
     public ShiftTemplate? ShiftTemplate { get; set; }
     public Employee? Employee { get; set; }
     public ICollection<ShiftSwapRequest> SwapRequests { get; set; } = new List<ShiftSwapRequest>();
+    public ICollection<ShiftBreak> Breaks { get; set; } = new List<ShiftBreak>();
+    public ICollection<ShiftAnomaly> Anomalies { get; set; } = new List<ShiftAnomaly>();
+    public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
+    public ICollection<ShiftCorrection> Corrections { get; set; } = new List<ShiftCorrection>();
 }
