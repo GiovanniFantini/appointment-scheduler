@@ -80,6 +80,9 @@ public class ShiftDto
     public DateTime? CheckInTime { get; set; }
     public bool IsCheckedOut { get; set; }
     public DateTime? CheckOutTime { get; set; }
+    public ValidationStatus ValidationStatus { get; set; }
+    public DateTime? ValidatedAt { get; set; }
+    public string? ValidatedBy { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

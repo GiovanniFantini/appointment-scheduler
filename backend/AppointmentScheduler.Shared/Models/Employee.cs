@@ -45,4 +45,6 @@ public class Employee
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
     public ICollection<EmployeeWorkingHoursLimit> WorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
+    public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
+    public ICollection<ShiftCorrection> ShiftCorrections { get; set; } = new List<ShiftCorrection>();
 }

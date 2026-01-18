@@ -12,6 +12,7 @@ import BusinessHours from './pages/BusinessHours'
 import ClosurePeriods from './pages/ClosurePeriods'
 import Shifts from './pages/Shifts'
 import ShiftTemplates from './pages/ShiftTemplates'
+import TimbratureValidation from './pages/TimbratureValidation'
 
 interface User {
   userId: number
@@ -106,6 +107,9 @@ function App() {
           } />
           <Route path="/shift-templates" element={
             user ? <ShiftTemplates onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/timbrature" element={
+            user ? <TimbratureValidation /> : <Navigate to="/login" />
           } />
           <Route path="/dashboard" element={
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
