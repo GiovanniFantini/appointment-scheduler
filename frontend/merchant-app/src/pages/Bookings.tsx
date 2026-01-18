@@ -142,7 +142,7 @@ function Bookings({ onLogout }: BookingsProps) {
                 <div className="grid grid-cols-3 gap-4 mb-4">
                   <div className="glass-card-dark p-3 rounded-xl border border-neon-blue/20">
                     <p className="text-xs text-gray-500 mb-1">📅 Data</p>
-                    <p className="font-semibold text-neon-blue">{new Date(booking.bookingDate).toLocaleDateString('it-IT')}</p>
+                    <p className="font-semibold text-neon-blue">{new Date(booking.bookingDate).toLocaleDateString('it-IT', { timeZone: 'UTC' })}</p>
                   </div>
                   <div className="glass-card-dark p-3 rounded-xl border border-neon-purple/20">
                     <p className="text-xs text-gray-500 mb-1">🕐 Orario</p>

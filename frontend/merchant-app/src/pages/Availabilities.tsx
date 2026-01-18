@@ -392,7 +392,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
               <span className="text-neon-cyan font-semibold">Servizio:</span> {getServiceName(selectedAvailability.serviceId)} -
               {selectedAvailability.isRecurring
                 ? ` ${selectedAvailability.dayOfWeekName}`
-                : ` ${new Date(selectedAvailability.specificDate!).toLocaleDateString()}`}
+                : ` ${new Date(selectedAvailability.specificDate!).toLocaleDateString('it-IT', { timeZone: 'UTC' })}`}
               {' '}({selectedAvailability.startTime} - {selectedAvailability.endTime})
             </p>
             <form onSubmit={handleAddSlot} className="space-y-4">
@@ -469,7 +469,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
                           <span className="text-neon-purple">
                             {avail.isRecurring
                               ? `🔄 Ogni ${avail.dayOfWeekName}`
-                              : `📅 ${new Date(avail.specificDate!).toLocaleDateString()}`}
+                              : `📅 ${new Date(avail.specificDate!).toLocaleDateString('it-IT', { timeZone: 'UTC' })}`}
                           </span>
                         </span>
                         <span className="glass-card-dark px-3 py-1 rounded-lg border border-neon-blue/30">
