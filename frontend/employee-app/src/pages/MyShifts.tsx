@@ -274,7 +274,7 @@ export default function MyShifts() {
               <div className="space-y-3 text-gray-300">
                 <div>
                   <span className="font-semibold">Data:</span>{' '}
-                  {new Date(selectedShift.date).toLocaleDateString('it-IT')}
+                  {new Date(selectedShift.date).toLocaleDateString('it-IT', { timeZone: 'UTC' })}
                 </div>
                 <div>
                   <span className="font-semibold">Orario:</span>{' '}

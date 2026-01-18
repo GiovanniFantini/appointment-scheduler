@@ -115,7 +115,7 @@ export default function TimbratureValidation() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+    return new Date(dateString).toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC' });
   };
 
   return (
