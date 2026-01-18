@@ -114,16 +114,16 @@ function Home({ user, onLogout }: HomeProps) {
       // Costruisci startTime e endTime basandosi sul BookingMode
       if (selectedService.bookingMode === 1) {
         // TimeSlot: usa lo slot selezionato
-        startTime = new Date(`${bookingData.bookingDate}T${bookingData.startTime}`)
+        startTime = new Date(`${bookingData.bookingDate}T${bookingData.startTime}Z`)
         endTime = new Date(startTime.getTime() + selectedService.durationMinutes * 60000)
       } else if (selectedService.bookingMode === 2) {
         // TimeRange: usa inizio e fine specificati dall'utente
-        startTime = new Date(`${bookingData.bookingDate}T${bookingData.startTime}`)
-        endTime = new Date(`${bookingData.bookingDate}T${bookingData.endTime}`)
+        startTime = new Date(`${bookingData.bookingDate}T${bookingData.startTime}Z`)
+        endTime = new Date(`${bookingData.bookingDate}T${bookingData.endTime}Z`)
       } else {
         // DayOnly: usa solo la data, con orari dummy (mezzanotte)
-        startTime = new Date(`${bookingData.bookingDate}T00:00:00`)
-        endTime = new Date(`${bookingData.bookingDate}T23:59:59`)
+        startTime = new Date(`${bookingData.bookingDate}T00:00:00Z`)
+        endTime = new Date(`${bookingData.bookingDate}T23:59:59Z`)
       }
 
       await apiClient.post('/bookings', {

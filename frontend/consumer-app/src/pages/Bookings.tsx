@@ -127,7 +127,7 @@ function Bookings({ onLogout }: BookingsProps) {
                     </div>
                     <div className="flex flex-wrap gap-3 mb-3">
                       <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-cyan/20">
-                        <span className="text-neon-cyan">📅 {new Date(booking.bookingDate).toLocaleDateString('it-IT')}</span>
+                        <span className="text-neon-cyan">📅 {new Date(booking.bookingDate).toLocaleDateString('it-IT', { timeZone: 'UTC' })}</span>
                       </div>
                       <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-blue/20">
                         <span className="text-neon-blue">🕐 {new Date(booking.startTime).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}</span>
