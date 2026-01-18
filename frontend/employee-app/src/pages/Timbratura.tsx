@@ -183,7 +183,7 @@ export default function Timbratura() {
               <div className="text-3xl font-bold text-gray-800 mb-2">
                 {status.statusMessage}
               </div>
-              {status.isCheckedIn && !status.isCheckedOut && (
+              {status.isCheckedIn && (
                 <div className="text-5xl font-mono text-blue-600 mb-4">
                   {formatDuration(status.checkInTime)}
                 </div>
