@@ -160,28 +160,30 @@ try
 
     // CORS per frontend
     var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>() ?? Array.Empty<string>();
+
+    // Se non configurato, usa gli URL di produzione conosciuti come fallback sicuro
+    if (corsOrigins.Length == 0)
+    {
+        Console.WriteLine("WARNING: No CORS origins configured in appsettings. Using production frontend URLs as fallback.");
+        corsOrigins = new[]
+        {
+            "https://appointment-consumer-app.azurewebsites.net",
+            "https://appointment-merchant-app.azurewebsites.net",
+            "https://appointment-employee-app.azurewebsites.net",
+            "https://appointment-admin-app.azurewebsites.net"
+        };
+    }
+
     Console.WriteLine($"CORS Origins configured: {string.Join(", ", corsOrigins)}");
 
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            if (corsOrigins.Length > 0)
-            {
-                policy.WithOrigins(corsOrigins)
-                    .AllowAnyHeader()
-                    .AllowAnyMethod()
-                    .AllowCredentials();
-            }
-            else
-            {
-                Console.WriteLine("WARNING: No CORS origins configured. Allowing all origins (NOT RECOMMENDED FOR PRODUCTION).");
-                // Fallback temporaneo: accetta tutte le origini se non configurato
-                // Per la produzione, configura le variabili CorsOrigins__0, CorsOrigins__1, ecc. in Azure
-                policy.AllowAnyOrigin()
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
-            }
+            policy.WithOrigins(corsOrigins)
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
         });
     });
     Console.WriteLine("CORS configured");
