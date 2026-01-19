@@ -2,6 +2,8 @@
 
 Piattaforma di prenotazione multi-verticale (B2C e B2B) che centralizza l'esperienza di prenotazione per utenti finali e gestione business per merchant.
 
+**🚀 Stato Produzione**: Applicazione deployata su Azure con 5 App Services + PostgreSQL Database
+
 ## Documentazione
 
 - **[SETUP.md](SETUP.md)** - Setup completo ambiente di sviluppo (INIZIA QUI)
@@ -34,21 +36,28 @@ npm install && npm run dev
 # 5. Frontend Admin (altra finestra)
 cd frontend/admin-app
 npm install && npm run dev
+
+# 6. Frontend Employee (altra finestra)
+cd frontend/employee-app
+npm install && npm run dev
 ```
 
 Vai su:
 - http://localhost:5173 (Consumer)
 - http://localhost:5174 (Merchant)
 - http://localhost:5175 (Admin)
+- http://localhost:5176 (Employee)
 
 Per istruzioni dettagliate: [SETUP.md](SETUP.md)
 
 ## 🎯 Obiettivo del Progetto
 
-Creare una Web App mobile-ready bidirezionale che:
+Creare una Web App mobile-ready multi-direzionale che:
 - **B2C**: Permette agli utenti di prenotare servizi (ristoranti, sport, wellness, ecc.)
 - **B2B**: Fornisce ai merchant strumenti per gestire prenotazioni e business
+- **B2B2E**: Gestione completa dipendenti con timbrature, turni e coordinamento
 - **Multi-verticale**: Gestisce diversi settori in un unico ecosistema
+- **Cloud-Native**: Deployato su Azure con CI/CD automatico
 
 ## 🏗️ Architettura
 
@@ -79,14 +88,16 @@ appointment-scheduler/
 └── frontend/
     ├── consumer-app/                      # App utenti (porta 5173)
     ├── merchant-app/                      # Dashboard merchant (porta 5174)
-    └── admin-app/                         # Admin panel (porta 5175)
+    ├── admin-app/                         # Admin panel (porta 5175)
+    └── employee-app/                      # App dipendenti (porta 5176)
 ```
 
 ## 👥 Ruoli Utente
 
 1. **User (Consumer)**: Può solo prenotare servizi
 2. **Merchant (Business)**: Gestisce le proprie attività e prenotazioni
-3. **Admin**: Gestisce permessi e approva i merchant
+3. **Employee (Dipendente)**: Gestisce turni, timbrature e colleghi
+4. **Admin**: Gestisce permessi e approva i merchant
 
 ## 📊 Database Schema
 
@@ -114,6 +125,37 @@ appointment-scheduler/
 - Status (Pending/Confirmed/Cancelled/Completed/NoShow)
 - NumberOfPeople, Notes
 - CreatedAt, ConfirmedAt, CancelledAt
+
+**Employees**
+- Id, UserId, FirstName, LastName, Email, PhoneNumber
+- HireDate, IsActive, CreatedAt
+
+**Shifts**
+- Id, EmployeeId, MerchantId, Date
+- StartTime, EndTime, BreakMinutes
+- Status (Scheduled/InProgress/Completed/Cancelled)
+- CheckInTime, CheckOutTime (timbrature effettive)
+
+**ShiftTemplates**
+- Id, MerchantId, Name, Description
+- DayOfWeek, StartTime, EndTime, BreakMinutes
+
+**ShiftSwapRequests**
+- Id, RequestingEmployeeId, TargetEmployeeId, ShiftId
+- Status (Pending/Approved/Rejected)
+- RequestDate, ResponseDate
+
+**BusinessHours**
+- Id, MerchantId, DayOfWeek
+- OpenTime, CloseTime, IsOpen
+
+**ClosurePeriods**
+- Id, MerchantId, StartDate, EndDate
+- Reason, CreatedAt
+
+**EmployeeWorkingHoursLimits**
+- Id, EmployeeId, MerchantId
+- MaxHoursPerDay, MaxHoursPerWeek, MaxHoursPerMonth
 
 ## 🚀 Sviluppo
 
@@ -182,7 +224,8 @@ Il sistema usa JWT Bearer Token:
 
 - **AdminOnly**: Solo Admin
 - **MerchantOnly**: Merchant e Admin
-- **UserOnly**: User, Merchant e Admin
+- **EmployeeOnly**: Employee e Admin
+- **UserOnly**: User, Merchant, Employee e Admin
 
 ## 📱 Interfacce
 
@@ -230,6 +273,24 @@ Il sistema usa JWT Bearer Token:
 - `/` - Dashboard admin
 - `/merchants` - Gestione merchant
 
+### Lato Employee (Dipendenti)
+
+**Funzionalità:**
+- Login riservato ai dipendenti
+- Dashboard personale con statistiche
+- Gestione timbrature (check-in/check-out)
+- Visualizzazione turni personali
+- Gestione colleghi e merchant
+- Sistema smart di timbratura con validazione orari
+
+**Pagine:**
+- `/login` - Login dipendente
+- `/register` - Registrazione dipendente
+- `/` - Dashboard dipendente
+- `/timbratura` - Sistema timbrature
+- `/my-shifts` - I miei turni
+- `/colleagues` - Colleghi
+
 ## 🔧 Configurazione
 
 ### File di Configurazione
@@ -262,6 +323,7 @@ Il backend è configurato per accettare richieste da:
 - `http://localhost:5173` (Consumer App)
 - `http://localhost:5174` (Merchant App)
 - `http://localhost:5175` (Admin App)
+- `http://localhost:5176` (Employee App)
 
 Modifica in `Program.cs` per ambiente di produzione.
 
@@ -270,12 +332,40 @@ Modifica in `Program.cs` per ambiente di produzione.
 ### Auth
 - `POST /api/auth/login` - Login
 - `POST /api/auth/register` - Registrazione
+- `POST /api/employee-auth/login` - Login dipendente
+- `POST /api/employee-auth/register` - Registrazione dipendente
 
 ### Bookings (Autenticato)
 - `GET /api/bookings` - Le mie prenotazioni
 - `GET /api/bookings/{id}` - Dettaglio prenotazione
 - `POST /api/bookings` - Crea prenotazione
 - `PATCH /api/bookings/{id}/cancel` - Cancella prenotazione
+
+### Employee (Autenticato Employee)
+- `GET /api/employees` - Lista dipendenti
+- `GET /api/employees/{id}` - Dettaglio dipendente
+- `GET /api/timbrature/my-timbrature` - Le mie timbrature
+- `POST /api/timbrature/check-in` - Timbra entrata
+- `POST /api/timbrature/check-out` - Timbra uscita
+- `GET /api/employee-colleagues/my-merchants` - I miei merchant
+- `GET /api/shift-templates` - Template turni
+- `GET /api/shift-swap-requests` - Richieste scambio turni
+
+### Merchant (Autenticato Merchant)
+- `GET /api/merchants` - Lista merchant
+- `GET /api/services` - Servizi del merchant
+- `POST /api/services` - Crea servizio
+- `GET /api/availability` - Disponibilità servizi
+- `GET /api/business-hours` - Orari apertura
+- `GET /api/closure-period` - Periodi di chiusura
+
+### Admin (Autenticato Admin)
+- `GET /api/merchants/pending` - Merchant in attesa approvazione
+- `PATCH /api/merchants/{id}/approve` - Approva merchant
+- `PATCH /api/merchants/{id}/reject` - Rifiuta merchant
+
+### System
+- `GET /api/version` - Versione applicazione
 
 ## 🎨 Stili e UI
 
@@ -285,6 +375,7 @@ Modifica in `Program.cs` per ambiente di produzione.
   - Consumer (blu/viola)
   - Merchant (verde/blu)
   - Admin (viola/rosso)
+  - Employee (arancione/giallo)
 
 ## 🔜 Roadmap
 
@@ -299,6 +390,15 @@ Modifica in `Program.cs` per ambiente di produzione.
 
 ### Fase 2: Advanced Features ✅ COMPLETATA
 - [x] Calendario disponibilita' con slot orari (3 modalità: TimeSlot, TimeRange, DayOnly)
+- [x] Sistema gestione dipendenti (Employee App)
+- [x] Sistema timbrature smart con validazione orari
+- [x] Gestione turni e template turni
+- [x] Scambio turni tra colleghi
+- [x] Periodi di chiusura merchant
+- [x] Limiti orari lavorativi dipendenti
+- [x] Orari apertura business
+- [x] Sistema versioning Git-based
+- [x] Deploy produzione su Azure (4 App Services)
 - [ ] Sistema notifiche (email/push)
 - [ ] Recensioni e rating
 - [ ] Upload immagini servizi
@@ -326,6 +426,34 @@ Modifica in `Program.cs` per ambiente di produzione.
 4. Testa in locale
 5. Crea Pull Request
 
+## 🌐 Produzione e Deployment
+
+L'applicazione è deployata su **Microsoft Azure** con architettura multi-servizio:
+
+### Componenti Azure
+- **5 App Services** (Linux, Node 20 / .NET 8):
+  - Backend API (.NET 8)
+  - Consumer App (React + Express)
+  - Merchant App (React + Express)
+  - Admin App (React + Express)
+  - Employee App (React + Express)
+- **PostgreSQL Database** (Azure Database for PostgreSQL - Flexible Server)
+- **GitHub Actions CI/CD** per deployment automatico
+
+### URLs Produzione
+Vedi [PRODUCTION_ARCHITECTURE.md](PRODUCTION_ARCHITECTURE.md) per dettagli completi su:
+- Configurazione Azure App Services
+- Variabili d'ambiente richieste
+- Workflow GitHub Actions
+- Monitoring e health checks
+- Troubleshooting produzione
+
+### CI/CD Pipeline
+Il progetto usa GitHub Actions per deployment automatico:
+- Push su `main` → Deploy automatico dei componenti modificati
+- Build separati per backend e ogni frontend
+- Health checks pre e post-deployment
+
 ## Troubleshooting
 
 ### Backend non si avvia
@@ -336,6 +464,7 @@ Modifica in `Program.cs` per ambiente di produzione.
 ### Frontend errori CORS
 - Verifica backend in esecuzione su porta corretta
 - Controlla configurazione CORS in Program.cs
+- In produzione, verifica variabili CorsOrigins in Azure
 
 ### Database errori
 ```bash
@@ -344,7 +473,10 @@ dotnet ef database drop -f
 dotnet ef database update
 ```
 
-Vedi [SETUP.md](SETUP.md) per troubleshooting dettagliato.
+### Problemi Timezone
+Il sistema usa UTC internamente e converte per display. Vedi [TROUBLESHOOTING.md](TROUBLESHOOTING.md) per fix comuni.
+
+Vedi [SETUP.md](SETUP.md) e [TROUBLESHOOTING.md](TROUBLESHOOTING.md) per troubleshooting dettagliato.
 
 ## Risorse
 
