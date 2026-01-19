@@ -175,7 +175,12 @@ try
             }
             else
             {
-                Console.WriteLine("WARNING: No CORS origins configured. CORS will block all requests.");
+                Console.WriteLine("WARNING: No CORS origins configured. Allowing all origins (NOT RECOMMENDED FOR PRODUCTION).");
+                // Fallback temporaneo: accetta tutte le origini se non configurato
+                // Per la produzione, configura le variabili CorsOrigins__0, CorsOrigins__1, ecc. in Azure
+                policy.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
             }
         });
     });
