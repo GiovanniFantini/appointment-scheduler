@@ -233,6 +233,7 @@ try
                 }
 
                 Console.WriteLine($"Database seeding is {(seedData ? "enabled" : "disabled")} (SEED_DATABASE={(seedData ? "true" : "false")})");
+                Console.WriteLine($"Connection String: {connectionString}");
 
                 DbInitializer.Initialize(context, seedData);
             }
