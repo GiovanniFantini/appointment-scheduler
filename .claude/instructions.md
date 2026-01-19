@@ -57,7 +57,7 @@ export const myFunction = (param: string): void => {}
 - Configurazioni esternalizzate (appsettings, .env)
 - Docker-compose per dipendenze
 - Seed data per test rapidi
-- Setup documentato in QUICK_START.md
+- Setup documentato in SETUP.md
 
 ### 5. NO Emoji
 - Non usare emoji in:
@@ -400,6 +400,6 @@ npm install && npm run dev
 ## Riferimenti
 
 - Dettagli completi: PROJECT_GUIDELINES.md
-- Setup rapido: QUICK_START.md
+- Setup rapido: SETUP.md
 - Configurazione: backend/CONFIGURATION.md
 - Architettura: README.md
