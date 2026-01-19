@@ -6,12 +6,13 @@ L'applicazione è deployata su **Azure App Service** (Linux) con deployment auto
 
 ### Componenti
 
-L'architettura consiste di **4 Azure App Services separati**:
+L'architettura consiste di **5 Azure App Services separati**:
 
 1. **Backend API** (.NET 8)
 2. **Consumer App** (React + Vite + Express)
 3. **Merchant App** (React + Vite + Express)
 4. **Admin App** (React + Vite + Express)
+5. **Employee App** (React + Vite + Express)
 
 ---
 
@@ -39,6 +40,7 @@ JwtSettings__Audience               # Audience JWT
 CorsOrigins__0                      # URL Consumer App
 CorsOrigins__1                      # URL Merchant App
 CorsOrigins__2                      # URL Admin App
+CorsOrigins__3                      # URL Employee App
 RUN_MIGRATIONS                      # true/false (default: true)
 SEED_DATABASE                       # true/false (default: false)
 ```
@@ -94,6 +96,11 @@ const API_URL = process.env.API_URL || 'https://appointment-scheduler-api.azurew
 - Pannello amministrativo
 - Approvazione merchant
 - Workflow: `.github/workflows/deploy-admin-app.yml`
+
+### Employee App
+- App dipendenti
+- Sistema timbrature e turni
+- Workflow: `.github/workflows/deploy-employee-app.yml`
 
 ### Build e Deploy Process
 
@@ -169,6 +176,7 @@ builder.Services.AddCors(options =>
 | `frontend/consumer-app/**`  | `deploy-consumer-app.yml`    |
 | `frontend/merchant-app/**`  | `deploy-merchant-app.yml`    |
 | `frontend/admin-app/**`     | `deploy-admin-app.yml`       |
+| `frontend/employee-app/**`  | `deploy-employee-app.yml`    |
 
 ### GitHub Secrets Richiesti
 
@@ -261,17 +269,17 @@ Restituisce configurazione runtime (API_URL, NODE_ENV, PORT).
 ## Architettura Riassuntiva
 
 ```
-┌──────────────────────────────────────────────┐
-│            Internet (HTTPS)                  │
-└────┬─────────────┬───────────────┬───────────┘
-     │             │               │
-┌────▼────┐   ┌────▼────┐   ┌─────▼─────┐
-│Consumer │   │Merchant │   │   Admin   │
-│  App    │   │   App   │   │    App    │
-│(Node 20)│   │(Node 20)│   │ (Node 20) │
-└────┬────┘   └────┬────┘   └─────┬─────┘
-     │             │               │
-     └─────────────┼───────────────┘
+┌────────────────────────────────────────────────────────┐
+│                 Internet (HTTPS)                       │
+└────┬──────────┬──────────┬──────────┬──────────────────┘
+     │          │          │          │
+┌────▼────┐┌───▼────┐┌────▼────┐┌────▼────┐
+│Consumer ││Merchant││  Admin  ││Employee │
+│  App    ││  App   ││   App   ││   App   │
+│(Node 20)││(Node 20)││(Node 20)││(Node 20)│
+└────┬────┘└───┬────┘└────┬────┘└────┬────┘
+     │          │          │          │
+     └──────────┴──────────┴──────────┘
                    │ Proxy /api/*
              ┌─────▼─────┐
              │  Backend  │
