@@ -4,10 +4,12 @@ Piattaforma di prenotazione multi-verticale (B2C e B2B) che centralizza l'esperi
 
 ## Documentazione
 
-- **[QUICK_START.md](QUICK_START.md)** - Setup rapido in 5 minuti (INIZIA QUI)
+- **[SETUP.md](SETUP.md)** - Setup completo ambiente di sviluppo (INIZIA QUI)
 - **[PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md)** - Coding standards e best practices
-- **[CONFIGURATION.md](backend/CONFIGURATION.md)** - Gestione configurazioni e secrets
-- **[.claude/instructions.md](.claude/instructions.md)** - Istruzioni per sviluppo AI-assisted
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Soluzioni ai problemi comuni
+- **[VERSIONING.md](VERSIONING.md)** - Sistema di versioning Git-based
+- **[PRODUCTION_ARCHITECTURE.md](PRODUCTION_ARCHITECTURE.md)** - Architettura Azure e deployment
+- **[backend/CONFIGURATION.md](backend/CONFIGURATION.md)** - Gestione configurazioni e secrets
 
 ## Inizio Rapido
 
@@ -39,7 +41,7 @@ Vai su:
 - http://localhost:5174 (Merchant)
 - http://localhost:5175 (Admin)
 
-Per istruzioni dettagliate: [QUICK_START.md](QUICK_START.md)
+Per istruzioni dettagliate: [SETUP.md](SETUP.md)
 
 ## 🎯 Obiettivo del Progetto
 
@@ -135,7 +137,7 @@ Vedi [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md) per dettagli completi.
 
 ### Setup Completo
 
-Vedi [QUICK_START.md](QUICK_START.md) per istruzioni passo-passo.
+Vedi [SETUP.md](SETUP.md) per istruzioni passo-passo.
 
 **In breve:**
 1. Clone repository
@@ -342,7 +344,7 @@ dotnet ef database drop -f
 dotnet ef database update
 ```
 
-Vedi [QUICK_START.md](QUICK_START.md) per troubleshooting dettagliato.
+Vedi [SETUP.md](SETUP.md) per troubleshooting dettagliato.
 
 ## Risorse
 
