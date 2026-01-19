@@ -9,6 +9,7 @@ using AppointmentScheduler.Core.Services;
 try
 {
     Console.WriteLine("Starting application...");
+    Console.WriteLine($"at time {DateTime.Now}");
 
     // Rileva se siamo in design-time mode (EF Core Tools)
     // Questo check evita che l'applicazione tenti di avviarsi quando EF Tools cerca il DbContext
