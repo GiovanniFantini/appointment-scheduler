@@ -13,7 +13,7 @@ namespace AppointmentScheduler.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20260119171236_initialize-database")]
-    partial class initializedatabase
+    partial class InitializeDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

@@ -20,6 +20,7 @@ public class ShiftSwapService : IShiftSwapService
 
     public async Task<IEnumerable<ShiftSwapRequestDto>> GetMerchantSwapRequestsAsync(int merchantId)
     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference - EF Core handles null navigation properties
         var requests = await _context.ShiftSwapRequests
             .Include(sr => sr.Shift)
                 .ThenInclude(s => s.Employee)
@@ -32,12 +33,14 @@ public class ShiftSwapService : IShiftSwapService
             .Where(sr => sr.Shift.MerchantId == merchantId)
             .OrderByDescending(sr => sr.CreatedAt)
             .ToListAsync();
+#pragma warning restore CS8602
 
         return requests.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ShiftSwapRequestDto>> GetEmployeeSwapRequestsAsync(int employeeId)
     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference - EF Core handles null navigation properties
         var requests = await _context.ShiftSwapRequests
             .Include(sr => sr.Shift)
                 .ThenInclude(s => s.Employee)
@@ -50,12 +53,14 @@ public class ShiftSwapService : IShiftSwapService
             .Where(sr => sr.RequestingEmployeeId == employeeId)
             .OrderByDescending(sr => sr.CreatedAt)
             .ToListAsync();
+#pragma warning restore CS8602
 
         return requests.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ShiftSwapRequestDto>> GetEmployeeReceivedSwapRequestsAsync(int employeeId)
     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference - EF Core handles null navigation properties
         var requests = await _context.ShiftSwapRequests
             .Include(sr => sr.Shift)
                 .ThenInclude(s => s.Employee)
@@ -68,12 +73,14 @@ public class ShiftSwapService : IShiftSwapService
             .Where(sr => sr.TargetEmployeeId == employeeId || (sr.TargetEmployeeId == null && sr.Shift.MerchantId == employeeId))
             .OrderByDescending(sr => sr.CreatedAt)
             .ToListAsync();
+#pragma warning restore CS8602
 
         return requests.Select(MapToDto);
     }
 
     public async Task<ShiftSwapRequestDto?> GetSwapRequestByIdAsync(int id)
     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference - EF Core handles null navigation properties
         var request = await _context.ShiftSwapRequests
             .Include(sr => sr.Shift)
                 .ThenInclude(s => s.Employee)
@@ -84,6 +91,7 @@ public class ShiftSwapService : IShiftSwapService
             .Include(sr => sr.OfferedShift)
                 .ThenInclude(s => s.ShiftTemplate)
             .FirstOrDefaultAsync(sr => sr.Id == id);
+#pragma warning restore CS8602
 
         return request == null ? null : MapToDto(request);
     }
@@ -129,6 +137,7 @@ public class ShiftSwapService : IShiftSwapService
 
     public async Task<ShiftSwapRequestDto?> RespondToSwapRequestAsync(int swapRequestId, int respondingUserId, RespondToShiftSwapRequest request)
     {
+#pragma warning disable CS8602 // Dereference of a possibly null reference - EF Core handles null navigation properties
         var swapRequest = await _context.ShiftSwapRequests
             .Include(sr => sr.Shift)
                 .ThenInclude(s => s.Employee)
@@ -139,6 +148,7 @@ public class ShiftSwapService : IShiftSwapService
             .Include(sr => sr.OfferedShift)
                 .ThenInclude(s => s.ShiftTemplate)
             .FirstOrDefaultAsync(sr => sr.Id == swapRequestId);
+#pragma warning restore CS8602
 
         if (swapRequest == null)
             return null;
