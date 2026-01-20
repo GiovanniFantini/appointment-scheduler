@@ -15,7 +15,7 @@ public class AzureBlobStorageService : IFileStorageService
 
     public AzureBlobStorageService(IConfiguration configuration)
     {
-        var connectionString = configuration["AzureBlobStorage:ConnectionString"]
+        var connectionString = configuration.GetConnectionString("AzureBlobStorage")
             ?? throw new InvalidOperationException("Azure Blob Storage connection string not configured");
 
         _blobServiceClient = new BlobServiceClient(connectionString);
