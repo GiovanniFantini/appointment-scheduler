@@ -105,19 +105,28 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </div>
 
-          <div className="glass-card p-6 rounded-2xl border border-white/10 opacity-50 cursor-not-allowed">
+          <button
+            onClick={() => navigate('/documents')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-purple transition-all duration-300 transform hover:scale-105 text-left border border-white/10"
+          >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-blue/20 border border-neon-purple/30">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-pink/20 border border-neon-purple/30">
                 <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Il Mio Profilo</h3>
-                <p className="text-gray-400 text-sm">Prossimamente</p>
+                <h3 className="text-xl font-bold text-white">I Miei Documenti</h3>
+                <p className="text-gray-400 text-sm">Buste paga e documenti HR</p>
               </div>
             </div>
-          </div>
+            <div className="flex items-center text-neon-purple text-sm font-semibold">
+              Vai ai documenti
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
         </div>
 
         {/* Welcome Message */}
@@ -130,6 +139,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             <li><strong className="text-neon-green">Timbratura intelligente</strong> - Check-in/out con sistema empatico e auto-validazione</li>
             <li>Visualizzare i tuoi colleghi</li>
             <li>Vedere le informazioni di contatto dei tuoi colleghi</li>
+            <li><strong className="text-neon-purple">I tuoi documenti HR</strong> - Buste paga, contratti e documenti payroll</li>
             <li>Gestire il tuo profilo (prossimamente)</li>
             <li>Visualizzare i tuoi turni (prossimamente)</li>
           </ul>

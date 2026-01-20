@@ -166,6 +166,20 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Template Turni</h2>
             <p className="text-gray-400">Modelli turni riutilizzabili</p>
           </Link>
+
+          <Link
+            to="/hr-documents"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-pink transition-all border border-white/10 hover:border-neon-pink/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.8s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-pink/20 to-neon-purple/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-pink/30 group-hover:shadow-glow-pink transition-all">
+              <svg className="w-8 h-8 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-pink transition-colors">Documenti HR</h2>
+            <p className="text-gray-400">Buste paga e documenti payroll</p>
+          </Link>
         </div>
 
         {/* Info Panel */}
