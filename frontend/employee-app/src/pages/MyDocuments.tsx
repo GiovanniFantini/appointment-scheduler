@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface HRDocument {
   id: number
@@ -15,6 +16,7 @@ interface HRDocument {
 }
 
 interface MyDocumentsProps {
+  user: any
   onLogout: () => void
 }
 
@@ -44,7 +46,7 @@ const MONTHS = [
   { value: '12', label: 'Dicembre' }
 ]
 
-function MyDocuments({ onLogout }: MyDocumentsProps) {
+function MyDocuments({ user, onLogout }: MyDocumentsProps) {
   const [documents, setDocuments] = useState<HRDocument[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -104,40 +106,7 @@ function MyDocuments({ onLogout }: MyDocumentsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-cyber-950 to-dark-surface">
-      {/* Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-                <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                I Miei Documenti
-              </h1>
-              <p className="text-gray-400 text-sm">Buste paga e documenti HR</p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                to="/"
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/10"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={onLogout}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors border border-red-500/50"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="I Miei Documenti">
         {/* Filtri */}
         <div className="glass-card rounded-3xl p-6 mb-8 border border-white/10">
           <div className="flex items-center gap-3 mb-4">
@@ -321,8 +290,7 @@ function MyDocuments({ onLogout }: MyDocumentsProps) {
             </div>
           </div>
         </div>
-      </main>
-    </div>
+    </AppLayout>
   )
 }
 

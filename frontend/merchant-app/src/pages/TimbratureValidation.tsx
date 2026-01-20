@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
+import AppLayout from '../components/layout/AppLayout';
 
 interface ShiftToValidate {
   id: number;
@@ -14,7 +15,12 @@ interface ShiftToValidate {
   isCheckedOut: boolean;
 }
 
-export default function TimbratureValidation() {
+interface TimbratureValidationProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export default function TimbratureValidation({ user, onLogout }: TimbratureValidationProps) {
   const [shiftsToReview, setShiftsToReview] = useState<ShiftToValidate[]>([]);
   const [selectedShifts, setSelectedShifts] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -119,15 +125,11 @@ export default function TimbratureValidation() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Validazione Timbrature">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Validazione Timbrature
-          </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             Sistema intelligente con auto-validazione 95% • Approva i turni con 1 click
           </p>
         </div>
@@ -269,8 +271,7 @@ export default function TimbratureValidation() {
             </div>
           </div>
         )}
-
       </div>
-    </div>
+    </AppLayout>
   );
 }

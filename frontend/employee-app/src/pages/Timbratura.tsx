@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
 import { CurrentStatusResponse, TimbratureResponse, CheckInRequest, CheckOutRequest, AnomalyReason, WellbeingStats } from '../types/timbratura';
+import AppLayout from '../components/layout/AppLayout';
 
-export default function Timbratura() {
+interface TimbraturaProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export default function Timbratura({ user, onLogout }: TimbraturaProps) {
   const [status, setStatus] = useState<CurrentStatusResponse | null>(null);
   const [wellbeing, setWellbeing] = useState<WellbeingStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -144,7 +150,7 @@ export default function Timbratura() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Timbratura">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header con orologio */}
@@ -319,7 +325,7 @@ export default function Timbratura() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }
 

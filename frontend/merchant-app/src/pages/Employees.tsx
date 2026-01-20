@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Employee {
   id: number
@@ -17,13 +18,14 @@ interface Employee {
 }
 
 interface EmployeesProps {
+  user: any
   onLogout: () => void
 }
 
 /**
  * Pagina per gestire i dipendenti del merchant (CRUD completo)
  */
-function Employees({ onLogout }: EmployeesProps) {
+function Employees({ user, onLogout }: EmployeesProps) {
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -109,36 +111,8 @@ function Employees({ onLogout }: EmployeesProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Futuristic Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              Gestione Dipendenti
-            </h1>
-            <div className="flex items-center gap-3">
-              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                🏠 Dashboard
-              </Link>
-              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
-                Esci
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Background Animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-green opacity-10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12 relative z-10">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Gestione Dipendenti">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <button
             onClick={() => { setShowForm(!showForm); setEditingId(null); resetForm(); }}
@@ -317,7 +291,7 @@ function Employees({ onLogout }: EmployeesProps) {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

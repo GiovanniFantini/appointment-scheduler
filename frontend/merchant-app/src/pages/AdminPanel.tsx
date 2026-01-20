@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Merchant {
   id: number
@@ -18,13 +19,14 @@ interface Merchant {
 }
 
 interface AdminPanelProps {
+  user: any
   onLogout: () => void
 }
 
 /**
  * Pannello amministrazione per approvare merchant
  */
-function AdminPanel({ onLogout }: AdminPanelProps) {
+function AdminPanel({ user, onLogout }: AdminPanelProps) {
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [filter, setFilter] = useState<'all' | 'pending'>('pending')
   const [loading, setLoading] = useState(true)
@@ -78,34 +80,8 @@ function AdminPanel({ onLogout }: AdminPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Futuristic Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-              </svg>
-              Admin Panel
-            </h1>
-            <button
-              onClick={onLogout}
-              className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10"
-            >
-              Esci
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Background Animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-purple opacity-10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-pink opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12 relative z-10">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Admin Panel">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex gap-4">
           <button
             onClick={() => setFilter('pending')}
@@ -258,7 +234,7 @@ function AdminPanel({ onLogout }: AdminPanelProps) {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

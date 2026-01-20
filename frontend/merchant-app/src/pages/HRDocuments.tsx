@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Employee {
   id: number
@@ -25,6 +26,7 @@ interface HRDocument {
 }
 
 interface HRDocumentsProps {
+  user: any
   onLogout: () => void
 }
 
@@ -52,7 +54,7 @@ const MONTHS = [
   { value: 12, label: 'Dicembre' }
 ]
 
-function HRDocuments({ onLogout }: HRDocumentsProps) {
+function HRDocuments({ user, onLogout }: HRDocumentsProps) {
   const [documents, setDocuments] = useState<HRDocument[]>([])
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(true)
@@ -217,40 +219,22 @@ function HRDocuments({ onLogout }: HRDocumentsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Documenti HR/Payroll
-            </h1>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setShowUploadForm(!showUploadForm)}
-                className={`px-5 py-2.5 rounded-xl transition-all font-semibold border ${
-                  showUploadForm
-                    ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 border-red-500/50 hover:shadow-glow-pink'
-                    : 'bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 text-neon-pink border-neon-pink/50 hover:shadow-glow-pink'
-                }`}
-              >
-                {showUploadForm ? '✕ Chiudi' : '+ Carica Documento'}
-              </button>
-              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                Dashboard
-              </Link>
-              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
-                Esci
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Documenti HR">
       <div className="container mx-auto px-4 py-8">
+        {/* Upload Button */}
+        <div className="mb-6 flex justify-end">
+          <button
+            onClick={() => setShowUploadForm(!showUploadForm)}
+            className={`px-5 py-2.5 rounded-xl transition-all font-semibold border ${
+              showUploadForm
+                ? 'bg-gradient-to-r from-red-500/20 to-red-600/20 text-red-300 border-red-500/50 hover:shadow-glow-pink'
+                : 'bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 text-neon-pink border-neon-pink/50 hover:shadow-glow-pink'
+            }`}
+          >
+            {showUploadForm ? '✕ Chiudi' : '+ Carica Documento'}
+          </button>
+        </div>
+
         {/* Upload Form */}
         {showUploadForm && (
           <div className="glass-card rounded-3xl p-6 mb-8 border border-neon-pink/30 animate-scale-in">
@@ -579,7 +563,7 @@ function HRDocuments({ onLogout }: HRDocumentsProps) {
           )}
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

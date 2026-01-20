@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Service {
   id: number
@@ -30,6 +31,7 @@ interface AvailabilitySlot {
 }
 
 interface AvailabilitiesProps {
+  user: any
   onLogout: () => void
 }
 
@@ -43,7 +45,7 @@ const DAYS_OF_WEEK = [
   { value: 6, label: 'Sabato' }
 ]
 
-function Availabilities({ onLogout }: AvailabilitiesProps) {
+function Availabilities({ user, onLogout }: AvailabilitiesProps) {
   const [services, setServices] = useState<Service[]>([])
   const [availabilities, setAvailabilities] = useState<Availability[]>([])
   const [loading, setLoading] = useState(true)
@@ -193,42 +195,8 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Futuristic Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Gestione Disponibilità
-            </h1>
-            <div className="flex items-center gap-3">
-              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                🏠 Dashboard
-              </Link>
-              <Link to="/services" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                📋 Servizi
-              </Link>
-              <Link to="/bookings" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                📅 Prenotazioni
-              </Link>
-              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
-                Esci
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Background Animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-cyan opacity-10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-blue opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12 relative z-10">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Disponibilità">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex justify-between items-center">
           <h2 className="text-3xl font-bold gradient-text">Le tue disponibilità</h2>
           <button
@@ -532,7 +500,7 @@ function Availabilities({ onLogout }: AvailabilitiesProps) {
           )}
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

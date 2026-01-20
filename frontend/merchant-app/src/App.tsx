@@ -83,37 +83,37 @@ function App() {
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/admin" element={
-            user && user.isAdmin ? <AdminPanel onLogout={handleLogout} /> : <Navigate to="/" />
+            user && user.isAdmin ? <AdminPanel user={user} onLogout={handleLogout} /> : <Navigate to="/" />
           } />
           <Route path="/services" element={
-            user ? <Services onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Services user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/bookings" element={
-            user ? <Bookings onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/availabilities" element={
-            user ? <Availabilities onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Availabilities user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/employees" element={
-            user ? <Employees onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Employees user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/business-hours" element={
-            user ? <BusinessHours onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <BusinessHours user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/closures" element={
-            user ? <ClosurePeriods onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <ClosurePeriods user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/shifts" element={
-            user ? <Shifts onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <Shifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/shift-templates" element={
-            user ? <ShiftTemplates onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <ShiftTemplates user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/timbrature" element={
-            user ? <TimbratureValidation /> : <Navigate to="/login" />
+            user ? <TimbratureValidation user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/hr-documents" element={
-            user ? <HRDocuments onLogout={handleLogout} /> : <Navigate to="/login" />
+            user ? <HRDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/dashboard" element={
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />

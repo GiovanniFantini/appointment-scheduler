@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
 import { Shift, EmployeeShiftStats } from '../types/shift';
+import AppLayout from '../components/layout/AppLayout';
 
 type ViewMode = 'week' | 'month';
 
-export default function MyShifts() {
+interface MyShiftsProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export default function MyShifts({ user, onLogout }: MyShiftsProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [stats, setStats] = useState<EmployeeShiftStats | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -128,7 +134,7 @@ export default function MyShifts() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 p-6">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="I Miei Turni">
       <div className="max-w-7xl mx-auto">
         {/* Stats Cards */}
         {stats && (
@@ -308,6 +314,6 @@ export default function MyShifts() {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   );
 }

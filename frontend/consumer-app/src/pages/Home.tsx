@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface HomeProps {
   user: any
@@ -158,58 +159,7 @@ function Home({ user, onLogout }: HomeProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Futuristic Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-              </svg>
-              Appointment Scheduler
-            </h1>
-            <div className="flex items-center gap-3">
-              <div className="glass-card-dark px-4 py-2 rounded-xl border border-neon-blue/30">
-                <span className="text-gray-300">👋 Ciao, <span className="text-neon-cyan font-semibold">{user.firstName}</span>!</span>
-              </div>
-              <Link to="/bookings" className="bg-gradient-to-r from-neon-blue to-neon-purple text-white px-5 py-2.5 rounded-xl hover:shadow-glow-blue transition-all font-semibold transform hover:scale-105">
-                📅 Prenotazioni
-              </Link>
-              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
-                Esci
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero Section Futuristic */}
-      <section className="relative overflow-hidden py-24">
-        <div className="absolute inset-0">
-          <div className="absolute top-10 left-10 w-96 h-96 bg-neon-blue opacity-20 rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-10 right-10 w-96 h-96 bg-neon-purple opacity-20 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-        </div>
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <h2 className="text-6xl font-bold gradient-text mb-6 animate-fade-in">
-            Prenota il Futuro
-          </h2>
-          <p className="text-xl text-gray-300 mb-8 animate-slide-up">
-            Sistema di prenotazioni intelligente per ristoranti, sport, wellness e molto altro
-          </p>
-          <div className="flex justify-center gap-4 animate-scale-in">
-            <div className="glass-card px-6 py-3 rounded-2xl border border-neon-blue/30">
-              <div className="text-neon-cyan font-bold text-2xl">{services.length}</div>
-              <div className="text-gray-400 text-sm">Servizi Disponibili</div>
-            </div>
-            <div className="glass-card px-6 py-3 rounded-2xl border border-neon-purple/30">
-              <div className="text-neon-purple font-bold text-2xl">24/7</div>
-              <div className="text-gray-400 text-sm">Sempre Online</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Catalogo Servizi">
       {/* Categories Section */}
       <section className="container mx-auto px-4 py-12">
         <h3 className="text-4xl font-bold gradient-text mb-8 text-center">Esplora per Categoria</h3>
@@ -471,7 +421,7 @@ function Home({ user, onLogout }: HomeProps) {
           )}
         </div>
       </section>
-    </div>
+    </AppLayout>
   )
 }
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Colleague {
   id: number
@@ -15,10 +16,11 @@ interface Colleague {
 }
 
 interface ColleaguesProps {
+  user: any
   onLogout: () => void
 }
 
-export default function Colleagues({ onLogout }: ColleaguesProps) {
+export default function Colleagues({ user, onLogout }: ColleaguesProps) {
   const [colleagues, setColleagues] = useState<Colleague[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -39,35 +41,7 @@ export default function Colleagues({ onLogout }: ColleaguesProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-cyber-950 to-dark-surface">
-      {/* Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold gradient-text">I Miei Colleghi</h1>
-              <p className="text-gray-400 text-sm">Dipendenti della tua azienda</p>
-            </div>
-            <div className="flex gap-3">
-              <Link
-                to="/"
-                className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-lg transition-colors border border-white/10"
-              >
-                Dashboard
-              </Link>
-              <button
-                onClick={onLogout}
-                className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors border border-red-500/50"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="I Miei Colleghi">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="glass-card p-8 rounded-2xl border border-white/10">
@@ -170,7 +144,6 @@ export default function Colleagues({ onLogout }: ColleaguesProps) {
             </div>
           </>
         )}
-      </main>
-    </div>
+    </AppLayout>
   )
 }
