@@ -124,7 +124,7 @@ public class EmployeeDocumentsController : ControllerBase
     /// </summary>
     private async Task<int?> GetEmployeeIdFromUserAsync()
     {
-        var userIdClaim = User.FindFirst("UserId")?.Value;
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
             return null;
 
