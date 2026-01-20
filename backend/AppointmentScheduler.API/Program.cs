@@ -122,6 +122,10 @@ try
     // Smart Timbratura System
     builder.Services.AddScoped<ITimbratureService, TimbratureService>();
 
+    // HR/Payroll Document Management
+    builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IFileStorageService, AppointmentScheduler.Core.Services.AzureBlobStorageService>();
+    builder.Services.AddScoped<IHRDocumentService, HRDocumentService>();
+
     Console.WriteLine("Application services registered");
 
     // JWT Authentication
