@@ -30,6 +30,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<OvertimeRecord> OvertimeRecords { get; set; }
     public DbSet<ShiftCorrection> ShiftCorrections { get; set; }
 
+    // HR/Payroll Document Management
+    public DbSet<HRDocument> HRDocuments { get; set; }
+    public DbSet<HRDocumentVersion> HRDocumentVersions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -361,6 +365,71 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.EmployeeId);
             entity.HasIndex(e => e.IsWithin24Hours);
             entity.HasIndex(e => e.RequiresMerchantApproval);
+        });
+
+        // HRDocument configuration
+        modelBuilder.Entity<HRDocument>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+
+            // Soft delete query filter
+            entity.HasQueryFilter(e => !e.IsDeleted);
+
+            entity.HasOne(e => e.Tenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.UpdatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.UpdatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indici per performance
+            entity.HasIndex(e => e.TenantId);
+            entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
+            entity.HasIndex(e => new { e.TenantId, e.DocumentType, e.Year, e.Month });
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.IsDeleted);
+        });
+
+        // HRDocumentVersion configuration
+        modelBuilder.Entity<HRDocumentVersion>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.BlobPath).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.FileName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.ContentType).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.FileHash).HasMaxLength(64);
+            entity.Property(e => e.ChangeNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.HRDocument)
+                .WithMany(d => d.Versions)
+                .HasForeignKey(e => e.HRDocumentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.UploadedBy)
+                .WithMany()
+                .HasForeignKey(e => e.UploadedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indice unique per versione
+            entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber })
+                .IsUnique();
+
+            entity.HasIndex(e => e.UploadStatus);
         });
     }
 }

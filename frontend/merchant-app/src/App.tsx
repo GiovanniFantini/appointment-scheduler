@@ -13,6 +13,7 @@ import ClosurePeriods from './pages/ClosurePeriods'
 import Shifts from './pages/Shifts'
 import ShiftTemplates from './pages/ShiftTemplates'
 import TimbratureValidation from './pages/TimbratureValidation'
+import HRDocuments from './pages/HRDocuments'
 
 interface User {
   userId: number
@@ -110,6 +111,9 @@ function App() {
           } />
           <Route path="/timbrature" element={
             user ? <TimbratureValidation /> : <Navigate to="/login" />
+          } />
+          <Route path="/hr-documents" element={
+            user ? <HRDocuments onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/dashboard" element={
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />

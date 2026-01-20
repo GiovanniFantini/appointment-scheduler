@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
 import MyShifts from './pages/MyShifts'
 import Timbratura from './pages/Timbratura'
+import MyDocuments from './pages/MyDocuments'
 
 interface User {
   userId: number
@@ -82,6 +83,9 @@ function App() {
         } />
         <Route path="/timbratura" element={
           user ? <Timbratura /> : <Navigate to="/login" />
+        } />
+        <Route path="/documents" element={
+          user ? <MyDocuments onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>
