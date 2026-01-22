@@ -24,6 +24,21 @@ export enum ShiftSwapStatus {
 }
 
 // Interfaces
+export interface ShiftEmployee {
+  id: number;
+  shiftId: number;
+  employeeId: number;
+  employeeName: string;
+  isConfirmed: boolean;
+  isCheckedIn: boolean;
+  checkInTime?: string;
+  isCheckedOut: boolean;
+  checkOutTime?: string;
+  checkInLocation?: string;
+  checkOutLocation?: string;
+  notes?: string;
+}
+
 export interface ShiftTemplate {
   id: number;
   merchantId: number;
@@ -48,8 +63,12 @@ export interface Shift {
   merchantId: number;
   shiftTemplateId?: number;
   shiftTemplateName?: string;
+  /** @deprecated Use employees array for multi-employee assignment */
   employeeId?: number;
+  /** @deprecated Use employees array for multi-employee assignment */
   employeeName?: string;
+  /** Lista dipendenti assegnati al turno */
+  employees: ShiftEmployee[];
   date: string;
   startTime: string;
   endTime: string;
@@ -142,7 +161,10 @@ export interface CreateShiftTemplateRequest {
 
 export interface CreateShiftRequest {
   shiftTemplateId?: number;
+  /** @deprecated Use employeeIds for multi-employee assignment */
   employeeId?: number;
+  /** Lista ID dipendenti da assegnare al turno */
+  employeeIds?: number[];
   date: string;
   startTime: string;
   endTime: string;
@@ -156,12 +178,18 @@ export interface CreateShiftsFromTemplateRequest {
   shiftTemplateId: number;
   startDate: string;
   endDate: string;
+  /** @deprecated Use employeeIds for multi-employee assignment */
   employeeId?: number;
+  /** Lista ID dipendenti da assegnare ai turni */
+  employeeIds?: number[];
   daysOfWeek?: number[];
 }
 
 export interface UpdateShiftRequest {
+  /** @deprecated Use employeeIds for multi-employee assignment */
   employeeId?: number;
+  /** Lista ID dipendenti da assegnare al turno */
+  employeeIds?: number[];
   date: string;
   startTime: string;
   endTime: string;
@@ -173,7 +201,10 @@ export interface UpdateShiftRequest {
 }
 
 export interface AssignShiftRequest {
-  employeeId: number;
+  /** @deprecated Use employeeIds for multi-employee assignment */
+  employeeId?: number;
+  /** Lista ID dipendenti da assegnare al turno */
+  employeeIds?: number[];
   notes?: string;
 }
 

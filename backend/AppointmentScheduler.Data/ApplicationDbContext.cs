@@ -21,6 +21,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ClosurePeriod> ClosurePeriods { get; set; }
     public DbSet<ShiftTemplate> ShiftTemplates { get; set; }
     public DbSet<Shift> Shifts { get; set; }
+    public DbSet<ShiftEmployee> ShiftEmployees { get; set; }
     public DbSet<ShiftSwapRequest> ShiftSwapRequests { get; set; }
     public DbSet<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; }
 
@@ -208,6 +209,7 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.ShiftTemplateId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            // DEPRECATED: Mantenuto per backward compatibility
             entity.HasOne(e => e.Employee)
                 .WithMany(emp => emp.Shifts)
                 .HasForeignKey(e => e.EmployeeId)
@@ -217,6 +219,27 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.EmployeeId);
             entity.HasIndex(e => e.Date);
             entity.HasIndex(e => new { e.EmployeeId, e.Date });
+        });
+
+        // ShiftEmployee configuration (many-to-many relationship)
+        modelBuilder.Entity<ShiftEmployee>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Shift)
+                .WithMany(s => s.ShiftEmployees)
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.ShiftEmployees)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => new { e.ShiftId, e.EmployeeId }).IsUnique();
         });
 
         // ShiftSwapRequest configuration

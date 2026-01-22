@@ -43,7 +43,18 @@ public class Employee
     public Merchant Merchant { get; set; } = null!;
     public User? User { get; set; } // User associato quando l'employee si registra
     public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
+
+    /// <summary>
+    /// DEPRECATED: Collection di turni per backward compatibility
+    /// </summary>
+    [Obsolete("Use ShiftEmployees collection for multi-employee assignment")]
     public ICollection<Shift> Shifts { get; set; } = new List<Shift>();
+
+    /// <summary>
+    /// Turni assegnati a questo dipendente (relazione many-to-many)
+    /// </summary>
+    public ICollection<ShiftEmployee> ShiftEmployees { get; set; } = new List<ShiftEmployee>();
+
     public ICollection<EmployeeWorkingHoursLimit> WorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
     public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
     public ICollection<ShiftCorrection> ShiftCorrections { get; set; } = new List<ShiftCorrection>();
