@@ -21,19 +21,42 @@ public class ShiftsController : ControllerBase
 
     /// <summary>
     /// Recupera tutti i turni del merchant in un range di date
+    /// Gli Admin possono specificare merchantId opzionale, altrimenti usa il proprio
     /// </summary>
     [HttpGet("merchant")]
     [Authorize(Policy = "MerchantOnly")]
     public async Task<ActionResult<IEnumerable<ShiftDto>>> GetMerchantShifts(
         [FromQuery] DateTime startDate,
-        [FromQuery] DateTime endDate)
+        [FromQuery] DateTime endDate,
+        [FromQuery] int? merchantId = null)
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+        // Se merchantId non è specificato, prova a prenderlo dal claim (per merchant normali)
+        if (!merchantId.HasValue)
+        {
+            var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
 
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato" });
+            if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int parsedMerchantId))
+            {
+                // Se non ha merchantId nel claim e non è Admin, errore
+                if (!User.IsInRole("Admin"))
+                    return BadRequest(new { message = "Merchant ID non trovato. Sei loggato come merchant?" });
 
-        var shifts = await _shiftService.GetMerchantShiftsAsync(merchantId, startDate, endDate);
+                // Admin senza merchantId specificato -> errore
+                return BadRequest(new { message = "Admin deve specificare merchantId come query parameter" });
+            }
+
+            merchantId = parsedMerchantId;
+        }
+        // Se merchantId è specificato ma l'utente non è Admin, verifica che corrisponda al proprio
+        else if (!User.IsInRole("Admin"))
+        {
+            var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+
+            if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int ownMerchantId) || ownMerchantId != merchantId.Value)
+                return Forbid(); // Non può accedere ai turni di altri merchant
+        }
+
+        var shifts = await _shiftService.GetMerchantShiftsAsync(merchantId.Value, startDate, endDate);
         return Ok(shifts);
     }
 

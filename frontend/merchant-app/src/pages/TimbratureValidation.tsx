@@ -44,6 +44,8 @@ export default function TimbratureValidation({ user, onLogout }: TimbratureValid
         params: {
           startDate: weekStart.toISOString(),
           endDate: weekEnd.toISOString(),
+          // Se l'utente è Admin puro (senza merchantId), passa merchantId da user
+          ...(user.role === 'Admin' && user.merchantId ? { merchantId: user.merchantId } : {})
         },
       });
 
@@ -55,7 +57,18 @@ export default function TimbratureValidation({ user, onLogout }: TimbratureValid
       setShiftsToReview(shiftsNeedingReview);
     } catch (error: any) {
       console.error('Errore nel caricamento turni:', error);
-      alert(error.response?.data?.message || 'Errore nel caricamento');
+
+      // Messaggio più descrittivo per Admin senza merchantId
+      if (error.response?.status === 400 && user.role === 'Admin' && !user.merchantId) {
+        console.warn('Admin senza merchantId associato. Nessun turno da visualizzare.');
+        setShiftsToReview([]); // Lista vuota, non errore
+      } else {
+        const errorMsg = error.response?.data?.message ||
+                        error.response?.status === 404
+                          ? 'Endpoint non trovato. Assicurati che il backend sia in esecuzione.'
+                          : 'Errore nel caricamento turni';
+        alert(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
