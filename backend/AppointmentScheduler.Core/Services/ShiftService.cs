@@ -24,6 +24,8 @@ public class ShiftService : IShiftService
         var shifts = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
+            .Include(s => s.ShiftEmployees)
+                .ThenInclude(se => se.Employee)
             .Where(s => s.MerchantId == merchantId
                 && s.Date >= startDate.Date
                 && s.Date <= endDate.Date
@@ -37,10 +39,13 @@ public class ShiftService : IShiftService
 
     public async Task<IEnumerable<ShiftDto>> GetEmployeeShiftsAsync(int employeeId, DateTime startDate, DateTime endDate)
     {
+        // Cerca turni sia nella relazione legacy (EmployeeId) che nella nuova (ShiftEmployees)
         var shifts = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
-            .Where(s => s.EmployeeId == employeeId
+            .Include(s => s.ShiftEmployees)
+                .ThenInclude(se => se.Employee)
+            .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
                 && s.Date >= startDate.Date
                 && s.Date <= endDate.Date
                 && s.IsActive)
@@ -56,6 +61,8 @@ public class ShiftService : IShiftService
         var shift = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
+            .Include(s => s.ShiftEmployees)
+                .ThenInclude(se => se.Employee)
             .FirstOrDefaultAsync(s => s.Id == id);
 
         return shift == null ? null : MapToDto(shift);
@@ -66,31 +73,37 @@ public class ShiftService : IShiftService
         // Ensure date is in UTC to avoid PostgreSQL timezone issues
         var shiftDate = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
 
-        // Verifica conflitti se c'è un dipendente assegnato
-        if (request.EmployeeId.HasValue)
+        // Determina lista dipendenti (supporta backward compatibility)
+        var employeeIds = new List<int>();
+        if (request.EmployeeIds?.Any() == true)
+            employeeIds = request.EmployeeIds;
+        else if (request.EmployeeId.HasValue)
+            employeeIds.Add(request.EmployeeId.Value);
+
+        // Verifica conflitti e limiti per ogni dipendente
+        var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
+        foreach (var employeeId in employeeIds)
         {
             var hasConflict = await HasShiftConflictAsync(
-                request.EmployeeId.Value,
+                employeeId,
                 shiftDate,
                 request.StartTime,
                 request.EndTime);
 
             if (hasConflict)
-                throw new InvalidOperationException("Il turno va in conflitto con altri turni del dipendente");
+                throw new InvalidOperationException($"Il turno va in conflitto con altri turni del dipendente ID {employeeId}");
 
-            // Verifica limiti orari
-            var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
-            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, shiftDate, hours);
+            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(employeeId, shiftDate, hours);
 
             if (exceedsLimit)
-                throw new InvalidOperationException("Il turno supera i limiti orari del dipendente");
+                throw new InvalidOperationException($"Il turno supera i limiti orari del dipendente ID {employeeId}");
         }
 
         var shift = new Shift
         {
             MerchantId = merchantId,
             ShiftTemplateId = request.ShiftTemplateId,
-            EmployeeId = request.EmployeeId,
+            EmployeeId = request.EmployeeId, // Mantieni per backward compatibility
             Date = shiftDate,
             StartTime = request.StartTime,
             EndTime = request.EndTime,
@@ -105,8 +118,26 @@ public class ShiftService : IShiftService
         _context.Shifts.Add(shift);
         await _context.SaveChangesAsync();
 
+        // Crea le associazioni ShiftEmployee
+        foreach (var employeeId in employeeIds)
+        {
+            var shiftEmployee = new ShiftEmployee
+            {
+                ShiftId = shift.Id,
+                EmployeeId = employeeId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ShiftEmployees.Add(shiftEmployee);
+        }
+        await _context.SaveChangesAsync();
+
         await _context.Entry(shift).Reference(s => s.Employee).LoadAsync();
         await _context.Entry(shift).Reference(s => s.ShiftTemplate).LoadAsync();
+        await _context.Entry(shift).Collection(s => s.ShiftEmployees).LoadAsync();
+        foreach (var se in shift.ShiftEmployees)
+        {
+            await _context.Entry(se).Reference(se => se.Employee).LoadAsync();
+        }
 
         return MapToDto(shift);
     }
@@ -119,7 +150,15 @@ public class ShiftService : IShiftService
         if (template == null)
             throw new InvalidOperationException("Template non trovato");
 
+        // Determina lista dipendenti (supporta backward compatibility)
+        var employeeIds = new List<int>();
+        if (request.EmployeeIds?.Any() == true)
+            employeeIds = request.EmployeeIds;
+        else if (request.EmployeeId.HasValue)
+            employeeIds.Add(request.EmployeeId.Value);
+
         var shifts = new List<Shift>();
+        var shiftEmployeeMappings = new List<(Shift shift, List<int> employeeIds)>();
 
         // Ensure dates are in UTC to avoid PostgreSQL timezone issues
         var startDate = DateTime.SpecifyKind(request.StartDate.Date, DateTimeKind.Utc);
@@ -131,40 +170,35 @@ public class ShiftService : IShiftService
             // Controlla se il giorno della settimana è incluso
             if (request.DaysOfWeek == null || request.DaysOfWeek.Contains(currentDate.DayOfWeek))
             {
-                // Verifica conflitti se c'è un dipendente
-                if (request.EmployeeId.HasValue)
-                {
-                    var hasConflict = await HasShiftConflictAsync(
-                        request.EmployeeId.Value,
-                        currentDate,
-                        template.StartTime,
-                        template.EndTime);
+                bool canCreateShift = true;
+                var validEmployees = new List<int>();
 
-                    if (!hasConflict)
+                // Verifica conflitti per ogni dipendente
+                if (employeeIds.Any())
+                {
+                    foreach (var employeeId in employeeIds)
                     {
-                        var shift = new Shift
-                        {
-                            MerchantId = merchantId,
-                            ShiftTemplateId = template.Id,
-                            EmployeeId = request.EmployeeId,
-                            Date = currentDate,
-                            StartTime = template.StartTime,
-                            EndTime = template.EndTime,
-                            BreakDurationMinutes = template.BreakDurationMinutes,
-                            ShiftType = template.ShiftType,
-                            Color = template.Color,
-                            IsActive = true,
-                            CreatedAt = DateTime.UtcNow
-                        };
-                        shifts.Add(shift);
+                        var hasConflict = await HasShiftConflictAsync(
+                            employeeId,
+                            currentDate,
+                            template.StartTime,
+                            template.EndTime);
+
+                        if (!hasConflict)
+                            validEmployees.Add(employeeId);
                     }
+
+                    // Crea turno solo se almeno un dipendente è valido
+                    canCreateShift = validEmployees.Any();
                 }
-                else
+
+                if (canCreateShift)
                 {
                     var shift = new Shift
                     {
                         MerchantId = merchantId,
                         ShiftTemplateId = template.Id,
+                        EmployeeId = request.EmployeeId, // Backward compatibility
                         Date = currentDate,
                         StartTime = template.StartTime,
                         EndTime = template.EndTime,
@@ -175,6 +209,7 @@ public class ShiftService : IShiftService
                         CreatedAt = DateTime.UtcNow
                     };
                     shifts.Add(shift);
+                    shiftEmployeeMappings.Add((shift, validEmployees));
                 }
             }
 
@@ -184,11 +219,32 @@ public class ShiftService : IShiftService
         _context.Shifts.AddRange(shifts);
         await _context.SaveChangesAsync();
 
+        // Crea le associazioni ShiftEmployee
+        foreach (var (shift, empIds) in shiftEmployeeMappings)
+        {
+            foreach (var employeeId in empIds)
+            {
+                var shiftEmployee = new ShiftEmployee
+                {
+                    ShiftId = shift.Id,
+                    EmployeeId = employeeId,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.ShiftEmployees.Add(shiftEmployee);
+            }
+        }
+        await _context.SaveChangesAsync();
+
         // Carica le navigation properties
         foreach (var shift in shifts)
         {
             await _context.Entry(shift).Reference(s => s.Employee).LoadAsync();
             await _context.Entry(shift).Reference(s => s.ShiftTemplate).LoadAsync();
+            await _context.Entry(shift).Collection(s => s.ShiftEmployees).LoadAsync();
+            foreach (var se in shift.ShiftEmployees)
+            {
+                await _context.Entry(se).Reference(se => se.Employee).LoadAsync();
+            }
         }
 
         return shifts.Select(MapToDto);
@@ -199,6 +255,7 @@ public class ShiftService : IShiftService
         var shift = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
+            .Include(s => s.ShiftEmployees)
             .FirstOrDefaultAsync(s => s.Id == shiftId && s.MerchantId == merchantId);
 
         if (shift == null)
@@ -207,28 +264,34 @@ public class ShiftService : IShiftService
         // Ensure date is in UTC to avoid PostgreSQL timezone issues
         var shiftDate = DateTime.SpecifyKind(request.Date.Date, DateTimeKind.Utc);
 
-        // Verifica conflitti se c'è un dipendente
-        if (request.EmployeeId.HasValue)
+        // Determina lista dipendenti (supporta backward compatibility)
+        var employeeIds = new List<int>();
+        if (request.EmployeeIds?.Any() == true)
+            employeeIds = request.EmployeeIds;
+        else if (request.EmployeeId.HasValue)
+            employeeIds.Add(request.EmployeeId.Value);
+
+        // Verifica conflitti e limiti per ogni dipendente
+        var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
+        foreach (var employeeId in employeeIds)
         {
             var hasConflict = await HasShiftConflictAsync(
-                request.EmployeeId.Value,
+                employeeId,
                 shiftDate,
                 request.StartTime,
                 request.EndTime,
                 shiftId);
 
             if (hasConflict)
-                throw new InvalidOperationException("Il turno va in conflitto con altri turni del dipendente");
+                throw new InvalidOperationException($"Il turno va in conflitto con altri turni del dipendente ID {employeeId}");
 
-            // Verifica limiti orari
-            var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
-            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(request.EmployeeId.Value, shiftDate, hours);
+            var exceedsLimit = await ExceedsWorkingHoursLimitAsync(employeeId, shiftDate, hours);
 
             if (exceedsLimit)
-                throw new InvalidOperationException("Il turno supera i limiti orari del dipendente");
+                throw new InvalidOperationException($"Il turno supera i limiti orari del dipendente ID {employeeId}");
         }
 
-        shift.EmployeeId = request.EmployeeId;
+        shift.EmployeeId = request.EmployeeId; // Backward compatibility
         shift.Date = shiftDate;
         shift.StartTime = request.StartTime;
         shift.EndTime = request.EndTime;
@@ -239,7 +302,29 @@ public class ShiftService : IShiftService
         shift.IsActive = request.IsActive;
         shift.UpdatedAt = DateTime.UtcNow;
 
+        // Rimuovi le associazioni esistenti e crea quelle nuove
+        var existingAssignments = shift.ShiftEmployees.ToList();
+        _context.ShiftEmployees.RemoveRange(existingAssignments);
+
+        foreach (var employeeId in employeeIds)
+        {
+            var shiftEmployee = new ShiftEmployee
+            {
+                ShiftId = shift.Id,
+                EmployeeId = employeeId,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ShiftEmployees.Add(shiftEmployee);
+        }
+
         await _context.SaveChangesAsync();
+
+        // Ricarica le navigation properties
+        await _context.Entry(shift).Collection(s => s.ShiftEmployees).LoadAsync();
+        foreach (var se in shift.ShiftEmployees)
+        {
+            await _context.Entry(se).Reference(se => se.Employee).LoadAsync();
+        }
 
         return MapToDto(shift);
     }
@@ -249,35 +334,69 @@ public class ShiftService : IShiftService
         var shift = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
+            .Include(s => s.ShiftEmployees)
             .FirstOrDefaultAsync(s => s.Id == shiftId && s.MerchantId == merchantId);
 
         if (shift == null)
             return null;
 
-        // Verifica che il dipendente appartenga allo stesso merchant
-        var employee = await _context.Employees
-            .FirstOrDefaultAsync(e => e.Id == request.EmployeeId && e.MerchantId == merchantId);
+        // Determina lista dipendenti (supporta backward compatibility)
+        var employeeIds = new List<int>();
+        if (request.EmployeeIds?.Any() == true)
+            employeeIds = request.EmployeeIds;
+        else if (request.EmployeeId.HasValue)
+            employeeIds.Add(request.EmployeeId.Value);
 
-        if (employee == null)
-            throw new InvalidOperationException("Dipendente non trovato");
+        // Verifica che tutti i dipendenti appartengano allo stesso merchant
+        foreach (var employeeId in employeeIds)
+        {
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.Id == employeeId && e.MerchantId == merchantId);
 
-        // Verifica conflitti
-        var hasConflict = await HasShiftConflictAsync(
-            request.EmployeeId,
-            shift.Date,
-            shift.StartTime,
-            shift.EndTime,
-            shiftId);
+            if (employee == null)
+                throw new InvalidOperationException($"Dipendente ID {employeeId} non trovato");
 
-        if (hasConflict)
-            throw new InvalidOperationException("Il turno va in conflitto con altri turni del dipendente");
+            // Verifica conflitti
+            var hasConflict = await HasShiftConflictAsync(
+                employeeId,
+                shift.Date,
+                shift.StartTime,
+                shift.EndTime,
+                shiftId);
 
-        shift.EmployeeId = request.EmployeeId;
+            if (hasConflict)
+                throw new InvalidOperationException($"Il turno va in conflitto con altri turni del dipendente ID {employeeId}");
+        }
+
+        shift.EmployeeId = request.EmployeeId; // Backward compatibility
         if (!string.IsNullOrWhiteSpace(request.Notes))
             shift.Notes = request.Notes;
         shift.UpdatedAt = DateTime.UtcNow;
 
+        // Rimuovi le associazioni esistenti e crea quelle nuove
+        var existingAssignments = shift.ShiftEmployees.ToList();
+        _context.ShiftEmployees.RemoveRange(existingAssignments);
+
+        foreach (var employeeId in employeeIds)
+        {
+            var shiftEmployee = new ShiftEmployee
+            {
+                ShiftId = shift.Id,
+                EmployeeId = employeeId,
+                Notes = request.Notes,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ShiftEmployees.Add(shiftEmployee);
+        }
+
         await _context.SaveChangesAsync();
+
+        // Ricarica le navigation properties
+        await _context.Entry(shift).Collection(s => s.ShiftEmployees).LoadAsync();
+        foreach (var se in shift.ShiftEmployees)
+        {
+            await _context.Entry(se).Reference(se => se.Employee).LoadAsync();
+        }
 
         return MapToDto(shift);
     }
@@ -313,22 +432,26 @@ public class ShiftService : IShiftService
         var startOfLastMonth = startOfMonth.AddMonths(-1);
         var endOfLastMonth = startOfMonth;
 
+        // Cerca turni sia nella relazione legacy (EmployeeId) che nella nuova (ShiftEmployees)
         var shiftsThisWeek = await _context.Shifts
-            .Where(s => s.EmployeeId == employeeId
+            .Include(s => s.ShiftEmployees)
+            .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
                 && s.Date >= startOfWeek
                 && s.Date < endOfWeek
                 && s.IsActive)
             .ToListAsync();
 
         var shiftsThisMonth = await _context.Shifts
-            .Where(s => s.EmployeeId == employeeId
+            .Include(s => s.ShiftEmployees)
+            .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
                 && s.Date >= startOfMonth
                 && s.Date < endOfMonth
                 && s.IsActive)
             .ToListAsync();
 
         var shiftsLastMonth = await _context.Shifts
-            .Where(s => s.EmployeeId == employeeId
+            .Include(s => s.ShiftEmployees)
+            .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
                 && s.Date >= startOfLastMonth
                 && s.Date < endOfLastMonth
                 && s.IsActive)
@@ -369,8 +492,10 @@ public class ShiftService : IShiftService
 
     public async Task<bool> HasShiftConflictAsync(int employeeId, DateTime date, TimeSpan startTime, TimeSpan endTime, int? excludeShiftId = null)
     {
+        // Controlla conflitti sia nella relazione legacy (EmployeeId) che nella nuova (ShiftEmployees)
         var shiftsOnDate = await _context.Shifts
-            .Where(s => s.EmployeeId == employeeId
+            .Include(s => s.ShiftEmployees)
+            .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
                 && s.Date == date.Date
                 && s.IsActive
                 && (excludeShiftId == null || s.Id != excludeShiftId))
@@ -447,14 +572,31 @@ public class ShiftService : IShiftService
     {
         var totalHours = CalculateTotalHours(shift.StartTime, shift.EndTime, shift.BreakDurationMinutes);
 
+        var employees = shift.ShiftEmployees?.Select(se => new ShiftEmployeeDto
+        {
+            Id = se.Id,
+            ShiftId = se.ShiftId,
+            EmployeeId = se.EmployeeId,
+            EmployeeName = se.Employee != null ? $"{se.Employee.FirstName} {se.Employee.LastName}" : string.Empty,
+            IsConfirmed = se.IsConfirmed,
+            IsCheckedIn = se.IsCheckedIn,
+            CheckInTime = se.CheckInTime,
+            IsCheckedOut = se.IsCheckedOut,
+            CheckOutTime = se.CheckOutTime,
+            CheckInLocation = se.CheckInLocation,
+            CheckOutLocation = se.CheckOutLocation,
+            Notes = se.Notes
+        }).ToList() ?? new List<ShiftEmployeeDto>();
+
         return new ShiftDto
         {
             Id = shift.Id,
             MerchantId = shift.MerchantId,
             ShiftTemplateId = shift.ShiftTemplateId,
             ShiftTemplateName = shift.ShiftTemplate?.Name,
-            EmployeeId = shift.EmployeeId,
-            EmployeeName = shift.Employee != null ? $"{shift.Employee.FirstName} {shift.Employee.LastName}" : null,
+            EmployeeId = shift.EmployeeId, // Backward compatibility
+            EmployeeName = shift.Employee != null ? $"{shift.Employee.FirstName} {shift.Employee.LastName}" : null, // Backward compatibility
+            Employees = employees,
             Date = shift.Date,
             StartTime = shift.StartTime,
             EndTime = shift.EndTime,

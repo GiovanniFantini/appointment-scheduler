@@ -17,7 +17,10 @@ public class Shift
 
     /// <summary>
     /// FK al dipendente assegnato (nullable se non ancora assegnato)
+    /// DEPRECATED: Usare ShiftEmployees per assegnazioni multiple
+    /// Mantenuto per backward compatibility
     /// </summary>
+    [Obsolete("Use ShiftEmployees collection for multi-employee assignment")]
     public int? EmployeeId { get; set; }
 
     /// <summary>
@@ -112,7 +115,18 @@ public class Shift
     // Navigation properties
     public Merchant Merchant { get; set; } = null!;
     public ShiftTemplate? ShiftTemplate { get; set; }
+
+    /// <summary>
+    /// DEPRECATED: Navigation property singola per backward compatibility
+    /// </summary>
+    [Obsolete("Use ShiftEmployees collection for multi-employee assignment")]
     public Employee? Employee { get; set; }
+
+    /// <summary>
+    /// Dipendenti assegnati a questo turno (relazione many-to-many)
+    /// </summary>
+    public ICollection<ShiftEmployee> ShiftEmployees { get; set; } = new List<ShiftEmployee>();
+
     public ICollection<ShiftSwapRequest> SwapRequests { get; set; } = new List<ShiftSwapRequest>();
     public ICollection<ShiftBreak> Breaks { get; set; } = new List<ShiftBreak>();
     public ICollection<ShiftAnomaly> Anomalies { get; set; } = new List<ShiftAnomaly>();

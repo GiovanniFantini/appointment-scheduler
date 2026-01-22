@@ -8,7 +8,18 @@ namespace AppointmentScheduler.Shared.DTOs;
 public class CreateShiftRequest
 {
     public int? ShiftTemplateId { get; set; }
+
+    /// <summary>
+    /// DEPRECATED: Usare EmployeeIds per assegnazioni multiple
+    /// </summary>
+    [Obsolete("Use EmployeeIds for multi-employee assignment")]
     public int? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Lista di ID dipendenti da assegnare al turno
+    /// </summary>
+    public List<int>? EmployeeIds { get; set; }
+
     public DateTime Date { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
@@ -26,7 +37,18 @@ public class CreateShiftsFromTemplateRequest
     public int ShiftTemplateId { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
+
+    /// <summary>
+    /// DEPRECATED: Usare EmployeeIds per assegnazioni multiple
+    /// </summary>
+    [Obsolete("Use EmployeeIds for multi-employee assignment")]
     public int? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Lista di ID dipendenti da assegnare ai turni
+    /// </summary>
+    public List<int>? EmployeeIds { get; set; }
+
     public List<DayOfWeek>? DaysOfWeek { get; set; }
 }
 
@@ -35,7 +57,17 @@ public class CreateShiftsFromTemplateRequest
 /// </summary>
 public class UpdateShiftRequest
 {
+    /// <summary>
+    /// DEPRECATED: Usare EmployeeIds per assegnazioni multiple
+    /// </summary>
+    [Obsolete("Use EmployeeIds for multi-employee assignment")]
     public int? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Lista di ID dipendenti da assegnare al turno
+    /// </summary>
+    public List<int>? EmployeeIds { get; set; }
+
     public DateTime Date { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }
@@ -47,11 +79,21 @@ public class UpdateShiftRequest
 }
 
 /// <summary>
-/// DTO per assegnare un turno a un dipendente
+/// DTO per assegnare un turno a uno o più dipendenti
 /// </summary>
 public class AssignShiftRequest
 {
-    public int EmployeeId { get; set; }
+    /// <summary>
+    /// DEPRECATED: Usare EmployeeIds per assegnazioni multiple
+    /// </summary>
+    [Obsolete("Use EmployeeIds for multi-employee assignment")]
+    public int? EmployeeId { get; set; }
+
+    /// <summary>
+    /// Lista di ID dipendenti da assegnare al turno
+    /// </summary>
+    public List<int>? EmployeeIds { get; set; }
+
     public string? Notes { get; set; }
 }
 
@@ -64,8 +106,26 @@ public class ShiftDto
     public int MerchantId { get; set; }
     public int? ShiftTemplateId { get; set; }
     public string? ShiftTemplateName { get; set; }
+
+    /// <summary>
+    /// DEPRECATED: Usare Employees per assegnazioni multiple
+    /// Mantenuto per backward compatibility
+    /// </summary>
+    [Obsolete("Use Employees list for multi-employee assignment")]
     public int? EmployeeId { get; set; }
+
+    /// <summary>
+    /// DEPRECATED: Usare Employees per assegnazioni multiple
+    /// Mantenuto per backward compatibility
+    /// </summary>
+    [Obsolete("Use Employees list for multi-employee assignment")]
     public string? EmployeeName { get; set; }
+
+    /// <summary>
+    /// Lista dipendenti assegnati al turno
+    /// </summary>
+    public List<ShiftEmployeeDto> Employees { get; set; } = new List<ShiftEmployeeDto>();
+
     public DateTime Date { get; set; }
     public TimeSpan StartTime { get; set; }
     public TimeSpan EndTime { get; set; }

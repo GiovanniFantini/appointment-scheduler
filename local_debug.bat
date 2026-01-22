@@ -13,7 +13,7 @@ if exist "%SCRIPT_DIR%backend\AppointmentScheduler.API" (
 ) else (
     echo ERRORE: percorso backend non trovato: "%SCRIPT_DIR%backend\AppointmentScheduler.API"
 )
-timeout /t 2 /nobreak >nul
+timeout /t 5 /nobreak >nul
 
 REM Lista delle cartelle frontend
 set "FRONTEND_FOLDERS=admin-app merchant-app employee-app consumer-app"
@@ -26,7 +26,7 @@ for %%F in (%FRONTEND_FOLDERS%) do (
     ) else (
         echo ERRORE: percorso frontend/%%F non trovato: "%SCRIPT_DIR%frontend\%%F"
     )
-    timeout /t 2 /nobreak >nul
+    timeout /t 1 /nobreak >nul
 )
 
 echo ====================================================

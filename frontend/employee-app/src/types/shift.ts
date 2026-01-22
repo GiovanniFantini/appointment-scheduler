@@ -8,13 +8,32 @@ export enum ShiftType {
   Custom = 6,
 }
 
+export interface ShiftEmployee {
+  id: number;
+  shiftId: number;
+  employeeId: number;
+  employeeName: string;
+  isConfirmed: boolean;
+  isCheckedIn: boolean;
+  checkInTime?: string;
+  isCheckedOut: boolean;
+  checkOutTime?: string;
+  checkInLocation?: string;
+  checkOutLocation?: string;
+  notes?: string;
+}
+
 export interface Shift {
   id: number;
   merchantId: number;
   shiftTemplateId?: number;
   shiftTemplateName?: string;
+  /** @deprecated Use employees array for multi-employee assignment */
   employeeId?: number;
+  /** @deprecated Use employees array for multi-employee assignment */
   employeeName?: string;
+  /** Lista dipendenti assegnati al turno */
+  employees: ShiftEmployee[];
   date: string;
   startTime: string;
   endTime: string;

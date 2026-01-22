@@ -56,6 +56,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     breakDurationMinutes: 30,
     shiftType: ShiftType.Custom,
     color: COLORS[0],
+    employeeIds: [],
   });
 
   // Form states for Create from Template
@@ -63,7 +64,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     shiftTemplateId: 0,
     startDate: '',
     endDate: '',
-    employeeId: undefined as number | undefined,
+    employeeIds: [] as number[],
     daysOfWeek: [] as number[],
   });
 
@@ -76,11 +77,12 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     shiftType: ShiftType.Custom,
     color: COLORS[0],
     isActive: true,
+    employeeIds: [],
   });
 
   // Form states for Assign Shift
   const [assignForm, setAssignForm] = useState<AssignShiftRequest>({
-    employeeId: 0,
+    employeeIds: [],
   });
 
   useEffect(() => {
@@ -254,6 +256,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         breakDurationMinutes: 30,
         shiftType: ShiftType.Custom,
         color: COLORS[0],
+        employeeIds: [],
       });
     } catch (error: any) {
       console.error('Errore creazione turno:', error);
@@ -272,7 +275,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         shiftTemplateId: templateForm.shiftTemplateId,
         startDate: templateForm.startDate,
         endDate: templateForm.endDate,
-        employeeId: templateForm.employeeId,
+        employeeIds: templateForm.employeeIds,
         daysOfWeek: templateForm.daysOfWeek.length > 0 ? templateForm.daysOfWeek : undefined,
       };
 
@@ -285,7 +288,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         shiftTemplateId: 0,
         startDate: '',
         endDate: '',
-        employeeId: undefined,
+        employeeIds: [],
         daysOfWeek: [],
       });
     } catch (error: any) {
@@ -297,7 +300,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
   const openEditModal = (shift: Shift) => {
     setSelectedShift(shift);
     setEditForm({
-      employeeId: shift.employeeId,
+      employeeIds: shift.employees?.map(e => e.employeeId) || [],
       date: shift.date.split('T')[0],
       startTime: shift.startTime,
       endTime: shift.endTime,
@@ -328,14 +331,14 @@ function Shifts({ user, onLogout }: ShiftsProps) {
   const openAssignModal = (shift: Shift) => {
     setSelectedShift(shift);
     setAssignForm({
-      employeeId: shift.employeeId || 0,
+      employeeIds: shift.employees?.map(e => e.employeeId) || [],
     });
     setShowAssignModal(true);
   };
 
   const handleAssignShift = async () => {
-    if (!selectedShift || !assignForm.employeeId) {
-      alert('Seleziona un dipendente');
+    if (!selectedShift || !assignForm.employeeIds || assignForm.employeeIds.length === 0) {
+      alert('Seleziona almeno un dipendente');
       return;
     }
 
@@ -518,8 +521,10 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                           <div className="font-semibold text-white">
                             {getTimeDisplay(shift.startTime)} - {getTimeDisplay(shift.endTime)}
                           </div>
-                          {shift.employeeName && (
-                            <div className="text-gray-300 truncate">{shift.employeeName}</div>
+                          {shift.employees && shift.employees.length > 0 && (
+                            <div className="text-gray-300 truncate">
+                              {shift.employees.map(e => e.employeeName).join(', ')}
+                            </div>
                           )}
                           <div className="text-gray-400">{shift.totalHours}h</div>
                         </div>
@@ -565,8 +570,10 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                   </div>
                 )}
                 <div>
-                  <span className="font-semibold">Dipendente:</span>{' '}
-                  {selectedShift.employeeName || 'Non assegnato'}
+                  <span className="font-semibold">Dipendenti:</span>{' '}
+                  {selectedShift.employees && selectedShift.employees.length > 0
+                    ? selectedShift.employees.map(e => e.employeeName).join(', ')
+                    : 'Non assegnato'}
                 </div>
                 <div>
                   <span className="font-semibold">Tipo:</span> {selectedShift.shiftTypeName}
@@ -645,21 +652,35 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                     />
                   </div>
 
-                  {/* Employee */}
+                  {/* Employees (Multi-select) */}
                   <div>
-                    <label className="block text-gray-300 mb-2">Dipendente</label>
-                    <select
-                      value={createForm.employeeId || ''}
-                      onChange={(e) => setCreateForm({ ...createForm, employeeId: e.target.value ? Number(e.target.value) : undefined })}
-                      className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="">Non assegnato</option>
-                      {employees.filter(e => e.isActive).map(emp => (
-                        <option key={emp.id} value={emp.id}>
-                          {emp.fullName}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="block text-gray-300 mb-2">Dipendenti (selezione multipla)</label>
+                    <div className="bg-gray-700 rounded-lg border border-gray-600 p-3 max-h-48 overflow-y-auto">
+                      {employees.filter(e => e.isActive).length === 0 ? (
+                        <p className="text-gray-400 text-sm">Nessun dipendente disponibile</p>
+                      ) : (
+                        employees.filter(e => e.isActive).map(emp => (
+                          <label key={emp.id} className="flex items-center gap-2 py-1 hover:bg-gray-600 rounded px-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={createForm.employeeIds?.includes(emp.id) || false}
+                              onChange={(e) => {
+                                const currentIds = createForm.employeeIds || [];
+                                const newIds = e.target.checked
+                                  ? [...currentIds, emp.id]
+                                  : currentIds.filter(id => id !== emp.id);
+                                setCreateForm({ ...createForm, employeeIds: newIds });
+                              }}
+                              className="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 rounded focus:ring-cyan-500"
+                            />
+                            <span className="text-white text-sm">{emp.fullName}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    {createForm.employeeIds && createForm.employeeIds.length > 0 && (
+                      <p className="text-cyan-400 text-xs mt-1">{createForm.employeeIds.length} dipendente/i selezionato/i</p>
+                    )}
                   </div>
                 </div>
 
@@ -817,21 +838,35 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                   </div>
                 </div>
 
-                {/* Employee */}
+                {/* Employees (Multi-select) */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Dipendente (opzionale)</label>
-                  <select
-                    value={templateForm.employeeId || ''}
-                    onChange={(e) => setTemplateForm({ ...templateForm, employeeId: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-cyan-500 focus:outline-none"
-                  >
-                    <option value="">Tutti i giorni nel range</option>
-                    {employees.filter(e => e.isActive).map(emp => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.fullName}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-gray-300 mb-2">Dipendenti (opzionale, selezione multipla)</label>
+                  <div className="bg-gray-700 rounded-lg border border-gray-600 p-3 max-h-48 overflow-y-auto">
+                    {employees.filter(e => e.isActive).length === 0 ? (
+                      <p className="text-gray-400 text-sm">Nessun dipendente disponibile</p>
+                    ) : (
+                      employees.filter(e => e.isActive).map(emp => (
+                        <label key={emp.id} className="flex items-center gap-2 py-1 hover:bg-gray-600 rounded px-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={templateForm.employeeIds?.includes(emp.id) || false}
+                            onChange={(e) => {
+                              const currentIds = templateForm.employeeIds || [];
+                              const newIds = e.target.checked
+                                ? [...currentIds, emp.id]
+                                : currentIds.filter(id => id !== emp.id);
+                              setTemplateForm({ ...templateForm, employeeIds: newIds });
+                            }}
+                            className="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 rounded focus:ring-cyan-500"
+                          />
+                          <span className="text-white text-sm">{emp.fullName}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {templateForm.employeeIds && templateForm.employeeIds.length > 0 && (
+                    <p className="text-cyan-400 text-xs mt-1">{templateForm.employeeIds.length} dipendente/i selezionato/i</p>
+                  )}
                 </div>
 
                 {/* Days of Week */}
@@ -905,17 +940,36 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                     />
                   </div>
 
-                  {/* Employee */}
+                  {/* Employees (Multi-select) */}
                   <div>
-                    <label className="block text-gray-300 mb-2">Dipendente</label>
-                    <select
-                      value={editForm.employeeId || ''}
-                      onChange={(e) => setEditForm({ ...editForm, employeeId: e.target.value ? Number(e.target.value) : undefined })}
-                      className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="">Non assegnato</option>
-                      {employees.filter(e => e.isActive).map(emp => (
-                        <option key={emp.id} value={emp.id}>
+                    <label className="block text-gray-300 mb-2">Dipendenti</label>
+                    <div className="bg-gray-700 rounded-lg border border-gray-600 p-3 max-h-36 overflow-y-auto">
+                      {employees.filter(e => e.isActive).length === 0 ? (
+                        <p className="text-gray-400 text-sm">Nessun dipendente disponibile</p>
+                      ) : (
+                        employees.filter(e => e.isActive).map(emp => (
+                          <label key={emp.id} className="flex items-center gap-2 py-1 hover:bg-gray-600 rounded px-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editForm.employeeIds?.includes(emp.id) || false}
+                              onChange={(e) => {
+                                const currentIds = editForm.employeeIds || [];
+                                const newIds = e.target.checked
+                                  ? [...currentIds, emp.id]
+                                  : currentIds.filter(id => id !== emp.id);
+                                setEditForm({ ...editForm, employeeIds: newIds });
+                              }}
+                              className="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 rounded focus:ring-cyan-500"
+                            />
+                            <span className="text-white text-sm">{emp.fullName}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    {editForm.employeeIds && editForm.employeeIds.length > 0 && (
+                      <p className="text-cyan-400 text-xs mt-1">{editForm.employeeIds.length} dipendente/i selezionato/i</p>
+                    )}
+                  </div>
                           {emp.fullName}
                         </option>
                       ))}
@@ -1047,22 +1101,35 @@ function Shifts({ user, onLogout }: ShiftsProps) {
               <h2 className="text-2xl font-bold text-cyan-400 mb-6">Assegna Turno</h2>
 
               <div className="space-y-4">
-                {/* Employee */}
+                {/* Employees (Multi-select) */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Dipendente *</label>
-                  <select
-                    value={assignForm.employeeId}
-                    onChange={(e) => setAssignForm({ ...assignForm, employeeId: Number(e.target.value) })}
-                    className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-cyan-500 focus:outline-none"
-                    required
-                  >
-                    <option value={0}>Seleziona un dipendente</option>
-                    {employees.filter(e => e.isActive).map(emp => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.fullName}
-                      </option>
-                    ))}
-                  </select>
+                  <label className="block text-gray-300 mb-2">Dipendenti * (selezione multipla)</label>
+                  <div className="bg-gray-700 rounded-lg border border-gray-600 p-3 max-h-64 overflow-y-auto">
+                    {employees.filter(e => e.isActive).length === 0 ? (
+                      <p className="text-gray-400 text-sm">Nessun dipendente disponibile</p>
+                    ) : (
+                      employees.filter(e => e.isActive).map(emp => (
+                        <label key={emp.id} className="flex items-center gap-2 py-1 hover:bg-gray-600 rounded px-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={assignForm.employeeIds?.includes(emp.id) || false}
+                            onChange={(e) => {
+                              const currentIds = assignForm.employeeIds || [];
+                              const newIds = e.target.checked
+                                ? [...currentIds, emp.id]
+                                : currentIds.filter(id => id !== emp.id);
+                              setAssignForm({ ...assignForm, employeeIds: newIds });
+                            }}
+                            className="w-4 h-4 text-cyan-500 bg-gray-600 border-gray-500 rounded focus:ring-cyan-500"
+                          />
+                          <span className="text-white text-sm">{emp.fullName}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                  {assignForm.employeeIds && assignForm.employeeIds.length > 0 && (
+                    <p className="text-cyan-400 text-xs mt-1">{assignForm.employeeIds.length} dipendente/i selezionato/i</p>
+                  )}
                 </div>
 
                 {/* Notes */}
