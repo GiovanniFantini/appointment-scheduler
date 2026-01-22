@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+
 import axios from '../lib/axios';
 import { ShiftTemplate, ShiftType, RecurrencePattern, CreateShiftTemplateRequest } from '../types/shift';
 import AppLayout from '../components/layout/AppLayout';

@@ -180,8 +180,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
 
   // Auto-expand category containing active page
   useEffect(() => {
-    const currentPath = location.pathname
-
     // Find which category contains the active page
     for (const category of navigationConfig) {
       const hasActivePage = category.items.some(item => isActive(item.path))
