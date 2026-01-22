@@ -1,102 +1,90 @@
-# Claude Instructions - Appointment Scheduler Project
+# Claude Instructions - Appointment Scheduler
 
-Queste sono le istruzioni permanenti per lo sviluppo di questo progetto. Seguile sempre quando lavori su questo codebase.
+Istruzioni permanenti per lo sviluppo di questo progetto.
 
 ## Stack Tecnologico
 
-- **Backend:** ASP.NET Core 8 Web API + Entity Framework Core + PostgreSQL
+- **Backend:** ASP.NET Core 8 + EF Core + PostgreSQL
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS
 - **Auth:** JWT Bearer Token
-- **Database:** PostgreSQL (con supporto SQL Server opzionale)
 
 ## Principi di Sviluppo
 
 ### 1. User-Friendly
-- L'applicazione deve essere intuitiva e facile da usare
-- Messaggi di errore chiari e comprensibili (non tecnici)
-- Feedback immediato su tutte le azioni
+- Interfacce intuitive
+- Messaggi di errore chiari (non tecnici)
+- Feedback immediato
 - Loading states visibili
-- Validazione client-side e server-side
+- Validazione client e server
 
 ### 2. Dependency Injection
-- Usare SEMPRE dependency injection per i servizi
-- Registrare tutti i servizi in Program.cs
-- Creare interfacce per tutti i servizi
-- Non usare mai `new` per istanziare servizi
-- Preferire Scoped lifetime per servizi con DbContext
+- Usare SEMPRE DI per servizi
+- Registrare in Program.cs
+- Creare interfacce per servizi
+- Non usare `new` per istanziare servizi
+- Preferire Scoped per servizi con DbContext
 
 ### 3. Commenti e Documentazione
 
-**C# - XML Comments obbligatori:**
+**C# - XML Comments:**
 ```csharp
-/// <summary>
-/// Descrizione chiara del metodo
-/// </summary>
-/// <param name="parametro">Descrizione parametro</param>
-/// <returns>Descrizione return value</returns>
+/// <summary>Descrizione metodo</summary>
+/// <param name="parametro">Descrizione</param>
+/// <returns>Descrizione return</returns>
 public async Task<Result> MetodoAsync(Parameter parametro)
 ```
 
-**TypeScript - JSDoc per funzioni esportate:**
+**TypeScript - JSDoc:**
 ```typescript
-/**
- * Descrizione della funzione
- * @param param - Descrizione parametro
- * @returns Descrizione return
- */
+/** Descrizione funzione
+ * @param param - Descrizione
+ * @returns Descrizione return */
 export const myFunction = (param: string): void => {}
 ```
 
 **Regole:**
 - Commentare TUTTI i metodi public/export
 - NON commentare codice ovvio
-- NO emoji nei commenti o messaggi dell'applicazione
-- Preferire codice auto-esplicativo ai commenti inline
+- NO emoji in commenti o messaggi app
+- Preferire codice auto-esplicativo
 
-### 4. Testabilita' Locale
+### 4. Testabilita'
 - Configurazioni esternalizzate (appsettings, .env)
 - Docker-compose per dipendenze
-- Seed data per test rapidi
+- Seed data per test
 - Setup documentato in SETUP.md
 
 ### 5. NO Emoji
-- Non usare emoji in:
-  - Commenti del codice
-  - Messaggi di errore/successo
-  - Log applicativi
-  - Documentazione tecnica
-- OK emoji solo in README/documentazione user-facing
+NO emoji in:
+- Commenti codice
+- Messaggi errore/successo
+- Log applicativi
+- Documentazione tecnica
 
-## Architettura e Pattern
+OK solo in README/documentazione user-facing
 
-### Backend Structure
+## Architettura
+
 ```
-AppointmentScheduler.API/       - Controllers, Program.cs, middleware
-AppointmentScheduler.Core/      - Services, business logic, interfaces
-AppointmentScheduler.Data/      - DbContext, repositories, migrations
-AppointmentScheduler.Shared/    - Models, DTOs, enums (condivisi)
+AppointmentScheduler.API/       # Controllers, Program.cs, middleware
+AppointmentScheduler.Core/      # Services, business logic, interfaces
+AppointmentScheduler.Data/      # DbContext, repositories, migrations
+AppointmentScheduler.Shared/    # Models, DTOs, enums
 ```
 
 ### Servizi - Sempre con interfaccia
 ```csharp
 // Interfaccia
-public interface IBookingService
-{
-    Task<BookingDto> CreateBookingAsync(CreateBookingRequest request);
-}
+public interface IBookingService { Task<BookingDto> CreateBookingAsync(...); }
 
 // Implementazione
 public class BookingService : IBookingService
 {
     private readonly ApplicationDbContext _context;
-
-    public BookingService(ApplicationDbContext context)
-    {
-        _context = context;
-    }
+    public BookingService(ApplicationDbContext context) { _context = context; }
 }
 
-// Registrazione in Program.cs
+// Registrazione
 builder.Services.AddScoped<IBookingService, BookingService>();
 ```
 
@@ -107,15 +95,9 @@ builder.Services.AddScoped<IBookingService, BookingService>();
 public class BookingsController : ControllerBase
 {
     private readonly IBookingService _bookingService;
+    public BookingsController(IBookingService bookingService) { _bookingService = bookingService; }
 
-    public BookingsController(IBookingService bookingService)
-    {
-        _bookingService = bookingService;
-    }
-
-    /// <summary>
-    /// Crea una nuova prenotazione
-    /// </summary>
+    /// <summary>Crea nuova prenotazione</summary>
     [HttpPost]
     public async Task<ActionResult<BookingDto>> Create(CreateBookingRequest request)
     {
@@ -138,11 +120,11 @@ return BadRequest(new { error = "SqlException: UNIQUE constraint violation" });
 
 ### Frontend
 ```typescript
-// Chiaro per l'utente
-setError("Impossibile completare la prenotazione. Riprova piu' tardi.");
+// Chiaro
+setError("Impossibile completare. Riprova piu' tardi.");
 
-// NO - troppo tecnico
-setError("Error 500: Internal Server Error at POST /api/bookings");
+// NO - tecnico
+setError("Error 500: Internal Server Error");
 ```
 
 ## Database
@@ -156,7 +138,7 @@ var users = await _context.Users.ToListAsync();
 var users = _context.Users.ToList();
 ```
 
-### Include esplicito quando servono relazioni
+### Include esplicito
 ```csharp
 var booking = await _context.Bookings
     .Include(b => b.Service)
@@ -166,22 +148,18 @@ var booking = await _context.Bookings
 
 ## Frontend
 
-### Custom Hooks per logica condivisa
+### Custom Hooks
 ```typescript
 export const useAuth = () => {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    // ...
     return { user, loading, login, logout };
 };
 ```
 
-### Loading e Disabled States
+### Loading States
 ```typescript
-<button
-    disabled={loading}
-    className="..."
->
+<button disabled={loading}>
     {loading ? 'Caricamento...' : 'Salva'}
 </button>
 ```
@@ -190,197 +168,105 @@ export const useAuth = () => {
 
 ### Commit Messages
 ```
-feat: Aggiunge servizio prenotazioni con dependency injection
-fix: Corregge validazione email case-insensitive
-refactor: Migliora gestione errori in AuthService
-docs: Aggiorna QUICK_START con setup Docker
-test: Aggiunge test per BookingService
+feat: Aggiunge servizio prenotazioni
+fix: Corregge validazione email
+refactor: Migliora gestione errori
+docs: Aggiorna SETUP
+test: Aggiunge test BookingService
 ```
 
 ### Non Committare
 - Password o secrets
 - appsettings.Local.json
 - node_modules/, bin/, obj/, dist/
-- File personali IDE
+- File IDE personali
 
 ## Versioning Automatico
 
-Questo progetto usa **Git-based semantic versioning** automatico. Le versioni sono gestite tramite Git tags e NON devono essere modificate manualmente.
+Sistema **Git-based semantic versioning** automatico.
 
-### Sistema di Versioning
-
-**Formato versione:** `{tag}+{commit}` (es. `0.0.1+abc1234`)
-
-**Fonti:**
-- **Version number**: Git tag (es. `v0.0.1`, `v1.2.3`)
-- **Commit SHA**: Git commit hash corto (es. `abc1234`)
-- **Build number**: GitHub Actions run number
-- **Build time**: Timestamp UTC del build
+**Formato:** `{tag}+{commit}` (es. `0.0.1+abc1234`)
 
 ### Regole CRITICHE
 
-#### ❌ NON FARE MAI:
-1. **NON** modificare manualmente versioni in `package.json`
-2. **NON** modificare manualmente versioni in `.csproj`
-3. **NON** hardcodare versioni nel codice
-4. **NON** rimuovere o modificare `vite-version-plugin.ts`
-5. **NON** rimuovere injection di env vars nei workflow GitHub Actions
+#### ❌ NON FARE:
+1. NO modificare versioni in `package.json`
+2. NO modificare versioni in `.csproj`
+3. NO hardcodare versioni
+4. NO rimuovere `vite-version-plugin.ts`
+5. NO rimuovere env vars injection nei workflow
 
-#### ✅ FARE SEMPRE:
-1. **USA Git tags** per incrementare le versioni:
-   ```bash
-   # Patch (0.0.1 → 0.0.2)
-   git tag v0.0.2
-   git push origin v0.0.2
-
-   # Minor (0.0.2 → 0.1.0)
-   git tag v0.1.0
-   git push origin v0.1.0
-
-   # Major (0.1.0 → 1.0.0)
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
-
-2. **Verifica versioning** dopo modifiche ai frontend/backend:
-   ```bash
-   # Test build frontend
-   cd frontend/consumer-app && npm run build
-
-   # Verifica che vite-version-plugin.ts sia incluso
-   # Verifica che vite.config.ts usi viteVersionPlugin()
-   ```
-
-### File Critici per Versioning
-
-**NON MODIFICARE questi file senza consultare la documentazione:**
-
-```
-Backend:
-✓ backend/AppointmentScheduler.API/Controllers/VersionController.cs
-  - Legge VERSION, GIT_COMMIT_SHA da environment variables
-  - Fallback a git commands per sviluppo locale
-
-Frontend (tutti e 3: consumer, merchant, admin):
-✓ vite-version-plugin.ts
-  - Inietta versione Git durante build
-✓ vite.config.ts
-  - DEVE includere viteVersionPlugin() nei plugins
-✓ src/vite-env.d.ts
-  - Definisce tipi TypeScript per __APP_VERSION__, __GIT_COMMIT__
-✓ src/components/VersionInfo.tsx
-  - Mostra versioni frontend e backend
-
-GitHub Actions:
-✓ .github/workflows/deploy-*.yml
-  - Step "Extract version info" OBBLIGATORIO
-  - Injection env vars durante build OBBLIGATORIA
-```
-
-### Come Funziona
-
-**Sviluppo Locale:**
+#### ✅ FARE:
+**Incrementare versione con Git tags:**
 ```bash
-# Il vite-version-plugin esegue automaticamente:
-git describe --tags --abbrev=0  # → v0.0.1
-git rev-parse --short HEAD      # → abc1234
+# Patch: 0.0.1 → 0.0.2
+git tag v0.0.2 && git push origin v0.0.2
 
-# Risultato: versione "0.0.1+abc1234"
+# Minor: 0.0.2 → 0.1.0
+git tag v0.1.0 && git push origin v0.1.0
+
+# Major: 0.1.0 → 1.0.0
+git tag v1.0.0 && git push origin v1.0.0
 ```
 
-**GitHub Actions (Production):**
-```yaml
-# Workflow estrae Git info
-- name: Extract version info
-  run: |
-    GIT_TAG=$(git describe --tags --abbrev=0)
-    GIT_COMMIT=$(git rev-parse --short HEAD)
-    # ...
+### File Critici (NON modificare)
 
-# Build con env vars
-- name: Build
-  env:
-    VERSION: ${{ steps.version.outputs.VERSION }}
-    GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
-```
+**Backend:**
+- `Controllers/VersionController.cs` - Legge VERSION, GIT_COMMIT_SHA da env
 
-### Quando Creare un Tag
+**Frontend (tutti):**
+- `vite-version-plugin.ts` - Inietta versione Git
+- `vite.config.ts` - DEVE includere viteVersionPlugin()
+- `src/vite-env.d.ts` - Tipi TypeScript
+- `src/components/VersionInfo.tsx` - Mostra versioni
 
-Crea un nuovo Git tag quando:
-- ✅ Feature completa pronta per rilascio
-- ✅ Bugfix critico in produzione
-- ✅ Breaking changes (major version)
-- ✅ Prima del merge in `main`
+**GitHub Actions:**
+- `.github/workflows/deploy-*.yml` - Step "Extract version info" OBBLIGATORIO
+
+### Quando Creare Tag
+✅ Feature completa
+✅ Bugfix critico
+✅ Breaking changes
+✅ Prima merge in `main`
 
 **Procedura:**
 ```bash
-# 1. Verifica che tutto sia committato
-git status
-
-# 2. Crea tag annotato con messaggio
-git tag -a v0.1.0 -m "Release 0.1.0: Aggiunge sistema prenotazioni"
-
-# 3. Push del tag
-git push origin v0.1.0
-
-# 4. GitHub Actions userà automaticamente questo tag
+git status                                              # Verifica clean
+git tag -a v0.1.0 -m "Release 0.1.0: Feature X"       # Crea tag
+git push origin v0.1.0                                  # Push tag
 ```
 
-### Troubleshooting Versioning
+### Troubleshooting
 
-**Problema:** Frontend mostra "0.0.1+dev" invece del commit SHA
-**Soluzione:**
+**Frontend mostra "0.0.1+dev":**
 ```bash
-# Verifica che vite-version-plugin.ts esista
-ls frontend/consumer-app/vite-version-plugin.ts
-
-# Verifica che vite.config.ts lo importi
-grep "viteVersionPlugin" frontend/consumer-app/vite.config.ts
-
-# Rebuild
-npm run build
+ls frontend/consumer-app/vite-version-plugin.ts      # Verifica esista
+grep "viteVersionPlugin" vite.config.ts              # Verifica import
+npm run build                                         # Rebuild
 ```
 
-**Problema:** Backend mostra "0.0.0+dev"
-**Soluzione:**
+**Backend mostra "0.0.0+dev":**
 ```bash
-# Verifica Git tags
-git tag -l
-
-# Se nessun tag esiste, creane uno
-git tag v0.0.1
+git tag -l           # Verifica tags
+git tag v0.0.1       # Crea tag se mancante
 git push origin v0.0.1
-
-# Verifica VersionController.cs
-grep "GetGitTag" backend/AppointmentScheduler.API/Controllers/VersionController.cs
-```
-
-**Problema:** GitHub Actions non inietta versioni
-**Soluzione:**
-```yaml
-# Verifica che il workflow abbia lo step "Extract version info"
-# Verifica che le env vars siano passate al build:
-env:
-  VERSION: ${{ steps.version.outputs.VERSION }}
-  GIT_COMMIT_SHA: ${{ steps.version.outputs.GIT_COMMIT }}
 ```
 
 ## Code Review Checklist
 
-Prima di ogni commit verificare:
 - [ ] XML/JSDoc comments su metodi public
-- [ ] Dependency injection usata correttamente
+- [ ] Dependency injection corretta
 - [ ] Nessun secret hardcoded
-- [ ] Messaggi utente chiari (no tecnicismi)
-- [ ] No emoji in codice/messaggi app
-- [ ] Async/await per operazioni DB
-- [ ] Loading states nel frontend
+- [ ] Messaggi utente chiari
+- [ ] No emoji in codice/messaggi
+- [ ] Async/await per DB
+- [ ] Loading states frontend
 - [ ] Gestione errori user-friendly
-- [ ] **Versioning automatico NON modificato manualmente**
-- [ ] **vite-version-plugin.ts presente in tutti i frontend**
-- [ ] **GitHub Actions workflows includono "Extract version info" step**
+- [ ] Versioning automatico NON modificato
+- [ ] vite-version-plugin.ts presente
+- [ ] GitHub Actions include "Extract version info"
 
-## Testing Locale - Setup Standard
+## Testing Locale
 
 ```bash
 # 1. Database
@@ -399,7 +285,6 @@ npm install && npm run dev
 
 ## Riferimenti
 
-- Dettagli completi: PROJECT_GUIDELINES.md
-- Setup rapido: SETUP.md
-- Configurazione: backend/CONFIGURATION.md
-- Architettura: README.md
+- [PROJECT_GUIDELINES.md](../PROJECT_GUIDELINES.md) - Dettagli completi
+- [SETUP.md](../SETUP.md) - Setup rapido
+- [backend/CONFIGURATION.md](../backend/CONFIGURATION.md) - Configurazione
