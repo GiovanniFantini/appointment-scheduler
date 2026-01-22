@@ -58,4 +58,6 @@ public class Employee
     public ICollection<EmployeeWorkingHoursLimit> WorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
     public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
     public ICollection<ShiftCorrection> ShiftCorrections { get; set; } = new List<ShiftCorrection>();
+    public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+    public ICollection<EmployeeLeaveBalance> LeaveBalances { get; set; } = new List<EmployeeLeaveBalance>();
 }

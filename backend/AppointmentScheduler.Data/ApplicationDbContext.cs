@@ -35,6 +35,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<HRDocument> HRDocuments { get; set; }
     public DbSet<HRDocumentVersion> HRDocumentVersions { get; set; }
 
+    // Leave & Availability Management
+    public DbSet<LeaveRequest> LeaveRequests { get; set; }
+    public DbSet<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -453,6 +457,48 @@ public class ApplicationDbContext : DbContext
                 .IsUnique();
 
             entity.HasIndex(e => e.UploadStatus);
+        });
+
+        // LeaveRequest configuration
+        modelBuilder.Entity<LeaveRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DaysRequested).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.ResponseNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.LeaveRequests)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.LeaveRequests)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.EmployeeId);
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => new { e.EmployeeId, e.StartDate, e.EndDate });
+        });
+
+        // EmployeeLeaveBalance configuration
+        modelBuilder.Entity<EmployeeLeaveBalance>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TotalDays).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.UsedDays).HasColumnType("decimal(5,2)");
+            entity.Property(e => e.Notes).HasMaxLength(500);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.LeaveBalances)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Indice unique per employee + leave type + year
+            entity.HasIndex(e => new { e.EmployeeId, e.LeaveType, e.Year })
+                .IsUnique();
         });
     }
 }
