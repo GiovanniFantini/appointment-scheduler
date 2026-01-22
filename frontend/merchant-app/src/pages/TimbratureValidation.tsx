@@ -40,7 +40,7 @@ export default function TimbratureValidation({ user, onLogout }: TimbratureValid
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
 
-      const response = await axios.get('/api/shifts/merchant', {
+      const response = await axios.get('/shifts/merchant', {
         params: {
           startDate: weekStart.toISOString(),
           endDate: weekEnd.toISOString(),
@@ -77,7 +77,7 @@ export default function TimbratureValidation({ user, onLogout }: TimbratureValid
   const handleAutoValidate = async () => {
     try {
       setAutoValidating(true);
-      const response = await axios.post('/api/timbrature/auto-validate');
+      const response = await axios.post('/timbrature/auto-validate');
       alert(response.data.message || 'Validazione automatica completata');
       await fetchShiftsToReview();
     } catch (error: any) {
@@ -99,7 +99,7 @@ export default function TimbratureValidation({ user, onLogout }: TimbratureValid
 
     try {
       setLoading(true);
-      const response = await axios.post('/api/timbrature/batch-approve', Array.from(selectedShifts));
+      const response = await axios.post('/timbrature/batch-approve', Array.from(selectedShifts));
       alert(response.data.message || 'Turni approvati con successo');
       setSelectedShifts(new Set());
       await fetchShiftsToReview();
