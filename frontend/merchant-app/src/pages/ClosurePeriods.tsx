@@ -20,7 +20,6 @@ interface ClosurePeriodsProps {
 
 function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
   const [closurePeriods, setClosurePeriods] = useState<ClosurePeriod[]>([])
-  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [formData, setFormData] = useState({
     startDate: '',
@@ -42,8 +41,6 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
       if (err.response?.status !== 404) {
         alert('Errore nel caricamento delle chiusure')
       }
-    } finally {
-      setLoading(false)
     }
   }
 
