@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-
 interface TopHeaderProps {
   user: any
   onLogout: () => void
