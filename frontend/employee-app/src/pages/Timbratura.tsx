@@ -30,7 +30,7 @@ export default function Timbratura({ user, onLogout }: TimbraturaProps) {
 
   const fetchStatus = async () => {
     try {
-      const response = await axios.get('/api/timbrature/status');
+      const response = await axios.get('/timbrature/status');
       setStatus(response.data);
     } catch (error: any) {
       console.error('Errore nel caricamento stato:', error);
@@ -39,7 +39,7 @@ export default function Timbratura({ user, onLogout }: TimbraturaProps) {
 
   const fetchWellbeingStats = async () => {
     try {
-      const response = await axios.get('/api/timbrature/wellbeing');
+      const response = await axios.get('/timbrature/wellbeing');
       setWellbeing(response.data);
     } catch (error: any) {
       console.error('Errore nel caricamento statistiche benessere:', error);
@@ -58,7 +58,7 @@ export default function Timbratura({ user, onLogout }: TimbraturaProps) {
         shiftId: status.currentShift.id,
       };
 
-      const response = await axios.post('/api/timbrature/check-in', request);
+      const response = await axios.post('/timbrature/check-in', request);
       setLastResponse(response.data);
 
       if (response.data.hasAnomaly) {
@@ -84,7 +84,7 @@ export default function Timbratura({ user, onLogout }: TimbraturaProps) {
         shiftId: status.currentShift.id,
       };
 
-      const response = await axios.post('/api/timbrature/check-out', request);
+      const response = await axios.post('/timbrature/check-out', request);
       setLastResponse(response.data);
 
       if (response.data.hasAnomaly || response.data.hasOvertime) {
@@ -105,7 +105,7 @@ export default function Timbratura({ user, onLogout }: TimbraturaProps) {
     if (!lastResponse?.anomalyId) return;
 
     try {
-      await axios.post('/api/timbrature/anomaly/resolve', {
+      await axios.post('/timbrature/anomaly/resolve', {
         anomalyId: lastResponse.anomalyId,
         reason,
       });

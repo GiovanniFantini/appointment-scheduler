@@ -27,7 +27,7 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
     try {
       setLoading(true);
       const { startDate, endDate } = getDateRange();
-      const response = await axios.get('/api/shifts/my-shifts', {
+      const response = await axios.get('/shifts/my-shifts', {
         params: {
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
@@ -44,7 +44,7 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/shifts/my-stats');
+      const response = await axios.get('/shifts/my-stats');
       setStats(response.data);
     } catch (error) {
       console.error('Errore nel caricamento statistiche:', error);
