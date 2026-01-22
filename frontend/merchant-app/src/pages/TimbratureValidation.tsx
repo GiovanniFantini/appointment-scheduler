@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
+import AppLayout from '../components/layout/AppLayout';
 
 interface ShiftToValidate {
   id: number;
@@ -14,7 +15,12 @@ interface ShiftToValidate {
   isCheckedOut: boolean;
 }
 
-export default function TimbratureValidation() {
+interface TimbratureValidationProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export default function TimbratureValidation({ user, onLogout }: TimbratureValidationProps) {
   const [shiftsToReview, setShiftsToReview] = useState<ShiftToValidate[]>([]);
   const [selectedShifts, setSelectedShifts] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -34,10 +40,12 @@ export default function TimbratureValidation() {
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 6);
 
-      const response = await axios.get('/api/shifts/merchant', {
+      const response = await axios.get('/shifts/merchant', {
         params: {
           startDate: weekStart.toISOString(),
           endDate: weekEnd.toISOString(),
+          // Se l'utente è Admin puro (senza merchantId), passa merchantId da user
+          ...(user.role === 'Admin' && user.merchantId ? { merchantId: user.merchantId } : {})
         },
       });
 
@@ -49,7 +57,18 @@ export default function TimbratureValidation() {
       setShiftsToReview(shiftsNeedingReview);
     } catch (error: any) {
       console.error('Errore nel caricamento turni:', error);
-      alert(error.response?.data?.message || 'Errore nel caricamento');
+
+      // Messaggio più descrittivo per Admin senza merchantId
+      if (error.response?.status === 400 && user.role === 'Admin' && !user.merchantId) {
+        console.warn('Admin senza merchantId associato. Nessun turno da visualizzare.');
+        setShiftsToReview([]); // Lista vuota, non errore
+      } else {
+        const errorMsg = error.response?.data?.message ||
+                        error.response?.status === 404
+                          ? 'Endpoint non trovato. Assicurati che il backend sia in esecuzione.'
+                          : 'Errore nel caricamento turni';
+        alert(errorMsg);
+      }
     } finally {
       setLoading(false);
     }
@@ -58,7 +77,7 @@ export default function TimbratureValidation() {
   const handleAutoValidate = async () => {
     try {
       setAutoValidating(true);
-      const response = await axios.post('/api/timbrature/auto-validate');
+      const response = await axios.post('/timbrature/auto-validate');
       alert(response.data.message || 'Validazione automatica completata');
       await fetchShiftsToReview();
     } catch (error: any) {
@@ -80,7 +99,7 @@ export default function TimbratureValidation() {
 
     try {
       setLoading(true);
-      const response = await axios.post('/api/timbrature/batch-approve', Array.from(selectedShifts));
+      const response = await axios.post('/timbrature/batch-approve', Array.from(selectedShifts));
       alert(response.data.message || 'Turni approvati con successo');
       setSelectedShifts(new Set());
       await fetchShiftsToReview();
@@ -119,15 +138,11 @@ export default function TimbratureValidation() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-
-        {/* Header */}
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Validazione Timbrature">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Validazione Timbrature
-          </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-300">
             Sistema intelligente con auto-validazione 95% • Approva i turni con 1 click
           </p>
         </div>
@@ -269,8 +284,7 @@ export default function TimbratureValidation() {
             </div>
           </div>
         )}
-
       </div>
-    </div>
+    </AppLayout>
   );
 }

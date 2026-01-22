@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import VersionInfo from '../components/VersionInfo'
+import AppLayout from '../components/layout/AppLayout'
 
 interface DashboardProps {
   user: {
@@ -20,27 +21,7 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-dark-bg via-cyber-950 to-dark-surface">
-      {/* Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold gradient-text">Employee App</h1>
-              <p className="text-gray-400 text-sm">Benvenuto, {user.firstName} {user.lastName}</p>
-            </div>
-            <button
-              onClick={onLogout}
-              className="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg transition-colors border border-red-500/50"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Dashboard Dipendente">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Card Timbratura - FEATURED */}
           <button
@@ -146,7 +127,6 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         </div>
 
         <VersionInfo />
-      </main>
-    </div>
+    </AppLayout>
   )
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface Merchant {
   id: number
@@ -90,32 +91,7 @@ function MerchantApproval({ user, onLogout }: MerchantApprovalProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Gestione Merchant</h1>
-            <p className="text-sm text-gray-600">
-              Benvenuto, {user.firstName} {user.lastName}
-            </p>
-          </div>
-          <div className="flex gap-4">
-            <Link
-              to="/"
-              className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300"
-            >
-              Dashboard
-            </Link>
-            <button
-              onClick={onLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-            >
-              Esci
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Approvazione Merchant">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex gap-4">
           <button
@@ -267,7 +243,7 @@ function MerchantApproval({ user, onLogout }: MerchantApprovalProps) {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

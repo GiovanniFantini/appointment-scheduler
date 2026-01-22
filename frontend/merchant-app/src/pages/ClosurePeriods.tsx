@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface ClosurePeriod {
   id: number
@@ -14,10 +15,11 @@ interface ClosurePeriod {
 }
 
 interface ClosurePeriodsProps {
+  user: any
   onLogout: () => void
 }
 
-function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
+function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
   const [closurePeriods, setClosurePeriods] = useState<ClosurePeriod[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -117,40 +119,9 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
     return new Date(endDate) < new Date()
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-dark">
-        <nav className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white p-4">
-          <div className="container mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
-          </div>
-        </nav>
-        <div className="container mx-auto p-4">
-          <div className="text-center py-8">Caricamento...</div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      <nav className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Merchant Dashboard</h1>
-          <div className="space-x-4">
-            <Link to="/dashboard" className="hover:underline">Dashboard</Link>
-            <Link to="/services" className="hover:underline">Servizi</Link>
-            <Link to="/business-hours" className="hover:underline">Orari</Link>
-            <Link to="/closures" className="hover:underline font-semibold">Chiusure</Link>
-            <Link to="/availabilities" className="hover:underline">Disponibilità</Link>
-            <Link to="/employees" className="hover:underline">Dipendenti</Link>
-            <Link to="/bookings" className="hover:underline">Prenotazioni</Link>
-            <button onClick={onLogout} className="hover:underline">Logout</button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="container mx-auto p-4">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Chiusure">
+      <div className="container mx-auto px-4 py-8">
         <div className="glass-card rounded-xl shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
             <div>
@@ -304,7 +275,7 @@ function ClosurePeriodsPage({ onLogout }: ClosurePeriodsProps) {
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

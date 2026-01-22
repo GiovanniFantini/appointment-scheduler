@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import AppLayout from '../components/layout/AppLayout'
 
 interface User {
   userId: number
@@ -20,24 +21,7 @@ interface DashboardProps {
 
 function Dashboard({ user, onLogout }: DashboardProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 to-red-600">
-      <header className="bg-white shadow-md">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Admin Panel</h1>
-            <p className="text-sm text-gray-600">
-              Benvenuto, {user.firstName} {user.lastName}
-            </p>
-          </div>
-          <button
-            onClick={onLogout}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
-          >
-            Esci
-          </button>
-        </div>
-      </header>
-
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Admin Dashboard">
       <div className="container mx-auto px-4 py-8">
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link
@@ -185,7 +169,7 @@ function Dashboard({ user, onLogout }: DashboardProps) {
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

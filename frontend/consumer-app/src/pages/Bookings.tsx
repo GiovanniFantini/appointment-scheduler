@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import AppLayout from '../components/layout/AppLayout'
 
 interface BookingsProps {
+  user: any
   onLogout: () => void
 }
 
@@ -21,7 +23,7 @@ interface Booking {
 /**
  * Pagina per visualizzare e gestire le proprie prenotazioni
  */
-function Bookings({ onLogout }: BookingsProps) {
+function Bookings({ user, onLogout }: BookingsProps) {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -62,36 +64,8 @@ function Bookings({ onLogout }: BookingsProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark">
-      {/* Futuristic Header */}
-      <header className="glass-card border-b border-white/10 sticky top-0 z-40 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold gradient-text flex items-center gap-2">
-              <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-              Le Mie Prenotazioni
-            </h1>
-            <div className="flex items-center gap-3">
-              <Link to="/" className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-neon-blue/50 transition-all font-semibold text-gray-300 hover:text-neon-blue border border-white/10">
-                🏠 Home
-              </Link>
-              <button onClick={onLogout} className="glass-card-dark px-5 py-2.5 rounded-xl hover:border-red-500/50 transition-all font-semibold text-gray-300 hover:text-red-400 border border-white/10">
-                Esci
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Background Animation */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-20 left-20 w-96 h-96 bg-neon-purple opacity-10 rounded-full blur-3xl animate-float"></div>
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-neon-blue opacity-10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }}></div>
-      </div>
-
-      <div className="container mx-auto px-4 py-12 relative z-10">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Le Mie Prenotazioni">
+      <div className="container mx-auto px-4 py-12">
         {loading ? (
           <div className="glass-card rounded-3xl p-16 text-center border border-white/10 animate-scale-in">
             <div className="flex items-center justify-center gap-3 text-neon-cyan">
@@ -161,7 +135,7 @@ function Bookings({ onLogout }: BookingsProps) {
           </div>
         )}
       </div>
-    </div>
+    </AppLayout>
   )
 }
 

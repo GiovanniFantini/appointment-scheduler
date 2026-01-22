@@ -76,16 +76,16 @@ function App() {
           user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/colleagues" element={
-          user ? <Colleagues onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <Colleagues user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/my-shifts" element={
-          user ? <MyShifts /> : <Navigate to="/login" />
+          user ? <MyShifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/timbratura" element={
-          user ? <Timbratura /> : <Navigate to="/login" />
+          user ? <Timbratura user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/documents" element={
-          user ? <MyDocuments onLogout={handleLogout} /> : <Navigate to="/login" />
+          user ? <MyDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>

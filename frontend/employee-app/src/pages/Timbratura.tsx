@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import axios from '../lib/axios';
 import { CurrentStatusResponse, TimbratureResponse, CheckInRequest, CheckOutRequest, AnomalyReason, WellbeingStats } from '../types/timbratura';
+import AppLayout from '../components/layout/AppLayout';
 
-export default function Timbratura() {
+interface TimbraturaProps {
+  user: any;
+  onLogout: () => void;
+}
+
+export default function Timbratura({ user, onLogout }: TimbraturaProps) {
   const [status, setStatus] = useState<CurrentStatusResponse | null>(null);
   const [wellbeing, setWellbeing] = useState<WellbeingStats | null>(null);
   const [loading, setLoading] = useState(false);
@@ -24,7 +30,7 @@ export default function Timbratura() {
 
   const fetchStatus = async () => {
     try {
-      const response = await axios.get('/api/timbrature/status');
+      const response = await axios.get('/timbrature/status');
       setStatus(response.data);
     } catch (error: any) {
       console.error('Errore nel caricamento stato:', error);
@@ -33,7 +39,7 @@ export default function Timbratura() {
 
   const fetchWellbeingStats = async () => {
     try {
-      const response = await axios.get('/api/timbrature/wellbeing');
+      const response = await axios.get('/timbrature/wellbeing');
       setWellbeing(response.data);
     } catch (error: any) {
       console.error('Errore nel caricamento statistiche benessere:', error);
@@ -52,7 +58,7 @@ export default function Timbratura() {
         shiftId: status.currentShift.id,
       };
 
-      const response = await axios.post('/api/timbrature/check-in', request);
+      const response = await axios.post('/timbrature/check-in', request);
       setLastResponse(response.data);
 
       if (response.data.hasAnomaly) {
@@ -78,7 +84,7 @@ export default function Timbratura() {
         shiftId: status.currentShift.id,
       };
 
-      const response = await axios.post('/api/timbrature/check-out', request);
+      const response = await axios.post('/timbrature/check-out', request);
       setLastResponse(response.data);
 
       if (response.data.hasAnomaly || response.data.hasOvertime) {
@@ -99,7 +105,7 @@ export default function Timbratura() {
     if (!lastResponse?.anomalyId) return;
 
     try {
-      await axios.post('/api/timbrature/anomaly/resolve', {
+      await axios.post('/timbrature/anomaly/resolve', {
         anomalyId: lastResponse.anomalyId,
         reason,
       });
@@ -144,7 +150,7 @@ export default function Timbratura() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Timbratura">
       <div className="max-w-2xl mx-auto space-y-6">
 
         {/* Header con orologio */}
@@ -319,7 +325,7 @@ export default function Timbratura() {
           </div>
         </div>
       )}
-    </div>
+    </AppLayout>
   );
 }
 
