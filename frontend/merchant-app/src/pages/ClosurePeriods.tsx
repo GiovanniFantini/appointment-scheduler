@@ -118,64 +118,61 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
   return (
     <AppLayout user={user} onLogout={onLogout} pageTitle="Chiusure">
       <div className="container mx-auto px-4 py-8">
-        <div className="glass-card rounded-xl shadow-md p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div>
-              <h2 className="text-2xl font-bold">🚫 Chiusure Straordinarie</h2>
-              <p className="text-gray-600">Gestisci ferie, festività e altre chiusure</p>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="px-4 py-2 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded hover:bg-indigo-700"
-            >
-              {showForm ? 'Annulla' : '+ Nuova Chiusura'}
-            </button>
-          </div>
+        <div className="mb-6">
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-gradient-to-r from-neon-green to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
+          >
+            {showForm ? '❌ Annulla' : '➕ Nuova Chiusura'}
+          </button>
+        </div>
 
-          {/* Form */}
-          {showForm && (
-            <form onSubmit={handleSubmit} className="mb-6 p-4 bg-gray-50 rounded border">
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Data Inizio *</label>
+        {/* Form */}
+        {showForm && (
+          <div className="glass-card rounded-3xl shadow-lg p-6 mb-6 border border-white/10 animate-scale-in">
+            <h2 className="text-2xl font-bold gradient-text mb-6">✨ Nuova Chiusura</h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Data Inizio *</label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Data Fine *</label>
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-white/90">Data Fine *</label>
                   <input
                     type="date"
                     value={formData.endDate}
                     onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                    className="w-full px-3 py-2 border rounded"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                     required
                   />
                 </div>
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Motivo *</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-white/90">Motivo *</label>
                 <input
                   type="text"
                   value={formData.reason}
                   onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   placeholder="Es: Ferie estive, Natale, Ristrutturazione..."
                   required
                 />
               </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">Descrizione (opzionale)</label>
+              <div className="space-y-2">
+                <label className="block text-sm font-bold text-white/90">Descrizione (opzionale)</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-3 py-2 border rounded"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-neon-cyan focus:shadow-glow-cyan transition-all duration-300"
                   rows={2}
                   placeholder="Dettagli aggiuntivi..."
                 />
@@ -183,92 +180,120 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
 
               <button
                 type="submit"
-                className="w-full px-4 py-2 bg-gradient-to-r from-neon-cyan to-neon-blue text-white rounded hover:bg-indigo-700"
+                className="w-full bg-gradient-to-r from-neon-blue to-neon-cyan text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
               >
-                Crea Chiusura
+                💾 Crea Chiusura
               </button>
             </form>
-          )}
+          </div>
+        )}
 
-          {/* Lista Chiusure */}
-          {closurePeriods.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <p>Nessuna chiusura programmata</p>
-              <p className="text-sm mt-2">Clicca su "Nuova Chiusura" per aggiungerne una</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {closurePeriods
-                .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
-                .map((closure) => {
-                  const upcoming = isUpcoming(closure.startDate)
-                  const current = isCurrent(closure.startDate, closure.endDate)
-                  const past = isPast(closure.endDate)
+        {/* Lista Chiusure */}
+        {closurePeriods.length === 0 ? (
+          <div className="glass-card rounded-3xl p-16 text-center border border-white/10 shadow-glow-purple animate-fade-in">
+            <svg className="w-24 h-24 text-gray-600 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+            <p className="text-2xl text-gray-400 mb-2">Nessuna chiusura programmata</p>
+            <p className="text-gray-500">Clicca su "Nuova Chiusura" per aggiungerne una</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {closurePeriods
+              .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+              .map((closure, index) => {
+                const upcoming = isUpcoming(closure.startDate)
+                const current = isCurrent(closure.startDate, closure.endDate)
+                const past = isPast(closure.endDate)
 
-                  return (
-                    <div
-                      key={closure.id}
-                      className={`border rounded-xl p-4 ${
-                        current ? 'border-red-500 bg-red-50' :
-                        upcoming ? 'border-orange-300 bg-orange-50' :
-                        'border-gray-300 bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-lg">{closure.reason}</h3>
-                            {current && (
-                              <span className="px-2 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs rounded">
-                                IN CORSO
-                              </span>
-                            )}
-                            {upcoming && (
-                              <span className="px-2 py-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs rounded">
-                                PROGRAMMATA
-                              </span>
-                            )}
-                            {past && (
-                              <span className="px-2 py-1 bg-gray-400 text-white text-xs rounded">
-                                PASSATA
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="text-sm text-gray-600 space-y-1">
-                            <p>
-                              📅 Dal <strong>{formatDate(closure.startDate)}</strong> al{' '}
-                              <strong>{formatDate(closure.endDate)}</strong>
-                              {' '}({getDaysCount(closure.startDate, closure.endDate)} giorni)
-                            </p>
-                            {closure.description && (
-                              <p className="text-gray-700">💬 {closure.description}</p>
-                            )}
-                          </div>
+                return (
+                  <div
+                    key={closure.id}
+                    className={`glass-card rounded-3xl shadow-lg p-6 transition-all hover:shadow-glow-pink animate-slide-up ${
+                      current ? 'border border-red-500/50' :
+                      upcoming ? 'border border-neon-pink/50' :
+                      'border border-white/10'
+                    }`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h3 className="text-2xl font-bold gradient-text">{closure.reason}</h3>
+                          {current && (
+                            <span className="px-3 py-1.5 bg-gradient-to-r from-red-500/20 to-neon-pink/20 text-red-400 text-xs font-bold rounded-xl border border-red-500/50">
+                              🔴 IN CORSO
+                            </span>
+                          )}
+                          {upcoming && (
+                            <span className="px-3 py-1.5 bg-gradient-to-r from-neon-pink/20 to-neon-purple/20 text-neon-pink text-xs font-bold rounded-xl border border-neon-pink/50">
+                              📌 PROGRAMMATA
+                            </span>
+                          )}
+                          {past && (
+                            <span className="px-3 py-1.5 bg-gray-500/20 text-gray-400 text-xs font-bold rounded-xl border border-gray-500/30">
+                              ⏸️ PASSATA
+                            </span>
+                          )}
                         </div>
 
-                        <button
-                          onClick={() => deleteClosure(closure.id)}
-                          className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded hover:bg-red-600 text-sm"
-                        >
-                          Elimina
-                        </button>
+                        <div className="space-y-3">
+                          <div className="glass-card-dark p-3 rounded-xl border border-neon-cyan/20">
+                            <p className="text-sm text-gray-400 mb-1">📅 Periodo</p>
+                            <p className="text-neon-cyan font-semibold">
+                              Dal {formatDate(closure.startDate)} al {formatDate(closure.endDate)}
+                              <span className="ml-2 text-neon-blue">({getDaysCount(closure.startDate, closure.endDate)} giorni)</span>
+                            </p>
+                          </div>
+                          {closure.description && (
+                            <div className="glass-card-dark p-3 rounded-xl border border-white/5">
+                              <p className="text-xs text-gray-500 mb-1">💬 Descrizione</p>
+                              <p className="text-gray-300">{closure.description}</p>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  )
-                })}
-            </div>
-          )}
 
-          <div className="mt-6 p-4 bg-blue-50 rounded">
-            <h4 className="font-semibold mb-2">ℹ️ Informazioni:</h4>
-            <ul className="text-sm text-gray-700 list-disc list-inside space-y-1">
-              <li>Le chiusure straordinarie hanno priorità sugli orari standard</li>
-              <li>Durante questi periodi non sarà possibile effettuare prenotazioni</li>
-              <li>Puoi creare una lista indefinita di chiusure future</li>
-              <li>Esempi: ferie estive, festività, ristrutturazioni, eventi speciali</li>
-            </ul>
+                      <button
+                        onClick={() => deleteClosure(closure.id)}
+                        className="glass-card-dark px-5 py-2.5 rounded-xl hover:bg-red-500/20 font-semibold text-gray-300 hover:text-red-400 border border-white/10 hover:border-red-500/50 transition-all transform hover:scale-105 ml-4"
+                      >
+                        🗑️ Elimina
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
           </div>
+        )}
+
+        <div className="mt-8 glass-card rounded-3xl p-6 border border-neon-blue/30">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 rounded-xl bg-gradient-to-br from-neon-blue/20 to-neon-cyan/20 border border-neon-blue/30">
+              <svg className="w-5 h-5 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h4 className="font-semibold text-neon-blue">Informazioni</h4>
+          </div>
+          <ul className="text-sm text-gray-300 space-y-2">
+            <li className="flex items-start gap-2">
+              <span className="text-neon-cyan">•</span>
+              <span>Le chiusure straordinarie hanno priorità sugli orari standard</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-neon-cyan">•</span>
+              <span>Durante questi periodi non sarà possibile effettuare prenotazioni</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-neon-cyan">•</span>
+              <span>Puoi creare una lista indefinita di chiusure future</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-neon-cyan">•</span>
+              <span>Esempi: ferie estive, festività, ristrutturazioni, eventi speciali</span>
+            </li>
+          </ul>
         </div>
       </div>
     </AppLayout>
