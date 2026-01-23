@@ -112,7 +112,7 @@ export default function MobileNav({ user, onLogout }: MobileNavProps) {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="font-bold gradient-text">Consumer Hub</h2>
+                  <h2 className="font-bold gradient-text">Area Cliente</h2>
                   <p className="text-xs text-gray-400">{user.firstName} {user.lastName}</p>
                 </div>
               </div>

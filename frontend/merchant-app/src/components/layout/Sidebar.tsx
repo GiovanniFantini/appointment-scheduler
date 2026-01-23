@@ -225,7 +225,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <span className="font-bold text-lg gradient-text">Business Hub</span>
+              <span className="font-bold text-lg gradient-text">Hub Business</span>
             </div>
           )}
           <button

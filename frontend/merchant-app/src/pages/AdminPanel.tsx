@@ -80,7 +80,7 @@ function AdminPanel({ user, onLogout }: AdminPanelProps) {
   }
 
   return (
-    <AppLayout user={user} onLogout={onLogout} pageTitle="Admin Panel">
+    <AppLayout user={user} onLogout={onLogout} pageTitle="Pannello Admin">
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6 flex gap-4">
           <button

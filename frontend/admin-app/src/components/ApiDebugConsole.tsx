@@ -192,7 +192,7 @@ function ApiDebugConsole() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-4 right-4 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all z-50"
-        title="API Debug Console"
+        title="Console Debug API"
       >
         {isOpen ? '✕' : '🔧'}
       </button>
@@ -201,7 +201,7 @@ function ApiDebugConsole() {
       {isOpen && (
         <div className="fixed bottom-20 right-4 bg-white border-2 border-gray-300 rounded-lg shadow-2xl p-4 w-[500px] max-h-[600px] overflow-y-auto z-50">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-bold text-gray-800">API Debug Console</h3>
+            <h3 className="text-lg font-bold text-gray-800">Console Debug API</h3>
             <button
               onClick={checkApiConfiguration}
               disabled={loading}
@@ -282,7 +282,7 @@ function ApiDebugConsole() {
                   {getStatusIcon(debugInfo.apiHealth.status)}
                 </span>
                 <div className="flex-1">
-                  <div className="text-xs font-semibold text-gray-700">Backend Health Check</div>
+                  <div className="text-xs font-semibold text-gray-700">Controllo Salute Backend</div>
                   <div className="text-xs text-gray-600 break-words">{debugInfo.apiHealth.message}</div>
                 </div>
               </div>
@@ -292,7 +292,7 @@ function ApiDebugConsole() {
                   {getStatusIcon(debugInfo.proxyTest.status)}
                 </span>
                 <div className="flex-1">
-                  <div className="text-xs font-semibold text-gray-700">Login Endpoint Test</div>
+                  <div className="text-xs font-semibold text-gray-700">Test Endpoint Login</div>
                   <div className="text-xs text-gray-600 break-words">{debugInfo.proxyTest.message}</div>
                 </div>
               </div>

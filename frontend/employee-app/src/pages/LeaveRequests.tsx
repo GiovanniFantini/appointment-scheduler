@@ -107,20 +107,6 @@ export default function LeaveRequests({ user, onLogout }: LeaveRequestsProps) {
     }
   };
 
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    switch (type) {
-      case LeaveType.Ferie: return 'Ferie';
-      case LeaveType.ROL: return 'ROL';
-      case LeaveType.PAR: return 'PAR';
-      case LeaveType.Malattia: return 'Malattia';
-      case LeaveType.ExFestivita: return 'Ex-festività';
-      case LeaveType.Welfare: return 'Welfare';
-      case LeaveType.Permesso: return 'Permesso';
-      case LeaveType.Altro: return 'Altro';
-      default: return 'Sconosciuto';
-    }
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('it-IT', {
       day: '2-digit',

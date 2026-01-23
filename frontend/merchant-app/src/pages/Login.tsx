@@ -49,7 +49,7 @@ function Login({ onLogin }: LoginProps) {
               </svg>
             </div>
             <h1 className="text-4xl font-bold gradient-text mb-2">
-              Merchant Dashboard
+              Dashboard Esercente
             </h1>
             <p className="text-gray-400 text-sm">Gestisci il tuo business con intelligenza</p>
           </div>

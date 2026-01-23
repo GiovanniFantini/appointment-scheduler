@@ -162,8 +162,8 @@ function Services({ user, onLogout }: ServicesProps) {
                     <option value={1}>🍝 Ristorante</option>
                     <option value={2}>⚽ Sport</option>
                     <option value={3}>💆 Wellness</option>
-                    <option value={4}>🏥 Healthcare</option>
-                    <option value={5}>💼 Professional</option>
+                    <option value={4}>🏥 Sanitario</option>
+                    <option value={5}>💼 Professionale</option>
                   </select>
                 </div>
               </div>

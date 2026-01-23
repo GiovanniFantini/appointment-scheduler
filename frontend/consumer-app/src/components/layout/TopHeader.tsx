@@ -20,7 +20,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <span className="text-lg font-bold gradient-text">Consumer Dashboard</span>
+                <span className="text-lg font-bold gradient-text">Dashboard Cliente</span>
               </div>
             )}
           </div>
@@ -32,7 +32,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <span className="font-bold gradient-text">Consumer Hub</span>
+            <span className="font-bold gradient-text">Area Cliente</span>
           </div>
 
           {/* Right Actions */}
@@ -50,7 +50,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                     <p className="text-sm font-semibold text-white">
                       {user.firstName} {user.lastName}
                     </p>
-                    <p className="text-xs text-gray-400">Consumer</p>
+                    <p className="text-xs text-gray-400">Cliente</p>
                   </div>
                 </div>
               </div>
