@@ -71,20 +71,53 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </button>
 
-          {/* Placeholder Cards */}
-          <div className="glass-card p-6 rounded-2xl border border-white/10 opacity-50 cursor-not-allowed">
+          {/* Card I Miei Turni */}
+          <button
+            onClick={() => navigate('/my-shifts')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-blue transition-all duration-300 transform hover:scale-105 text-left border border-white/10"
+          >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-green/20 to-neon-cyan/20 border border-neon-green/30">
-                <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-blue/20 to-neon-purple/20 border border-neon-blue/30">
+                <svg className="w-8 h-8 text-neon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">I Miei Turni</h3>
-                <p className="text-gray-400 text-sm">Prossimamente</p>
+                <p className="text-gray-400 text-sm">Visualizza il tuo calendario</p>
               </div>
             </div>
-          </div>
+            <div className="flex items-center text-neon-blue text-sm font-semibold">
+              Vai ai turni
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
+          {/* Card Ferie e Permessi */}
+          <button
+            onClick={() => navigate('/leave-requests')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-pink transition-all duration-300 transform hover:scale-105 text-left border border-white/10"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-pink/20 to-red-500/20 border border-neon-pink/30">
+                <svg className="w-8 h-8 text-neon-pink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Ferie e Permessi</h3>
+                <p className="text-gray-400 text-sm">Gestisci le tue richieste</p>
+              </div>
+            </div>
+            <div className="flex items-center text-neon-pink text-sm font-semibold">
+              Vai alle richieste
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
 
           <button
             onClick={() => navigate('/documents')}
@@ -118,11 +151,10 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           </p>
           <ul className="list-disc list-inside text-gray-300 space-y-2">
             <li><strong className="text-neon-green">Timbratura intelligente</strong> - Check-in/out con sistema empatico e auto-validazione</li>
-            <li>Visualizzare i tuoi colleghi</li>
-            <li>Vedere le informazioni di contatto dei tuoi colleghi</li>
+            <li><strong className="text-neon-blue">I tuoi turni</strong> - Visualizza il calendario e pianifica il tuo lavoro</li>
+            <li><strong className="text-neon-pink">Ferie e permessi</strong> - Richiedi e gestisci le tue assenze</li>
+            <li>Visualizzare i tuoi colleghi e le informazioni di contatto</li>
             <li><strong className="text-neon-purple">I tuoi documenti HR</strong> - Buste paga, contratti e documenti payroll</li>
-            <li>Gestire il tuo profilo (prossimamente)</li>
-            <li>Visualizzare i tuoi turni (prossimamente)</li>
           </ul>
         </div>
 

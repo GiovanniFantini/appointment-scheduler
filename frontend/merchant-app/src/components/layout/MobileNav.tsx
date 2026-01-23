@@ -79,7 +79,9 @@ const menuSections = [
     title: 'Risorse Umane',
     items: [
       { path: '/timbrature', label: 'Timbrature', icon: '⏱️' },
-      { path: '/hr-documents', label: 'Documenti HR', icon: '📄' }
+      { path: '/hr-documents', label: 'Documenti HR', icon: '📄' },
+      { path: '/leave-requests', label: 'Richieste Ferie', icon: '📋' },
+      { path: '/leave-balances', label: 'Saldi Ferie', icon: '📁' }
     ]
   }
 ]
