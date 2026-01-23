@@ -34,16 +34,6 @@ interface AvailabilitiesProps {
   onLogout: () => void
 }
 
-const DAYS_OF_WEEK = [
-  { value: 0, label: 'Domenica' },
-  { value: 1, label: 'Lunedì' },
-  { value: 2, label: 'Martedì' },
-  { value: 3, label: 'Mercoledì' },
-  { value: 4, label: 'Giovedì' },
-  { value: 5, label: 'Venerdì' },
-  { value: 6, label: 'Sabato' }
-]
-
 function Availabilities({ user, onLogout }: AvailabilitiesProps) {
   const [services, setServices] = useState<Service[]>([])
   const [availabilities, setAvailabilities] = useState<Availability[]>([])
@@ -100,63 +90,6 @@ function Availabilities({ user, onLogout }: AvailabilitiesProps) {
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    const requestData = {
-      serviceId: formData.serviceId,
-      isRecurring: formData.isRecurring,
-      dayOfWeek: formData.isRecurring ? formData.dayOfWeek : null,
-      specificDate: !formData.isRecurring ? formData.specificDate : null,
-      startTime: formData.startTime,
-      endTime: formData.endTime,
-      maxCapacity: formData.maxCapacity ? parseInt(formData.maxCapacity) : null
-    }
-
-    try {
-      await apiClient.post('/availability', requestData)
-      fetchData()
-      setShowForm(false)
-      resetForm()
-      alert('Disponibilità creata con successo!')
-    } catch (err: any) {
-      alert(err.response?.data || 'Errore nella creazione della disponibilità')
-    }
-  }
-
-  const handleAddSlot = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedAvailability) return
-
-    const slots = [{
-      slotTime: slotFormData.slotTime,
-      maxCapacity: slotFormData.maxCapacity ? parseInt(slotFormData.maxCapacity) : null
-    }]
-
-    try {
-      await apiClient.post(`/availability/${selectedAvailability.id}/slots`, slots)
-      fetchData()
-      setShowSlotForm(false)
-      setSelectedAvailability(null)
-      setSlotFormData({ slotTime: '09:00', maxCapacity: '' })
-      alert('Slot aggiunto con successo!')
-    } catch (err: any) {
-      alert(err.response?.data || 'Errore nell\'aggiunta dello slot')
-    }
-  }
-
-  const handleDelete = async (id: number) => {
-    if (!confirm('Sei sicuro di voler eliminare questa disponibilità?')) return
-
-    try {
-      await apiClient.delete(`/availability/${id}`)
-      fetchData()
-      alert('Disponibilità eliminata!')
-    } catch (err: any) {
-      alert(err.response?.data || 'Errore nell\'eliminazione')
-    }
-  }
-
   const resetForm = () => {
     setFormData({
       serviceId: 0,
@@ -171,10 +104,6 @@ function Availabilities({ user, onLogout }: AvailabilitiesProps) {
 
   const getServiceName = (serviceId: number) => {
     return services.find(s => s.id === serviceId)?.name || 'Sconosciuto'
-  }
-
-  const getServiceBookingMode = (serviceId: number) => {
-    return services.find(s => s.id === serviceId)?.bookingMode || 1
   }
 
 return (
