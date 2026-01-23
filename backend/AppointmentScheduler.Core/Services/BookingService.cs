@@ -86,9 +86,9 @@ public class BookingService : IBookingService
         {
             UserId = userId,
             ServiceId = request.ServiceId,
-            BookingDate = request.BookingDate,
-            StartTime = request.StartTime,
-            EndTime = request.EndTime,
+            BookingDate = DateTime.SpecifyKind(request.BookingDate, DateTimeKind.Utc),
+            StartTime = DateTime.SpecifyKind(request.StartTime, DateTimeKind.Utc),
+            EndTime = DateTime.SpecifyKind(request.EndTime, DateTimeKind.Utc),
             NumberOfPeople = request.NumberOfPeople,
             Notes = request.Notes,
             Status = BookingStatus.Pending,
