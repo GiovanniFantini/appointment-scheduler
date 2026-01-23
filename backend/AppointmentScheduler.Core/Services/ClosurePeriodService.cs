@@ -56,8 +56,8 @@ public class ClosurePeriodService : IClosurePeriodService
         var closurePeriod = new ClosurePeriod
         {
             MerchantId = merchantId,
-            StartDate = dto.StartDate.Date, // Ensure we store only the date part
-            EndDate = dto.EndDate.Date,
+            StartDate = DateTime.SpecifyKind(dto.StartDate.Date, DateTimeKind.Utc),
+            EndDate = DateTime.SpecifyKind(dto.EndDate.Date, DateTimeKind.Utc),
             Reason = dto.Reason,
             Description = dto.Description,
             IsActive = true,
@@ -80,10 +80,10 @@ public class ClosurePeriodService : IClosurePeriodService
 
         // Update only provided fields
         if (dto.StartDate.HasValue)
-            closurePeriod.StartDate = dto.StartDate.Value.Date;
+            closurePeriod.StartDate = DateTime.SpecifyKind(dto.StartDate.Value.Date, DateTimeKind.Utc);
 
         if (dto.EndDate.HasValue)
-            closurePeriod.EndDate = dto.EndDate.Value.Date;
+            closurePeriod.EndDate = DateTime.SpecifyKind(dto.EndDate.Value.Date, DateTimeKind.Utc);
 
         if (dto.Reason != null)
             closurePeriod.Reason = dto.Reason;
