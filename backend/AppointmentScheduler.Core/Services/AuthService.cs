@@ -37,7 +37,16 @@ public class AuthService : IAuthService
 
         // Costruisci la lista di ruoli basata sui flags
         var roles = GetUserRoles(user);
-        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id);
+
+        // Se l'utente è un employee, trova il primo employee record attivo
+        int? employeeId = null;
+        if (user.IsEmployee && user.Employees != null && user.Employees.Any())
+        {
+            var activeEmployee = user.Employees.FirstOrDefault(e => e.IsActive);
+            employeeId = activeEmployee?.Id;
+        }
+
+        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id, employeeId);
 
         return new AuthResponse
         {
@@ -52,7 +61,7 @@ public class AuthService : IAuthService
             IsMerchant = user.IsMerchant,
             IsEmployee = user.IsEmployee,
             MerchantId = user.Merchant?.Id
-            // Note: EmployeeId rimosso perché un employee può lavorare per multipli merchant
+            // Note: EmployeeId rimosso dalla response perché un employee può lavorare per multipli merchant
         };
     }
 
@@ -166,9 +175,10 @@ public class AuthService : IAuthService
             await _context.SaveChangesAsync();
         }
 
-        // Genera il token (senza EmployeeId/MerchantId specifici se multipli)
+        // Genera il token - se ci sono employee records collegati, usa il primo
         var roles = GetUserRoles(user);
-        var token = GenerateJwtToken(user.Id, user.Email, roles);
+        int? employeeId = pendingEmployees.Any() ? pendingEmployees.First().Id : null;
+        var token = GenerateJwtToken(user.Id, user.Email, roles, null, employeeId);
 
         return new AuthResponse
         {
