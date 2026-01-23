@@ -32,7 +32,7 @@ const quickNavItems: QuickNavItem[] = [
     )
   },
   {
-    path: '/shifts',
+    path: '/my-shifts',
     label: 'I Miei Turni',
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,7 +56,8 @@ const menuSections = [
     title: 'Il Mio Lavoro',
     items: [
       { path: '/timbratura', label: 'Timbratura', icon: '⏱️' },
-      { path: '/shifts', label: 'I Miei Turni', icon: '📋' }
+      { path: '/my-shifts', label: 'I Miei Turni', icon: '📋' },
+      { path: '/leave-requests', label: 'Ferie e Permessi', icon: '🏖️' }
     ]
   },
   {
