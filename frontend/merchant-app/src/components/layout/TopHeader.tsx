@@ -22,7 +22,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <span className="text-lg font-bold gradient-text">Business Dashboard</span>
+                <span className="text-lg font-bold gradient-text">Dashboard Business</span>
               </div>
             )}
           </div>
@@ -34,7 +34,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="font-bold gradient-text">Business Hub</span>
+            <span className="font-bold gradient-text">Hub Business</span>
           </div>
 
           {/* Right Actions */}
@@ -52,7 +52,7 @@ export default function TopHeader({ user, onLogout, pageTitle }: TopHeaderProps)
                     <p className="text-sm font-semibold text-white">
                       {user.firstName} {user.lastName}
                     </p>
-                    <p className="text-xs text-gray-400">{user.role || 'Merchant'}</p>
+                    <p className="text-xs text-gray-400">{user.role || 'Esercente'}</p>
                   </div>
                 </div>
               </div>

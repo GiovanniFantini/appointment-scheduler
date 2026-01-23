@@ -14,7 +14,7 @@ function VersionInfo() {
 
   const [version, setVersion] = useState<VersionData>({
     frontend: `${frontendVersion}+${gitCommit}`,
-    backend: 'Loading...',
+    backend: 'Caricamento...',
     environment: import.meta.env.MODE || 'development'
   })
 
@@ -31,7 +31,7 @@ function VersionInfo() {
       } catch (error) {
         setVersion(prev => ({
           ...prev,
-          backend: 'N/A'
+          backend: 'N.D.'
         }))
       }
     }

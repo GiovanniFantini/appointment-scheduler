@@ -11,7 +11,7 @@ interface LeaveRequestsProps {
   onLogout: () => void;
 }
 
-export default function LeaveRequests({ user, onLogout }: LeaveRequestsProps) {
+export default function LeaveRequests({ }: LeaveRequestsProps) {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');

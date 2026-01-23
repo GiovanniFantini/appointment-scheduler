@@ -970,11 +970,6 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                       <p className="text-cyan-400 text-xs mt-1">{editForm.employeeIds.length} dipendente/i selezionato/i</p>
                     )}
                   </div>
-                          {emp.fullName}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4">

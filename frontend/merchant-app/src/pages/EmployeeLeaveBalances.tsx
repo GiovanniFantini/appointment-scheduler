@@ -18,7 +18,7 @@ interface EmployeeLeaveBalancesProps {
   onLogout: () => void;
 }
 
-export default function EmployeeLeaveBalances({ user, onLogout }: EmployeeLeaveBalancesProps) {
+export default function EmployeeLeaveBalances({ }: EmployeeLeaveBalancesProps) {
   const [balances, setBalances] = useState<EmployeeLeaveBalance[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(false);
@@ -112,20 +112,6 @@ export default function EmployeeLeaveBalances({ user, onLogout }: EmployeeLeaveB
       totalDays: 0,
       notes: ''
     });
-  };
-
-  const getLeaveTypeLabel = (type: LeaveType) => {
-    switch (type) {
-      case LeaveType.Ferie: return 'Ferie';
-      case LeaveType.ROL: return 'ROL';
-      case LeaveType.PAR: return 'PAR';
-      case LeaveType.Malattia: return 'Malattia';
-      case LeaveType.ExFestivita: return 'Ex-festività';
-      case LeaveType.Welfare: return 'Welfare';
-      case LeaveType.Permesso: return 'Permesso';
-      case LeaveType.Altro: return 'Altro';
-      default: return 'Sconosciuto';
-    }
   };
 
   // Raggruppa i saldi per dipendente

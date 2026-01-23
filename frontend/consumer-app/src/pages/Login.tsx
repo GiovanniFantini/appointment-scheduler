@@ -49,7 +49,7 @@ function Login({ onLogin }: LoginProps) {
               </svg>
             </div>
             <h1 className="text-4xl font-bold gradient-text mb-2">
-              Appointment Scheduler
+              Sistema Appuntamenti
             </h1>
             <p className="text-gray-400 text-sm">Sistema di Prenotazioni Futuristico</p>
           </div>
