@@ -39,21 +39,6 @@ function Availabilities({ user, onLogout }: AvailabilitiesProps) {
   const [availabilities, setAvailabilities] = useState<Availability[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [showSlotForm, setShowSlotForm] = useState(false)
-  const [selectedAvailability, setSelectedAvailability] = useState<Availability | null>(null)
-  const [formData, setFormData] = useState({
-    serviceId: 0,
-    isRecurring: true,
-    dayOfWeek: 1,
-    specificDate: '',
-    startTime: '09:00',
-    endTime: '18:00',
-    maxCapacity: ''
-  })
-  const [slotFormData, setSlotFormData] = useState({
-    slotTime: '09:00',
-    maxCapacity: ''
-  })
 
   useEffect(() => {
     fetchData()
@@ -88,18 +73,6 @@ function Availabilities({ user, onLogout }: AvailabilitiesProps) {
     } finally {
       setLoading(false)
     }
-  }
-
-  const resetForm = () => {
-    setFormData({
-      serviceId: 0,
-      isRecurring: true,
-      dayOfWeek: 1,
-      specificDate: '',
-      startTime: '09:00',
-      endTime: '18:00',
-      maxCapacity: ''
-    })
   }
 
   const getServiceName = (serviceId: number) => {
@@ -147,12 +120,6 @@ return (
           {showForm && (
             <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10">
               {/* FORM CREA DISPONIBILITÀ */}
-            </div>
-          )}
-
-          {showSlotForm && selectedAvailability && (
-            <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10">
-              {/* FORM SLOT */}
             </div>
           )}
 
