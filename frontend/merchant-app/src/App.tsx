@@ -16,6 +16,7 @@ import TimbratureValidation from './pages/TimbratureValidation'
 import HRDocuments from './pages/HRDocuments'
 import LeaveRequests from './pages/LeaveRequests'
 import EmployeeLeaveBalances from './pages/EmployeeLeaveBalances'
+import { ToastProvider } from './components/Toast'
 
 interface User {
   userId: number
@@ -73,61 +74,63 @@ function App() {
   }
 
   return (
-    <Router>
-        <Routes>
-          <Route path="/login" element={
-            user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-          } />
-          <Route path="/register" element={
-            user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
-          } />
-          <Route path="/" element={
-            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/admin" element={
-            user && user.isAdmin ? <AdminPanel user={user} onLogout={handleLogout} /> : <Navigate to="/" />
-          } />
-          <Route path="/services" element={
-            user ? <Services user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/bookings" element={
-            user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/availabilities" element={
-            user ? <Availabilities user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/employees" element={
-            user ? <Employees user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/business-hours" element={
-            user ? <BusinessHours user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/closures" element={
-            user ? <ClosurePeriods user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/shifts" element={
-            user ? <Shifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/shift-templates" element={
-            user ? <ShiftTemplates user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/timbrature" element={
-            user ? <TimbratureValidation user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/hr-documents" element={
-            user ? <HRDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/leave-requests" element={
-            user ? <LeaveRequests user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/leave-balances" element={
-            user ? <EmployeeLeaveBalances user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-          <Route path="/dashboard" element={
-            user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-          } />
-        </Routes>
-      </Router>
+    <ToastProvider>
+      <Router>
+          <Routes>
+            <Route path="/login" element={
+              user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
+            } />
+            <Route path="/register" element={
+              user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
+            } />
+            <Route path="/" element={
+              user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/admin" element={
+              user && user.isAdmin ? <AdminPanel user={user} onLogout={handleLogout} /> : <Navigate to="/" />
+            } />
+            <Route path="/services" element={
+              user ? <Services user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/bookings" element={
+              user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/availabilities" element={
+              user ? <Availabilities user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/employees" element={
+              user ? <Employees user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/business-hours" element={
+              user ? <BusinessHours user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/closures" element={
+              user ? <ClosurePeriods user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/shifts" element={
+              user ? <Shifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/shift-templates" element={
+              user ? <ShiftTemplates user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/timbrature" element={
+              user ? <TimbratureValidation user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/hr-documents" element={
+              user ? <HRDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/leave-requests" element={
+              user ? <LeaveRequests user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/leave-balances" element={
+              user ? <EmployeeLeaveBalances user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/dashboard" element={
+              user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+          </Routes>
+        </Router>
+    </ToastProvider>
   )
 }
 
