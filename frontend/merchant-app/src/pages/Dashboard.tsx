@@ -12,7 +12,7 @@ interface DashboardProps {
 function Dashboard({ user, onLogout }: DashboardProps) {
   return (
     <AppLayout user={user} onLogout={onLogout}>
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-12 text-center animate-fade-in">
           <h2 className="text-5xl font-bold gradient-text mb-4">Benvenuto nel tuo Centro di Controllo</h2>
