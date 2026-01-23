@@ -126,6 +126,9 @@ try
     builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IFileStorageService, AppointmentScheduler.Core.Services.AzureBlobStorageService>();
     builder.Services.AddScoped<IHRDocumentService, HRDocumentService>();
 
+    // Leave & Availability Management
+    builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
+
     Console.WriteLine("Application services registered");
 
     // JWT Authentication

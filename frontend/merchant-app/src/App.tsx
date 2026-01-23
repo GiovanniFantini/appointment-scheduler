@@ -14,6 +14,8 @@ import Shifts from './pages/Shifts'
 import ShiftTemplates from './pages/ShiftTemplates'
 import TimbratureValidation from './pages/TimbratureValidation'
 import HRDocuments from './pages/HRDocuments'
+import LeaveRequests from './pages/LeaveRequests'
+import EmployeeLeaveBalances from './pages/EmployeeLeaveBalances'
 
 interface User {
   userId: number
@@ -114,6 +116,12 @@ function App() {
           } />
           <Route path="/hr-documents" element={
             user ? <HRDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/leave-requests" element={
+            user ? <LeaveRequests user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+          } />
+          <Route path="/leave-balances" element={
+            user ? <EmployeeLeaveBalances user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
           <Route path="/dashboard" element={
             user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
