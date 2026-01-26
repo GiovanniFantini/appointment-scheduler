@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 
 // Ensure API_URL has a protocol (https://)
-let API_URL = process.env.API_URL || 'https://appointment-scheduler-api.azurewebsites.net/api';
+let API_URL = process.env.API_URL || 'https://appointment-scheduler-api.azurewebsites.net';
 if (API_URL && !API_URL.startsWith('http://') && !API_URL.startsWith('https://')) {
   API_URL = `https://${API_URL}`;
 }
