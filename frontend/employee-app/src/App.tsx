@@ -8,6 +8,7 @@ import MyShifts from './pages/MyShifts'
 import Timbratura from './pages/Timbratura'
 import MyDocuments from './pages/MyDocuments'
 import LeaveRequests from './pages/LeaveRequests'
+import Reports from './pages/Reports'
 
 interface User {
   userId: number
@@ -90,6 +91,9 @@ function App() {
         } />
         <Route path="/leave-requests" element={
           user ? <LeaveRequests user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/reports" element={
+          user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>

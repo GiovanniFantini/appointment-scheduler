@@ -129,6 +129,9 @@ try
     // Leave & Availability Management
     builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 
+    // Reporting System
+    builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IReportService, AppointmentScheduler.Core.Services.ReportService>();
+
     Console.WriteLine("Application services registered");
 
     // JWT Authentication

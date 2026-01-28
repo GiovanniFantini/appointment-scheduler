@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import MerchantApproval from './pages/MerchantApproval'
+import Reports from './pages/Reports'
 
 interface User {
   userId: number
@@ -70,6 +71,9 @@ function App() {
         } />
         <Route path="/merchants" element={
           user ? <MerchantApproval user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/reports" element={
+          user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
       </Routes>
     </Router>
