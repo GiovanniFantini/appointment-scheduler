@@ -16,6 +16,7 @@ import TimbratureValidation from './pages/TimbratureValidation'
 import HRDocuments from './pages/HRDocuments'
 import LeaveRequests from './pages/LeaveRequests'
 import EmployeeLeaveBalances from './pages/EmployeeLeaveBalances'
+import Reports from './pages/Reports'
 import { ToastProvider } from './components/Toast'
 
 interface User {
@@ -124,6 +125,9 @@ function App() {
             } />
             <Route path="/leave-balances" element={
               user ? <EmployeeLeaveBalances user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } />
+            <Route path="/reports" element={
+              user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             } />
             <Route path="/dashboard" element={
               user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
