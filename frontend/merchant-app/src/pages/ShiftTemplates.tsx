@@ -10,8 +10,8 @@ interface ShiftTemplatesProps {
 }
 
 const SHIFT_COLORS = [
-  '#2196F3', '#4CAF50', '#FF9800', '#9C27B0', '#F44336',
-  '#00BCD4', '#8BC34A', '#FFC107', '#E91E63', '#3F51B5'
+  '#00d4ff', '#b24bf3', '#ff2e97', '#00fff9', '#39ff14',
+  '#fffc00', '#ff6b35', '#ff1744', '#7c4dff', '#00e5ff'
 ];
 
 const SHIFT_TYPE_LABELS: Record<ShiftType, string> = {
