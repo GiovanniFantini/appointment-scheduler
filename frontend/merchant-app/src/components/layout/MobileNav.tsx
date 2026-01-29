@@ -83,6 +83,12 @@ const menuSections = [
       { path: '/leave-requests', label: 'Richieste Ferie', icon: '📋' },
       { path: '/leave-balances', label: 'Saldi Ferie', icon: '📁' }
     ]
+  },
+  {
+    title: 'Reportistica',
+    items: [
+      { path: '/reports', label: 'Report & Statistiche', icon: '📊' }
+    ]
   }
 ]
 

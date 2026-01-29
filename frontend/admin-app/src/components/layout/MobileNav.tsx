@@ -39,6 +39,12 @@ const menuSections = [
     items: [
       { path: '/merchants', label: 'Merchant', icon: '🏢' }
     ]
+  },
+  {
+    title: 'Reportistica',
+    items: [
+      { path: '/reports', label: 'Report Globali', icon: '📊' }
+    ]
   }
 ]
 

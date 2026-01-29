@@ -71,6 +71,12 @@ const menuSections = [
     items: [
       { path: '/documents', label: 'I Miei Documenti', icon: '📄' }
     ]
+  },
+  {
+    title: 'Reportistica',
+    items: [
+      { path: '/reports', label: 'I Miei Report', icon: '📊' }
+    ]
   }
 ]
 
