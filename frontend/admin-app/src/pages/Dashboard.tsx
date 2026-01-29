@@ -81,10 +81,13 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6">
+          <Link
+            to="/reports"
+            className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow"
+          >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-800">
-                Statistiche
+                Report Globali
               </h2>
               <svg
                 className="w-8 h-8 text-green-600"
@@ -103,10 +106,10 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <p className="text-gray-600">
               Analytics e report della piattaforma
             </p>
-            <div className="mt-4 text-gray-400 text-sm">
-              Prossimamente disponibile
+            <div className="mt-4 text-green-600 font-semibold">
+              Vai ai report →
             </div>
-          </div>
+          </Link>
 
           <div className="bg-white rounded-lg shadow-lg p-6">
             <div className="flex items-center justify-between mb-4">

@@ -145,6 +145,20 @@ function Dashboard({ user, onLogout }: DashboardProps) {
             <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-pink transition-colors">Documenti HR</h2>
             <p className="text-gray-400">Buste paga e documenti payroll</p>
           </Link>
+
+          <Link
+            to="/reports"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-cyan/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.9s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-cyan/20 to-neon-blue/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-cyan/30 group-hover:shadow-glow-cyan transition-all">
+              <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-cyan transition-colors">Report & Statistiche</h2>
+            <p className="text-gray-400">Analytics e statistiche del business</p>
+          </Link>
         </div>
 
         {/* Info Panel */}
