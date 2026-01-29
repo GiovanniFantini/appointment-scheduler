@@ -3,7 +3,7 @@ using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
-using ClosedXML.Workbook;
+using ClosedXML.Excel;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
