@@ -2,16 +2,20 @@
 
 Piattaforma di prenotazione multi-verticale (B2C e B2B) che centralizza l'esperienza di prenotazione per utenti finali e gestione business per merchant.
 
-**🚀 Stato Produzione**: Applicazione deployata su Azure con 5 App Services + PostgreSQL Database
+**Stato Produzione**: Applicazione deployata su Azure con 5 App Services + PostgreSQL Database
 
 ## Documentazione
 
 - **[SETUP.md](SETUP.md)** - Setup completo ambiente di sviluppo (INIZIA QUI)
+- **[MANUALE_UTENTE.md](MANUALE_UTENTE.md)** - Guida utente completa per tutti i ruoli
 - **[PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md)** - Coding standards e best practices
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Soluzioni ai problemi comuni
 - **[VERSIONING.md](VERSIONING.md)** - Sistema di versioning Git-based
 - **[PRODUCTION_ARCHITECTURE.md](PRODUCTION_ARCHITECTURE.md)** - Architettura Azure e deployment
+- **[MARKET_ANALYSIS.md](MARKET_ANALYSIS.md)** - Analisi di mercato e competitor
 - **[backend/CONFIGURATION.md](backend/CONFIGURATION.md)** - Gestione configurazioni e secrets
+- **[docs/ERP_HR_PAYROLL_SETUP_GUIDE.md](docs/ERP_HR_PAYROLL_SETUP_GUIDE.md)** - Setup modulo HR Documents
+- **[docs/ERP_HR_PAYROLL_TECHNICAL_SPEC.md](docs/ERP_HR_PAYROLL_TECHNICAL_SPEC.md)** - Specifica tecnica HR Documents
 
 ## Inizio Rapido
 
@@ -50,16 +54,94 @@ Vai su:
 
 Per istruzioni dettagliate: [SETUP.md](SETUP.md)
 
-## 🎯 Obiettivo del Progetto
+## Obiettivo del Progetto
 
 Creare una Web App mobile-ready multi-direzionale che:
 - **B2C**: Permette agli utenti di prenotare servizi (ristoranti, sport, wellness, ecc.)
 - **B2B**: Fornisce ai merchant strumenti per gestire prenotazioni e business
-- **B2B2E**: Gestione completa dipendenti con timbrature, turni e coordinamento
-- **Multi-verticale**: Gestisce diversi settori in un unico ecosistema
+- **B2B2E**: Gestione completa dipendenti con timbrature, turni, ferie, HR e coordinamento
+- **Multi-verticale**: Gestisce diversi settori in un unico ecosistema (6 verticali)
 - **Cloud-Native**: Deployato su Azure con CI/CD automatico
 
-## 🏗️ Architettura
+## Feature Implementate
+
+### Sistema Prenotazioni (B2C)
+- Registrazione/Login utenti con JWT
+- Esplorazione servizi per categoria (Restaurant, Sport, Wellness, Healthcare, Professional, Other)
+- 3 modalita' di prenotazione: TimeSlot (slot fissi), TimeRange (intervallo), DayOnly (giornaliero)
+- Gestione prenotazioni con stati (Pending, Confirmed, Cancelled, Completed, NoShow)
+- Storico prenotazioni personali
+
+### Gestione Merchant (B2B)
+- Dashboard con statistiche e KPI
+- CRUD completo servizi con configurazione JSON flessibile
+- Calendario disponibilita' multi-modalita'
+- Gestione orari apertura (Business Hours)
+- Periodi di chiusura (vacanze, manutenzione)
+- Approvazione prenotazioni
+- Report e analytics con export PDF/Excel
+
+### Sistema HR e Dipendenti (B2B2E)
+- **Gestione Dipendenti**: CRUD completo con badge code, ruoli, dati anagrafici
+- **Multi-merchant**: Un dipendente puo' lavorare per piu' merchant
+- **Timbrature Smart**: Check-in/out con auto-validazione 95%, tolerance 15 minuti
+- **Rilevamento Anomalie**: EarlyCheckIn, LateCheckIn, ExcessiveBreak, NoBreak, OverworkAlert
+- **Messaggi Empatici**: Feedback positivo e suggerimenti break
+- **Self-correction**: Correzione autonoma entro 24 ore
+- **Wellbeing Alert**: Notifica dopo 50 ore lavoro settimanali
+
+### Gestione Turni
+- CRUD turni con assegnazione multi-dipendente (many-to-many)
+- Template turni ricorrenti per giorno della settimana
+- Applicazione batch template su range date
+- Scambio turni tra colleghi con approvazione merchant
+- Tipi turno: Morning, Afternoon, Night, Full
+- Stati validazione: Pending, Approved, Rejected, Manual
+
+### Ferie e Permessi
+- Richiesta ferie con calcolo giorni automatico
+- Tipi: AnnualLeave, SickLeave, PersonalLeave, MaternityLeave, UnpaidLeave
+- Workflow approvazione merchant
+- Tracciamento saldo ferie per dipendente
+- Storico richieste
+
+### Limiti Orari Lavorativi
+- Configurazione max ore per giorno/settimana/mese
+- Alert automatici al superamento soglie
+- Tracciamento overtime records
+
+### HR Documents Management
+- Upload documenti PDF/Excel (buste paga, contratti, valutazioni)
+- Versioning automatico con storico modifiche
+- Stati documento: Draft, Finalized, Archived
+- Azure Blob Storage con SAS token (expiration 5 min)
+- Filtri per dipendente, tipo, anno/mese, status
+- GDPR-compliant con audit trail
+
+### Reportistica Avanzata
+- Dashboard merchant con KPI real-time
+- Dashboard dipendente con statistiche personali
+- Dashboard admin con metriche piattaforma
+- Report presenze dettagliato
+- Report payroll con totali ore e overtime
+- Report prenotazioni con conversion rate
+- Export PDF/Excel
+
+## Statistiche Progetto
+
+| Metrica | Valore |
+|---------|--------|
+| Controller API | 20 |
+| Endpoint API | 119+ |
+| Servizi Business | 17 |
+| Modelli/DTO/Enums | 68 |
+| Tabelle Database | 30+ |
+| Frontend Apps | 4 |
+| Pagine Frontend | 34 |
+| Componenti React | 64 |
+| LOC Backend | ~10K |
+
+## Architettura
 
 ### Stack Tecnologico
 
@@ -92,14 +174,14 @@ appointment-scheduler/
     └── employee-app/                      # App dipendenti (porta 5176)
 ```
 
-## 👥 Ruoli Utente
+## Ruoli Utente
 
 1. **User (Consumer)**: Può solo prenotare servizi
 2. **Merchant (Business)**: Gestisce le proprie attività e prenotazioni
 3. **Employee (Dipendente)**: Gestisce turni, timbrature e colleghi
 4. **Admin**: Gestisce permessi e approva i merchant
 
-## 📊 Database Schema
+## Database Schema
 
 ### Tabelle Principali
 
@@ -157,7 +239,7 @@ appointment-scheduler/
 - Id, EmployeeId, MerchantId
 - MaxHoursPerDay, MaxHoursPerWeek, MaxHoursPerMonth
 
-## 🚀 Sviluppo
+## Sviluppo
 
 ### Prerequisiti
 
@@ -212,7 +294,7 @@ Una volta avviato il backend, vai su:
 - Swagger UI: https://localhost:5001/swagger
 - Documentazione interattiva con possibilita' di testare endpoint
 
-## 🔐 Autenticazione
+## Autenticazione
 
 Il sistema usa JWT Bearer Token:
 
@@ -227,7 +309,7 @@ Il sistema usa JWT Bearer Token:
 - **EmployeeOnly**: Employee e Admin
 - **UserOnly**: User, Merchant, Employee e Admin
 
-## 📱 Interfacce
+## Interfacce
 
 ### Lato Consumer (B2C)
 
@@ -291,7 +373,7 @@ Il sistema usa JWT Bearer Token:
 - `/my-shifts` - I miei turni
 - `/colleagues` - Colleghi
 
-## 🔧 Configurazione
+## Configurazione
 
 ### File di Configurazione
 
@@ -317,7 +399,7 @@ cp appsettings.Local.json.example appsettings.Local.json
 
 Vedi [CONFIGURATION.md](backend/CONFIGURATION.md) per dettagli completi.
 
-## 🌐 CORS
+## CORS
 
 Il backend è configurato per accettare richieste da:
 - `http://localhost:5173` (Consumer App)
@@ -327,7 +409,7 @@ Il backend è configurato per accettare richieste da:
 
 Modifica in `Program.cs` per ambiente di produzione.
 
-## 📝 API Endpoints
+## API Endpoints
 
 ### Auth
 - `POST /api/auth/login` - Login
@@ -367,7 +449,7 @@ Modifica in `Program.cs` per ambiente di produzione.
 ### System
 - `GET /api/version` - Versione applicazione
 
-## 🎨 Stili e UI
+## Stili e UI
 
 - **Tailwind CSS** per styling rapido
 - **Mobile-first** responsive design
@@ -377,46 +459,52 @@ Modifica in `Program.cs` per ambiente di produzione.
   - Admin (viola/rosso)
   - Employee (arancione/giallo)
 
-## 🔜 Roadmap
+## Roadmap
 
-### Fase 1: Core Features ✅ COMPLETATA
+### Fase 1: Core Features - COMPLETATA
 - [x] Setup progetto e architettura
-- [x] Autenticazione JWT con 3 ruoli
-- [x] Database multi-verticale
-- [x] Frontend Consumer e Merchant base
+- [x] Autenticazione JWT con 4 ruoli (Consumer, Merchant, Employee, Admin)
+- [x] Database multi-verticale (6 categorie servizi)
+- [x] Frontend 4 app separate (Consumer, Merchant, Admin, Employee)
 - [x] Admin panel per approvare merchant
 - [x] CRUD completo servizi merchant
 - [x] Sistema prenotazioni completo
 
-### Fase 2: Advanced Features ✅ COMPLETATA
-- [x] Calendario disponibilita' con slot orari (3 modalità: TimeSlot, TimeRange, DayOnly)
-- [x] Sistema gestione dipendenti (Employee App)
-- [x] Sistema timbrature smart con validazione orari
+### Fase 2: Advanced Features - COMPLETATA
+- [x] Calendario disponibilita' (3 modalita': TimeSlot, TimeRange, DayOnly)
+- [x] Sistema gestione dipendenti completo
+- [x] Sistema timbrature smart con auto-validazione 95%
 - [x] Gestione turni e template turni
 - [x] Scambio turni tra colleghi
 - [x] Periodi di chiusura merchant
 - [x] Limiti orari lavorativi dipendenti
 - [x] Orari apertura business
 - [x] Sistema versioning Git-based
-- [x] Deploy produzione su Azure (4 App Services)
-- [ ] Sistema notifiche (email/push)
-- [ ] Recensioni e rating
+- [x] Deploy produzione su Azure (5 App Services)
+- [x] Ferie e permessi con workflow approvazione
+- [x] Saldo ferie per dipendente
+- [x] HR Documents management con versioning
+- [x] Report avanzati con export PDF/Excel
+- [x] Dashboard analytics (Merchant, Employee, Admin)
+
+### Fase 3: Business Features - IN CORSO
+- [ ] Sistema notifiche (email/push/SMS)
+- [ ] Pagamenti integrati (Stripe)
+- [ ] Recensioni e rating servizi
 - [ ] Upload immagini servizi
 - [ ] Ricerca e filtri avanzati
-
-### Fase 3: Business Features
-- [ ] Pagamenti integrati (Stripe)
-- [ ] Analytics e report merchant
-- [ ] Sistema fedalta' utenti
+- [ ] Sistema fedelta' utenti
 - [ ] Promozioni e sconti
-- [ ] Export dati (CSV, PDF)
+- [ ] Geofencing timbrature
+- [ ] Waitlist auto-fill
 
-### Fase 4: Scale & Polish
-- [ ] App mobile (React Native)
+### Fase 4: Scale & AI
+- [ ] App mobile (React Native o PWA)
+- [ ] AI scheduling suggestions
 - [ ] Ottimizzazioni performance
 - [ ] Testing completo (unit + e2e)
-- [ ] CI/CD pipeline
-- [ ] Documentazione API completa
+- [ ] API pubblica con documentazione
+- [ ] Multi-lingua support
 
 ## Contribuire
 
@@ -426,7 +514,7 @@ Modifica in `Program.cs` per ambiente di produzione.
 4. Testa in locale
 5. Crea Pull Request
 
-## 🌐 Produzione e Deployment
+## Produzione e Deployment
 
 L'applicazione è deployata su **Microsoft Azure** con architettura multi-servizio:
 
