@@ -77,7 +77,7 @@ public class ReportService : IReportService
                        o.Date >= startDate &&
                        o.Date <= endDate)
             .ToListAsync();
-        var totalOvertimeHours = overtimeRecords.Sum(o => o.Minutes / 60m);
+        var totalOvertimeHours = overtimeRecords.Sum(o => o.DurationMinutes / 60m);
 
         var report = new EmployeeAttendanceReportDto
         {
@@ -94,9 +94,9 @@ public class ReportService : IReportService
             TotalHoursWorked = Math.Round(totalHoursWorked, 2),
             TotalOvertimeHours = Math.Round(totalOvertimeHours, 2),
             TotalAnomalies = anomalies.Count,
-            LateArrivals = anomalies.Count(a => a.AnomalyType == AnomalyType.LateArrival),
-            EarlyDepartures = anomalies.Count(a => a.AnomalyType == AnomalyType.EarlyDeparture),
-            UnauthorizedAbsences = anomalies.Count(a => a.AnomalyType == AnomalyType.UnauthorizedAbsence),
+            LateArrivals = anomalies.Count(a => a.Type == AnomalyType.LateCheckIn),
+            EarlyDepartures = anomalies.Count(a => a.Type == AnomalyType.EarlyCheckOut),
+            UnauthorizedAbsences = anomalies.Count(a => a.Type == AnomalyType.MissingCheckIn),
             LeaveRequestsApproved = leaveRequests.Count(lr => lr.Status == LeaveRequestStatus.Approved),
             LeaveDaysTaken = leaveRequests
                 .Where(lr => lr.Status == LeaveRequestStatus.Approved)
@@ -149,7 +149,7 @@ public class ReportService : IReportService
                     .Where(s => s.CheckInTime.HasValue && s.CheckOutTime.HasValue)
                     .Sum(s => (decimal)(s.CheckOutTime!.Value - s.CheckInTime!.Value).TotalHours),
                 HasAnomaly = dayAnomalies.Any(),
-                AnomalyType = dayAnomalies.FirstOrDefault()?.AnomalyType.ToString(),
+                AnomalyType = dayAnomalies.FirstOrDefault()?.Type.ToString(),
                 Notes = dayLeave != null ? $"Ferie: {dayLeave.LeaveType}" : mainShift?.Notes
             };
 
@@ -253,7 +253,7 @@ public class ReportService : IReportService
                 ShiftsAssigned = empShifts.Count,
                 ShiftsCompleted = empShifts.Count(s => s.IsCheckedOut),
                 HoursWorked = Math.Round(empHoursWorked, 2),
-                OvertimeHours = Math.Round(overtimeRecords.Sum(o => o.Minutes / 60m), 2),
+                OvertimeHours = Math.Round(overtimeRecords.Sum(o => o.DurationMinutes / 60m), 2),
                 AttendanceRate = empShifts.Count > 0
                     ? Math.Round((decimal)empShifts.Count(s => s.IsCheckedOut) / empShifts.Count * 100, 2)
                     : 0,
@@ -369,7 +369,7 @@ public class ReportService : IReportService
     {
         var merchants = await _context.Merchants.ToListAsync();
         var employees = await _context.Employees.ToListAsync();
-        var consumers = await _context.Users.Where(u => u.Role == UserRole.Consumer).CountAsync();
+        var consumers = await _context.Users.Where(u => u.IsConsumer).CountAsync();
 
         var shifts = await _context.Shifts
             .Where(s => s.Date >= startDate && s.Date <= endDate && s.IsActive)
