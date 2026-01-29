@@ -35,6 +35,14 @@ const COLORS = [
   '#fffc00', '#ff6b35', '#ff1744', '#7c4dff', '#00e5ff'
 ];
 
+/** Format a local Date as YYYY-MM-DD without UTC conversion */
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function Shifts({ user, onLogout }: ShiftsProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [templates, setTemplates] = useState<ShiftTemplate[]>([]);
@@ -97,8 +105,8 @@ function Shifts({ user, onLogout }: ShiftsProps) {
       const { startDate, endDate } = getDateRange();
       const response = await axios.get('/shifts/merchant', {
         params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: toLocalDateString(startDate),
+          endDate: toLocalDateString(endDate),
         },
       });
       setShifts(response.data);
@@ -170,7 +178,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
   };
 
   const getShiftsForDay = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     return shifts.filter(shift => shift.date.split('T')[0] === dateStr);
   };
 
@@ -237,7 +245,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     const targetDate = date || new Date();
     setCreateForm({
       ...createForm,
-      date: targetDate.toISOString().split('T')[0],
+      date: toLocalDateString(targetDate),
     });
     setShowCreateModal(true);
   };

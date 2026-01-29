@@ -10,6 +10,14 @@ interface MyShiftsProps {
   onLogout: () => void;
 }
 
+/** Format a local Date as YYYY-MM-DD without UTC conversion */
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export default function MyShifts({ user, onLogout }: MyShiftsProps) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [stats, setStats] = useState<EmployeeShiftStats | null>(null);
@@ -29,8 +37,8 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
       const { startDate, endDate } = getDateRange();
       const response = await axios.get('/shifts/my-shifts', {
         params: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
+          startDate: toLocalDateString(startDate),
+          endDate: toLocalDateString(endDate),
         },
       });
       setShifts(response.data);
@@ -89,7 +97,7 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
   };
 
   const getShiftsForDay = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    const dateStr = toLocalDateString(date);
     return shifts.filter(shift => shift.date.split('T')[0] === dateStr);
   };
 
