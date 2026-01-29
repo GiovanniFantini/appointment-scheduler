@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
 import apiClient from '../lib/axios'
 
 interface ApiDebugInfo {
@@ -84,15 +83,21 @@ function ApiDebugConsole() {
     }
 
     try {
-      // Test 1: Check server config endpoint
-      const configResponse = await axios.get('/api-debug/config', {
-        timeout: 5000
+      // Test 1: Check server config endpoint (non ha prefisso /api, usa fetch)
+      const controller1 = new AbortController()
+      const timeout1 = setTimeout(() => controller1.abort(), 5000)
+      const configResponse = await fetch('/api-debug/config', {
+        signal: controller1.signal
       })
+      clearTimeout(timeout1)
+
+      if (!configResponse.ok) throw new Error(`HTTP ${configResponse.status}`)
+      const configData = await configResponse.json()
 
       newDebugInfo.serverConfig = {
-        nodeEnv: configResponse.data.nodeEnv || 'unknown',
-        apiUrl: configResponse.data.apiUrl || 'unknown',
-        port: configResponse.data.port || 'unknown'
+        nodeEnv: configData.nodeEnv || 'unknown',
+        apiUrl: configData.apiUrl || 'unknown',
+        port: configData.port || 'unknown'
       }
     } catch (error: any) {
       newDebugInfo.serverConfig = {
@@ -104,25 +109,31 @@ function ApiDebugConsole() {
 
     try {
       // Test 2: Check backend API health
-      // NOTA: /health è l'unico endpoint del backend che NON ha il prefisso /api
+      // NOTA: /health è l'unico endpoint del backend che NON ha il prefisso /api, usa fetch
       const baseURL = apiClient.defaults.baseURL || ''
       const healthURL = import.meta.env.PROD
         ? baseURL.replace(/\/api$/, '/health')  // Rimuove /api e aggiunge /health
         : '/health'  // In dev, il proxy Vite gestisce correttamente /health
 
-      const apiHealthResponse = await axios.get(healthURL, {
-        timeout: 5000
+      const controller2 = new AbortController()
+      const timeout2 = setTimeout(() => controller2.abort(), 5000)
+      const apiHealthResponse = await fetch(healthURL, {
+        signal: controller2.signal
       })
+      clearTimeout(timeout2)
+
+      if (!apiHealthResponse.ok) throw new Error(`HTTP ${apiHealthResponse.status}`)
+      const healthData = await apiHealthResponse.json()
 
       newDebugInfo.apiHealth = {
         status: 'success',
-        message: `API raggiungibile: ${JSON.stringify(apiHealthResponse.data)}`,
+        message: `API raggiungibile: ${JSON.stringify(healthData)}`,
         checked: true
       }
     } catch (error: any) {
       newDebugInfo.apiHealth = {
         status: 'error',
-        message: `Errore: ${error.response?.status || 'Network error'} - ${error.message}`,
+        message: `Errore: ${error.message || 'Network error'}`,
         checked: true
       }
     }
