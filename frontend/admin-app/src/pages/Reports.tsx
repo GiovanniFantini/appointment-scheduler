@@ -316,21 +316,21 @@ function Reports({ user, onLogout }: ReportsProps) {
         {activeTab === 'global' && (
           <div className="bg-white rounded-lg shadow p-4 mb-6 flex flex-wrap gap-4 items-center">
             <div>
-              <label className="text-gray-600 text-sm">Data Inizio</label>
+              <label className="text-gray-800 text-sm font-medium">Data Inizio</label>
               <input
                 type="date"
                 value={dateRange.startDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, startDate: e.target.value }))}
-                className="ml-2 px-3 py-2 border border-gray-300 rounded-lg"
+                className="ml-2 px-3 py-2 border border-gray-300 rounded-lg text-gray-800 bg-white"
               />
             </div>
             <div>
-              <label className="text-gray-600 text-sm">Data Fine</label>
+              <label className="text-gray-800 text-sm font-medium">Data Fine</label>
               <input
                 type="date"
                 value={dateRange.endDate}
                 onChange={(e) => setDateRange(prev => ({ ...prev, endDate: e.target.value }))}
-                className="ml-2 px-3 py-2 border border-gray-300 rounded-lg"
+                className="ml-2 px-3 py-2 border border-gray-300 rounded-lg text-gray-800 bg-white"
               />
             </div>
             <button
