@@ -37,7 +37,6 @@ try
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
         {
-            options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             options.JsonSerializerOptions.Converters.Add(new TimeSpanJsonConverter());
         });
     builder.Services.AddEndpointsApiExplorer();
