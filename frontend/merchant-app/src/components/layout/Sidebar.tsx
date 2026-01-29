@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface NavItem {
   path: string
@@ -210,22 +210,23 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     )
   }
 
-  const isActive = (path: string) => {
+  const isActive = useCallback((path: string) => {
     if (path === '/') return location.pathname === '/'
     return location.pathname.startsWith(path)
-  }
+  }, [location.pathname])
 
   // Auto-expand category containing active page
   useEffect(() => {
-    // Find which category contains the active page
     for (const category of navigationConfig) {
       const hasActivePage = category.items.some(item => isActive(item.path))
 
-      if (hasActivePage && !expandedCategories.includes(category.label)) {
-        setExpandedCategories(prev => [...prev, category.label])
+      if (hasActivePage) {
+        setExpandedCategories(prev =>
+          prev.includes(category.label) ? prev : [...prev, category.label]
+        )
       }
     }
-  }, [location.pathname])
+  }, [location.pathname, isActive])
 
   return (
     <>
