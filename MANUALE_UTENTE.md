@@ -130,6 +130,65 @@ Piattaforma per la gestione di prenotazioni che connette clienti, attività comm
 **Scambi Turno:**
 - Approva richieste scambio tra dipendenti
 
+### Gestione Ferie e Permessi
+
+**Visualizzare Richieste:**
+- `/leave-requests` → Lista richieste ferie dipendenti
+- Filtra per dipendente, stato, periodo
+
+**Approvare/Rifiutare:**
+1. Seleziona richiesta Pending
+2. Verifica disponibilita' operativa
+3. Approva o Rifiuta con nota (opzionale)
+
+**Saldo Ferie:**
+- `/employee-leave-balances` → Visualizza saldo ferie ogni dipendente
+- Giorni totali, usati, rimanenti
+
+### HR Documents Management
+
+**Caricare Documento:**
+1. `/hr-documents` → Nuovo Documento
+2. Seleziona dipendente
+3. Seleziona tipo (Payslip, Contract, Performance Review, etc.)
+4. Inserisci titolo, anno, mese (per cedolini)
+5. Carica file PDF/Excel (max 10 MB)
+6. Salva → Documento disponibile per dipendente
+
+**Tipi Documento:**
+- **Payslip**: Busta paga/cedolino
+- **Contract**: Contratto di lavoro
+- **Performance Review**: Valutazione prestazioni
+- **Training Record**: Attestati formazione
+- **Certification Copy**: Copie certificati
+- **Other**: Altri documenti
+
+**Versioning:**
+- Ogni modifica crea nuova versione
+- Storico completo disponibile
+- Stati: Draft, Finalized, Archived
+
+**Filtri:**
+- Per dipendente, tipo, anno, mese, stato
+
+### Reports e Analytics
+
+**Dashboard:**
+- `/reports` → KPI in tempo reale
+- Prenotazioni totali, confermate, cancellate
+- Revenue stimato
+- Occupazione servizi
+
+**Report Presenze:**
+- Report dettagliato per dipendente
+- Ore lavorate, anomalie, overtime
+- Export PDF/Excel
+
+**Report Payroll:**
+- Totali ore per periodo
+- Overtime calcolato
+- Pronto per elaborazione stipendi
+
 ---
 
 ## Dipendenti
@@ -183,6 +242,55 @@ Piattaforma per la gestione di prenotazioni che connette clienti, attività comm
 - Visualizza richieste ricevute
 - Accetta o rifiuta
 
+### Ferie e Permessi
+
+**Richiedere Ferie:**
+1. `/leave-requests` → Nuova Richiesta
+2. Seleziona tipo (Ferie, Malattia, Permesso, Maternita', Non Retribuito)
+3. Seleziona date inizio/fine
+4. Aggiungi note (opzionale)
+5. Invia → Attendi approvazione manager
+
+**Tipi Disponibili:**
+- **Annual Leave**: Ferie annuali
+- **Sick Leave**: Malattia (certificato richiesto)
+- **Personal Leave**: Permesso personale
+- **Maternity Leave**: Maternita'/paternita'
+- **Unpaid Leave**: Permesso non retribuito
+
+**Saldo Ferie:**
+- Visualizza giorni disponibili, usati, rimanenti
+- Il saldo si aggiorna automaticamente
+
+### Documenti HR
+
+**Visualizzare:**
+1. `/documents` → Lista documenti personali
+2. Filtra per tipo (Busta Paga, Contratto, Valutazione, ecc.)
+3. Filtra per anno/mese
+
+**Scaricare:**
+- Clicca sul documento → Download
+- Link valido 5 minuti per sicurezza
+
+**Tipi Documento:**
+- Payslip (Cedolino/Busta Paga)
+- Contract (Contratto)
+- Performance Review (Valutazione)
+- Training Record (Formazione)
+- Certification Copy (Certificati)
+
+### Report Personali
+
+**Dashboard:**
+- `/reports` → Statistiche personali
+- Ore lavorate giorno/settimana/mese
+- Anomalie registrate
+- Saldo ferie
+
+**Export:**
+- Scarica report presenze in PDF/Excel
+
 ### Best Practices
 
 ✅ **Fare:**
@@ -228,4 +336,4 @@ A: No, 95% auto-validate, approvazione batch settimanale
 
 ---
 
-**Versione**: 1.0 - Gennaio 2026
+**Versione**: 2.0 - Gennaio 2026
