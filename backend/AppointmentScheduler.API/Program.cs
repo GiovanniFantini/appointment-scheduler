@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Core.Services;
+using AppointmentScheduler.API.Converters;
 
 try
 {
@@ -37,6 +38,7 @@ try
         .AddJsonOptions(options =>
         {
             options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+            options.JsonSerializerOptions.Converters.Add(new TimeSpanJsonConverter());
         });
     builder.Services.AddEndpointsApiExplorer();
     Console.WriteLine("Controllers registered");
