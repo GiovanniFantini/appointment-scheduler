@@ -737,6 +737,26 @@ public class ReportService : IReportService
 
     public async Task<byte[]> ExportToPdfAsync(ReportExportRequest request)
     {
+        // Fetch data asynchronously BEFORE PDF generation
+        EmployeeAttendanceReportDto? attendanceReport = null;
+        MerchantSummaryReportDto? merchantReport = null;
+
+        if (request.ReportType == "attendance" && request.EmployeeId.HasValue)
+        {
+            attendanceReport = await GetEmployeeAttendanceReportAsync(
+                request.EmployeeId.Value,
+                request.StartDate,
+                request.EndDate,
+                request.IncludeDetails);
+        }
+        else if (request.ReportType == "merchant-summary" && request.MerchantId.HasValue)
+        {
+            merchantReport = await GetMerchantSummaryReportAsync(
+                request.MerchantId.Value,
+                request.StartDate,
+                request.EndDate);
+        }
+
         var document = Document.Create(container =>
         {
             container.Page(page =>
@@ -744,7 +764,7 @@ public class ReportService : IReportService
                 page.Size(PageSizes.A4);
                 page.Margin(2, Unit.Centimetre);
                 page.Header().Element(ComposeHeader);
-                page.Content().Element(c => ComposeContent(c, request).Wait());
+                page.Content().Element(c => ComposeContent(c, request, attendanceReport, merchantReport));
                 page.Footer().AlignCenter().Text(x =>
                 {
                     x.Span("Pagina ");
@@ -772,23 +792,21 @@ public class ReportService : IReportService
         });
     }
 
-    private async Task ComposeContent(IContainer container, ReportExportRequest request)
+    private void ComposeContent(
+        IContainer container,
+        ReportExportRequest request,
+        EmployeeAttendanceReportDto? attendanceReport,
+        MerchantSummaryReportDto? merchantReport)
     {
         container.Column(column =>
         {
             column.Spacing(10);
 
-            if (request.ReportType == "attendance" && request.EmployeeId.HasValue)
+            if (request.ReportType == "attendance" && attendanceReport != null)
             {
-                var report = await GetEmployeeAttendanceReportAsync(
-                    request.EmployeeId.Value,
-                    request.StartDate,
-                    request.EndDate,
-                    request.IncludeDetails);
-
                 // Info dipendente
-                column.Item().Text($"Dipendente: {report.EmployeeName}").FontSize(14).Bold();
-                column.Item().Text($"Periodo: {report.PeriodStart:dd/MM/yyyy} - {report.PeriodEnd:dd/MM/yyyy}");
+                column.Item().Text($"Dipendente: {attendanceReport.EmployeeName}").FontSize(14).Bold();
+                column.Item().Text($"Periodo: {attendanceReport.PeriodStart:dd/MM/yyyy} - {attendanceReport.PeriodEnd:dd/MM/yyyy}");
                 column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                 // Statistiche
@@ -802,20 +820,20 @@ public class ReportService : IReportService
                     });
 
                     table.Cell().Text("Turni Assegnati:").Bold();
-                    table.Cell().Text(report.TotalShiftsAssigned.ToString());
+                    table.Cell().Text(attendanceReport.TotalShiftsAssigned.ToString());
                     table.Cell().Text("Turni Completati:").Bold();
-                    table.Cell().Text(report.ShiftsCompleted.ToString());
+                    table.Cell().Text(attendanceReport.ShiftsCompleted.ToString());
                     table.Cell().Text("Tasso Presenza:").Bold();
-                    table.Cell().Text($"{report.AttendanceRate}%");
+                    table.Cell().Text($"{attendanceReport.AttendanceRate}%");
                     table.Cell().Text("Ore Lavorate:").Bold();
-                    table.Cell().Text($"{report.TotalHoursWorked}h");
+                    table.Cell().Text($"{attendanceReport.TotalHoursWorked}h");
                     table.Cell().Text("Straordinari:").Bold();
-                    table.Cell().Text($"{report.TotalOvertimeHours}h");
+                    table.Cell().Text($"{attendanceReport.TotalOvertimeHours}h");
                     table.Cell().Text("Anomalie:").Bold();
-                    table.Cell().Text(report.TotalAnomalies.ToString());
+                    table.Cell().Text(attendanceReport.TotalAnomalies.ToString());
                 });
 
-                if (request.IncludeDetails && report.DailyDetails.Any())
+                if (request.IncludeDetails && attendanceReport.DailyDetails.Any())
                 {
                     column.Item().PaddingTop(15).Text("Dettaglio Giornaliero").FontSize(12).Bold();
                     column.Item().Table(table =>
@@ -840,7 +858,7 @@ public class ReportService : IReportService
                             header.Cell().Text("Note").Bold();
                         });
 
-                        foreach (var day in report.DailyDetails.Take(31))
+                        foreach (var day in attendanceReport.DailyDetails.Take(31))
                         {
                             table.Cell().Text(day.Date.ToString("dd/MM"));
                             table.Cell().Text(day.Status);
@@ -852,15 +870,10 @@ public class ReportService : IReportService
                     });
                 }
             }
-            else if (request.ReportType == "merchant-summary" && request.MerchantId.HasValue)
+            else if (request.ReportType == "merchant-summary" && merchantReport != null)
             {
-                var report = await GetMerchantSummaryReportAsync(
-                    request.MerchantId.Value,
-                    request.StartDate,
-                    request.EndDate);
-
-                column.Item().Text($"Azienda: {report.BusinessName}").FontSize(14).Bold();
-                column.Item().Text($"Periodo: {report.PeriodStart:dd/MM/yyyy} - {report.PeriodEnd:dd/MM/yyyy}");
+                column.Item().Text($"Azienda: {merchantReport.BusinessName}").FontSize(14).Bold();
+                column.Item().Text($"Periodo: {merchantReport.PeriodStart:dd/MM/yyyy} - {merchantReport.PeriodEnd:dd/MM/yyyy}");
                 column.Item().LineHorizontal(1).LineColor(Colors.Grey.Lighten2);
 
                 // Statistiche generali
@@ -876,21 +889,21 @@ public class ReportService : IReportService
                     });
 
                     table.Cell().Text("Dipendenti Attivi:").Bold();
-                    table.Cell().Text(report.ActiveEmployees.ToString());
+                    table.Cell().Text(merchantReport.ActiveEmployees.ToString());
                     table.Cell().Text("Turni Totali:").Bold();
-                    table.Cell().Text(report.TotalShifts.ToString());
+                    table.Cell().Text(merchantReport.TotalShifts.ToString());
                     table.Cell().Text("Ore Programmate:").Bold();
-                    table.Cell().Text($"{report.TotalHoursScheduled}h");
+                    table.Cell().Text($"{merchantReport.TotalHoursScheduled}h");
                     table.Cell().Text("Ore Lavorate:").Bold();
-                    table.Cell().Text($"{report.TotalHoursWorked}h");
+                    table.Cell().Text($"{merchantReport.TotalHoursWorked}h");
                     table.Cell().Text("Tasso Presenza:").Bold();
-                    table.Cell().Text($"{report.AverageAttendanceRate}%");
+                    table.Cell().Text($"{merchantReport.AverageAttendanceRate}%");
                     table.Cell().Text("Anomalie:").Bold();
-                    table.Cell().Text(report.TotalAnomalies.ToString());
+                    table.Cell().Text(merchantReport.TotalAnomalies.ToString());
                 });
 
                 // Riepilogo dipendenti
-                if (report.EmployeeSummaries.Any())
+                if (merchantReport.EmployeeSummaries.Any())
                 {
                     column.Item().PaddingTop(15).Text("Riepilogo per Dipendente").FontSize(12).Bold();
                     column.Item().Table(table =>
@@ -915,7 +928,7 @@ public class ReportService : IReportService
                             header.Cell().Text("Anom.").Bold();
                         });
 
-                        foreach (var emp in report.EmployeeSummaries)
+                        foreach (var emp in merchantReport.EmployeeSummaries)
                         {
                             table.Cell().Text(emp.EmployeeName);
                             table.Cell().Text(emp.ShiftsAssigned.ToString());
