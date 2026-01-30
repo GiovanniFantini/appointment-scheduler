@@ -430,9 +430,21 @@ function Shifts({ user, onLogout }: ShiftsProps) {
   return (
     <AppLayout user={user} onLogout={onLogout} pageTitle="Pianificazione Turni">
       <div className="container mx-auto px-4 py-8">
+        {/* Print Header - visible only when printing */}
+        <div className="print-header">
+          <h1>Pianificazione Turni</h1>
+          <p>{getCurrentPeriodLabel()} — Vista {viewMode === 'week' ? 'Settimanale' : 'Mensile'}</p>
+        </div>
+
         {/* Action Buttons */}
-        <div className="mb-6">
+        <div className="mb-6 no-print">
           <div className="flex gap-3 justify-end">
+            <button
+              onClick={() => window.print()}
+              className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
+            >
+              Stampa Calendario
+            </button>
             <button
               onClick={() => openCreateModal()}
               className="bg-gradient-to-r from-neon-cyan to-neon-blue text-white px-6 py-3 rounded-xl hover:shadow-glow-cyan transition-all transform hover:scale-105 font-semibold"
@@ -449,7 +461,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         </div>
 
         {/* Calendar Controls */}
-        <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10">
+        <div className="glass-card rounded-3xl p-6 mb-6 border border-white/10 no-print">
 
           {/* Navigation Controls */}
           <div className="flex items-center justify-between">
@@ -558,7 +570,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
                     {viewMode === 'week' && (
                       <button
                         onClick={() => openCreateModal(day)}
-                        className="mt-2 w-full text-xs py-1 text-neon-cyan hover:bg-neon-cyan/20 rounded-lg transition-all border border-neon-cyan/30"
+                        className="mt-2 w-full text-xs py-1 text-neon-cyan hover:bg-neon-cyan/20 rounded-lg transition-all border border-neon-cyan/30 no-print"
                       >
                         + Aggiungi
                       </button>
@@ -568,6 +580,11 @@ function Shifts({ user, onLogout }: ShiftsProps) {
               })}
             </div>
           )}
+        </div>
+
+        {/* Print Footer - visible only when printing */}
+        <div className="print-footer">
+          Stampato il {new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
         </div>
 
         {/* Shift Detail Modal */}

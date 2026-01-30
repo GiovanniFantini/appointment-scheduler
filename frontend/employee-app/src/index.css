@@ -68,3 +68,237 @@ select option {
     background-clip: text;
   }
 }
+
+/* ===== Print Styles ===== */
+
+/* Print header - only visible when printing */
+.print-header {
+  display: none;
+}
+
+.no-print {
+  /* Visible on screen by default */
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 10mm;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Reset dark theme for print */
+  body {
+    background: white !important;
+    color: #1a1a1a !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  .bg-gradient-dark,
+  .min-h-screen {
+    background: white !important;
+    min-height: auto !important;
+  }
+
+  /* Hide non-printable UI */
+  .no-print,
+  nav,
+  header,
+  [class*="Sidebar"],
+  [class*="MobileNav"],
+  [class*="TopHeader"] {
+    display: none !important;
+  }
+
+  /* Hide background animations */
+  .pointer-events-none.overflow-hidden,
+  .fixed.inset-0.pointer-events-none {
+    display: none !important;
+  }
+
+  /* Hide modals */
+  .fixed.inset-0.bg-black\/70,
+  .fixed.inset-0.bg-black\/80 {
+    display: none !important;
+  }
+
+  /* Show print header */
+  .print-header {
+    display: block !important;
+    text-align: center;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #333;
+  }
+
+  .print-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0 0 4px 0;
+  }
+
+  .print-header p {
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+  }
+
+  /* Remove sidebar margin */
+  .lg\:ml-72,
+  .lg\:ml-20 {
+    margin-left: 0 !important;
+  }
+
+  /* Remove padding/overflow adjustments */
+  main {
+    padding-bottom: 0 !important;
+  }
+
+  /* Calendar container */
+  .glass-card,
+  .glass-card-dark {
+    background: white !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+
+  /* Calendar grid */
+  .grid.grid-cols-7 {
+    background: white !important;
+    border: 1px solid #333 !important;
+    gap: 0 !important;
+  }
+
+  .grid.grid-cols-7 > div {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    min-height: 80px !important;
+    padding: 6px !important;
+  }
+
+  /* Day labels */
+  .font-semibold.text-gray-300,
+  .font-semibold.text-cyan-400,
+  .text-gray-300 {
+    color: #1a1a1a !important;
+  }
+
+  /* Today highlight */
+  .ring-2.ring-cyan-500 {
+    ring-color: transparent !important;
+    outline: 2px solid #333 !important;
+    outline-offset: -2px;
+    background: #f5f5f5 !important;
+  }
+
+  /* Shift cards in calendar */
+  .text-xs.p-2.rounded-lg,
+  .text-xs.p-2.rounded {
+    border-left-width: 4px !important;
+    border-left-style: solid !important;
+    padding: 4px 6px !important;
+    margin-bottom: 3px !important;
+    page-break-inside: avoid;
+    border-radius: 4px !important;
+  }
+
+  /* Shift text */
+  .font-semibold.text-white {
+    color: #1a1a1a !important;
+    font-size: 10px !important;
+  }
+
+  .text-gray-400 {
+    color: #666 !important;
+    font-size: 9px !important;
+  }
+
+  .text-gray-500 {
+    color: #777 !important;
+    font-size: 9px !important;
+  }
+
+  /* Period label */
+  .text-xl.font-semibold.text-cyan-400 {
+    color: #1a1a1a !important;
+  }
+
+  /* Gradient text fix for print */
+  .gradient-text,
+  .text-transparent.bg-clip-text {
+    -webkit-text-fill-color: #1a1a1a !important;
+    color: #1a1a1a !important;
+    background: none !important;
+  }
+
+  /* Neon-colored text to dark for print */
+  .text-cyan-400,
+  .text-blue-400,
+  .text-purple-400,
+  .text-pink-400 {
+    color: #333 !important;
+  }
+
+  /* Stat cards */
+  .bg-gray-800\/50 {
+    background: white !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .text-3xl.font-bold.text-cyan-400,
+  .text-3xl.font-bold.text-blue-400,
+  .text-3xl.font-bold.text-purple-400,
+  .text-3xl.font-bold.text-pink-400 {
+    color: #1a1a1a !important;
+  }
+
+  /* Remove hover/transform effects */
+  .hover\:scale-105,
+  .transform {
+    transform: none !important;
+  }
+
+  /* Ensure page breaks work well */
+  .container {
+    page-break-inside: avoid;
+  }
+
+  /* Remove rounded borders for cleaner print */
+  .rounded-3xl {
+    border-radius: 8px !important;
+  }
+
+  .rounded-xl {
+    border-radius: 6px !important;
+  }
+
+  /* Remove shadows and glows */
+  [class*="shadow-glow"],
+  [class*="shadow-"] {
+    box-shadow: none !important;
+  }
+
+  /* Print footer with date */
+  .print-footer {
+    display: block !important;
+    text-align: center;
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #ccc;
+    font-size: 10px;
+    color: #999;
+  }
+}
+
+.print-footer {
+  display: none;
+}
