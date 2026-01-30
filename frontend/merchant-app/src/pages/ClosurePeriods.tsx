@@ -18,6 +18,19 @@ interface ClosurePeriodsProps {
   onLogout: () => void
 }
 
+/** Format a local Date as YYYY-MM-DD without UTC conversion */
+const toLocalDateString = (date: Date): string => {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+/** Parse a date string (ISO or YYYY-MM-DD) to a local YYYY-MM-DD string */
+const toDateOnly = (dateString: string): string => {
+  return dateString.split('T')[0]
+}
+
 function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
   const [closurePeriods, setClosurePeriods] = useState<ClosurePeriod[]>([])
   const [showForm, setShowForm] = useState(false)
@@ -27,6 +40,7 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
     reason: '',
     description: ''
   })
+  const [calendarDate, setCalendarDate] = useState(new Date())
 
   useEffect(() => {
     fetchClosurePeriods()
@@ -49,6 +63,11 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
 
     if (!formData.startDate || !formData.endDate || !formData.reason) {
       alert('Compila tutti i campi obbligatori')
+      return
+    }
+
+    if (formData.startDate > formData.endDate) {
+      alert('La data di fine deve essere uguale o successiva alla data di inizio')
       return
     }
 
@@ -85,34 +104,126 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
   }
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    // Parse only the date part to avoid timezone shift
+    const parts = toDateOnly(dateString).split('-')
+    const date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
     return date.toLocaleDateString('it-IT', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric',
-      timeZone: 'UTC'
+      year: 'numeric'
     })
   }
 
   const getDaysCount = (start: string, end: string) => {
-    const startDate = new Date(start)
-    const endDate = new Date(end)
+    const startParts = toDateOnly(start).split('-')
+    const endParts = toDateOnly(end).split('-')
+    const startDate = new Date(Number(startParts[0]), Number(startParts[1]) - 1, Number(startParts[2]))
+    const endDate = new Date(Number(endParts[0]), Number(endParts[1]) - 1, Number(endParts[2]))
     const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     return diffDays
   }
 
   const isUpcoming = (startDate: string) => {
-    return new Date(startDate) > new Date()
+    const todayStr = toLocalDateString(new Date())
+    return toDateOnly(startDate) > todayStr
   }
 
   const isCurrent = (startDate: string, endDate: string) => {
-    const now = new Date()
-    return new Date(startDate) <= now && new Date(endDate) >= now
+    const todayStr = toLocalDateString(new Date())
+    return toDateOnly(startDate) <= todayStr && toDateOnly(endDate) >= todayStr
   }
 
   const isPast = (endDate: string) => {
-    return new Date(endDate) < new Date()
+    const todayStr = toLocalDateString(new Date())
+    return toDateOnly(endDate) < todayStr
+  }
+
+  // Calendar helpers
+  const getCalendarDays = () => {
+    const year = calendarDate.getFullYear()
+    const month = calendarDate.getMonth()
+
+    // First day of month
+    const firstDay = new Date(year, month, 1)
+    // Last day of month
+    const lastDay = new Date(year, month + 1, 0)
+
+    // Start from Monday before the first day
+    const startDow = firstDay.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+    const mondayOffset = startDow === 0 ? 6 : startDow - 1
+    const start = new Date(year, month, 1 - mondayOffset)
+
+    // End on Sunday after the last day
+    const endDow = lastDay.getDay()
+    const sundayOffset = endDow === 0 ? 0 : 7 - endDow
+    const end = new Date(year, month, lastDay.getDate() + sundayOffset)
+
+    const days: Date[] = []
+    const current = new Date(start)
+    while (current <= end) {
+      days.push(new Date(current))
+      current.setDate(current.getDate() + 1)
+    }
+    return days
+  }
+
+  const isDateInClosure = (dateStr: string) => {
+    return closurePeriods.some(cp => {
+      const start = toDateOnly(cp.startDate)
+      const end = toDateOnly(cp.endDate)
+      return dateStr >= start && dateStr <= end
+    })
+  }
+
+  const isDateInSelection = (dateStr: string) => {
+    if (!formData.startDate) return false
+    if (!formData.endDate) return dateStr === formData.startDate
+    return dateStr >= formData.startDate && dateStr <= formData.endDate
+  }
+
+  const isSelectionStart = (dateStr: string) => {
+    return formData.startDate === dateStr
+  }
+
+  const isSelectionEnd = (dateStr: string) => {
+    return formData.endDate === dateStr
+  }
+
+  const handleCalendarDayClick = (dateStr: string) => {
+    if (!showForm) return
+
+    if (!formData.startDate || (formData.startDate && formData.endDate)) {
+      // Start new selection
+      setFormData({ ...formData, startDate: dateStr, endDate: '' })
+    } else {
+      // Complete selection
+      if (dateStr < formData.startDate) {
+        setFormData({ ...formData, startDate: dateStr, endDate: formData.startDate })
+      } else {
+        setFormData({ ...formData, endDate: dateStr })
+      }
+    }
+  }
+
+  const handlePrevMonth = () => {
+    const newDate = new Date(calendarDate)
+    newDate.setMonth(newDate.getMonth() - 1)
+    setCalendarDate(newDate)
+  }
+
+  const handleNextMonth = () => {
+    const newDate = new Date(calendarDate)
+    newDate.setMonth(newDate.getMonth() + 1)
+    setCalendarDate(newDate)
+  }
+
+  const handleToday = () => {
+    setCalendarDate(new Date())
+  }
+
+  const getCalendarLabel = () => {
+    return calendarDate.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' })
   }
 
   return (
@@ -125,6 +236,103 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
           >
             {showForm ? '❌ Annulla' : '➕ Nuova Chiusura'}
           </button>
+        </div>
+
+        {/* Calendar */}
+        <div className="glass-card rounded-3xl shadow-lg p-6 mb-6 border border-white/10">
+          {/* Calendar Navigation */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePrevMonth}
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
+              >
+                ← Precedente
+              </button>
+              <button
+                onClick={handleToday}
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
+              >
+                Oggi
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="glass-card-dark px-4 py-2 text-neon-cyan rounded-xl hover:border-neon-cyan/50 transition-all border border-white/10"
+              >
+                Successivo →
+              </button>
+            </div>
+            <span className="text-xl font-semibold text-neon-cyan capitalize">
+              {getCalendarLabel()}
+            </span>
+          </div>
+
+          {showForm && (
+            <p className="text-sm text-neon-pink mb-3">
+              Clicca su un giorno per selezionare la data di inizio, poi clicca su un altro giorno per la data di fine.
+            </p>
+          )}
+
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-px bg-white/5 rounded-xl overflow-hidden">
+            {/* Day headers */}
+            {['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((dayName) => (
+              <div key={dayName} className="glass-card-dark p-2 text-center text-sm font-bold text-neon-cyan">
+                {dayName}
+              </div>
+            ))}
+            {/* Day cells */}
+            {getCalendarDays().map((day, index) => {
+              const dateStr = toLocalDateString(day)
+              const isCurrentMonth = day.getMonth() === calendarDate.getMonth()
+              const isToday = dateStr === toLocalDateString(new Date())
+              const inClosure = isDateInClosure(dateStr)
+              const inSelection = isDateInSelection(dateStr)
+              const isStart = isSelectionStart(dateStr)
+              const isEnd = isSelectionEnd(dateStr)
+
+              return (
+                <div
+                  key={index}
+                  onClick={() => handleCalendarDayClick(dateStr)}
+                  className={`glass-card-dark min-h-[3rem] p-2 flex items-center justify-center relative transition-all
+                    ${!isCurrentMonth ? 'opacity-30' : ''}
+                    ${isToday ? 'ring-2 ring-neon-cyan' : ''}
+                    ${showForm ? 'cursor-pointer hover:bg-white/10' : ''}
+                    ${inClosure && !inSelection ? 'bg-red-500/20' : ''}
+                    ${inSelection ? 'bg-neon-pink/30' : ''}
+                    ${isStart || isEnd ? 'bg-neon-pink/50' : ''}
+                  `}
+                >
+                  <span className={`text-sm font-semibold
+                    ${isToday ? 'text-neon-cyan' : ''}
+                    ${inClosure && !inSelection ? 'text-red-400' : ''}
+                    ${inSelection ? 'text-white' : ''}
+                    ${!isToday && !inClosure && !inSelection ? 'text-gray-300' : ''}
+                  `}>
+                    {day.getDate()}
+                  </span>
+                  {inClosure && !inSelection && (
+                    <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-red-400 rounded-full"></span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex items-center gap-6 mt-4 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 bg-red-500/40 rounded-sm border border-red-400/50"></span>
+              <span>Giorni di chiusura</span>
+            </div>
+            {showForm && (
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-neon-pink/50 rounded-sm border border-neon-pink/50"></span>
+                <span>Selezione corrente</span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Form */}
@@ -200,7 +408,7 @@ function ClosurePeriodsPage({ user, onLogout }: ClosurePeriodsProps) {
         ) : (
           <div className="space-y-6">
             {closurePeriods
-              .sort((a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime())
+              .sort((a, b) => toDateOnly(b.startDate).localeCompare(toDateOnly(a.startDate)))
               .map((closure, index) => {
                 const upcoming = isUpcoming(closure.startDate)
                 const current = isCurrent(closure.startDate, closure.endDate)
