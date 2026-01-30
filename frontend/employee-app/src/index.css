@@ -21,6 +21,12 @@ body {
   overflow-x: hidden;
 }
 
+/* Fix dropdown options contrast on dark theme */
+select option {
+  background-color: #1a1a24;
+  color: #ffffff;
+}
+
 @layer utilities {
   .glass-card {
     background: rgba(255, 255, 255, 0.05);
