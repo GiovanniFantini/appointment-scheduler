@@ -154,11 +154,20 @@ function Shifts({ user, onLogout }: ShiftsProps) {
       // Inizio mese
       start.setDate(1);
       start.setHours(0, 0, 0, 0);
+      // Torna al lunedì precedente (o resta se già lunedì)
+      const startDow = start.getDay(); // 0=Dom, 1=Lun, ..., 6=Sab
+      const mondayOffset = startDow === 0 ? 6 : startDow - 1;
+      start.setDate(start.getDate() - mondayOffset);
 
       // Fine mese
       end.setMonth(end.getMonth() + 1);
       end.setDate(0);
       end.setHours(23, 59, 59, 999);
+      // Vai avanti fino a domenica (o resta se già domenica)
+      const endDow = end.getDay();
+      if (endDow !== 0) {
+        end.setDate(end.getDate() + (7 - endDow));
+      }
     }
 
     return { startDate: start, endDate: end };
@@ -500,17 +509,24 @@ function Shifts({ user, onLogout }: ShiftsProps) {
               Caricamento turni...
             </div>
           ) : (
-            <div className={`grid ${viewMode === 'week' ? 'grid-cols-7' : 'grid-cols-7'} gap-px bg-white/5`}>
+            <div className="grid grid-cols-7 gap-px bg-white/5">
+              {/* Header giorni della settimana (solo vista mese) */}
+              {viewMode === 'month' && ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'].map((dayName) => (
+                <div key={dayName} className="glass-card-dark p-2 text-center text-sm font-bold text-neon-cyan">
+                  {dayName}
+                </div>
+              ))}
               {getDaysInView().map((day, index) => {
                 const dayShifts = getShiftsForDay(day);
                 const isToday = day.toDateString() === new Date().toDateString();
+                const isCurrentMonth = viewMode === 'month' && day.getMonth() === currentDate.getMonth();
 
                 return (
                   <div
                     key={index}
                     className={`glass-card-dark min-h-32 p-3 ${
                       isToday ? 'ring-2 ring-neon-cyan' : ''
-                    }`}
+                    } ${viewMode === 'month' && !isCurrentMonth ? 'opacity-30' : ''}`}
                   >
                     <div className={`font-semibold mb-2 ${
                       isToday ? 'text-neon-cyan' : 'text-gray-300'
