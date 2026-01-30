@@ -21,14 +21,18 @@ public class ShiftService : IShiftService
 
     public async Task<IEnumerable<ShiftDto>> GetMerchantShiftsAsync(int merchantId, DateTime startDate, DateTime endDate)
     {
+        // Ensure dates are in UTC to avoid PostgreSQL timezone issues
+        var utcStartDate = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+        var utcEndDate = DateTime.SpecifyKind(endDate.Date, DateTimeKind.Utc);
+
         var shifts = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.ShiftTemplate)
             .Include(s => s.ShiftEmployees)
                 .ThenInclude(se => se.Employee)
             .Where(s => s.MerchantId == merchantId
-                && s.Date >= startDate.Date
-                && s.Date <= endDate.Date
+                && s.Date >= utcStartDate
+                && s.Date <= utcEndDate
                 && s.IsActive)
             .OrderBy(s => s.Date)
             .ThenBy(s => s.StartTime)
@@ -39,6 +43,10 @@ public class ShiftService : IShiftService
 
     public async Task<IEnumerable<ShiftDto>> GetEmployeeShiftsAsync(int employeeId, DateTime startDate, DateTime endDate)
     {
+        // Ensure dates are in UTC to avoid PostgreSQL timezone issues
+        var utcStartDate = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+        var utcEndDate = DateTime.SpecifyKind(endDate.Date, DateTimeKind.Utc);
+
         // Cerca turni sia nella relazione legacy (EmployeeId) che nella nuova (ShiftEmployees)
         var shifts = await _context.Shifts
             .Include(s => s.Employee)
@@ -46,8 +54,8 @@ public class ShiftService : IShiftService
             .Include(s => s.ShiftEmployees)
                 .ThenInclude(se => se.Employee)
             .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
-                && s.Date >= startDate.Date
-                && s.Date <= endDate.Date
+                && s.Date >= utcStartDate
+                && s.Date <= utcEndDate
                 && s.IsActive)
             .OrderBy(s => s.Date)
             .ThenBy(s => s.StartTime)
@@ -427,7 +435,7 @@ public class ShiftService : IShiftService
         var now = DateTime.UtcNow;
         var startOfWeek = now.Date.AddDays(-(int)now.DayOfWeek);
         var endOfWeek = startOfWeek.AddDays(7);
-        var startOfMonth = new DateTime(now.Year, now.Month, 1);
+        var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var endOfMonth = startOfMonth.AddMonths(1);
         var startOfLastMonth = startOfMonth.AddMonths(-1);
         var endOfLastMonth = startOfMonth;
@@ -496,7 +504,7 @@ public class ShiftService : IShiftService
         var shiftsOnDate = await _context.Shifts
             .Include(s => s.ShiftEmployees)
             .Where(s => (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
-                && s.Date == date.Date
+                && s.Date == DateTime.SpecifyKind(date.Date, DateTimeKind.Utc)
                 && s.IsActive
                 && (excludeShiftId == null || s.Id != excludeShiftId))
             .ToListAsync();
@@ -544,7 +552,7 @@ public class ShiftService : IShiftService
         // Verifica limite mensile
         if (activeLimit.MaxHoursPerMonth.HasValue)
         {
-            var startOfMonth = new DateTime(date.Year, date.Month, 1);
+            var startOfMonth = new DateTime(date.Year, date.Month, 1, 0, 0, 0, DateTimeKind.Utc);
             var endOfMonth = startOfMonth.AddMonths(1);
 
             var monthShifts = await _context.Shifts
