@@ -179,8 +179,24 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
           </div>
         )}
 
+        {/* Print Header - visible only when printing */}
+        <div className="print-header">
+          <h1>I Miei Turni</h1>
+          <p>{getCurrentPeriodLabel()} — Vista {viewMode === 'week' ? 'Settimanale' : 'Mensile'}</p>
+        </div>
+
+        {/* Print Button */}
+        <div className="mb-4 flex justify-end no-print">
+          <button
+            onClick={() => window.print()}
+            className="bg-gradient-to-r from-gray-600 to-gray-700 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-all font-semibold"
+          >
+            Stampa Calendario
+          </button>
+        </div>
+
         {/* Header */}
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-cyan-500/30">
+        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 mb-6 border border-cyan-500/30 no-print">
           <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 mb-4">
             I Miei Turni
           </h1>
@@ -277,6 +293,11 @@ export default function MyShifts({ user, onLogout }: MyShiftsProps) {
               })}
             </div>
           )}
+        </div>
+
+        {/* Print Footer - visible only when printing */}
+        <div className="print-footer">
+          Stampato il {new Date().toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
         </div>
 
         {/* Shift Detail Modal */}
