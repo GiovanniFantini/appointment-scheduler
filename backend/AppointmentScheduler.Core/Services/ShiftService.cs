@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.Shared.Exceptions;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -88,6 +90,18 @@ public class ShiftService : IShiftService
         else if (request.EmployeeId.HasValue)
             employeeIds.Add(request.EmployeeId.Value);
 
+        // Verifica conflitti con ferie/permessi
+        if (!request.ForceCreate && employeeIds.Any())
+        {
+            var leaveConflicts = await GetLeaveConflictsAsync(employeeIds, shiftDate);
+            if (leaveConflicts.Any())
+            {
+                throw new LeaveConflictException(
+                    "Alcuni dipendenti hanno ferie/permessi in questa data",
+                    leaveConflicts);
+            }
+        }
+
         // Verifica conflitti e limiti per ogni dipendente
         var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
         foreach (var employeeId in employeeIds)
@@ -164,6 +178,18 @@ public class ShiftService : IShiftService
             employeeIds = request.EmployeeIds;
         else if (request.EmployeeId.HasValue)
             employeeIds.Add(request.EmployeeId.Value);
+
+        // Verifica conflitti con ferie/permessi per l'intero range di date
+        if (!request.ForceCreate && employeeIds.Any())
+        {
+            var leaveConflicts = await GetLeaveConflictsForDateRangeAsync(employeeIds, request.StartDate, request.EndDate);
+            if (leaveConflicts.Any())
+            {
+                throw new LeaveConflictException(
+                    "Alcuni dipendenti hanno ferie/permessi nel periodo selezionato",
+                    leaveConflicts);
+            }
+        }
 
         var shifts = new List<Shift>();
         var shiftEmployeeMappings = new List<(Shift shift, List<int> employeeIds)>();
@@ -279,6 +305,18 @@ public class ShiftService : IShiftService
         else if (request.EmployeeId.HasValue)
             employeeIds.Add(request.EmployeeId.Value);
 
+        // Verifica conflitti con ferie/permessi
+        if (!request.ForceCreate && employeeIds.Any())
+        {
+            var leaveConflicts = await GetLeaveConflictsAsync(employeeIds, shiftDate);
+            if (leaveConflicts.Any())
+            {
+                throw new LeaveConflictException(
+                    "Alcuni dipendenti hanno ferie/permessi in questa data",
+                    leaveConflicts);
+            }
+        }
+
         // Verifica conflitti e limiti per ogni dipendente
         var hours = CalculateTotalHours(request.StartTime, request.EndTime, request.BreakDurationMinutes);
         foreach (var employeeId in employeeIds)
@@ -354,6 +392,18 @@ public class ShiftService : IShiftService
             employeeIds = request.EmployeeIds;
         else if (request.EmployeeId.HasValue)
             employeeIds.Add(request.EmployeeId.Value);
+
+        // Verifica conflitti con ferie/permessi
+        if (!request.ForceCreate && employeeIds.Any())
+        {
+            var leaveConflicts = await GetLeaveConflictsAsync(employeeIds, shift.Date);
+            if (leaveConflicts.Any())
+            {
+                throw new LeaveConflictException(
+                    "Alcuni dipendenti hanno ferie/permessi in questa data",
+                    leaveConflicts);
+            }
+        }
 
         // Verifica che tutti i dipendenti appartengano allo stesso merchant
         foreach (var employeeId in employeeIds)
@@ -569,6 +619,69 @@ public class ShiftService : IShiftService
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Verifica se i dipendenti hanno ferie/permessi approvati o in attesa per una data specifica
+    /// </summary>
+    public async Task<List<LeaveConflictInfo>> GetLeaveConflictsAsync(List<int> employeeIds, DateTime date)
+    {
+        if (!employeeIds.Any())
+            return new List<LeaveConflictInfo>();
+
+        var utcDate = DateTime.SpecifyKind(date.Date, DateTimeKind.Utc);
+
+        var conflicts = await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .Where(lr => employeeIds.Contains(lr.EmployeeId)
+                && lr.StartDate <= utcDate
+                && lr.EndDate >= utcDate
+                && (lr.Status == LeaveRequestStatus.Pending || lr.Status == LeaveRequestStatus.Approved))
+            .Select(lr => new LeaveConflictInfo
+            {
+                EmployeeId = lr.EmployeeId,
+                EmployeeName = lr.Employee.FirstName + " " + lr.Employee.LastName,
+                LeaveRequestId = lr.Id,
+                LeaveTypeName = lr.LeaveType.ToString(),
+                StatusName = lr.Status == LeaveRequestStatus.Approved ? "Approvata" : "In attesa",
+                StartDate = lr.StartDate,
+                EndDate = lr.EndDate
+            })
+            .ToListAsync();
+
+        return conflicts;
+    }
+
+    /// <summary>
+    /// Verifica conflitti ferie per un range di date e ritorna i conflitti raggruppati per data
+    /// </summary>
+    public async Task<List<LeaveConflictInfo>> GetLeaveConflictsForDateRangeAsync(List<int> employeeIds, DateTime startDate, DateTime endDate)
+    {
+        if (!employeeIds.Any())
+            return new List<LeaveConflictInfo>();
+
+        var utcStartDate = DateTime.SpecifyKind(startDate.Date, DateTimeKind.Utc);
+        var utcEndDate = DateTime.SpecifyKind(endDate.Date, DateTimeKind.Utc);
+
+        var conflicts = await _context.LeaveRequests
+            .Include(lr => lr.Employee)
+            .Where(lr => employeeIds.Contains(lr.EmployeeId)
+                && lr.StartDate <= utcEndDate
+                && lr.EndDate >= utcStartDate
+                && (lr.Status == LeaveRequestStatus.Pending || lr.Status == LeaveRequestStatus.Approved))
+            .Select(lr => new LeaveConflictInfo
+            {
+                EmployeeId = lr.EmployeeId,
+                EmployeeName = lr.Employee.FirstName + " " + lr.Employee.LastName,
+                LeaveRequestId = lr.Id,
+                LeaveTypeName = lr.LeaveType.ToString(),
+                StatusName = lr.Status == LeaveRequestStatus.Approved ? "Approvata" : "In attesa",
+                StartDate = lr.StartDate,
+                EndDate = lr.EndDate
+            })
+            .ToListAsync();
+
+        return conflicts;
     }
 
     private static bool TimesOverlap(TimeSpan start1, TimeSpan end1, TimeSpan start2, TimeSpan end2)

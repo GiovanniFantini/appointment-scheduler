@@ -172,6 +172,8 @@ export interface CreateShiftRequest {
   shiftType: ShiftType;
   color: string;
   notes?: string;
+  /** Se true, forza la creazione del turno anche in caso di conflitto con ferie/permessi */
+  forceCreate?: boolean;
 }
 
 export interface CreateShiftsFromTemplateRequest {
@@ -183,6 +185,8 @@ export interface CreateShiftsFromTemplateRequest {
   /** Lista ID dipendenti da assegnare ai turni */
   employeeIds?: number[];
   daysOfWeek?: number[];
+  /** Se true, forza la creazione dei turni anche in caso di conflitto con ferie/permessi */
+  forceCreate?: boolean;
 }
 
 export interface UpdateShiftRequest {
@@ -198,6 +202,8 @@ export interface UpdateShiftRequest {
   color: string;
   notes?: string;
   isActive: boolean;
+  /** Se true, forza l'aggiornamento del turno anche in caso di conflitto con ferie/permessi */
+  forceCreate?: boolean;
 }
 
 export interface AssignShiftRequest {
@@ -206,6 +212,25 @@ export interface AssignShiftRequest {
   /** Lista ID dipendenti da assegnare al turno */
   employeeIds?: number[];
   notes?: string;
+  /** Se true, forza l'assegnazione del turno anche in caso di conflitto con ferie/permessi */
+  forceCreate?: boolean;
+}
+
+/** Informazioni su un conflitto tra turno e richiesta di ferie/permessi */
+export interface LeaveConflictInfo {
+  employeeId: number;
+  employeeName: string;
+  leaveRequestId: number;
+  leaveTypeName: string;
+  statusName: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** Risposta in caso di conflitto con ferie/permessi (HTTP 409) */
+export interface LeaveConflictResponse {
+  message: string;
+  conflicts: LeaveConflictInfo[];
 }
 
 export interface CreateEmployeeWorkingHoursLimitRequest {
