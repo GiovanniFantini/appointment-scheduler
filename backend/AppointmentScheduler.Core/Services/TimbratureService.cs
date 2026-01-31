@@ -27,7 +27,9 @@ public class TimbratureService : ITimbratureService
         var shift = await _context.Shifts
             .Include(s => s.Employee)
             .Include(s => s.Merchant)
-            .FirstOrDefaultAsync(s => s.Id == request.ShiftId && s.EmployeeId == employeeId);
+            .Include(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(s => s.Id == request.ShiftId
+                && (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (shift == null)
         {
@@ -108,7 +110,9 @@ public class TimbratureService : ITimbratureService
             .Include(s => s.Employee)
             .Include(s => s.Merchant)
             .Include(s => s.Breaks)
-            .FirstOrDefaultAsync(s => s.Id == request.ShiftId && s.EmployeeId == employeeId);
+            .Include(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(s => s.Id == request.ShiftId
+                && (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (shift == null)
         {
@@ -208,7 +212,9 @@ public class TimbratureService : ITimbratureService
     {
         var shift = await _context.Shifts
             .Include(s => s.Breaks)
-            .FirstOrDefaultAsync(s => s.Id == request.ShiftId && s.EmployeeId == employeeId);
+            .Include(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(s => s.Id == request.ShiftId
+                && (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (shift == null || !shift.IsCheckedIn || shift.IsCheckedOut)
         {
@@ -234,7 +240,9 @@ public class TimbratureService : ITimbratureService
     {
         var shiftBreak = await _context.ShiftBreaks
             .Include(sb => sb.Shift)
-            .FirstOrDefaultAsync(sb => sb.Id == request.BreakId && sb.Shift.EmployeeId == employeeId);
+                .ThenInclude(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(sb => sb.Id == request.BreakId
+                && (sb.Shift.EmployeeId == employeeId || sb.Shift.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (shiftBreak == null)
         {
@@ -261,7 +269,11 @@ public class TimbratureService : ITimbratureService
         var today = DateTime.UtcNow.Date;
         var shift = await _context.Shifts
             .Include(s => s.Breaks)
-            .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == today);
+            .Include(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(s =>
+                (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
+                && s.Date == today
+                && s.IsActive);
 
         if (shift == null)
         {
@@ -307,7 +319,12 @@ public class TimbratureService : ITimbratureService
         var shift = await _context.Shifts
             .Include(s => s.Merchant)
             .Include(s => s.Employee)
-            .FirstOrDefaultAsync(s => s.EmployeeId == employeeId && s.Date == today);
+            .Include(s => s.ShiftEmployees)
+                .ThenInclude(se => se.Employee)
+            .FirstOrDefaultAsync(s =>
+                (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId))
+                && s.Date == today
+                && s.IsActive);
 
         return shift != null ? MapToShiftDto(shift) : null;
     }
@@ -316,7 +333,9 @@ public class TimbratureService : ITimbratureService
     {
         var anomaly = await _context.ShiftAnomalies
             .Include(a => a.Shift)
-            .FirstOrDefaultAsync(a => a.Id == request.AnomalyId && a.Shift.EmployeeId == employeeId);
+                .ThenInclude(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(a => a.Id == request.AnomalyId
+                && (a.Shift.EmployeeId == employeeId || a.Shift.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (anomaly == null)
         {
@@ -363,7 +382,9 @@ public class TimbratureService : ITimbratureService
     public async Task<ShiftCorrectionDto> CorrectShiftAsync(int employeeId, CorrectShiftRequest request)
     {
         var shift = await _context.Shifts
-            .FirstOrDefaultAsync(s => s.Id == request.ShiftId && s.EmployeeId == employeeId);
+            .Include(s => s.ShiftEmployees)
+            .FirstOrDefaultAsync(s => s.Id == request.ShiftId
+                && (s.EmployeeId == employeeId || s.ShiftEmployees.Any(se => se.EmployeeId == employeeId)));
 
         if (shift == null)
         {
