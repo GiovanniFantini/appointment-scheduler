@@ -5,10 +5,12 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
 import MyShifts from './pages/MyShifts'
+import TeamCalendar from './pages/TeamCalendar'
 import Timbratura from './pages/Timbratura'
 import MyDocuments from './pages/MyDocuments'
 import LeaveRequests from './pages/LeaveRequests'
 import Reports from './pages/Reports'
+import Bacheca from './pages/Bacheca'
 
 interface User {
   userId: number
@@ -82,6 +84,12 @@ function App() {
         } />
         <Route path="/my-shifts" element={
           user ? <MyShifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/team-calendar" element={
+          user ? <TeamCalendar user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/bacheca" element={
+          user ? <Bacheca user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
         <Route path="/timbratura" element={
           user ? <Timbratura user={user} onLogout={handleLogout} /> : <Navigate to="/login" />

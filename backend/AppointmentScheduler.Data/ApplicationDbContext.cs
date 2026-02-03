@@ -39,6 +39,10 @@ public class ApplicationDbContext : DbContext
     public DbSet<LeaveRequest> LeaveRequests { get; set; }
     public DbSet<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; }
 
+    // Employee Communication System
+    public DbSet<BoardMessage> BoardMessages { get; set; }
+    public DbSet<BoardMessageRead> BoardMessageReads { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -499,6 +503,49 @@ public class ApplicationDbContext : DbContext
             // Indice unique per employee + leave type + year
             entity.HasIndex(e => new { e.EmployeeId, e.LeaveType, e.Year })
                 .IsUnique();
+        });
+
+        // BoardMessage configuration
+        modelBuilder.Entity<BoardMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(5000);
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.BoardMessages)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Author)
+                .WithMany()
+                .HasForeignKey(e => e.AuthorUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => new { e.MerchantId, e.IsActive, e.IsPinned });
+            entity.HasIndex(e => e.ExpiresAt);
+        });
+
+        // BoardMessageRead configuration
+        modelBuilder.Entity<BoardMessageRead>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.BoardMessage)
+                .WithMany(m => m.ReadReceipts)
+                .HasForeignKey(e => e.BoardMessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.BoardMessageId, e.EmployeeId }).IsUnique();
+            entity.HasIndex(e => e.EmployeeId);
         });
     }
 }

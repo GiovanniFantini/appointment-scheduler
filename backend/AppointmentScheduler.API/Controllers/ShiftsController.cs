@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
@@ -241,6 +242,31 @@ public class ShiftsController : ControllerBase
             return NotFound(new { message = "Turno non trovato" });
 
         return NoContent();
+    }
+
+    /// <summary>
+    /// Recupera tutti i turni del team per un merchant specifico (vista employee)
+    /// Permette ai dipendenti di vedere i turni di tutti i colleghi
+    /// </summary>
+    [HttpGet("team")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<IEnumerable<ShiftDto>>> GetTeamShifts(
+        [FromQuery] DateTime startDate,
+        [FromQuery] DateTime endDate)
+    {
+        var employeeIdClaim = User.FindFirst("EmployeeId")?.Value;
+        if (string.IsNullOrEmpty(employeeIdClaim) || !int.TryParse(employeeIdClaim, out int empId))
+            return BadRequest(new { message = "Employee ID non trovato" });
+
+        try
+        {
+            var shifts = await _shiftService.GetTeamShiftsAsync(empId, startDate, endDate);
+            return Ok(shifts);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
