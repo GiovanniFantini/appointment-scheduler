@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Exceptions;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -124,6 +125,14 @@ public class ShiftsController : ControllerBase
             var shift = await _shiftService.CreateShiftAsync(merchantId, request);
             return CreatedAtAction(nameof(GetById), new { id = shift.Id }, shift);
         }
+        catch (LeaveConflictException ex)
+        {
+            return Conflict(new LeaveConflictResponse
+            {
+                Message = ex.Message,
+                Conflicts = ex.Conflicts
+            });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
@@ -150,6 +159,14 @@ public class ShiftsController : ControllerBase
         {
             var shifts = await _shiftService.CreateShiftsFromTemplateAsync(merchantId, request);
             return Ok(shifts);
+        }
+        catch (LeaveConflictException ex)
+        {
+            return Conflict(new LeaveConflictResponse
+            {
+                Message = ex.Message,
+                Conflicts = ex.Conflicts
+            });
         }
         catch (InvalidOperationException ex)
         {
@@ -182,6 +199,14 @@ public class ShiftsController : ControllerBase
 
             return Ok(shift);
         }
+        catch (LeaveConflictException ex)
+        {
+            return Conflict(new LeaveConflictResponse
+            {
+                Message = ex.Message,
+                Conflicts = ex.Conflicts
+            });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
@@ -212,6 +237,14 @@ public class ShiftsController : ControllerBase
                 return NotFound(new { message = "Turno non trovato" });
 
             return Ok(shift);
+        }
+        catch (LeaveConflictException ex)
+        {
+            return Conflict(new LeaveConflictResponse
+            {
+                Message = ex.Message,
+                Conflicts = ex.Conflicts
+            });
         }
         catch (InvalidOperationException ex)
         {

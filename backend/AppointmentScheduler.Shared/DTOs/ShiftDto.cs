@@ -27,6 +27,11 @@ public class CreateShiftRequest
     public ShiftType ShiftType { get; set; }
     public string Color { get; set; } = "#2196F3";
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Se true, forza la creazione del turno anche in caso di conflitto con ferie/permessi
+    /// </summary>
+    public bool ForceCreate { get; set; } = false;
 }
 
 /// <summary>
@@ -50,6 +55,11 @@ public class CreateShiftsFromTemplateRequest
     public List<int>? EmployeeIds { get; set; }
 
     public List<DayOfWeek>? DaysOfWeek { get; set; }
+
+    /// <summary>
+    /// Se true, forza la creazione dei turni anche in caso di conflitto con ferie/permessi
+    /// </summary>
+    public bool ForceCreate { get; set; } = false;
 }
 
 /// <summary>
@@ -76,6 +86,11 @@ public class UpdateShiftRequest
     public string Color { get; set; } = "#2196F3";
     public string? Notes { get; set; }
     public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Se true, forza l'aggiornamento del turno anche in caso di conflitto con ferie/permessi
+    /// </summary>
+    public bool ForceCreate { get; set; } = false;
 }
 
 /// <summary>
@@ -95,6 +110,11 @@ public class AssignShiftRequest
     public List<int>? EmployeeIds { get; set; }
 
     public string? Notes { get; set; }
+
+    /// <summary>
+    /// Se true, forza l'assegnazione del turno anche in caso di conflitto con ferie/permessi
+    /// </summary>
+    public bool ForceCreate { get; set; } = false;
 }
 
 /// <summary>
@@ -167,4 +187,27 @@ public class EmployeeShiftStatsDto
     public decimal RemainingHoursThisWeek { get; set; }
     public decimal RemainingHoursThisMonth { get; set; }
     public bool IsOverLimit { get; set; }
+}
+
+/// <summary>
+/// Informazioni su un conflitto tra turno e richiesta di ferie/permessi
+/// </summary>
+public class LeaveConflictInfo
+{
+    public int EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
+    public int LeaveRequestId { get; set; }
+    public string LeaveTypeName { get; set; } = string.Empty;
+    public string StatusName { get; set; } = string.Empty;
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+}
+
+/// <summary>
+/// Risposta in caso di conflitto con ferie/permessi
+/// </summary>
+public class LeaveConflictResponse
+{
+    public string Message { get; set; } = string.Empty;
+    public List<LeaveConflictInfo> Conflicts { get; set; } = new();
 }

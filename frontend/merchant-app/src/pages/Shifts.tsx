@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import axios from '../lib/axios';
-import { Shift, ShiftTemplate, ShiftType, CreateShiftRequest, CreateShiftsFromTemplateRequest, UpdateShiftRequest, AssignShiftRequest } from '../types/shift';
+import { Shift, ShiftTemplate, ShiftType, CreateShiftRequest, CreateShiftsFromTemplateRequest, UpdateShiftRequest, AssignShiftRequest, LeaveConflictInfo } from '../types/shift';
 import AppLayout from '../components/layout/AppLayout';
 
 interface Employee {
@@ -55,6 +55,9 @@ function Shifts({ user, onLogout }: ShiftsProps) {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showLeaveConflictModal, setShowLeaveConflictModal] = useState(false);
+  const [leaveConflicts, setLeaveConflicts] = useState<LeaveConflictInfo[]>([]);
+  const [pendingForceAction, setPendingForceAction] = useState<(() => void) | null>(null);
 
   // Form states for Create Shift
   const [createForm, setCreateForm] = useState<CreateShiftRequest>({
@@ -215,6 +218,31 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     setCurrentDate(new Date());
   };
 
+  const isLeaveConflictError = (error: any): boolean => {
+    return error.response?.status === 409 && error.response?.data?.conflicts;
+  };
+
+  const showLeaveConflictAlert = (conflicts: LeaveConflictInfo[], forceAction: () => void) => {
+    setLeaveConflicts(conflicts);
+    setPendingForceAction(() => forceAction);
+    setShowLeaveConflictModal(true);
+  };
+
+  const handleForceConfirm = () => {
+    setShowLeaveConflictModal(false);
+    if (pendingForceAction) {
+      pendingForceAction();
+    }
+    setPendingForceAction(null);
+    setLeaveConflicts([]);
+  };
+
+  const handleForceCancel = () => {
+    setShowLeaveConflictModal(false);
+    setPendingForceAction(null);
+    setLeaveConflicts([]);
+  };
+
   const getTimeDisplay = (timeSpan: string) => {
     // TimeSpan format: "HH:mm:ss"
     const parts = timeSpan.split(':');
@@ -259,9 +287,10 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     setShowCreateModal(true);
   };
 
-  const handleCreateShift = async () => {
+  const handleCreateShift = async (forceCreate = false) => {
     try {
-      await axios.post('/shifts', createForm);
+      const requestData = { ...createForm, forceCreate };
+      await axios.post('/shifts', requestData);
       setShowCreateModal(false);
       fetchShifts();
       alert('Turno creato con successo');
@@ -276,12 +305,16 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         employeeIds: [],
       });
     } catch (error: any) {
+      if (isLeaveConflictError(error)) {
+        showLeaveConflictAlert(error.response.data.conflicts, () => handleCreateShift(true));
+        return;
+      }
       console.error('Errore creazione turno:', error);
       alert(error.response?.data?.message || 'Errore nella creazione del turno');
     }
   };
 
-  const handleCreateFromTemplate = async () => {
+  const handleCreateFromTemplate = async (forceCreate = false) => {
     if (!templateForm.shiftTemplateId) {
       alert('Seleziona un template');
       return;
@@ -294,6 +327,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         endDate: templateForm.endDate,
         employeeIds: templateForm.employeeIds,
         daysOfWeek: templateForm.daysOfWeek.length > 0 ? templateForm.daysOfWeek : undefined,
+        forceCreate,
       };
 
       await axios.post('/shifts/from-template', request);
@@ -309,6 +343,10 @@ function Shifts({ user, onLogout }: ShiftsProps) {
         daysOfWeek: [],
       });
     } catch (error: any) {
+      if (isLeaveConflictError(error)) {
+        showLeaveConflictAlert(error.response.data.conflicts, () => handleCreateFromTemplate(true));
+        return;
+      }
       console.error('Errore creazione turni da template:', error);
       alert(error.response?.data?.message || 'Errore nella creazione dei turni');
     }
@@ -330,16 +368,21 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     setShowEditModal(true);
   };
 
-  const handleEditShift = async () => {
+  const handleEditShift = async (forceCreate = false) => {
     if (!selectedShift) return;
 
     try {
-      await axios.put(`/shifts/${selectedShift.id}`, editForm);
+      const requestData = { ...editForm, forceCreate };
+      await axios.put(`/shifts/${selectedShift.id}`, requestData);
       setShowEditModal(false);
       setSelectedShift(null);
       fetchShifts();
       alert('Turno aggiornato con successo');
     } catch (error: any) {
+      if (isLeaveConflictError(error)) {
+        showLeaveConflictAlert(error.response.data.conflicts, () => handleEditShift(true));
+        return;
+      }
       console.error('Errore aggiornamento turno:', error);
       alert(error.response?.data?.message || 'Errore nell\'aggiornamento del turno');
     }
@@ -353,19 +396,24 @@ function Shifts({ user, onLogout }: ShiftsProps) {
     setShowAssignModal(true);
   };
 
-  const handleAssignShift = async () => {
+  const handleAssignShift = async (forceCreate = false) => {
     if (!selectedShift || !assignForm.employeeIds || assignForm.employeeIds.length === 0) {
       alert('Seleziona almeno un dipendente');
       return;
     }
 
     try {
-      await axios.post(`/shifts/${selectedShift.id}/assign`, assignForm);
+      const requestData = { ...assignForm, forceCreate };
+      await axios.post(`/shifts/${selectedShift.id}/assign`, requestData);
       setShowAssignModal(false);
       setSelectedShift(null);
       fetchShifts();
       alert('Turno assegnato con successo');
     } catch (error: any) {
+      if (isLeaveConflictError(error)) {
+        showLeaveConflictAlert(error.response.data.conflicts, () => handleAssignShift(true));
+        return;
+      }
       console.error('Errore assegnazione turno:', error);
       alert(error.response?.data?.message || 'Errore nell\'assegnazione del turno');
     }
@@ -812,7 +860,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={handleCreateShift}
+                  onClick={() => handleCreateShift()}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all"
                 >
                   Crea Turno
@@ -945,7 +993,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={handleCreateFromTemplate}
+                  onClick={() => handleCreateFromTemplate()}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
                 >
                   Crea Turni
@@ -1114,7 +1162,7 @@ function Shifts({ user, onLogout }: ShiftsProps) {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={handleEditShift}
+                  onClick={() => handleEditShift()}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all"
                 >
                   Salva Modifiche
@@ -1182,13 +1230,71 @@ function Shifts({ user, onLogout }: ShiftsProps) {
 
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={handleAssignShift}
+                  onClick={() => handleAssignShift()}
                   className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
                 >
                   Assegna
                 </button>
                 <button
                   onClick={() => setShowAssignModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700 transition-all"
+                >
+                  Annulla
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Leave Conflict Alert Modal */}
+        {showLeaveConflictModal && leaveConflicts.length > 0 && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-[60]">
+            <div className="bg-gray-800 rounded-xl p-6 max-w-lg w-full border border-yellow-500/50">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-yellow-400 text-xl font-bold">
+                  !
+                </div>
+                <h2 className="text-xl font-bold text-yellow-400">Attenzione: Conflitto con Ferie/Permessi</h2>
+              </div>
+
+              <p className="text-gray-300 mb-4">
+                I seguenti dipendenti hanno richieste di ferie/permessi che si sovrappongono con il turno:
+              </p>
+
+              <div className="bg-gray-900/50 rounded-lg border border-yellow-500/20 p-3 mb-4 max-h-48 overflow-y-auto">
+                {leaveConflicts.map((conflict, index) => (
+                  <div key={index} className="flex items-start gap-3 py-2 border-b border-gray-700/50 last:border-b-0">
+                    <div className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                      conflict.statusName === 'Approvata'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'bg-orange-500/20 text-orange-400'
+                    }`}>
+                      {conflict.statusName}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white font-medium text-sm">{conflict.employeeName}</div>
+                      <div className="text-gray-400 text-xs">
+                        {conflict.leaveTypeName} &mdash; dal{' '}
+                        {new Date(conflict.startDate).toLocaleDateString('it-IT', { timeZone: 'UTC' })} al{' '}
+                        {new Date(conflict.endDate).toLocaleDateString('it-IT', { timeZone: 'UTC' })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <p className="text-yellow-300/80 text-sm mb-5">
+                Vuoi forzare la creazione del turno nonostante i conflitti con le ferie/permessi?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleForceConfirm}
+                  className="flex-1 px-4 py-2 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-lg hover:from-yellow-700 hover:to-orange-700 transition-all font-semibold"
+                >
+                  Forza Creazione
+                </button>
+                <button
+                  onClick={handleForceCancel}
                   className="flex-1 px-4 py-2 bg-gray-700/50 text-gray-300 rounded-lg hover:bg-gray-700 transition-all"
                 >
                   Annulla
