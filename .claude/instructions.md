@@ -129,6 +129,34 @@ setError("Error 500: Internal Server Error");
 
 ## Database
 
+### DateTime e PostgreSQL - CRITICO
+PostgreSQL con Npgsql richiede che TUTTI i DateTime salvati su colonne `timestamp with time zone` abbiano `Kind=Utc`.
+I DateTime che arrivano dalla deserializzazione JSON del frontend hanno `Kind=Unspecified` e causano:
+`System.ArgumentException: Cannot write DateTime with Kind=Unspecified to PostgreSQL type 'timestamp with time zone'`
+
+**Regola:** Normalizzare SEMPRE a UTC prima di salvare su DB:
+```csharp
+// Helper da usare nei servizi per DateTime nullable
+private static DateTime? NormalizeToUtc(DateTime? dateTime)
+{
+    if (dateTime == null) return null;
+    var dt = dateTime.Value;
+    return dt.Kind == DateTimeKind.Unspecified
+        ? DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+        : dt.ToUniversalTime();
+}
+
+// Per DateTime non-nullable
+var utcDate = dt.Kind == DateTimeKind.Unspecified
+    ? DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+    : dt.ToUniversalTime();
+```
+
+**Dove applicare:**
+- Ogni campo DateTime che arriva da un DTO/Request del frontend (ExpiresAt, StartDate, EndDate, ecc.)
+- NON serve per `DateTime.UtcNow` (gia' UTC)
+- NON serve per campi calcolati internamente con `DateTime.UtcNow`
+
 ### Async sempre
 ```csharp
 // GIUSTO
@@ -260,6 +288,7 @@ git push origin v0.0.1
 - [ ] Messaggi utente chiari
 - [ ] No emoji in codice/messaggi
 - [ ] Async/await per DB
+- [ ] DateTime da DTO normalizzati a UTC prima di salvare su DB
 - [ ] Loading states frontend
 - [ ] Gestione errori user-friendly
 - [ ] Versioning automatico NON modificato
