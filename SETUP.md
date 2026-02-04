@@ -50,7 +50,7 @@ Backend disponibile su:
 
 ### 3. Frontend
 
-Scegli quale app frontend avviare (o tutte e 3 in terminali separati):
+Scegli quale app frontend avviare (o tutte e 4 in terminali separati):
 
 ```bash
 # Consumer App (utenti) - porta 5173
@@ -65,6 +65,11 @@ npm run dev
 
 # Admin App - porta 5175
 cd frontend/admin-app
+npm install
+npm run dev
+
+# Employee App (dipendenti) - porta 5176
+cd frontend/employee-app
 npm install
 npm run dev
 ```
@@ -264,6 +269,7 @@ fetch('/api/version').then(r => r.json()).then(console.log)
 - Consumer App: `http://localhost:5173`
 - Merchant App: `http://localhost:5174`
 - Admin App: `http://localhost:5175`
+- Employee App: `http://localhost:5176`
 - Backend API: `http://localhost:5000`
 - Swagger UI: `http://localhost:5000/swagger`
 
