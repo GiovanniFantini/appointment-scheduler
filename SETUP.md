@@ -5,7 +5,7 @@ Guida completa per configurare l'ambiente di sviluppo locale.
 ## Prerequisiti
 
 - .NET 8 SDK
-- Node.js 18+
+- Node.js 22+
 - PostgreSQL (o Docker)
 - Git
 
