@@ -130,6 +130,9 @@ try
     // Leave & Availability Management
     builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 
+    // Employee Communication System
+    builder.Services.AddScoped<IBoardMessageService, BoardMessageService>();
+
     // Reporting System
     builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IReportService, AppointmentScheduler.Core.Services.ReportService>();
 
