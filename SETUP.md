@@ -92,6 +92,25 @@ npm run dev
 }
 ```
 
+### Azure Communication Services (Email)
+
+Il recupero password richiede Azure Communication Services. Per lo sviluppo locale, aggiungi a `appsettings.Local.json`:
+
+```json
+{
+  "AzureCommunicationServices": {
+    "ConnectionString": "endpoint=https://acs-xxx.communication.azure.com/;accesskey=...",
+    "SenderAddress": "DoNotReply@xxxxxxxx.azurecomm.net",
+    "SenderDisplayName": "Appointment Scheduler",
+    "FrontendBaseUrl": "http://localhost:5173"
+  }
+}
+```
+
+Se la connection string non e' configurata, il servizio non invia email ma logga il link di reset nella console del backend (utile per sviluppo locale senza account Azure).
+
+Per la guida completa all'installazione di ACS, vedi [backend/AZURE_COMMUNICATION_SERVICES.md](backend/AZURE_COMMUNICATION_SERVICES.md).
+
 ### Alternative a appsettings.Local.json
 
 **User Secrets (raccomandato):**

@@ -43,6 +43,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<BoardMessage> BoardMessages { get; set; }
     public DbSet<BoardMessageRead> BoardMessageReads { get; set; }
 
+    // Authentication
+    public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -546,6 +549,23 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => new { e.BoardMessageId, e.EmployeeId }).IsUnique();
             entity.HasIndex(e => e.EmployeeId);
+        });
+
+        // PasswordResetToken configuration
+        modelBuilder.Entity<PasswordResetToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(128);
+            entity.HasIndex(e => e.Token).IsUnique();
+
+            entity.HasOne(e => e.User)
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => e.ExpiresAt);
+            entity.HasIndex(e => e.UsedAt);
         });
     }
 }

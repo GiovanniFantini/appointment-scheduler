@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import MerchantApproval from './pages/MerchantApproval'
 import Reports from './pages/Reports'
 
@@ -75,6 +77,8 @@ function App() {
         <Route path="/reports" element={
           user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   )

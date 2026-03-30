@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
 import MyShifts from './pages/MyShifts'
@@ -103,6 +105,8 @@ function App() {
         <Route path="/reports" element={
           user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   )
