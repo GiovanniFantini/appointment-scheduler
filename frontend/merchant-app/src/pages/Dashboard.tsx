@@ -147,9 +147,23 @@ function Dashboard({ user, onLogout }: DashboardProps) {
           </Link>
 
           <Link
+            to="/bacheca"
+            className="glass-card p-8 rounded-3xl hover:shadow-glow-green transition-all border border-white/10 hover:border-neon-green/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
+            style={{ animationDelay: '0.9s' }}
+          >
+            <div className="bg-gradient-to-br from-neon-green/20 to-emerald-500/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-green/30 group-hover:shadow-glow-green transition-all">
+              <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2 group-hover:text-neon-green transition-colors">Bacheca</h2>
+            <p className="text-gray-400">Comunicazioni aziendali ai dipendenti</p>
+          </Link>
+
+          <Link
             to="/reports"
             className="glass-card p-8 rounded-3xl hover:shadow-glow-cyan transition-all border border-white/10 hover:border-neon-cyan/50 transform hover:scale-105 hover:-translate-y-2 group animate-scale-in"
-            style={{ animationDelay: '0.9s' }}
+            style={{ animationDelay: '1.0s' }}
           >
             <div className="bg-gradient-to-br from-neon-cyan/20 to-neon-blue/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border border-neon-cyan/30 group-hover:shadow-glow-cyan transition-all">
               <svg className="w-8 h-8 text-neon-cyan" fill="none" stroke="currentColor" viewBox="0 0 24 24">

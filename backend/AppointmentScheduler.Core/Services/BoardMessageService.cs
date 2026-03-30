@@ -72,7 +72,7 @@ public class BoardMessageService : IBoardMessageService
             Priority = request.Priority,
             Category = request.Category,
             IsPinned = request.IsPinned,
-            ExpiresAt = request.ExpiresAt,
+            ExpiresAt = NormalizeToUtc(request.ExpiresAt),
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -103,7 +103,7 @@ public class BoardMessageService : IBoardMessageService
         message.Priority = request.Priority;
         message.Category = request.Category;
         message.IsPinned = request.IsPinned;
-        message.ExpiresAt = request.ExpiresAt;
+        message.ExpiresAt = NormalizeToUtc(request.ExpiresAt);
         message.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -144,6 +144,18 @@ public class BoardMessageService : IBoardMessageService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    /// <summary>
+    /// Normalizza un DateTime nullable a UTC per compatibilita' PostgreSQL
+    /// </summary>
+    private static DateTime? NormalizeToUtc(DateTime? dateTime)
+    {
+        if (dateTime == null) return null;
+        var dt = dateTime.Value;
+        return dt.Kind == DateTimeKind.Unspecified
+            ? DateTime.SpecifyKind(dt, DateTimeKind.Utc)
+            : dt.ToUniversalTime();
     }
 
     private static BoardMessageDto MapToDto(BoardMessage message, int? currentEmployeeId = null)

@@ -95,6 +95,30 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </button>
 
+          {/* Card Calendario Team */}
+          <button
+            onClick={() => navigate('/team-calendar')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-purple transition-all duration-300 transform hover:scale-105 text-left border border-white/10"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-purple/20 to-neon-blue/20 border border-neon-purple/30">
+                <svg className="w-8 h-8 text-neon-purple" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Calendario Team</h3>
+                <p className="text-gray-400 text-sm">Turni di tutti i colleghi</p>
+              </div>
+            </div>
+            <div className="flex items-center text-neon-purple text-sm font-semibold">
+              Vai al calendario
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
           {/* Card Ferie e Permessi */}
           <button
             onClick={() => navigate('/leave-requests')}
@@ -142,6 +166,30 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
             </div>
           </button>
 
+          {/* Card Bacheca */}
+          <button
+            onClick={() => navigate('/bacheca')}
+            className="glass-card p-6 rounded-2xl hover:shadow-glow-green transition-all duration-300 transform hover:scale-105 text-left border border-white/10"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-neon-green/20 to-emerald-500/20 border border-neon-green/30">
+                <svg className="w-8 h-8 text-neon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Bacheca</h3>
+                <p className="text-gray-400 text-sm">Comunicazioni aziendali</p>
+              </div>
+            </div>
+            <div className="flex items-center text-neon-green text-sm font-semibold">
+              Vai alla bacheca
+              <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </button>
+
           {/* Card Report */}
           <button
             onClick={() => navigate('/reports')}
@@ -176,7 +224,9 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
           <ul className="list-disc list-inside text-gray-300 space-y-2">
             <li><strong className="text-neon-green">Timbratura intelligente</strong> - Check-in/out con sistema empatico e auto-validazione</li>
             <li><strong className="text-neon-blue">I tuoi turni</strong> - Visualizza il calendario e pianifica il tuo lavoro</li>
+            <li><strong className="text-neon-purple">Calendario Team</strong> - Vedi i turni di tutti i tuoi colleghi</li>
             <li><strong className="text-neon-pink">Ferie e permessi</strong> - Richiedi e gestisci le tue assenze</li>
+            <li><strong className="text-neon-green">Bacheca aziendale</strong> - Leggi le comunicazioni dal tuo merchant</li>
             <li>Visualizzare i tuoi colleghi e le informazioni di contatto</li>
             <li><strong className="text-neon-purple">I tuoi documenti HR</strong> - Buste paga, contratti e documenti payroll</li>
           </ul>
