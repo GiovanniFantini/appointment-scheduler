@@ -50,7 +50,7 @@ Backend disponibile su:
 
 ### 3. Frontend
 
-Scegli quale app frontend avviare (o tutte e 3 in terminali separati):
+Scegli quale app frontend avviare (o tutte e 4 in terminali separati):
 
 ```bash
 # Consumer App (utenti) - porta 5173
@@ -65,6 +65,11 @@ npm run dev
 
 # Admin App - porta 5175
 cd frontend/admin-app
+npm install
+npm run dev
+
+# Employee App (dipendenti) - porta 5176
+cd frontend/employee-app
 npm install
 npm run dev
 ```
@@ -86,6 +91,25 @@ npm run dev
   }
 }
 ```
+
+### Azure Communication Services (Email)
+
+Il recupero password richiede Azure Communication Services. Per lo sviluppo locale, aggiungi a `appsettings.Local.json`:
+
+```json
+{
+  "AzureCommunicationServices": {
+    "ConnectionString": "endpoint=https://acs-xxx.communication.azure.com/;accesskey=...",
+    "SenderAddress": "DoNotReply@xxxxxxxx.azurecomm.net",
+    "SenderDisplayName": "Appointment Scheduler",
+    "FrontendBaseUrl": "http://localhost:5173"
+  }
+}
+```
+
+Se la connection string non e' configurata, il servizio non invia email ma logga il link di reset nella console del backend (utile per sviluppo locale senza account Azure).
+
+Per la guida completa all'installazione di ACS, vedi [backend/AZURE_COMMUNICATION_SERVICES.md](backend/AZURE_COMMUNICATION_SERVICES.md).
 
 ### Alternative a appsettings.Local.json
 
@@ -264,6 +288,7 @@ fetch('/api/version').then(r => r.json()).then(console.log)
 - Consumer App: `http://localhost:5173`
 - Merchant App: `http://localhost:5174`
 - Admin App: `http://localhost:5175`
+- Employee App: `http://localhost:5176`
 - Backend API: `http://localhost:5000`
 - Swagger UI: `http://localhost:5000/swagger`
 

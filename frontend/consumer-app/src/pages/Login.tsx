@@ -96,6 +96,11 @@ function Login({ onLogin }: LoginProps) {
                   required
                 />
               </div>
+              <div className="flex justify-end mt-1">
+                <Link to="/forgot-password" className="text-sm text-neon-cyan hover:text-neon-blue transition-colors">
+                  Password dimenticata?
+                </Link>
+              </div>
             </div>
 
             <button

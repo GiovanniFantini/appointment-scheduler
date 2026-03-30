@@ -26,4 +26,5 @@ public class Merchant
     public ICollection<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; } = new List<EmployeeWorkingHoursLimit>();
     public ICollection<OvertimeRecord> OvertimeRecords { get; set; } = new List<OvertimeRecord>();
     public ICollection<LeaveRequest> LeaveRequests { get; set; } = new List<LeaveRequest>();
+    public ICollection<BoardMessage> BoardMessages { get; set; } = new List<BoardMessage>();
 }

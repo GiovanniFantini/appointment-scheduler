@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
 import ApiDebugConsole from '../components/ApiDebugConsole'
 import VersionInfo from '../components/VersionInfo'
@@ -69,6 +70,11 @@ function Login({ onLogin }: LoginProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-800 bg-white"
               required
             />
+            <div className="flex justify-end mt-1">
+              <Link to="/forgot-password" className="text-sm text-purple-600 hover:text-purple-800">
+                Password dimenticata?
+              </Link>
+            </div>
           </div>
 
           <button

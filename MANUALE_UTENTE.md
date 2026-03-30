@@ -6,8 +6,8 @@ Piattaforma per la gestione di prenotazioni che connette clienti, attività comm
 
 **Ruoli:**
 - **Cliente**: Prenota servizi
-- **Merchant**: Gestisce attività, prenotazioni, dipendenti e turni
-- **Dipendente**: Gestisce turni e timbrature
+- **Merchant**: Gestisce attività, prenotazioni, dipendenti, turni e comunicazioni
+- **Dipendente**: Gestisce turni, timbrature, calendario team e comunicazioni
 - **Admin**: Approva merchant e gestisce piattaforma
 
 **Categorie Servizi:** Ristoranti, Sport, Wellness, Healthcare, Professional, Altri
@@ -171,6 +171,34 @@ Piattaforma per la gestione di prenotazioni che connette clienti, attività comm
 **Filtri:**
 - Per dipendente, tipo, anno, mese, stato
 
+### Bacheca Comunicazioni Aziendali
+
+**Accesso:** `/bacheca` → Gestione comunicazioni per i dipendenti
+
+**Creare Messaggio:**
+1. Clicca "Nuovo Messaggio"
+2. Inserisci Titolo e Contenuto
+3. Seleziona Priorita':
+   - **Normale**: Comunicazione ordinaria
+   - **Importante**: Evidenziata in arancione
+   - **Urgente**: Evidenziata in rosso
+4. Seleziona Categoria: Generale, Turni, HR, Sicurezza, Eventi, Altro
+5. Opzioni avanzate:
+   - **Fissa in alto**: Il messaggio resta sempre in cima alla bacheca
+   - **Data scadenza**: Il messaggio scompare automaticamente dopo questa data
+6. Salva
+
+**Gestire Messaggi:**
+- Visualizza statistiche: messaggi totali, fissati, urgenti, in scadenza
+- Filtra per priorita' o categoria
+- Modifica o elimina messaggi esistenti
+- Monitora quanti dipendenti hanno letto ogni messaggio (Read Receipts)
+
+**Consigli:**
+- Usa priorita' "Urgente" solo per emergenze reali
+- Fissa in alto i messaggi che tutti devono leggere
+- Imposta scadenze per messaggi temporanei (es. eventi, promozioni)
+
 ### Reports e Analytics
 
 **Dashboard:**
@@ -262,6 +290,41 @@ Piattaforma per la gestione di prenotazioni che connette clienti, attività comm
 - Visualizza giorni disponibili, usati, rimanenti
 - Il saldo si aggiorna automaticamente
 
+### Calendario Team
+
+**Accesso:** `/team-calendar` → Visualizza i turni di tutti i colleghi
+
+**Funzionalita':**
+1. **Vista Settimanale**: Visualizza turni giorno per giorno per la settimana corrente
+2. **Vista Mensile**: Panoramica completa del mese
+3. **Filtro Dipendenti**: Seleziona uno o piu' colleghi per visualizzarne i turni
+4. **Dettaglio Turno**: Clicca su un turno per vedere orario, pausa, tipo e colleghi assegnati
+5. **Navigazione**: Frecce avanti/indietro per cambiare settimana o mese
+6. **Stampa**: Pulsante per stampare il calendario corrente
+
+**Tipi Turno:**
+- Mattina (Morning) - Blu
+- Pomeriggio (Afternoon) - Arancione
+- Notte (Night) - Viola
+- Intero (Full) - Verde
+
+### Bacheca Comunicazioni
+
+**Accesso:** `/bacheca` → Leggi le comunicazioni aziendali
+
+**Funzionalita':**
+1. **Lista Messaggi**: Visualizza tutti i messaggi attivi dal tuo merchant
+2. **Priorita' visive**: Badge colorati per Normale, Importante, Urgente
+3. **Filtri**: Filtra per categoria o mostra solo messaggi non letti
+4. **Lettura**: Clicca su un messaggio per espanderlo e leggerlo
+   - Il messaggio viene automaticamente segnato come "letto"
+5. **Statistiche**: Visualizza contatore messaggi totali e non letti
+
+**Badge Priorita':**
+- Normale: Grigio
+- Importante: Arancione
+- Urgente: Rosso
+
 ### Documenti HR
 
 **Visualizzare:**
@@ -326,6 +389,12 @@ A: Richiedi correzione entro 24h (auto-approvata)
 **Q: Validare manualmente tutte le timbrature?**
 A: No, 95% auto-validate, approvazione batch settimanale
 
+**Q: Come vedo i turni dei colleghi?**
+A: `/team-calendar` → Calendario turni con vista settimanale/mensile e filtri per collega
+
+**Q: Come funziona la bacheca?**
+A: Merchant crea messaggi in `/bacheca`, dipendenti li leggono nella propria bacheca. Il sistema traccia chi ha letto ogni messaggio
+
 ---
 
 ## Supporto
@@ -336,4 +405,4 @@ A: No, 95% auto-validate, approvazione batch settimanale
 
 ---
 
-**Versione**: 2.0 - Gennaio 2026
+**Versione**: 2.1 - Febbraio 2026

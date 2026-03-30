@@ -57,13 +57,15 @@ const menuSections = [
     items: [
       { path: '/timbratura', label: 'Timbratura', icon: '⏱️' },
       { path: '/my-shifts', label: 'I Miei Turni', icon: '📋' },
+      { path: '/team-calendar', label: 'Calendario Team', icon: '📅' },
       { path: '/leave-requests', label: 'Ferie e Permessi', icon: '🏖️' }
     ]
   },
   {
     title: 'Team',
     items: [
-      { path: '/colleagues', label: 'Colleghi', icon: '👥' }
+      { path: '/colleagues', label: 'Colleghi', icon: '👥' },
+      { path: '/bacheca', label: 'Bacheca', icon: '📌' }
     ]
   },
   {

@@ -2,13 +2,17 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Dashboard from './pages/Dashboard'
 import Colleagues from './pages/Colleagues'
 import MyShifts from './pages/MyShifts'
+import TeamCalendar from './pages/TeamCalendar'
 import Timbratura from './pages/Timbratura'
 import MyDocuments from './pages/MyDocuments'
 import LeaveRequests from './pages/LeaveRequests'
 import Reports from './pages/Reports'
+import Bacheca from './pages/Bacheca'
 
 interface User {
   userId: number
@@ -83,6 +87,12 @@ function App() {
         <Route path="/my-shifts" element={
           user ? <MyShifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
+        <Route path="/team-calendar" element={
+          user ? <TeamCalendar user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
+        <Route path="/bacheca" element={
+          user ? <Bacheca user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+        } />
         <Route path="/timbratura" element={
           user ? <Timbratura user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
@@ -95,6 +105,8 @@ function App() {
         <Route path="/reports" element={
           user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
         } />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
     </Router>
   )

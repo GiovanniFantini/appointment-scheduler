@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
 
@@ -9,10 +11,12 @@ namespace AppointmentScheduler.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly IPasswordResetService _passwordResetService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, IPasswordResetService passwordResetService)
     {
         _authService = authService;
+        _passwordResetService = passwordResetService;
     }
 
     [HttpPost("login")]
@@ -46,5 +50,32 @@ public class AuthController : ControllerBase
         {
             return StatusCode(500, new { message = "Errore durante la registrazione. Riprova più tardi." });
         }
+    }
+
+    /// <summary>
+    /// Richiede il reset della password. Risponde sempre 200 per sicurezza (anti-enumeration).
+    /// Valido per tutti i tipi di utente: consumer, merchant, admin ed employee.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
+    {
+        await _passwordResetService.RequestPasswordResetAsync(request.Email);
+        return Ok(new { message = "Se l'email risulta registrata, riceverai le istruzioni per il recupero della password." });
+    }
+
+    /// <summary>
+    /// Imposta la nuova password utilizzando il token ricevuto via email.
+    /// </summary>
+    [HttpPost("reset-password")]
+    [AllowAnonymous]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+    {
+        var success = await _passwordResetService.ResetPasswordAsync(request.Token, request.NewPassword);
+
+        if (!success)
+            return BadRequest(new { message = "Il link non e' piu' valido. Richiedi un nuovo recupero password." });
+
+        return Ok(new { message = "Password aggiornata con successo. Puoi ora accedere con la nuova password." });
     }
 }

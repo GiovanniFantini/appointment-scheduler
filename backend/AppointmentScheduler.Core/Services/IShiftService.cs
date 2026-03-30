@@ -82,6 +82,15 @@ public interface IShiftService
     Task<EmployeeShiftStatsDto> GetEmployeeShiftStatsAsync(int employeeId);
 
     /// <summary>
+    /// Recupera tutti i turni del team per un employee (usa il merchantId dell'employee)
+    /// </summary>
+    /// <param name="employeeId">ID del dipendente</param>
+    /// <param name="startDate">Data inizio</param>
+    /// <param name="endDate">Data fine</param>
+    /// <returns>Lista di turni del team nel periodo</returns>
+    Task<IEnumerable<ShiftDto>> GetTeamShiftsAsync(int employeeId, DateTime startDate, DateTime endDate);
+
+    /// <summary>
     /// Verifica se un turno va in conflitto con altri turni del dipendente
     /// </summary>
     /// <param name="employeeId">ID del dipendente</param>

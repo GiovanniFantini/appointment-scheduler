@@ -130,6 +130,14 @@ try
     // Leave & Availability Management
     builder.Services.AddScoped<ILeaveRequestService, LeaveRequestService>();
 
+    // Employee Communication System
+    builder.Services.AddScoped<IBoardMessageService, BoardMessageService>();
+
+    // Email e Communication Services
+    builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IEmailService, AppointmentScheduler.Core.Services.AzureEmailService>();
+    builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.ICommunicationService, AppointmentScheduler.Core.Services.CommunicationService>();
+    builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IPasswordResetService, AppointmentScheduler.Core.Services.PasswordResetService>();
+
     // Reporting System
     builder.Services.AddScoped<AppointmentScheduler.Core.Interfaces.IReportService, AppointmentScheduler.Core.Services.ReportService>();
 

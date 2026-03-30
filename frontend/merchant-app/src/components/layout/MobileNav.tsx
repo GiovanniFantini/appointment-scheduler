@@ -65,7 +65,8 @@ const menuSections = [
       { path: '/employees', label: 'Dipendenti', icon: '👥' },
       { path: '/shifts', label: 'Turni', icon: '📋' },
       { path: '/shift-templates', label: 'Template Turni', icon: '📝' },
-      { path: '/availabilities', label: 'Disponibilità', icon: '✅' }
+      { path: '/availabilities', label: 'Disponibilità', icon: '✅' },
+      { path: '/bacheca', label: 'Bacheca', icon: '📌' }
     ]
   },
   {

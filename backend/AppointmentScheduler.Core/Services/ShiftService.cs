@@ -548,6 +548,18 @@ public class ShiftService : IShiftService
         return stats;
     }
 
+    public async Task<IEnumerable<ShiftDto>> GetTeamShiftsAsync(int employeeId, DateTime startDate, DateTime endDate)
+    {
+        // Recupera il merchantId dal record employee
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Id == employeeId && e.IsActive);
+
+        if (employee == null)
+            throw new InvalidOperationException("Dipendente non trovato");
+
+        return await GetMerchantShiftsAsync(employee.MerchantId, startDate, endDate);
+    }
+
     public async Task<bool> HasShiftConflictAsync(int employeeId, DateTime date, TimeSpan startTime, TimeSpan endTime, int? excludeShiftId = null)
     {
         // Controlla conflitti sia nella relazione legacy (EmployeeId) che nella nuova (ShiftEmployees)

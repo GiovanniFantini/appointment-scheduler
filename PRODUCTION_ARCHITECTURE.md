@@ -89,7 +89,7 @@ const API_URL = process.env.API_URL || 'https://appointment-scheduler-api.azurew
 
 ### Merchant App
 - Dashboard merchant
-- Gestione servizi e prenotazioni
+- Gestione servizi, prenotazioni e comunicazioni aziendali (bacheca)
 - Workflow: `.github/workflows/deploy-merchant-app.yml`
 
 ### Admin App
@@ -99,7 +99,7 @@ const API_URL = process.env.API_URL || 'https://appointment-scheduler-api.azurew
 
 ### Employee App
 - App dipendenti
-- Sistema timbrature e turni
+- Sistema timbrature, turni, calendario team e bacheca comunicazioni
 - Workflow: `.github/workflows/deploy-employee-app.yml`
 
 ### Build e Deploy Process

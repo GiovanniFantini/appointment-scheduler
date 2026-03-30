@@ -4,6 +4,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/Home'
 import Bookings from './pages/Bookings'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 interface User {
   userId: number
@@ -73,6 +75,8 @@ function App() {
           <Route path="/bookings" element={
             user ? <Bookings user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
           } />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
         </Routes>
       </Router>
   )

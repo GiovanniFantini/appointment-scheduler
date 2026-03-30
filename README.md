@@ -118,6 +118,20 @@ Creare una Web App mobile-ready multi-direzionale che:
 - Filtri per dipendente, tipo, anno/mese, status
 - GDPR-compliant con audit trail
 
+### Comunicazioni Aziendali
+- **Bacheca Aziendale**: Sistema di messaggi e comunicazioni merchant-dipendenti
+  - Creazione messaggi con priorita' (Normale, Importante, Urgente)
+  - Categorie personalizzabili (Generale, Turni, HR, Sicurezza, Eventi, Altro)
+  - Pin messaggi importanti in cima
+  - Scadenza automatica messaggi
+  - Tracciamento lettura (read receipts) per dipendente
+  - Filtri per priorita', categoria, stato lettura
+- **Calendario Team**: Visualizzazione turni di tutto il team per dipendenti
+  - Vista settimanale e mensile
+  - Filtro per dipendente
+  - Dettaglio turno con tutti i dipendenti assegnati
+  - Supporto stampa
+
 ### Reportistica Avanzata
 - Dashboard merchant con KPI real-time
 - Dashboard dipendente con statistiche personali
@@ -131,15 +145,15 @@ Creare una Web App mobile-ready multi-direzionale che:
 
 | Metrica | Valore |
 |---------|--------|
-| Controller API | 20 |
-| Endpoint API | 119+ |
-| Servizi Business | 17 |
-| Modelli/DTO/Enums | 68 |
-| Tabelle Database | 30+ |
+| Controller API | 21 |
+| Endpoint API | 126+ |
+| Servizi Business | 18 |
+| Modelli/DTO/Enums | 72 |
+| Tabelle Database | 32+ |
 | Frontend Apps | 4 |
-| Pagine Frontend | 34 |
+| Pagine Frontend | 37 |
 | Componenti React | 64 |
-| LOC Backend | ~10K |
+| LOC Backend | ~11K |
 
 ## Architettura
 
@@ -239,6 +253,16 @@ appointment-scheduler/
 - Id, EmployeeId, MerchantId
 - MaxHoursPerDay, MaxHoursPerWeek, MaxHoursPerMonth
 
+**BoardMessages**
+- Id, MerchantId, AuthorUserId
+- Title, Content, Priority (Normal/Important/Urgent)
+- Category, IsPinned, ExpiresAt
+- IsActive, CreatedAt, UpdatedAt
+
+**BoardMessageReads**
+- Id, BoardMessageId, EmployeeId
+- ReadAt
+
 ## Sviluppo
 
 ### Prerequisiti
@@ -334,12 +358,14 @@ Il sistema usa JWT Bearer Token:
 - Gestione servizi
 - Gestione prenotazioni
 - Calendario disponibilità
+- Bacheca comunicazioni aziendali (CRUD messaggi, priorita', read receipts)
 - Report e analytics
 
 **Pagine:**
 - `/login` - Login merchant
 - `/register` - Registrazione merchant
 - `/` - Dashboard
+- `/bacheca` - Bacheca comunicazioni aziendali
 
 ### Lato Admin
 
@@ -362,6 +388,8 @@ Il sistema usa JWT Bearer Token:
 - Dashboard personale con statistiche
 - Gestione timbrature (check-in/check-out)
 - Visualizzazione turni personali
+- Calendario turni del team (tutti i colleghi)
+- Bacheca comunicazioni aziendali (lettura, tracciamento letture)
 - Gestione colleghi e merchant
 - Sistema smart di timbratura con validazione orari
 
@@ -372,6 +400,8 @@ Il sistema usa JWT Bearer Token:
 - `/timbratura` - Sistema timbrature
 - `/my-shifts` - I miei turni
 - `/colleagues` - Colleghi
+- `/team-calendar` - Calendario turni del team
+- `/bacheca` - Bacheca comunicazioni aziendali
 
 ## Configurazione
 
@@ -433,6 +463,18 @@ Modifica in `Program.cs` per ambiente di produzione.
 - `GET /api/shift-templates` - Template turni
 - `GET /api/shift-swap-requests` - Richieste scambio turni
 
+### Board Messages (Comunicazioni Aziendali)
+- `GET /api/board-messages/merchant/{merchantId}` - Lista messaggi merchant
+- `GET /api/board-messages/employee` - Messaggi attivi per dipendente
+- `GET /api/board-messages/{id}` - Dettaglio messaggio
+- `POST /api/board-messages` - Crea messaggio (Merchant)
+- `PUT /api/board-messages/{id}` - Modifica messaggio (Merchant)
+- `DELETE /api/board-messages/{id}` - Elimina messaggio (Merchant)
+- `POST /api/board-messages/{id}/read` - Segna come letto (Employee)
+
+### Shifts - Team Calendar
+- `GET /api/shifts/team` - Turni del team (Employee, basato su merchant del dipendente)
+
 ### Merchant (Autenticato Merchant)
 - `GET /api/merchants` - Lista merchant
 - `GET /api/services` - Servizi del merchant
@@ -488,6 +530,7 @@ Modifica in `Program.cs` per ambiente di produzione.
 - [x] Dashboard analytics (Merchant, Employee, Admin)
 
 ### Fase 3: Business Features - IN CORSO
+- [x] Comunicazioni aziendali (Bacheca + Calendario Team)
 - [ ] Sistema notifiche (email/push/SMS)
 - [ ] Pagamenti integrati (Stripe)
 - [ ] Recensioni e rating servizi
