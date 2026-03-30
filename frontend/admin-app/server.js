@@ -34,6 +34,10 @@ app.get('/api-debug/config', (req, res) => {
     apiUrl: API_URL,
     nodeEnv: process.env.NODE_ENV || 'development',
     port: PORT,
+    websiteNodeDefaultVersion: process.env.WEBSITE_NODE_DEFAULT_VERSION || '(not set)',
+    scmDoBuildDuringDeployment: process.env.SCM_DO_BUILD_DURING_DEPLOYMENT || '(not set)',
+    websiteName: process.env.WEBSITE_SITE_NAME || '(not set)',
+    websiteHostname: process.env.WEBSITE_HOSTNAME || '(not set)',
     timestamp: new Date().toISOString()
   });
 });

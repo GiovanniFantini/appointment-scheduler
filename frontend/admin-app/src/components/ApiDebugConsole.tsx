@@ -14,6 +14,10 @@ interface ApiDebugInfo {
     nodeEnv: string
     apiUrl: string
     port: string | number
+    websiteNodeDefaultVersion: string
+    scmDoBuildDuringDeployment: string
+    websiteName: string
+    websiteHostname: string
   }
   runtime: {
     appUrl: string
@@ -33,6 +37,7 @@ interface ApiDebugInfo {
 
 function ApiDebugConsole() {
   const [isOpen, setIsOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [debugInfo, setDebugInfo] = useState<ApiDebugInfo>({
     timestamp: new Date().toISOString(),
     viteEnv: {
@@ -45,7 +50,11 @@ function ApiDebugConsole() {
     serverConfig: {
       nodeEnv: 'unknown',
       apiUrl: 'unknown',
-      port: 'unknown'
+      port: 'unknown',
+      websiteNodeDefaultVersion: 'unknown',
+      scmDoBuildDuringDeployment: 'unknown',
+      websiteName: 'unknown',
+      websiteHostname: 'unknown'
     },
     runtime: {
       appUrl: window.location.origin,
@@ -63,6 +72,11 @@ function ApiDebugConsole() {
     }
   })
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    setIsAuthenticated(!!token)
+  }, [isOpen])
 
   const checkApiConfiguration = async () => {
     setLoading(true)
@@ -97,13 +111,21 @@ function ApiDebugConsole() {
       newDebugInfo.serverConfig = {
         nodeEnv: configData.nodeEnv || 'unknown',
         apiUrl: configData.apiUrl || 'unknown',
-        port: configData.port || 'unknown'
+        port: configData.port || 'unknown',
+        websiteNodeDefaultVersion: configData.websiteNodeDefaultVersion || '(not set)',
+        scmDoBuildDuringDeployment: configData.scmDoBuildDuringDeployment || '(not set)',
+        websiteName: configData.websiteName || '(not set)',
+        websiteHostname: configData.websiteHostname || '(not set)'
       }
     } catch (error: any) {
       newDebugInfo.serverConfig = {
         nodeEnv: 'Errore: impossibile recuperare',
         apiUrl: 'Errore: proxy non configurato',
-        port: 'unknown'
+        port: 'unknown',
+        websiteNodeDefaultVersion: 'unknown',
+        scmDoBuildDuringDeployment: 'unknown',
+        websiteName: 'unknown',
+        websiteHostname: 'unknown'
       }
     }
 
@@ -249,22 +271,49 @@ function ApiDebugConsole() {
             </div>
           </div>
 
-          {/* Server Config (Runtime) */}
+          {/* Server Config (Runtime) - visibile solo se autenticati */}
           <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded">
-            <h4 className="font-semibold text-sm mb-2 text-blue-900">⚙️ Server Config (Runtime - Azure)</h4>
+            <h4 className="font-semibold text-sm mb-2 text-blue-900">
+              ⚙️ Server Config (Runtime - Azure)
+              {!isAuthenticated && (
+                <span className="ml-2 text-xs font-normal text-orange-600">🔒 Login per dettagli</span>
+              )}
+            </h4>
             <div className="space-y-1 text-xs font-mono">
               <div>
                 <span className="text-gray-700 font-semibold">NODE_ENV:</span>
                 <span className="ml-2 text-blue-700">{debugInfo.serverConfig.nodeEnv}</span>
               </div>
               <div>
-                <span className="text-gray-700 font-semibold">API_URL:</span>
-                <span className="ml-2 text-blue-700 break-all">{debugInfo.serverConfig.apiUrl}</span>
-              </div>
-              <div>
                 <span className="text-gray-700 font-semibold">PORT:</span>
-                <span className="ml-2 text-blue-700">{debugInfo.serverConfig.port}</span>
+                <span className="ml-2 text-blue-700">{String(debugInfo.serverConfig.port)}</span>
               </div>
+              {isAuthenticated ? (
+                <>
+                  <div>
+                    <span className="text-gray-700 font-semibold">API_URL:</span>
+                    <span className="ml-2 text-blue-700 break-all">{debugInfo.serverConfig.apiUrl}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-700 font-semibold">WEBSITE_NODE_DEFAULT_VERSION:</span>
+                    <span className="ml-2 text-blue-700">{debugInfo.serverConfig.websiteNodeDefaultVersion}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-700 font-semibold">SCM_DO_BUILD_DURING_DEPLOYMENT:</span>
+                    <span className="ml-2 text-blue-700">{debugInfo.serverConfig.scmDoBuildDuringDeployment}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-700 font-semibold">WEBSITE_SITE_NAME:</span>
+                    <span className="ml-2 text-blue-700">{debugInfo.serverConfig.websiteName}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-700 font-semibold">WEBSITE_HOSTNAME:</span>
+                    <span className="ml-2 text-blue-700 break-all">{debugInfo.serverConfig.websiteHostname}</span>
+                  </div>
+                </>
+              ) : (
+                <div className="text-orange-500 italic">Effettua il login per visualizzare le variabili Azure</div>
+              )}
             </div>
           </div>
 
