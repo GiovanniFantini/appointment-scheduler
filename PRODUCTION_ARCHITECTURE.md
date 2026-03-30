@@ -65,7 +65,7 @@ SEED_DATABASE                       # true/false (default: false)
 - React 18 + TypeScript
 - Vite 6 (build tool)
 - Tailwind CSS 3.4
-- Express.js (server Node.js 20)
+- Express.js (server Node.js 22)
 - Axios (HTTP client)
 
 ### Architettura Server Express
@@ -123,7 +123,7 @@ Azure startup: "npm start" → node server.js
   "API_URL": "https://appointment-scheduler-api.azurewebsites.net",
   "NODE_ENV": "production",
   "SCM_DO_BUILD_DURING_DEPLOYMENT": "false",
-  "WEBSITE_NODE_DEFAULT_VERSION": "~20"
+  "WEBSITE_NODE_DEFAULT_VERSION": "~22"
 }
 ```
 
@@ -276,7 +276,7 @@ Restituisce configurazione runtime (API_URL, NODE_ENV, PORT).
 ┌────▼────┐┌───▼────┐┌────▼────┐┌────▼────┐
 │Consumer ││Merchant││  Admin  ││Employee │
 │  App    ││  App   ││   App   ││   App   │
-│(Node 20)││(Node 20)││(Node 20)││(Node 20)│
+│(Node 22)││(Node 22)││(Node 22)││(Node 22)│
 └────┬────┘└───┬────┘└────┬────┘└────┬────┘
      │          │          │          │
      └──────────┴──────────┴──────────┘

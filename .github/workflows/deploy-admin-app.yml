@@ -25,7 +25,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: frontend/admin-app/package-lock.json
 
@@ -104,7 +104,7 @@ jobs:
               },
               {
                 "name": "WEBSITE_NODE_DEFAULT_VERSION",
-                "value": "~20",
+                "value": "~22",
                 "slotSetting": false
               }
             ]
