@@ -53,8 +53,14 @@ try
     });
 
     // Database
-    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    if (string.IsNullOrEmpty(connectionString))
+        connectionString = Environment.GetEnvironmentVariable("POSTGRESQLCONNSTR_DefaultConnection");
+
+    var maskedCs = connectionString is not null && connectionString.Length > 20
+        ? connectionString[..20] + "***"
+        : "(null or empty)";
+    Console.WriteLine($"Connection string source resolved. Preview: {maskedCs}");
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
