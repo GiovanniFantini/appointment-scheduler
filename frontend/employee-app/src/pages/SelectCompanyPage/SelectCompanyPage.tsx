@@ -73,7 +73,7 @@ export default function SelectCompanyPage({ user, onCompanySelected, onLogout }:
         {error && <div className="select-company-error">{error}</div>}
 
         <div className="company-list">
-          {user.companies.map(company => (
+          {(user.companies ?? []).map(company => (
             <button
               key={company.merchantId}
               className="company-card"

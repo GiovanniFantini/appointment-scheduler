@@ -132,7 +132,7 @@ export default function MerchantDetailPage() {
           </Link>
           <h1 className="page-title">{merchant.companyName}</h1>
           <span className={chipClass(merchant.status)}>
-            {merchant.status.charAt(0).toUpperCase() + merchant.status.slice(1)}
+            {(merchant.status ? merchant.status.charAt(0).toUpperCase() + merchant.status.slice(1) : 'Unknown')}
           </span>
         </div>
 

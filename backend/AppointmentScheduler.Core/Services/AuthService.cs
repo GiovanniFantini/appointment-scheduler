@@ -182,6 +182,10 @@ public class AuthService : IAuthService
                 RoleName = m.Role.Name
             }).ToList();
 
+        // Garantisce che Companies sia sempre presente (anche se vuoto)
+        if (response.Companies == null)
+            response.Companies = new List<EmployeeCompanyDto>();
+
         // Se ha una sola azienda, auto-seleziona
         if (response.Companies.Count == 1)
         {
@@ -322,6 +326,7 @@ public class AuthService : IAuthService
         Email = user.Email,
         FirstName = user.FirstName,
         LastName = user.LastName,
-        AccountType = user.AccountType
+        AccountType = user.AccountType,
+        Companies = new List<EmployeeCompanyDto>() // garantisce sempre la proprietà
     };
 }

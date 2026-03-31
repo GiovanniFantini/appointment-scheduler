@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../../lib/axios'
 import { MerchantUser } from '../../App'
 import './LoginPage.css'
@@ -9,6 +9,7 @@ interface LoginPageProps {
 }
 
 export default function LoginPage({ onLogin }: LoginPageProps) {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -20,8 +21,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setLoading(true)
     try {
       const res = await apiClient.post('/auth/merchant/login', { email, password })
-      const { token, user } = res.data
+      const { token, ...user } = res.data
       onLogin(user, token)
+      navigate('/')
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setError(e.response?.data?.message ?? 'Credenziali non valide')

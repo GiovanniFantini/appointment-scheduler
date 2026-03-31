@@ -136,9 +136,9 @@ export default function MerchantsPage() {
                     <td className="td-secondary">{m.city ?? '—'}</td>
                     <td className="td-secondary">{m.vatNumber ?? '—'}</td>
                     <td>
-                      <span className={statusClass(m.status)}>
-                        {m.status.charAt(0).toUpperCase() + m.status.slice(1)}
-                      </span>
+                        <span className={statusClass(m.status)}>
+                          {(m.status ? m.status.charAt(0).toUpperCase() + m.status.slice(1) : 'Unknown')}
+                        </span>
                     </td>
                     <td className="td-secondary">
                       {new Date(m.createdAt).toLocaleDateString()}
