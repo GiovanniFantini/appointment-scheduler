@@ -142,6 +142,8 @@ try
     // ── Database Init ──────────────────────────────────────────────────────
     var runMigrations = builder.Configuration.GetValue<bool?>("RUN_MIGRATIONS") ?? true;
 
+    Console.WriteLine($"Database initialization check: ConnectionString {(string.IsNullOrWhiteSpace(connectionString) ? "NOT set" : "set")}, RUN_MIGRATIONS={runMigrations}");
+
     if (!string.IsNullOrWhiteSpace(connectionString) && runMigrations)
     {
         using var scope = app.Services.CreateScope();
@@ -150,6 +152,8 @@ try
             var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var seedData = builder.Configuration.GetValue<bool?>("SEED_DATABASE") ?? app.Environment.IsDevelopment();
             DbInitializer.Initialize(context, seedData);
+
+            Console.WriteLine("Database initialization completed.");
         }
         catch (Exception ex)
         {
