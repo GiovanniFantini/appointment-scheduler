@@ -13,10 +13,8 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  isAdmin: boolean
-  isConsumer: boolean
-  isMerchant: boolean
-  isEmployee: boolean
+  // 1 = admin, 2 = consumer, 3 = merchant, 4 = employee
+  accountType: number
 }
 
 function App() {
@@ -30,7 +28,7 @@ function App() {
     if (token && userData) {
       try {
         const parsed = JSON.parse(userData) as User
-        if (parsed.isAdmin) {
+        if (parsed.accountType === 1) {
           setUser(parsed)
         } else {
           localStorage.removeItem('token')
@@ -45,7 +43,7 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (!userData.isAdmin) return
+    if (userData.accountType !== 1) return
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)

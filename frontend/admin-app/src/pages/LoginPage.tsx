@@ -45,7 +45,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
       localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(userData))
       onLogin(userData, token)
-      navigate('/')
     } catch (err: unknown) {
       const axiosErr = err as { response?: { data?: { message?: string } } }
       setError(axiosErr.response?.data?.message ?? 'Login failed. Please check your credentials.')

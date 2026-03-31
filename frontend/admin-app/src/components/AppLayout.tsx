@@ -7,7 +7,8 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  isAdmin: boolean
+  // 1 = admin, 2 = consumer, 3 = merchant, 4 = employee
+  accountType: number
 }
 
 interface AppLayoutProps {
