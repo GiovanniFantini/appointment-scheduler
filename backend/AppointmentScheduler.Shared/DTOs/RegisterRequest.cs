@@ -1,18 +1,21 @@
 namespace AppointmentScheduler.Shared.DTOs;
 
-public class RegisterRequest
+/// <summary>
+/// Registrazione merchant: crea User (AccountType=Merchant) + Merchant.
+/// </summary>
+public class RegisterMerchantRequest
 {
     public string Email { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
-
-    // Registrazione base come User (consumer)
-    // I ruoli merchant/employee vengono attivati in seguito
-
-    // Se vuole registrarsi anche come Merchant
-    public bool RegisterAsMerchant { get; set; } = false;
-    public string? BusinessName { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
     public string? VatNumber { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    public string? BusinessPhone { get; set; }
+    public string? BusinessEmail { get; set; }
 }

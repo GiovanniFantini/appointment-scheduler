@@ -10,38 +10,26 @@ public class ApplicationDbContext : DbContext
     {
     }
 
+    // Core
     public DbSet<User> Users { get; set; }
     public DbSet<Merchant> Merchants { get; set; }
-    public DbSet<Service> Services { get; set; }
-    public DbSet<Booking> Bookings { get; set; }
-    public DbSet<Availability> Availabilities { get; set; }
-    public DbSet<AvailabilitySlot> AvailabilitySlots { get; set; }
     public DbSet<Employee> Employees { get; set; }
-    public DbSet<BusinessHours> BusinessHours { get; set; }
-    public DbSet<ClosurePeriod> ClosurePeriods { get; set; }
-    public DbSet<ShiftTemplate> ShiftTemplates { get; set; }
-    public DbSet<Shift> Shifts { get; set; }
-    public DbSet<ShiftEmployee> ShiftEmployees { get; set; }
-    public DbSet<ShiftSwapRequest> ShiftSwapRequests { get; set; }
-    public DbSet<EmployeeWorkingHoursLimit> EmployeeWorkingHoursLimits { get; set; }
 
-    // Smart Timbratura System
-    public DbSet<ShiftBreak> ShiftBreaks { get; set; }
-    public DbSet<ShiftAnomaly> ShiftAnomalies { get; set; }
-    public DbSet<OvertimeRecord> OvertimeRecords { get; set; }
-    public DbSet<ShiftCorrection> ShiftCorrections { get; set; }
+    // Membership & Roles
+    public DbSet<EmployeeMembership> EmployeeMemberships { get; set; }
+    public DbSet<MerchantRole> MerchantRoles { get; set; }
+    public DbSet<RoleFeature> RoleFeatures { get; set; }
 
-    // HR/Payroll Document Management
+    // Events
+    public DbSet<Event> Events { get; set; }
+    public DbSet<EventParticipant> EventParticipants { get; set; }
+
+    // Notifications
+    public DbSet<Notification> Notifications { get; set; }
+
+    // HR Documents (placeholder payroll)
     public DbSet<HRDocument> HRDocuments { get; set; }
     public DbSet<HRDocumentVersion> HRDocumentVersions { get; set; }
-
-    // Leave & Availability Management
-    public DbSet<LeaveRequest> LeaveRequests { get; set; }
-    public DbSet<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; }
-
-    // Employee Communication System
-    public DbSet<BoardMessage> BoardMessages { get; set; }
-    public DbSet<BoardMessageRead> BoardMessageReads { get; set; }
 
     // Authentication
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
@@ -50,7 +38,7 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // User configuration
+        // ── User ──────────────────────────────────────────────────────────────
         modelBuilder.Entity<User>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -64,360 +52,157 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey<Merchant>(m => m.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasMany(e => e.Employees)
+            entity.HasOne(e => e.Employee)
                 .WithOne(emp => emp.User)
-                .HasForeignKey(emp => emp.UserId)
+                .HasForeignKey<Employee>(emp => emp.UserId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // Merchant configuration
+        // ── Merchant ──────────────────────────────────────────────────────────
         modelBuilder.Entity<Merchant>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.BusinessName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CompanyName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.VatNumber).HasMaxLength(20);
+            entity.Property(e => e.Phone).HasMaxLength(30);
+            entity.Property(e => e.BusinessEmail).HasMaxLength(256);
         });
 
-        // Service configuration
-        modelBuilder.Entity<Service>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.Services)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-        });
-
-        // Booking configuration
-        modelBuilder.Entity<Booking>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.HasOne(e => e.User)
-                .WithMany(u => u.Bookings)
-                .HasForeignKey(e => e.UserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Service)
-                .WithMany(s => s.Bookings)
-                .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.Bookings)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.SetNull);
-        });
-
-        // Availability configuration
-        modelBuilder.Entity<Availability>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.HasOne(e => e.Service)
-                .WithMany(s => s.Availabilities)
-                .HasForeignKey(e => e.ServiceId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ServiceId);
-            entity.HasIndex(e => e.DayOfWeek);
-            entity.HasIndex(e => e.SpecificDate);
-        });
-
-        // AvailabilitySlot configuration
-        modelBuilder.Entity<AvailabilitySlot>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.HasOne(e => e.Availability)
-                .WithMany(a => a.Slots)
-                .HasForeignKey(e => e.AvailabilityId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.AvailabilityId);
-        });
-
-        // Employee configuration
+        // ── Employee ──────────────────────────────────────────────────────────
         modelBuilder.Entity<Employee>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(256);
             entity.HasIndex(e => e.Email);
-            entity.Property(e => e.BadgeCode).HasMaxLength(50);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.Employees)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.MerchantId);
+            entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
         });
 
-        // BusinessHours configuration
-        modelBuilder.Entity<BusinessHours>(entity =>
+        // ── EmployeeMembership ────────────────────────────────────────────────
+        modelBuilder.Entity<EmployeeMembership>(entity =>
         {
             entity.HasKey(e => e.Id);
 
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.Memberships)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.BusinessHours)
+                .WithMany(m => m.EmployeeMemberships)
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => new { e.MerchantId, e.DayOfWeek });
-            entity.Property(e => e.DayOfWeek).IsRequired();
-        });
+            entity.HasOne(e => e.Role)
+                .WithMany(r => r.Memberships)
+                .HasForeignKey(e => e.RoleId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-        // ClosurePeriod configuration
-        modelBuilder.Entity<ClosurePeriod>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Reason).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Description).HasMaxLength(500);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.ClosurePeriods)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-
+            entity.HasIndex(e => new { e.EmployeeId, e.MerchantId }).IsUnique();
             entity.HasIndex(e => e.MerchantId);
-            entity.HasIndex(e => new { e.StartDate, e.EndDate });
         });
 
-        // ShiftTemplate configuration
-        modelBuilder.Entity<ShiftTemplate>(entity =>
+        // ── MerchantRole ──────────────────────────────────────────────────────
+        modelBuilder.Entity<MerchantRole>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.Description).HasMaxLength(500);
-            entity.Property(e => e.Color).HasMaxLength(7);
 
             entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.ShiftTemplates)
+                .WithMany(m => m.Roles)
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.MerchantId);
         });
 
-        // Shift configuration
-        modelBuilder.Entity<Shift>(entity =>
+        // ── RoleFeature ───────────────────────────────────────────────────────
+        modelBuilder.Entity<RoleFeature>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Color).HasMaxLength(7);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Role)
+                .WithMany(r => r.Features)
+                .HasForeignKey(e => e.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.RoleId, e.Feature }).IsUnique();
+        });
+
+        // ── Event ─────────────────────────────────────────────────────────────
+        modelBuilder.Entity<Event>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Notes).HasMaxLength(2000);
+            entity.Property(e => e.Recurrence).HasMaxLength(500);
 
             entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.Shifts)
+                .WithMany(m => m.Events)
                 .HasForeignKey(e => e.MerchantId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(e => e.ShiftTemplate)
-                .WithMany(st => st.Shifts)
-                .HasForeignKey(e => e.ShiftTemplateId)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            // DEPRECATED: Mantenuto per backward compatibility
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.Shifts)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(e => e.CreatedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasIndex(e => e.MerchantId);
-            entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => e.Date);
-            entity.HasIndex(e => new { e.EmployeeId, e.Date });
+            entity.HasIndex(e => new { e.MerchantId, e.StartDate });
+            entity.HasIndex(e => e.EventType);
         });
 
-        // ShiftEmployee configuration (many-to-many relationship)
-        modelBuilder.Entity<ShiftEmployee>(entity =>
+        // ── EventParticipant ──────────────────────────────────────────────────
+        modelBuilder.Entity<EventParticipant>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Notes).HasMaxLength(1000);
 
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.ShiftEmployees)
-                .HasForeignKey(e => e.ShiftId)
+            entity.HasOne(e => e.Event)
+                .WithMany(ev => ev.Participants)
+                .HasForeignKey(e => e.EventId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.ShiftEmployees)
+                .WithMany(emp => emp.EventParticipations)
                 .HasForeignKey(e => e.EmployeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasIndex(e => e.ShiftId);
+            entity.HasIndex(e => new { e.EventId, e.EmployeeId }).IsUnique();
             entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => new { e.ShiftId, e.EmployeeId }).IsUnique();
         });
 
-        // ShiftSwapRequest configuration
-        modelBuilder.Entity<ShiftSwapRequest>(entity =>
+        // ── Notification ──────────────────────────────────────────────────────
+        modelBuilder.Entity<Notification>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Message).HasMaxLength(1000);
-            entity.Property(e => e.ResponseMessage).HasMaxLength(1000);
+            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(1000);
 
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.SwapRequests)
-                .HasForeignKey(e => e.ShiftId)
+            entity.HasOne(e => e.User)
+                .WithMany(u => u.Notifications)
+                .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            entity.HasOne(e => e.RequestingEmployee)
-                .WithMany()
-                .HasForeignKey(e => e.RequestingEmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.TargetEmployee)
-                .WithMany()
-                .HasForeignKey(e => e.TargetEmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.OfferedShift)
-                .WithMany()
-                .HasForeignKey(e => e.OfferedShiftId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.ShiftId);
-            entity.HasIndex(e => e.RequestingEmployeeId);
-            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.UserId);
+            entity.HasIndex(e => new { e.UserId, e.IsRead });
         });
 
-        // EmployeeWorkingHoursLimit configuration
-        modelBuilder.Entity<EmployeeWorkingHoursLimit>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.MaxHoursPerDay).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.MaxHoursPerWeek).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.MaxHoursPerMonth).HasColumnType("decimal(6,2)");
-            entity.Property(e => e.MinHoursPerWeek).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.MinHoursPerMonth).HasColumnType("decimal(6,2)");
-            entity.Property(e => e.MaxOvertimeHoursPerWeek).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.MaxOvertimeHoursPerMonth).HasColumnType("decimal(6,2)");
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.WorkingHoursLimits)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.EmployeeWorkingHoursLimits)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => new { e.EmployeeId, e.ValidFrom, e.ValidTo });
-        });
-
-        // ShiftBreak configuration
-        modelBuilder.Entity<ShiftBreak>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.BreakType).IsRequired().HasMaxLength(50);
-            entity.Property(e => e.Notes).HasMaxLength(500);
-
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.Breaks)
-                .HasForeignKey(e => e.ShiftId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ShiftId);
-        });
-
-        // ShiftAnomaly configuration
-        modelBuilder.Entity<ShiftAnomaly>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.EmpatheticMessage).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.EmployeeNotes).HasMaxLength(1000);
-            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
-            entity.Property(e => e.ResolutionMethod).HasMaxLength(100);
-
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.Anomalies)
-                .HasForeignKey(e => e.ShiftId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.ShiftId);
-            entity.HasIndex(e => e.IsResolved);
-            entity.HasIndex(e => e.RequiresMerchantReview);
-        });
-
-        // OvertimeRecord configuration
-        modelBuilder.Entity<OvertimeRecord>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.ApprovedBy).HasMaxLength(100);
-            entity.Property(e => e.EmployeeNotes).HasMaxLength(1000);
-            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
-
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.OvertimeRecords)
-                .HasForeignKey(e => e.ShiftId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.OvertimeRecords)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.OvertimeRecords)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.ShiftId);
-            entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => e.Date);
-            entity.HasIndex(e => new { e.EmployeeId, e.Date });
-            entity.HasIndex(e => e.IsApproved);
-        });
-
-        // ShiftCorrection configuration
-        modelBuilder.Entity<ShiftCorrection>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.CorrectedField).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.OriginalValue).HasMaxLength(500);
-            entity.Property(e => e.NewValue).IsRequired().HasMaxLength(500);
-            entity.Property(e => e.Reason).HasMaxLength(1000);
-            entity.Property(e => e.MerchantNotes).HasMaxLength(1000);
-
-            entity.HasOne(e => e.Shift)
-                .WithMany(s => s.Corrections)
-                .HasForeignKey(e => e.ShiftId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.ShiftCorrections)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.ShiftId);
-            entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => e.IsWithin24Hours);
-            entity.HasIndex(e => e.RequiresMerchantApproval);
-        });
-
-        // HRDocument configuration
+        // ── HRDocument ────────────────────────────────────────────────────────
         modelBuilder.Entity<HRDocument>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Description).HasMaxLength(1000);
 
-            // Soft delete query filter
             entity.HasQueryFilter(e => !e.IsDeleted);
 
             entity.HasOne(e => e.Tenant)
-                .WithMany()
+                .WithMany(m => m.HRDocuments)
                 .HasForeignKey(e => e.TenantId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             entity.HasOne(e => e.Employee)
-                .WithMany()
+                .WithMany(emp => emp.HRDocuments)
                 .HasForeignKey(e => e.EmployeeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -431,7 +216,6 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.UpdatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Indici per performance
             entity.HasIndex(e => e.TenantId);
             entity.HasIndex(e => new { e.TenantId, e.EmployeeId });
             entity.HasIndex(e => new { e.TenantId, e.DocumentType, e.Year, e.Month });
@@ -439,7 +223,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.IsDeleted);
         });
 
-        // HRDocumentVersion configuration
+        // ── HRDocumentVersion ─────────────────────────────────────────────────
         modelBuilder.Entity<HRDocumentVersion>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -459,99 +243,11 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.UploadedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Indice unique per versione
-            entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber })
-                .IsUnique();
-
+            entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber }).IsUnique();
             entity.HasIndex(e => e.UploadStatus);
         });
 
-        // LeaveRequest configuration
-        modelBuilder.Entity<LeaveRequest>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.DaysRequested).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.Notes).HasMaxLength(1000);
-            entity.Property(e => e.ResponseNotes).HasMaxLength(1000);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.LeaveRequests)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.LeaveRequests)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => e.EmployeeId);
-            entity.HasIndex(e => e.MerchantId);
-            entity.HasIndex(e => e.Status);
-            entity.HasIndex(e => new { e.EmployeeId, e.StartDate, e.EndDate });
-        });
-
-        // EmployeeLeaveBalance configuration
-        modelBuilder.Entity<EmployeeLeaveBalance>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.TotalDays).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.UsedDays).HasColumnType("decimal(5,2)");
-            entity.Property(e => e.Notes).HasMaxLength(500);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany(emp => emp.LeaveBalances)
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            // Indice unique per employee + leave type + year
-            entity.HasIndex(e => new { e.EmployeeId, e.LeaveType, e.Year })
-                .IsUnique();
-        });
-
-        // BoardMessage configuration
-        modelBuilder.Entity<BoardMessage>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-            entity.Property(e => e.Title).IsRequired().HasMaxLength(200);
-            entity.Property(e => e.Content).IsRequired().HasMaxLength(5000);
-            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
-
-            entity.HasOne(e => e.Merchant)
-                .WithMany(m => m.BoardMessages)
-                .HasForeignKey(e => e.MerchantId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Author)
-                .WithMany()
-                .HasForeignKey(e => e.AuthorUserId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasIndex(e => e.MerchantId);
-            entity.HasIndex(e => e.IsActive);
-            entity.HasIndex(e => new { e.MerchantId, e.IsActive, e.IsPinned });
-            entity.HasIndex(e => e.ExpiresAt);
-        });
-
-        // BoardMessageRead configuration
-        modelBuilder.Entity<BoardMessageRead>(entity =>
-        {
-            entity.HasKey(e => e.Id);
-
-            entity.HasOne(e => e.BoardMessage)
-                .WithMany(m => m.ReadReceipts)
-                .HasForeignKey(e => e.BoardMessageId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasOne(e => e.Employee)
-                .WithMany()
-                .HasForeignKey(e => e.EmployeeId)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            entity.HasIndex(e => new { e.BoardMessageId, e.EmployeeId }).IsUnique();
-            entity.HasIndex(e => e.EmployeeId);
-        });
-
-        // PasswordResetToken configuration
+        // ── PasswordResetToken ────────────────────────────────────────────────
         modelBuilder.Entity<PasswordResetToken>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -559,13 +255,12 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.Token).IsUnique();
 
             entity.HasOne(e => e.User)
-                .WithMany()
+                .WithMany(u => u.PasswordResetTokens)
                 .HasForeignKey(e => e.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => e.UserId);
             entity.HasIndex(e => e.ExpiresAt);
-            entity.HasIndex(e => e.UsedAt);
         });
     }
 }

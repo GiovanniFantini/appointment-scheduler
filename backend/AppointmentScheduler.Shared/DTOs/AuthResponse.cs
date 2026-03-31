@@ -1,3 +1,5 @@
+using AppointmentScheduler.Shared.Enums;
+
 namespace AppointmentScheduler.Shared.DTOs;
 
 public class AuthResponse
@@ -7,17 +9,27 @@ public class AuthResponse
     public string Email { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
+    public AccountType AccountType { get; set; }
 
-    // Multi-role system: un utente può avere multipli ruoli
-    public List<string> Roles { get; set; } = new List<string>();
+    // Merchant account
+    public int? MerchantId { get; set; }
 
-    // Flags per accesso rapido (backward compatibility)
-    public bool IsAdmin { get; set; }
-    public bool IsConsumer { get; set; }
-    public bool IsMerchant { get; set; }
-    public bool IsEmployee { get; set; }
+    // Employee: lista aziende disponibili (pre-switch)
+    public int? EmployeeId { get; set; }
+    public List<EmployeeCompanyDto> Companies { get; set; } = new();
 
-    public int? MerchantId { get; set; } // Se è un merchant (one-to-one)
-    // Note: EmployeeId rimosso perché un employee può lavorare per multipli merchant
-    // Frontend employee-app userà un endpoint dedicato per ottenere la lista merchant
+    // Features attive (post company-switch)
+    public List<string> ActiveFeatures { get; set; } = new();
+}
+
+/// <summary>
+/// Azienda disponibile per l'employee (usata nel select-company screen).
+/// </summary>
+public class EmployeeCompanyDto
+{
+    public int MerchantId { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
+    public string? City { get; set; }
+    public int RoleId { get; set; }
+    public string RoleName { get; set; } = string.Empty;
 }

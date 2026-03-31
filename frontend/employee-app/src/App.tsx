@@ -1,47 +1,39 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import Dashboard from './pages/Dashboard'
-import Colleagues from './pages/Colleagues'
-import MyShifts from './pages/MyShifts'
-import TeamCalendar from './pages/TeamCalendar'
-import Timbratura from './pages/Timbratura'
-import MyDocuments from './pages/MyDocuments'
-import LeaveRequests from './pages/LeaveRequests'
-import Reports from './pages/Reports'
-import Bacheca from './pages/Bacheca'
+import LoginPage from './pages/LoginPage/LoginPage'
+import SelectCompanyPage from './pages/SelectCompanyPage/SelectCompanyPage'
+import DashboardPage from './pages/DashboardPage/DashboardPage'
+import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
+import RichiestePage from './pages/RichiestePage/RichiestePage'
+import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
+import NotifichePage from './pages/NotifichePage/NotifichePage'
+import AppLayout from './components/AppLayout/AppLayout'
 
-interface User {
+export interface EmployeeUser {
   userId: number
   email: string
   firstName: string
   lastName: string
-  roles: string[]
-  isAdmin: boolean
-  isConsumer: boolean
-  isMerchant: boolean
-  isEmployee: boolean
-  // Note: employeeId e merchantId rimossi - employee può lavorare per multipli merchant
-  // Usa /api/employee-colleagues/my-merchants per ottenere la lista
+  accountType: number
+  employeeId?: number
+  merchantId?: number
+  companyName?: string
+  activeFeatures: string[]
+  companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
 }
 
 function App() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<EmployeeUser | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const token = localStorage.getItem('token')
     const userData = localStorage.getItem('user')
-
     if (token && userData) {
-      const parsedUser = JSON.parse(userData) as User
-      // Employee app: permette accesso solo a Employee o Admin
-      if (parsedUser.isEmployee || parsedUser.isAdmin) {
-        setUser(parsedUser)
-      } else {
+      try {
+        const parsed = JSON.parse(userData) as EmployeeUser
+        setUser(parsed)
+      } catch {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
       }
@@ -49,11 +41,7 @@ function App() {
     setLoading(false)
   }, [])
 
-  const handleLogin = (userData: User, token: string) => {
-    if (!userData.isEmployee && !userData.isAdmin) {
-      alert('Accesso riservato solo ai dipendenti')
-      return
-    }
+  const handleLogin = (userData: EmployeeUser, token: string) => {
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
@@ -65,48 +53,88 @@ function App() {
     setUser(null)
   }
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Caricamento...</div>
+  const handleUserUpdate = (updatedUser: EmployeeUser, token: string) => {
+    localStorage.setItem('token', token)
+    localStorage.setItem('user', JSON.stringify(updatedUser))
+    setUser(updatedUser)
   }
+
+  if (loading) {
+    return (
+      <div className="loading-screen">
+        <div className="loading-spinner" />
+      </div>
+    )
+  }
+
+  const isAuthenticated = !!(user && user.merchantId)
+  const needsCompanySelection = !!(user && !user.merchantId)
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={
-          user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/register" element={
-          user ? <Navigate to="/" /> : <Register onRegister={handleLogin} />
-        } />
-        <Route path="/" element={
-          user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/colleagues" element={
-          user ? <Colleagues user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/my-shifts" element={
-          user ? <MyShifts user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/team-calendar" element={
-          user ? <TeamCalendar user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/bacheca" element={
-          user ? <Bacheca user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/timbratura" element={
-          user ? <Timbratura user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/documents" element={
-          user ? <MyDocuments user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/leave-requests" element={
-          user ? <LeaveRequests user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/reports" element={
-          user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        {/* Public routes */}
+        <Route
+          path="/login"
+          element={
+            isAuthenticated
+              ? <Navigate to="/" replace />
+              : needsCompanySelection
+                ? <Navigate to="/select-company" replace />
+                : <LoginPage onLogin={handleLogin} />
+          }
+        />
+        <Route
+          path="/select-company"
+          element={
+            !user
+              ? <Navigate to="/login" replace />
+              : isAuthenticated
+                ? <Navigate to="/" replace />
+                : <SelectCompanyPage user={user} onCompanySelected={handleUserUpdate} onLogout={handleLogout} />
+          }
+        />
+
+        {/* Protected routes */}
+        <Route
+          path="/"
+          element={
+            !user
+              ? <Navigate to="/login" replace />
+              : needsCompanySelection
+                ? <Navigate to="/select-company" replace />
+                : <AppLayout user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+          }
+        >
+          <Route index element={<DashboardPage user={user!} />} />
+          <Route
+            path="calendario"
+            element={
+              user?.activeFeatures?.includes('Calendario')
+                ? <CalendarioPage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="richieste"
+            element={
+              user?.activeFeatures?.includes('Richieste')
+                ? <RichiestePage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="documenti"
+            element={
+              user?.activeFeatures?.includes('Documenti')
+                ? <DocumentiPage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route path="notifiche" element={<NotifichePage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/login'} replace />} />
       </Routes>
     </Router>
   )

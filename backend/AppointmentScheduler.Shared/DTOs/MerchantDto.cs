@@ -1,29 +1,50 @@
-using AppointmentScheduler.Shared.Models;
-
 namespace AppointmentScheduler.Shared.DTOs;
 
-/// <summary>
-/// DTO per la risposta con i dati del merchant
-/// </summary>
 public class MerchantDto
 {
     public int Id { get; set; }
     public int UserId { get; set; }
-    public string BusinessName { get; set; } = string.Empty;
-    public string? Description { get; set; }
+    public string CompanyName { get; set; } = string.Empty;
+    public string? VatNumber { get; set; }
     public string? Address { get; set; }
     public string? City { get; set; }
-    public string? VatNumber { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    public string? Phone { get; set; }
+    public string? BusinessEmail { get; set; }
     public bool IsApproved { get; set; }
+    public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? ApprovedAt { get; set; }
 
-    public UserDto User { get; set; } = null!;
+    public UserDto? Owner { get; set; }
+    public int EmployeeCount { get; set; }
 }
 
-/// <summary>
-/// DTO per i dati utente nel contesto merchant
-/// </summary>
+public class CreateMerchantRequest
+{
+    public string CompanyName { get; set; } = string.Empty;
+    public string? VatNumber { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    public string? Phone { get; set; }
+    public string? BusinessEmail { get; set; }
+}
+
+public class UpdateMerchantRequest
+{
+    public string CompanyName { get; set; } = string.Empty;
+    public string? VatNumber { get; set; }
+    public string? Address { get; set; }
+    public string? City { get; set; }
+    public string? PostalCode { get; set; }
+    public string? Country { get; set; }
+    public string? Phone { get; set; }
+    public string? BusinessEmail { get; set; }
+}
+
 public class UserDto
 {
     public int Id { get; set; }

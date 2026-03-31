@@ -8,35 +8,32 @@ namespace AppointmentScheduler.Core.Services;
 public interface IMerchantService
 {
     /// <summary>
-    /// Recupera tutti i merchant in attesa di approvazione
-    /// </summary>
-    /// <returns>Lista di merchant non approvati</returns>
-    Task<IEnumerable<MerchantDto>> GetPendingMerchantsAsync();
-
-    /// <summary>
     /// Recupera tutti i merchant
     /// </summary>
-    /// <returns>Lista di tutti i merchant</returns>
-    Task<IEnumerable<MerchantDto>> GetAllMerchantsAsync();
+    Task<List<MerchantDto>> GetAllAsync();
+
+    /// <summary>
+    /// Recupera i merchant in attesa di approvazione
+    /// </summary>
+    Task<List<MerchantDto>> GetPendingAsync();
 
     /// <summary>
     /// Recupera un merchant per ID
     /// </summary>
-    /// <param name="id">ID del merchant</param>
-    /// <returns>Dati del merchant o null se non trovato</returns>
-    Task<MerchantDto?> GetMerchantByIdAsync(int id);
+    Task<MerchantDto?> GetByIdAsync(int id);
 
     /// <summary>
     /// Approva un merchant
     /// </summary>
-    /// <param name="merchantId">ID del merchant da approvare</param>
-    /// <returns>True se approvato con successo</returns>
-    Task<bool> ApproveMerchantAsync(int merchantId);
+    Task<bool> ApproveAsync(int id);
 
     /// <summary>
     /// Rifiuta o disabilita un merchant
     /// </summary>
-    /// <param name="merchantId">ID del merchant da rifiutare</param>
-    /// <returns>True se operazione completata con successo</returns>
-    Task<bool> RejectMerchantAsync(int merchantId);
+    Task<bool> RejectAsync(int id);
+
+    /// <summary>
+    /// Aggiorna i dati di un merchant
+    /// </summary>
+    Task<MerchantDto?> UpdateAsync(int id, UpdateMerchantRequest request);
 }

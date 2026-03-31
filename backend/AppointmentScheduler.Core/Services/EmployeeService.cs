@@ -1,12 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
 
 /// <summary>
-/// Servizio per la gestione dei dipendenti
+/// Servizio per la gestione dei dipendenti tramite EmployeeMembership
 /// </summary>
 public class EmployeeService : IEmployeeService
 {
@@ -18,129 +19,172 @@ public class EmployeeService : IEmployeeService
     }
 
     /// <summary>
-    /// Recupera tutti i dipendenti di un merchant
+    /// Recupera tutti i dipendenti di un merchant tramite le membership attive
     /// </summary>
-    public async Task<IEnumerable<EmployeeDto>> GetMerchantEmployeesAsync(int merchantId)
+    public async Task<List<EmployeeDto>> GetMerchantEmployeesAsync(int merchantId)
     {
-        var employees = await _context.Employees
-            .Include(e => e.Merchant)
-            .Where(e => e.MerchantId == merchantId)
-            .OrderByDescending(e => e.CreatedAt)
+        var memberships = await _context.EmployeeMemberships
+            .Include(m => m.Employee)
+            .Include(m => m.Role)
+                .ThenInclude(r => r.Features)
+            .Where(m => m.MerchantId == merchantId && m.IsActive)
+            .OrderBy(m => m.Employee.LastName)
+            .ThenBy(m => m.Employee.FirstName)
             .ToListAsync();
 
-        return employees.Select(MapToDto);
+        return memberships.Select(m => MapToDto(m.Employee, m)).ToList();
     }
 
     /// <summary>
-    /// Recupera un dipendente per ID
+    /// Recupera un dipendente per ID, verificando la membership al merchant
     /// </summary>
-    public async Task<EmployeeDto?> GetEmployeeByIdAsync(int id)
+    public async Task<EmployeeDto?> GetByIdAsync(int employeeId, int merchantId)
     {
-        var employee = await _context.Employees
-            .Include(e => e.Merchant)
-            .FirstOrDefaultAsync(e => e.Id == id);
+        var membership = await _context.EmployeeMemberships
+            .Include(m => m.Employee)
+            .Include(m => m.Role)
+                .ThenInclude(r => r.Features)
+            .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
 
-        return employee == null ? null : MapToDto(employee);
+        if (membership == null)
+            return null;
+
+        return MapToDto(membership.Employee, membership);
     }
 
     /// <summary>
-    /// Crea un nuovo dipendente
-    /// Se l'email corrisponde a un User già registrato come Employee, lo collega automaticamente
-    /// Altrimenti crea un "pending employee" che verrà collegato quando l'employee si registrerà
+    /// Crea un nuovo dipendente e la relativa membership.
+    /// Se esiste già un Employee con questa email, riusa il record esistente.
     /// </summary>
-    public async Task<EmployeeDto> CreateEmployeeAsync(int merchantId, CreateEmployeeRequest request)
+    public async Task<EmployeeDto> CreateAsync(int merchantId, CreateEmployeeRequest request)
     {
         var normalizedEmail = request.Email.ToLower();
 
-        // Cerca se esiste già un User registrato con questa email come Employee
-        var existingUser = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.IsEmployee && u.IsActive);
+        // Check if the Employee already exists by email
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Email == normalizedEmail);
 
-        var employee = new Employee
+        if (employee == null)
         {
-            MerchantId = merchantId,
-            UserId = existingUser?.Id, // Se esiste, collega; altrimenti null (pending)
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            Email = normalizedEmail,
-            PhoneNumber = request.PhoneNumber,
-            BadgeCode = request.BadgeCode,
-            Role = request.Role,
-            ShiftsConfiguration = request.ShiftsConfiguration,
-            IsActive = true,
-            CreatedAt = DateTime.UtcNow
-        };
+            // Try to link with an existing User account of type Employee
+            var existingUser = await _context.Users
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail
+                    && u.AccountType == AccountType.Employee
+                    && u.IsActive);
 
-        _context.Employees.Add(employee);
+            employee = new Employee
+            {
+                UserId = existingUser?.Id,
+                Email = normalizedEmail,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                PhoneNumber = request.PhoneNumber,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Employees.Add(employee);
+            await _context.SaveChangesAsync();
+        }
+
+        // Check for existing membership (even inactive)
+        var existingMembership = await _context.EmployeeMemberships
+            .FirstOrDefaultAsync(m => m.EmployeeId == employee.Id && m.MerchantId == merchantId);
+
+        if (existingMembership != null)
+        {
+            // Reactivate existing membership
+            existingMembership.IsActive = true;
+            existingMembership.RoleId = request.RoleId;
+        }
+        else
+        {
+            var membership = new EmployeeMembership
+            {
+                EmployeeId = employee.Id,
+                MerchantId = merchantId,
+                RoleId = request.RoleId,
+                IsActive = true,
+                JoinedAt = DateTime.UtcNow
+            };
+            _context.EmployeeMemberships.Add(membership);
+        }
+
         await _context.SaveChangesAsync();
 
-        await _context.Entry(employee).Reference(e => e.Merchant).LoadAsync();
-
-        return MapToDto(employee);
+        // Return with full membership context
+        return (await GetByIdAsync(employee.Id, merchantId))!;
     }
 
     /// <summary>
-    /// Aggiorna un dipendente esistente
+    /// Aggiorna i dati di un dipendente e/o la sua membership nel merchant
     /// </summary>
-    public async Task<EmployeeDto?> UpdateEmployeeAsync(int employeeId, int merchantId, UpdateEmployeeRequest request)
+    public async Task<EmployeeDto?> UpdateAsync(int employeeId, int merchantId, UpdateEmployeeRequest request)
     {
-        var employee = await _context.Employees
-            .Include(e => e.Merchant)
-            .FirstOrDefaultAsync(e => e.Id == employeeId && e.MerchantId == merchantId);
+        var membership = await _context.EmployeeMemberships
+            .Include(m => m.Employee)
+            .Include(m => m.Role)
+                .ThenInclude(r => r.Features)
+            .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
 
-        if (employee == null)
+        if (membership == null)
             return null;
 
+        var employee = membership.Employee;
         employee.FirstName = request.FirstName;
         employee.LastName = request.LastName;
-        employee.Email = request.Email.ToLower();
         employee.PhoneNumber = request.PhoneNumber;
-        employee.BadgeCode = request.BadgeCode;
-        employee.Role = request.Role;
-        employee.ShiftsConfiguration = request.ShiftsConfiguration;
         employee.IsActive = request.IsActive;
         employee.UpdatedAt = DateTime.UtcNow;
 
+        membership.RoleId = request.RoleId;
+        membership.IsActive = request.IsActive;
+
         await _context.SaveChangesAsync();
 
-        return MapToDto(employee);
+        // Reload role with features
+        await _context.Entry(membership).Reference(m => m.Role).LoadAsync();
+        await _context.Entry(membership.Role).Collection(r => r.Features).LoadAsync();
+
+        return MapToDto(employee, membership);
     }
 
     /// <summary>
-    /// Elimina un dipendente
+    /// Rimuove un dipendente dal merchant disattivando la membership
     /// </summary>
-    public async Task<bool> DeleteEmployeeAsync(int employeeId, int merchantId)
+    public async Task<bool> RemoveFromMerchantAsync(int employeeId, int merchantId)
     {
-        var employee = await _context.Employees
-            .FirstOrDefaultAsync(e => e.Id == employeeId && e.MerchantId == merchantId);
+        var membership = await _context.EmployeeMemberships
+            .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
 
-        if (employee == null)
+        if (membership == null)
             return false;
 
-        _context.Employees.Remove(employee);
+        membership.IsActive = false;
         await _context.SaveChangesAsync();
-
         return true;
     }
 
-    private EmployeeDto MapToDto(Employee employee)
+    private static EmployeeDto MapToDto(Employee employee, EmployeeMembership membership)
     {
+        var activeFeatures = membership.Role?.Features
+            .Where(f => f.IsEnabled)
+            .Select(f => f.Feature.ToString())
+            .ToList() ?? new List<string>();
+
         return new EmployeeDto
         {
             Id = employee.Id,
-            MerchantId = employee.MerchantId,
-            MerchantName = employee.Merchant.BusinessName,
             FirstName = employee.FirstName,
             LastName = employee.LastName,
-            FullName = $"{employee.FirstName} {employee.LastName}",
             Email = employee.Email,
             PhoneNumber = employee.PhoneNumber,
-            BadgeCode = employee.BadgeCode,
-            Role = employee.Role,
-            ShiftsConfiguration = employee.ShiftsConfiguration,
             IsActive = employee.IsActive,
+            HasUserAccount = employee.UserId.HasValue,
             CreatedAt = employee.CreatedAt,
-            UpdatedAt = employee.UpdatedAt
+            RoleId = membership.RoleId,
+            RoleName = membership.Role?.Name,
+            ActiveFeatures = activeFeatures
         };
     }
 }

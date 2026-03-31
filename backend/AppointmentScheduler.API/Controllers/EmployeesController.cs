@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
@@ -6,10 +7,11 @@ using AppointmentScheduler.Shared.DTOs;
 namespace AppointmentScheduler.API.Controllers;
 
 /// <summary>
-/// Controller per la gestione dei dipendenti
+/// Controller per la gestione dei dipendenti del merchant
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/employees")]
+[Authorize(Policy = "MerchantOnly")]
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _employeeService;
@@ -19,61 +21,55 @@ public class EmployeesController : ControllerBase
         _employeeService = employeeService;
     }
 
+    private bool TryGetMerchantId(out int merchantId)
+    {
+        merchantId = 0;
+        var claim = User.FindFirst("MerchantId")?.Value;
+        return !string.IsNullOrEmpty(claim) && int.TryParse(claim, out merchantId);
+    }
+
     /// <summary>
     /// Recupera tutti i dipendenti del merchant corrente
     /// </summary>
-    [HttpGet("my-employees")]
-    [Authorize(Policy = "MerchantOnly")]
-    public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetMyEmployees()
+    [HttpGet]
+    public async Task<ActionResult<List<EmployeeDto>>> GetAll()
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
-
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato. Assicurati di essere registrato come merchant." });
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
         var employees = await _employeeService.GetMerchantEmployeesAsync(merchantId);
         return Ok(employees);
     }
 
     /// <summary>
-    /// Recupera un dipendente specifico
+    /// Recupera un dipendente specifico del merchant corrente
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
     public async Task<ActionResult<EmployeeDto>> GetById(int id)
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato" });
-
-        var employee = await _employeeService.GetEmployeeByIdAsync(id);
+        var employee = await _employeeService.GetByIdAsync(id, merchantId);
 
         if (employee == null)
-            return NotFound(new { message = "Dipendente non trovato" });
-
-        // Verifica che il dipendente appartenga al merchant corrente
-        if (employee.MerchantId != merchantId)
-            return Forbid();
+            return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
 
         return Ok(employee);
     }
 
     /// <summary>
-    /// Crea un nuovo dipendente
+    /// Aggiunge un nuovo dipendente al merchant corrente
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "MerchantOnly")]
     public async Task<ActionResult<EmployeeDto>> Create([FromBody] CreateEmployeeRequest request)
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
-
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato" });
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
         try
         {
-            var employee = await _employeeService.CreateEmployeeAsync(merchantId, request);
+            var employee = await _employeeService.CreateAsync(merchantId, request);
             return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
         }
         catch (Exception ex)
@@ -83,18 +79,15 @@ public class EmployeesController : ControllerBase
     }
 
     /// <summary>
-    /// Aggiorna un dipendente esistente
+    /// Aggiorna i dati di un dipendente del merchant corrente
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
     public async Task<ActionResult<EmployeeDto>> Update(int id, [FromBody] UpdateEmployeeRequest request)
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato" });
-
-        var employee = await _employeeService.UpdateEmployeeAsync(id, merchantId, request);
+        var employee = await _employeeService.UpdateAsync(id, merchantId, request);
 
         if (employee == null)
             return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
@@ -103,22 +96,19 @@ public class EmployeesController : ControllerBase
     }
 
     /// <summary>
-    /// Elimina un dipendente
+    /// Rimuove un dipendente dal merchant (disattiva la membership)
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Remove(int id)
     {
-        var merchantIdClaim = User.FindFirst("MerchantId")?.Value;
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        if (string.IsNullOrEmpty(merchantIdClaim) || !int.TryParse(merchantIdClaim, out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato" });
-
-        var result = await _employeeService.DeleteEmployeeAsync(id, merchantId);
+        var result = await _employeeService.RemoveFromMerchantAsync(id, merchantId);
 
         if (!result)
             return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
 
-        return Ok(new { message = "Dipendente eliminato con successo" });
+        return Ok(new { message = "Dipendente rimosso dal merchant con successo" });
     }
 }

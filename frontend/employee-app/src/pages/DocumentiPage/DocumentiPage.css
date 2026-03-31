@@ -1,0 +1,50 @@
+.documenti-page {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.documenti-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.documenti-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.documenti-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 16px;
+}
+
+.empty-illustration {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 1.5rem;
+}
+
+.empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 0.625rem;
+}
+
+.empty-subtitle {
+  font-size: 0.9375rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  max-width: 360px;
+}

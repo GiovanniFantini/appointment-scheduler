@@ -17,118 +17,60 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Recupera tutti i merchant in attesa di approvazione
+    /// Recupera tutti i merchant con dati dell'owner e conteggio dipendenti
     /// </summary>
-    public async Task<IEnumerable<MerchantDto>> GetPendingMerchantsAsync()
+    public async Task<List<MerchantDto>> GetAllAsync()
     {
         var merchants = await _context.Merchants
             .Include(m => m.User)
+            .Include(m => m.EmployeeMemberships)
+            .OrderByDescending(m => m.CreatedAt)
+            .ToListAsync();
+
+        return merchants.Select(MapToDto).ToList();
+    }
+
+    /// <summary>
+    /// Recupera i merchant in attesa di approvazione
+    /// </summary>
+    public async Task<List<MerchantDto>> GetPendingAsync()
+    {
+        var merchants = await _context.Merchants
+            .Include(m => m.User)
+            .Include(m => m.EmployeeMemberships)
             .Where(m => !m.IsApproved)
             .OrderBy(m => m.CreatedAt)
             .ToListAsync();
 
-        return merchants.Select(m => new MerchantDto
-        {
-            Id = m.Id,
-            UserId = m.UserId,
-            BusinessName = m.BusinessName,
-            Description = m.Description,
-            Address = m.Address,
-            City = m.City,
-            VatNumber = m.VatNumber,
-            IsApproved = m.IsApproved,
-            CreatedAt = m.CreatedAt,
-            ApprovedAt = m.ApprovedAt,
-            User = new UserDto
-            {
-                Id = m.User.Id,
-                Email = m.User.Email,
-                FirstName = m.User.FirstName,
-                LastName = m.User.LastName,
-                PhoneNumber = m.User.PhoneNumber
-            }
-        });
-    }
-
-    /// <summary>
-    /// Recupera tutti i merchant
-    /// </summary>
-    public async Task<IEnumerable<MerchantDto>> GetAllMerchantsAsync()
-    {
-        var merchants = await _context.Merchants
-            .Include(m => m.User)
-            .OrderByDescending(m => m.CreatedAt)
-            .ToListAsync();
-
-        return merchants.Select(m => new MerchantDto
-        {
-            Id = m.Id,
-            UserId = m.UserId,
-            BusinessName = m.BusinessName,
-            Description = m.Description,
-            Address = m.Address,
-            City = m.City,
-            VatNumber = m.VatNumber,
-            IsApproved = m.IsApproved,
-            CreatedAt = m.CreatedAt,
-            ApprovedAt = m.ApprovedAt,
-            User = new UserDto
-            {
-                Id = m.User.Id,
-                Email = m.User.Email,
-                FirstName = m.User.FirstName,
-                LastName = m.User.LastName,
-                PhoneNumber = m.User.PhoneNumber
-            }
-        });
+        return merchants.Select(MapToDto).ToList();
     }
 
     /// <summary>
     /// Recupera un merchant per ID
     /// </summary>
-    public async Task<MerchantDto?> GetMerchantByIdAsync(int id)
+    public async Task<MerchantDto?> GetByIdAsync(int id)
     {
         var merchant = await _context.Merchants
             .Include(m => m.User)
+            .Include(m => m.EmployeeMemberships)
             .FirstOrDefaultAsync(m => m.Id == id);
 
-        if (merchant == null)
-            return null;
-
-        return new MerchantDto
-        {
-            Id = merchant.Id,
-            UserId = merchant.UserId,
-            BusinessName = merchant.BusinessName,
-            Description = merchant.Description,
-            Address = merchant.Address,
-            City = merchant.City,
-            VatNumber = merchant.VatNumber,
-            IsApproved = merchant.IsApproved,
-            CreatedAt = merchant.CreatedAt,
-            ApprovedAt = merchant.ApprovedAt,
-            User = new UserDto
-            {
-                Id = merchant.User.Id,
-                Email = merchant.User.Email,
-                FirstName = merchant.User.FirstName,
-                LastName = merchant.User.LastName,
-                PhoneNumber = merchant.User.PhoneNumber
-            }
-        };
+        return merchant == null ? null : MapToDto(merchant);
     }
 
     /// <summary>
     /// Approva un merchant
     /// </summary>
-    public async Task<bool> ApproveMerchantAsync(int merchantId)
+    public async Task<bool> ApproveAsync(int id)
     {
-        var merchant = await _context.Merchants.FindAsync(merchantId);
+        var merchant = await _context.Merchants.FindAsync(id);
         if (merchant == null)
             return false;
 
         merchant.IsApproved = true;
+        merchant.IsActive = true;
         merchant.ApprovedAt = DateTime.UtcNow;
+        merchant.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
@@ -137,16 +79,76 @@ public class MerchantService : IMerchantService
     /// <summary>
     /// Rifiuta o disabilita un merchant
     /// </summary>
-    public async Task<bool> RejectMerchantAsync(int merchantId)
+    public async Task<bool> RejectAsync(int id)
     {
-        var merchant = await _context.Merchants.FindAsync(merchantId);
+        var merchant = await _context.Merchants.FindAsync(id);
         if (merchant == null)
             return false;
 
         merchant.IsApproved = false;
+        merchant.IsActive = false;
         merchant.ApprovedAt = null;
+        merchant.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    /// <summary>
+    /// Aggiorna i dati di un merchant
+    /// </summary>
+    public async Task<MerchantDto?> UpdateAsync(int id, UpdateMerchantRequest request)
+    {
+        var merchant = await _context.Merchants
+            .Include(m => m.User)
+            .Include(m => m.EmployeeMemberships)
+            .FirstOrDefaultAsync(m => m.Id == id);
+
+        if (merchant == null)
+            return null;
+
+        merchant.CompanyName = request.CompanyName;
+        merchant.VatNumber = request.VatNumber;
+        merchant.Address = request.Address;
+        merchant.City = request.City;
+        merchant.PostalCode = request.PostalCode;
+        merchant.Country = request.Country;
+        merchant.Phone = request.Phone;
+        merchant.BusinessEmail = request.BusinessEmail;
+        merchant.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return MapToDto(merchant);
+    }
+
+    private static MerchantDto MapToDto(Shared.Models.Merchant m)
+    {
+        return new MerchantDto
+        {
+            Id = m.Id,
+            UserId = m.UserId,
+            CompanyName = m.CompanyName,
+            VatNumber = m.VatNumber,
+            Address = m.Address,
+            City = m.City,
+            PostalCode = m.PostalCode,
+            Country = m.Country,
+            Phone = m.Phone,
+            BusinessEmail = m.BusinessEmail,
+            IsApproved = m.IsApproved,
+            IsActive = m.IsActive,
+            CreatedAt = m.CreatedAt,
+            ApprovedAt = m.ApprovedAt,
+            Owner = m.User != null ? new UserDto
+            {
+                Id = m.User.Id,
+                Email = m.User.Email,
+                FirstName = m.User.FirstName,
+                LastName = m.User.LastName,
+                PhoneNumber = m.User.PhoneNumber
+            } : null,
+            EmployeeCount = m.EmployeeMemberships.Count(em => em.IsActive)
+        };
     }
 }

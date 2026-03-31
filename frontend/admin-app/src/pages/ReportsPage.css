@@ -1,0 +1,97 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.reports-placeholder {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.reports-placeholder-icon {
+  width: 64px;
+  height: 64px;
+  background-color: rgba(99, 102, 241, 0.12);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6366f1;
+}
+
+.reports-placeholder-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.reports-placeholder-text {
+  font-size: 14px;
+  color: #94a3b8;
+  max-width: 380px;
+  line-height: 1.6;
+}
+
+.reports-placeholder-badge {
+  padding: 4px 14px;
+  border-radius: 99px;
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Mock stats */
+.mock-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.mock-stat-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mock-stat-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.mock-stat-value {
+  font-size: 30px;
+  font-weight: 700;
+  color: #f1f5f9;
+  line-height: 1;
+}
+
+.mock-stat-trend {
+  font-size: 12px;
+  color: #10b981;
+}
+
+.mock-stat-trend.down {
+  color: #ef4444;
+}
+
+@media (max-width: 768px) {
+  .mock-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}

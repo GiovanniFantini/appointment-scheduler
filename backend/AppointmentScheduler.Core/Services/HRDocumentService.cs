@@ -127,7 +127,8 @@ public class HRDocumentService : IHRDocumentService
     {
         // Verifica che l'employee appartenga al tenant
         var employee = await _context.Employees
-            .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId && e.MerchantId == tenantId);
+            .Include(e => e.Memberships)
+            .FirstOrDefaultAsync(e => e.Id == dto.EmployeeId && e.Memberships.Any(m => m.MerchantId == tenantId && m.IsActive));
 
         if (employee == null)
             throw new UnauthorizedAccessException("Employee not found or access denied");

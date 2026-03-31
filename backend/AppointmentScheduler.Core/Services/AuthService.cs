@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -21,211 +22,287 @@ public class AuthService : IAuthService
         _configuration = configuration;
     }
 
-    public async Task<AuthResponse?> LoginAsync(LoginRequest request)
+    // ── Admin Login ────────────────────────────────────────────────────────
+    public async Task<AuthResponse?> LoginAdminAsync(LoginRequest request)
     {
-        var normalizedEmail = request.Email.ToLower();
+        var user = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower()
+                                   && u.AccountType == AccountType.Admin
+                                   && u.IsActive);
+
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            return null;
+
+        var token = GenerateJwtToken(user.Id, user.Email, "Admin");
+        return BuildAuthResponse(user, token);
+    }
+
+    // ── Merchant Login ─────────────────────────────────────────────────────
+    public async Task<AuthResponse?> LoginMerchantAsync(LoginRequest request)
+    {
         var user = await _context.Users
             .Include(u => u.Merchant)
-            .Include(u => u.Employees)
-            .FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower()
+                                   && u.AccountType == AccountType.Merchant
+                                   && u.IsActive);
 
-        if (user == null || !VerifyPassword(request.Password, user.PasswordHash))
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return null;
 
-        if (!user.IsActive)
-            return null;
-
-        // Costruisci la lista di ruoli basata sui flags
-        var roles = GetUserRoles(user);
-
-        // Se l'utente è un employee, trova il primo employee record attivo
-        int? employeeId = null;
-        if (user.IsEmployee && user.Employees != null && user.Employees.Any())
-        {
-            var activeEmployee = user.Employees.FirstOrDefault(e => e.IsActive);
-            employeeId = activeEmployee?.Id;
-        }
-
-        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id, employeeId);
-
-        return new AuthResponse
-        {
-            Token = token,
-            UserId = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Roles = roles,
-            IsAdmin = user.IsAdmin,
-            IsConsumer = user.IsConsumer,
-            IsMerchant = user.IsMerchant,
-            IsEmployee = user.IsEmployee,
-            MerchantId = user.Merchant?.Id
-            // Note: EmployeeId rimosso dalla response perché un employee può lavorare per multipli merchant
-        };
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id);
+        var response = BuildAuthResponse(user, token);
+        response.MerchantId = user.Merchant?.Id;
+        return response;
     }
 
-    public async Task<AuthResponse?> RegisterAsync(RegisterRequest request)
+    // ── Merchant Register ──────────────────────────────────────────────────
+    public async Task<AuthResponse?> RegisterMerchantAsync(RegisterMerchantRequest request)
     {
-        var normalizedEmail = request.Email.ToLower();
-
-        // Verifica se l'email esiste già
-        if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
+        var email = request.Email.ToLower();
+        if (await _context.Users.AnyAsync(u => u.Email == email))
             return null;
-
-        // Verifica che BusinessName sia presente se vuole registrarsi come Merchant
-        if (request.RegisterAsMerchant && string.IsNullOrWhiteSpace(request.BusinessName))
-            throw new ArgumentException("BusinessName è obbligatorio per i Merchant");
 
         var user = new User
         {
-            Email = normalizedEmail,
-            PasswordHash = HashPassword(request.Password),
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            // Tutti partono come consumer di default
-            IsConsumer = true,
-            IsMerchant = request.RegisterAsMerchant,
-            IsEmployee = false,
-            IsAdmin = false,
+            AccountType = AccountType.Merchant,
             IsActive = true
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Se si registra anche come Merchant, crea il profilo business
-        if (request.RegisterAsMerchant && !string.IsNullOrEmpty(request.BusinessName))
+        // Crea profilo merchant (richiede approvazione admin)
+        var merchant = new Merchant
         {
-            var merchant = new Merchant
-            {
-                UserId = user.Id,
-                BusinessName = request.BusinessName,
-                VatNumber = request.VatNumber,
-                IsApproved = false, // Deve essere approvato dall'admin
-                User = user // Imposta la navigation property per evitare errori di salvataggio
-            };
-
-            _context.Merchants.Add(merchant);
-            await _context.SaveChangesAsync();
-
-            user.Merchant = merchant;
-        }
-
-        var roles = GetUserRoles(user);
-        var token = GenerateJwtToken(user.Id, user.Email, roles, user.Merchant?.Id);
-
-        return new AuthResponse
-        {
-            Token = token,
             UserId = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Roles = roles,
-            IsAdmin = user.IsAdmin,
-            IsConsumer = user.IsConsumer,
-            IsMerchant = user.IsMerchant,
-            IsEmployee = user.IsEmployee,
-            MerchantId = user.Merchant?.Id
+            CompanyName = request.CompanyName,
+            VatNumber = request.VatNumber,
+            Address = request.Address,
+            City = request.City,
+            PostalCode = request.PostalCode,
+            Country = request.Country,
+            Phone = request.BusinessPhone,
+            BusinessEmail = request.BusinessEmail ?? email,
+            IsApproved = false,
+            IsActive = true
         };
+
+        _context.Merchants.Add(merchant);
+        await _context.SaveChangesAsync();
+
+        // Crea il ruolo "Responsabile App" con tutte le feature attive
+        var defaultRole = new MerchantRole
+        {
+            MerchantId = merchant.Id,
+            Name = "Responsabile App",
+            IsDefault = true
+        };
+        _context.MerchantRoles.Add(defaultRole);
+        await _context.SaveChangesAsync();
+
+        var allFeatures = Enum.GetValues<MerchantFeature>();
+        foreach (var feature in allFeatures)
+        {
+            _context.RoleFeatures.Add(new RoleFeature
+            {
+                RoleId = defaultRole.Id,
+                Feature = feature,
+                IsEnabled = true
+            });
+        }
+        await _context.SaveChangesAsync();
+
+        // Crea l'employee owner (il responsabile/CEO) e lo associa
+        var ownerEmployee = new Employee
+        {
+            UserId = user.Id,
+            Email = email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            IsActive = true
+        };
+        _context.Employees.Add(ownerEmployee);
+        await _context.SaveChangesAsync();
+
+        _context.EmployeeMemberships.Add(new EmployeeMembership
+        {
+            EmployeeId = ownerEmployee.Id,
+            MerchantId = merchant.Id,
+            RoleId = defaultRole.Id,
+            IsActive = true
+        });
+        await _context.SaveChangesAsync();
+
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id);
+        var response = BuildAuthResponse(user, token);
+        response.MerchantId = merchant.Id;
+        return response;
     }
 
+    // ── Employee Login ─────────────────────────────────────────────────────
+    public async Task<AuthResponse?> LoginEmployeeAsync(LoginRequest request)
+    {
+        var user = await _context.Users
+            .Include(u => u.Employee)
+                .ThenInclude(e => e!.Memberships)
+                    .ThenInclude(m => m.Merchant)
+            .Include(u => u.Employee)
+                .ThenInclude(e => e!.Memberships)
+                    .ThenInclude(m => m.Role)
+                        .ThenInclude(r => r.Features)
+            .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower()
+                                   && u.AccountType == AccountType.Employee
+                                   && u.IsActive);
+
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            return null;
+
+        var employee = user.Employee;
+        if (employee == null) return null;
+
+        // Token base senza company — frontend mostra select-company
+        var token = GenerateJwtToken(user.Id, user.Email, "Employee", employeeId: employee.Id);
+        var response = BuildAuthResponse(user, token);
+        response.EmployeeId = employee.Id;
+
+        // Popola lista aziende disponibili
+        response.Companies = employee.Memberships
+            .Where(m => m.IsActive && m.Merchant.IsActive)
+            .Select(m => new EmployeeCompanyDto
+            {
+                MerchantId = m.MerchantId,
+                CompanyName = m.Merchant.CompanyName,
+                City = m.Merchant.City,
+                RoleId = m.RoleId,
+                RoleName = m.Role.Name
+            }).ToList();
+
+        // Se ha una sola azienda, auto-seleziona
+        if (response.Companies.Count == 1)
+        {
+            return await SelectCompanyAsync(user.Id, response.Companies[0].MerchantId);
+        }
+
+        return response;
+    }
+
+    // ── Employee Register ──────────────────────────────────────────────────
     public async Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request)
     {
-        var normalizedEmail = request.Email.ToLower();
+        var email = request.Email.ToLower();
 
-        // Verifica se l'email esiste già nella tabella Users
-        if (await _context.Users.AnyAsync(u => u.Email == normalizedEmail))
-            throw new ArgumentException("Email già registrata nel sistema.");
+        if (await _context.Users.AnyAsync(u => u.Email == email))
+            return null;
 
-        // Crea un nuovo User come Employee
         var user = new User
         {
-            Email = normalizedEmail,
-            PasswordHash = HashPassword(request.Password),
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
-            IsEmployee = true,
-            IsConsumer = true, // Può anche fare booking come consumer
-            IsMerchant = false,
-            IsAdmin = false,
+            AccountType = AccountType.Employee,
             IsActive = true
         };
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Cerca tutti gli Employee "pending" (UserId = null) con questa email
-        // e collegali automaticamente al nuovo user
-        var pendingEmployees = await _context.Employees
-            .Where(e => e.Email == normalizedEmail && !e.UserId.HasValue && e.IsActive)
+        // Crea il record Employee
+        var employee = new Employee
+        {
+            UserId = user.Id,
+            Email = email,
+            FirstName = request.FirstName,
+            LastName = request.LastName,
+            IsActive = true
+        };
+        _context.Employees.Add(employee);
+        await _context.SaveChangesAsync();
+
+        // Collega gli EmployeeMemberships pre-caricati (se un merchant ha già aggiunto questa email)
+        var pendingMemberships = await _context.EmployeeMemberships
+            .Include(m => m.Employee)
+            .Where(m => m.Employee.Email == email && m.Employee.UserId == null)
             .ToListAsync();
 
-        if (pendingEmployees.Any())
+        foreach (var membership in pendingMemberships)
         {
-            foreach (var emp in pendingEmployees)
-            {
-                emp.UserId = user.Id;
-                emp.UpdatedAt = DateTime.UtcNow;
-            }
-            _context.Employees.UpdateRange(pendingEmployees);
-            await _context.SaveChangesAsync();
+            membership.Employee.UserId = user.Id;
         }
+        await _context.SaveChangesAsync();
 
-        // Genera il token - se ci sono employee records collegati, usa il primo
-        var roles = GetUserRoles(user);
-        int? employeeId = pendingEmployees.Any() ? pendingEmployees.First().Id : null;
-        var token = GenerateJwtToken(user.Id, user.Email, roles, null, employeeId);
-
-        return new AuthResponse
-        {
-            Token = token,
-            UserId = user.Id,
-            Email = user.Email,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Roles = roles,
-            IsAdmin = user.IsAdmin,
-            IsConsumer = user.IsConsumer,
-            IsMerchant = user.IsMerchant,
-            IsEmployee = user.IsEmployee
-        };
+        var token = GenerateJwtToken(user.Id, user.Email, "Employee", employeeId: employee.Id);
+        return BuildAuthResponse(user, token);
     }
 
-    public string GenerateJwtToken(int userId, string email, List<string> roles, int? merchantId = null, int? employeeId = null)
+    // ── Select Company (Employee) ──────────────────────────────────────────
+    public async Task<AuthResponse?> SelectCompanyAsync(int userId, int merchantId)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null || user.AccountType != AccountType.Employee) return null;
+
+        var employee = await _context.Employees
+            .Include(e => e.Memberships)
+                .ThenInclude(m => m.Role)
+                    .ThenInclude(r => r.Features)
+            .FirstOrDefaultAsync(e => e.UserId == userId && e.IsActive);
+
+        if (employee == null) return null;
+
+        var membership = employee.Memberships
+            .FirstOrDefault(m => m.MerchantId == merchantId && m.IsActive);
+
+        if (membership == null) return null;
+
+        var features = membership.Role.Features
+            .Where(f => f.IsEnabled)
+            .Select(f => f.Feature.ToString())
+            .ToList();
+
+        var token = GenerateJwtToken(userId, user.Email, "Employee",
+            merchantId: merchantId, employeeId: employee.Id, features: features);
+
+        var response = BuildAuthResponse(user, token);
+        response.EmployeeId = employee.Id;
+        response.MerchantId = merchantId;
+        response.ActiveFeatures = features;
+        return response;
+    }
+
+    // ── JWT Generation ─────────────────────────────────────────────────────
+    public string GenerateJwtToken(int userId, string email, string role,
+        int? merchantId = null, int? employeeId = null, List<string>? features = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        var secretKey = jwtSettings["SecretKey"]
+            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var claimsList = new List<Claim>
+        var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Email, email),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(ClaimTypes.Role, role)
         };
 
-        // Aggiungi un claim per ogni ruolo
-        foreach (var role in roles)
-        {
-            claimsList.Add(new Claim(ClaimTypes.Role, role));
-        }
-
         if (merchantId.HasValue)
-        {
-            claimsList.Add(new Claim("MerchantId", merchantId.Value.ToString()));
-        }
+            claims.Add(new Claim("MerchantId", merchantId.Value.ToString()));
 
         if (employeeId.HasValue)
-        {
-            claimsList.Add(new Claim("EmployeeId", employeeId.Value.ToString()));
-        }
+            claims.Add(new Claim("EmployeeId", employeeId.Value.ToString()));
 
-        var claims = claimsList.ToArray();
+        if (features != null)
+            foreach (var feature in features)
+                claims.Add(new Claim("Feature", feature));
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],
@@ -238,26 +315,13 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private List<string> GetUserRoles(User user)
+    private static AuthResponse BuildAuthResponse(User user, string token) => new()
     {
-        var roles = new List<string>();
-
-        if (user.IsAdmin) roles.Add("Admin");
-        if (user.IsConsumer) roles.Add("Consumer");
-        if (user.IsMerchant) roles.Add("Merchant");
-        if (user.IsEmployee) roles.Add("Employee");
-
-        return roles;
-    }
-
-    private string HashPassword(string password)
-    {
-        // In produzione, usa BCrypt o Identity
-        return BCrypt.Net.BCrypt.HashPassword(password);
-    }
-
-    private bool VerifyPassword(string password, string hash)
-    {
-        return BCrypt.Net.BCrypt.Verify(password, hash);
-    }
+        Token = token,
+        UserId = user.Id,
+        Email = user.Email,
+        FirstName = user.FirstName,
+        LastName = user.LastName,
+        AccountType = user.AccountType
+    };
 }

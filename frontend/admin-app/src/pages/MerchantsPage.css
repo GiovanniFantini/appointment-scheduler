@@ -1,0 +1,231 @@
+.merchants-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Filter tabs */
+.filter-tabs {
+  display: flex;
+  gap: 4px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.filter-tab {
+  padding: 7px 16px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  background: none;
+  color: #94a3b8;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.filter-tab:hover {
+  color: #f1f5f9;
+  background-color: #334155;
+}
+
+.filter-tab.active {
+  background-color: #6366f1;
+  color: #fff;
+}
+
+/* Table card */
+.table-card {
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #334155;
+}
+
+.table-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.table-count {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead th {
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+  border-bottom: 1px solid #334155;
+  white-space: nowrap;
+}
+
+tbody tr {
+  border-bottom: 1px solid #334155;
+  transition: background-color 0.12s;
+}
+
+tbody tr:last-child {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background-color: rgba(99, 102, 241, 0.04);
+}
+
+tbody td {
+  padding: 12px 16px;
+  color: #f1f5f9;
+  vertical-align: middle;
+}
+
+.td-secondary {
+  color: #94a3b8;
+}
+
+/* Status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-badge::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-active {
+  background-color: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.status-active::before {
+  background-color: #10b981;
+}
+
+.status-pending {
+  background-color: rgba(245, 158, 11, 0.12);
+  color: #f59e0b;
+}
+
+.status-pending::before {
+  background-color: #f59e0b;
+}
+
+.status-inactive,
+.status-rejected {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.status-inactive::before,
+.status-rejected::before {
+  background-color: #ef4444;
+}
+
+/* Actions */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.btn-icon-view {
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
+
+.btn-icon-view:hover {
+  color: #6366f1;
+  border-color: #6366f1;
+  background-color: rgba(99, 102, 241, 0.08);
+}
+
+.btn-icon-approve {
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.btn-icon-approve:hover {
+  background-color: rgba(16, 185, 129, 0.12);
+}
+
+.btn-icon-reject {
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.btn-icon-reject:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.btn-icon:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.table-empty {
+  padding: 48px 20px;
+  text-align: center;
+  color: #475569;
+  font-size: 13px;
+}
+
+.table-loading {
+  padding: 48px 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+@media (max-width: 768px) {
+  .filter-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+}

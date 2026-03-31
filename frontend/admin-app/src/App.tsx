@@ -1,24 +1,22 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import Login from './pages/Login'
-import Dashboard from './pages/Dashboard'
-import ForgotPassword from './pages/ForgotPassword'
-import ResetPassword from './pages/ResetPassword'
-import MerchantApproval from './pages/MerchantApproval'
-import Reports from './pages/Reports'
+import AppLayout from './components/AppLayout'
+import LoginPage from './pages/LoginPage'
+import DashboardPage from './pages/DashboardPage'
+import MerchantsPage from './pages/MerchantsPage'
+import MerchantDetailPage from './pages/MerchantDetailPage'
+import ReportsPage from './pages/ReportsPage'
+import UsersPage from './pages/UsersPage'
 
 interface User {
   userId: number
   email: string
   firstName: string
   lastName: string
-  roles: string[]
   isAdmin: boolean
   isConsumer: boolean
   isMerchant: boolean
   isEmployee: boolean
-  merchantId?: number
-  // Note: employeeId rimosso - employee può lavorare per multipli merchant
 }
 
 function App() {
@@ -30,11 +28,15 @@ function App() {
     const userData = localStorage.getItem('user')
 
     if (token && userData) {
-      const parsedUser = JSON.parse(userData) as User
-      // Admin app: permette accesso solo ad Admin
-      if (parsedUser.isAdmin) {
-        setUser(parsedUser)
-      } else {
+      try {
+        const parsed = JSON.parse(userData) as User
+        if (parsed.isAdmin) {
+          setUser(parsed)
+        } else {
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+        }
+      } catch {
         localStorage.removeItem('token')
         localStorage.removeItem('user')
       }
@@ -43,10 +45,7 @@ function App() {
   }, [])
 
   const handleLogin = (userData: User, token: string) => {
-    if (!userData.isAdmin) {
-      alert('Accesso riservato solo agli amministratori')
-      return
-    }
+    if (!userData.isAdmin) return
     localStorage.setItem('token', token)
     localStorage.setItem('user', JSON.stringify(userData))
     setUser(userData)
@@ -59,26 +58,100 @@ function App() {
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Caricamento...</div>
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#0f172a',
+          color: '#94a3b8',
+          fontSize: 14,
+        }}
+      >
+        Loading…
+      </div>
+    )
   }
 
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={
-          user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />
-        } />
-        <Route path="/" element={
-          user ? <Dashboard user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/merchants" element={
-          user ? <MerchantApproval user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/reports" element={
-          user ? <Reports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-        } />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+        {/* Public */}
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/" replace /> : <LoginPage onLogin={handleLogin} />}
+        />
+
+        {/* Protected – the layout's onLogout is wired here via a wrapper so we always have the current handler */}
+        <Route
+          path="/"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Dashboard">
+                <DashboardPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/merchants"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Merchants">
+                <MerchantsPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/merchants/:id"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Merchant Detail">
+                <MerchantDetailPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/reports"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Reports">
+                <ReportsPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/users"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Users">
+                <UsersPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   )
