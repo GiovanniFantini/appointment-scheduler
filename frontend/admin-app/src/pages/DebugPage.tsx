@@ -7,6 +7,8 @@ type ServiceStatus = 'idle' | 'checking' | 'online' | 'offline'
 interface EndpointCheck {
   label: string
   path: string
+  method?: 'GET' | 'POST'
+  note?: string
   status: ServiceStatus
   statusCode?: number
   latencyMs?: number
@@ -14,11 +16,14 @@ interface EndpointCheck {
 }
 
 const ENDPOINTS: Omit<EndpointCheck, 'status'>[] = [
-  { label: 'Health', path: '/health' },
-  { label: 'Auth – Admin Login', path: '/auth/admin/login' },
-  { label: 'Merchants', path: '/merchants' },
-  { label: 'Users', path: '/users' },
-  { label: 'Reports', path: '/reports' },
+  { label: 'Version', path: '/version' },
+  { label: 'Auth – Admin Login', path: '/auth/admin/login', method: 'POST', note: 'POST, empty body → 400 = reachable' },
+  { label: 'Auth – Merchant Login', path: '/auth/merchant/login', method: 'POST', note: 'POST, empty body → 400 = reachable' },
+  { label: 'Merchants (AdminOnly)', path: '/merchants' },
+  { label: 'Merchants – Pending', path: '/merchants/pending' },
+  { label: 'Notifications', path: '/notifications' },
+  { label: 'Employees (MerchantOnly)', path: '/employees' },
+  { label: 'Events (MerchantOnly)', path: '/events' },
 ]
 
 function buildEnvRows(): Record<string, string> {
@@ -136,7 +141,10 @@ export default function DebugPage() {
       ENDPOINTS.map(async (ep, i) => {
         const t0 = Date.now()
         try {
-          const res = await apiClient.get(ep.path, { timeout: 6000 })
+          const req = ep.method === 'POST'
+            ? apiClient.post(ep.path, {}, { timeout: 6000 })
+            : apiClient.get(ep.path, { timeout: 6000 })
+          const res = await req
           const latencyMs = Date.now() - t0
           setChecks(prev => {
             const next = [...prev]
@@ -147,6 +155,7 @@ export default function DebugPage() {
           const latencyMs = Date.now() - t0
           const axErr = err as { response?: { status?: number }; message?: string }
           const statusCode = axErr.response?.status
+          // Any HTTP response (even 4xx) means the server is reachable
           const isReachable = !!axErr.response
           setChecks(prev => {
             const next = [...prev]
@@ -188,18 +197,26 @@ export default function DebugPage() {
             <thead>
               <tr>
                 <th>Service</th>
+                <th>Method</th>
                 <th>Path</th>
                 <th>Status</th>
-                <th>Error</th>
+                <th>Note / Error</th>
               </tr>
             </thead>
             <tbody>
               {checks.map(c => (
                 <tr key={c.path}>
                   <td className="dbg-table-key">{c.label}</td>
+                  <td>
+                    <span className={`dbg-method dbg-method-${(c.method ?? 'GET').toLowerCase()}`}>
+                      {c.method ?? 'GET'}
+                    </span>
+                  </td>
                   <td><code className="dbg-code">{c.path}</code></td>
                   <td><StatusBadge status={c.status} statusCode={c.statusCode} latencyMs={c.latencyMs} /></td>
-                  <td style={{ fontSize: 11, color: '#ef4444' }}>{c.error ?? ''}</td>
+                  <td style={{ fontSize: 11, color: c.error ? '#ef4444' : '#475569' }}>
+                    {c.error ?? c.note ?? ''}
+                  </td>
                 </tr>
               ))}
             </tbody>
