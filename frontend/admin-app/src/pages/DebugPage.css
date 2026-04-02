@@ -1,0 +1,156 @@
+.dbg-page {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 900px;
+}
+
+.dbg-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dbg-section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dbg-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #cbd5e1;
+  letter-spacing: -0.2px;
+}
+
+.dbg-badge {
+  font-size: 11px;
+  color: #475569;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.dbg-run-btn {
+  margin-left: auto;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dbg-run-btn:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #c7d2fe;
+}
+
+.dbg-run-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dbg-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.dbg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.dbg-table thead th {
+  text-align: left;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #334155;
+  background: #0f172a50;
+}
+
+.dbg-table tbody tr {
+  border-bottom: 1px solid #1e293b;
+}
+
+.dbg-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.dbg-table tbody tr:hover {
+  background: #ffffff06;
+}
+
+.dbg-table td {
+  padding: 9px 16px;
+  vertical-align: top;
+}
+
+.dbg-table-key {
+  color: #7dd3fc;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  white-space: nowrap;
+  width: 180px;
+}
+
+.dbg-table-val {
+  color: #94a3b8;
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.dbg-table-val pre {
+  margin: 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: pre-wrap;
+  font-size: 12px;
+}
+
+.dbg-table-actions {
+  width: 36px;
+  text-align: right;
+}
+
+.dbg-copy-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: #475569;
+  font-size: 13px;
+  padding: 2px 5px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.dbg-copy-btn:hover {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.dbg-checks-table .dbg-table-key {
+  width: 160px;
+}
+
+.dbg-code {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+@keyframes dbg-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

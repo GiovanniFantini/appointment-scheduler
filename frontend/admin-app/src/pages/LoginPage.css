@@ -128,3 +128,103 @@
   font-size: 12px;
   color: #475569;
 }
+
+/* ── System Status ── */
+.login-status {
+  margin-top: 16px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.login-status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 12px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.login-status-toggle:hover {
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+.login-status-toggle svg:last-child {
+  margin-left: auto;
+}
+
+.login-status-panel {
+  margin-top: 6px;
+  background-color: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.login-status-label {
+  color: #64748b;
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.login-status-value {
+  color: #94a3b8;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.login-status-check {
+  border-top: 1px solid #1e3a5f30;
+  padding-top: 8px;
+  margin-top: 2px;
+}
+
+.login-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.login-status-ping {
+  margin-left: auto;
+  background: #1e3a5f;
+  border: 1px solid #334155;
+  border-radius: 4px;
+  color: #64748b;
+  font-size: 11px;
+  padding: 2px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.login-status-ping:hover {
+  color: #94a3b8;
+  border-color: #475569;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

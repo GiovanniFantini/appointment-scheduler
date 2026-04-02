@@ -1,6 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import apiClient from '../lib/axios'
 import './LoginPage.css'
+
+type ServiceStatus = 'checking' | 'online' | 'offline'
+
+const apiURL = import.meta.env.PROD
+  ? (import.meta.env.VITE_API_URL || 'https://appointment-scheduler-api.azurewebsites.net')
+  : window.location.origin
+
+const safeEnvVars: Record<string, string> = {
+  VITE_API_URL: import.meta.env.VITE_API_URL || '(not set)',
+  MODE: import.meta.env.MODE,
+  PROD: String(import.meta.env.PROD),
+  BASE_URL: import.meta.env.BASE_URL,
+}
+
+function StatusDot({ status }: { status: ServiceStatus }) {
+  const colors: Record<ServiceStatus, string> = {
+    checking: '#f59e0b',
+    online: '#22c55e',
+    offline: '#ef4444',
+  }
+  return (
+    <span
+      style={{
+        display: 'inline-block',
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        backgroundColor: colors[status],
+        flexShrink: 0,
+        ...(status === 'checking' ? { animation: 'pulse 1.2s infinite' } : {}),
+      }}
+    />
+  )
+}
 
 interface User {
   userId: number
@@ -20,6 +54,24 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [statusOpen, setStatusOpen] = useState(false)
+  const [apiStatus, setApiStatus] = useState<ServiceStatus>('checking')
+
+  const checkApi = useCallback(async () => {
+    setApiStatus('checking')
+    try {
+      await apiClient.get('/health', { timeout: 5000 })
+      setApiStatus('online')
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { status?: number } }
+      // A response (even 404/401) means the server is reachable
+      setApiStatus(axiosErr.response ? 'online' : 'offline')
+    }
+  }, [])
+
+  useEffect(() => {
+    if (statusOpen) checkApi()
+  }, [statusOpen, checkApi])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,6 +160,58 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
         </form>
 
         <p className="login-footer">Access restricted to platform administrators</p>
+      </div>
+
+      {/* System Status panel */}
+      <div className="login-status">
+        <button
+          className="login-status-toggle"
+          onClick={() => setStatusOpen(o => !o)}
+          type="button"
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          System Status
+          <svg
+            width="11"
+            height="11"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            style={{ transform: statusOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+
+        {statusOpen && (
+          <div className="login-status-panel">
+            <div className="login-status-row">
+              <span className="login-status-label">API endpoint</span>
+              <span className="login-status-value" title={apiURL}>{apiURL}</span>
+            </div>
+            {Object.entries(safeEnvVars).map(([k, v]) => (
+              <div className="login-status-row" key={k}>
+                <span className="login-status-label">{k}</span>
+                <span className="login-status-value">{v}</span>
+              </div>
+            ))}
+            <div className="login-status-row login-status-check">
+              <span className="login-status-label">API reachable</span>
+              <span className="login-status-indicator">
+                <StatusDot status={apiStatus} />
+                <span>{apiStatus}</span>
+              </span>
+              <button className="login-status-ping" onClick={checkApi} type="button">
+                Ping
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ import MerchantsPage from './pages/MerchantsPage'
 import MerchantDetailPage from './pages/MerchantDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
+import DebugPage from './pages/DebugPage'
 
 interface User {
   userId: number
@@ -141,6 +142,19 @@ function App() {
             user ? (
               <AppLayout user={user} onLogout={handleLogout} pageTitle="Users">
                 <UsersPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/debug"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Debug">
+                <DebugPage />
               </AppLayout>
             ) : (
               <Navigate to="/login" replace />

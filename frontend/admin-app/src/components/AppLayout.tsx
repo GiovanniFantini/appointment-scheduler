@@ -83,6 +83,24 @@ const navItems = [
       },
     ],
   },
+  {
+    section: 'Developer',
+    links: [
+      {
+        path: '/debug',
+        label: 'Debug',
+        exact: false,
+        icon: (
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+            <path d="M12 22c4.97 0 9-4.03 9-9H3c0 4.97 4.03 9 9 9z" />
+            <path d="M12 13V2" />
+            <path d="M5 9l7-7 7 7" />
+            <path d="M3 13h3M18 13h3" />
+          </svg>
+        ),
+      },
+    ],
+  },
 ]
 
 export default function AppLayout({ user, onLogout, children, pageTitle }: AppLayoutProps) {
