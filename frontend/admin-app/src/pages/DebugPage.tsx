@@ -8,6 +8,7 @@ interface EndpointCheck {
   label: string
   path: string
   method?: 'GET' | 'POST'
+  expectedCodes?: number[]
   note?: string
   status: ServiceStatus
   statusCode?: number
@@ -16,14 +17,14 @@ interface EndpointCheck {
 }
 
 const ENDPOINTS: Omit<EndpointCheck, 'status'>[] = [
-  { label: 'Version', path: '/version' },
-  { label: 'Auth – Admin Login', path: '/auth/admin/login', method: 'POST', note: 'any HTTP response = reachable' },
-  { label: 'Auth – Merchant Login', path: '/auth/merchant/login', method: 'POST', note: 'any HTTP response = reachable' },
-  { label: 'Merchants (AdminOnly)', path: '/merchants' },
-  { label: 'Merchants – Pending', path: '/merchants/pending' },
-  { label: 'Notifications', path: '/notifications' },
-  { label: 'Employees (MerchantOnly)', path: '/employees' },
-  { label: 'Events (MerchantOnly)', path: '/events' },
+  { label: 'Version',                  path: '/version' },
+  { label: 'Auth – Admin Login',       path: '/auth/admin/login',    method: 'POST', expectedCodes: [400, 401], note: 'any HTTP response = reachable' },
+  { label: 'Auth – Merchant Login',    path: '/auth/merchant/login', method: 'POST', expectedCodes: [400, 401], note: 'any HTTP response = reachable' },
+  { label: 'Merchants',                path: '/merchants' },
+  { label: 'Merchants – Pending',      path: '/merchants/pending' },
+  { label: 'Notifications',            path: '/notifications' },
+  { label: 'Employees (MerchantOnly)', path: '/employees',           expectedCodes: [400], note: 'admin token has no MerchantId claim → 400 expected' },
+  { label: 'Events (MerchantOnly)',    path: '/events',              expectedCodes: [400], note: 'admin token has no MerchantId claim → 400 expected' },
 ]
 
 function buildEnvRows(): Record<string, string> {
@@ -61,31 +62,37 @@ function buildBrowserRows(): Record<string, string> {
   }
 }
 
-function StatusBadge({ status, statusCode, latencyMs }: Pick<EndpointCheck, 'status' | 'statusCode' | 'latencyMs'>) {
-  const map: Record<ServiceStatus, { bg: string; color: string; label: string }> = {
-    idle: { bg: '#1e293b', color: '#475569', label: 'idle' },
-    checking: { bg: '#451a03', color: '#f59e0b', label: 'checking…' },
-    online: { bg: '#052e16', color: '#22c55e', label: statusCode ? `${statusCode}` : 'online' },
-    offline: { bg: '#450a0a', color: '#ef4444', label: statusCode ? `${statusCode}` : 'offline' },
-  }
-  const { bg, color, label } = map[status]
+function StatusBadge({ status, statusCode, latencyMs, expectedCodes }: Pick<EndpointCheck, 'status' | 'statusCode' | 'latencyMs' | 'expectedCodes'>) {
+  const is2xx = statusCode !== undefined && statusCode >= 200 && statusCode < 300
+  const isExpected = statusCode !== undefined && (is2xx || expectedCodes?.includes(statusCode))
+
+  const style = ((): { bg: string; color: string; label: string; pulse?: boolean } => {
+    if (status === 'idle')     return { bg: '#1e293b',  color: '#475569', label: 'idle' }
+    if (status === 'checking') return { bg: '#451a03',  color: '#f59e0b', label: 'checking…', pulse: true }
+    if (status === 'offline')  return { bg: '#450a0a',  color: '#ef4444', label: statusCode ? `${statusCode}` : 'offline' }
+    // online: green if 2xx or expected code, amber otherwise
+    return isExpected
+      ? { bg: '#052e16', color: '#22c55e', label: `${statusCode}` }
+      : { bg: '#451a03', color: '#f59e0b', label: `${statusCode}` }
+  })()
+
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
       <span
         style={{
-          background: bg,
-          color,
-          border: `1px solid ${color}33`,
+          background: style.bg,
+          color: style.color,
+          border: `1px solid ${style.color}33`,
           borderRadius: 4,
           padding: '2px 8px',
           fontSize: 12,
           fontFamily: 'monospace',
-          ...(status === 'checking' ? { animation: 'dbg-pulse 1s infinite' } : {}),
+          ...(style.pulse ? { animation: 'dbg-pulse 1s infinite' } : {}),
         }}
       >
-        {label}
+        {style.label}
       </span>
-      {latencyMs !== undefined && status === 'online' && (
+      {latencyMs !== undefined && status !== 'idle' && (
         <span style={{ fontSize: 11, color: '#475569' }}>{latencyMs}ms</span>
       )}
     </span>
@@ -213,7 +220,7 @@ export default function DebugPage() {
                     </span>
                   </td>
                   <td><code className="dbg-code">{c.path}</code></td>
-                  <td><StatusBadge status={c.status} statusCode={c.statusCode} latencyMs={c.latencyMs} /></td>
+                  <td><StatusBadge status={c.status} statusCode={c.statusCode} latencyMs={c.latencyMs} expectedCodes={c.expectedCodes} /></td>
                   <td style={{ fontSize: 11, color: c.error ? '#ef4444' : '#475569' }}>
                     {c.error ?? (c.statusCode == null ? c.note : null) ?? ''}
                   </td>
