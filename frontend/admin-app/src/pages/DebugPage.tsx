@@ -17,8 +17,8 @@ interface EndpointCheck {
 
 const ENDPOINTS: Omit<EndpointCheck, 'status'>[] = [
   { label: 'Version', path: '/version' },
-  { label: 'Auth – Admin Login', path: '/auth/admin/login', method: 'POST', note: 'POST, empty body → 400 = reachable' },
-  { label: 'Auth – Merchant Login', path: '/auth/merchant/login', method: 'POST', note: 'POST, empty body → 400 = reachable' },
+  { label: 'Auth – Admin Login', path: '/auth/admin/login', method: 'POST', note: 'any HTTP response = reachable' },
+  { label: 'Auth – Merchant Login', path: '/auth/merchant/login', method: 'POST', note: 'any HTTP response = reachable' },
   { label: 'Merchants (AdminOnly)', path: '/merchants' },
   { label: 'Merchants – Pending', path: '/merchants/pending' },
   { label: 'Notifications', path: '/notifications' },
@@ -215,7 +215,7 @@ export default function DebugPage() {
                   <td><code className="dbg-code">{c.path}</code></td>
                   <td><StatusBadge status={c.status} statusCode={c.statusCode} latencyMs={c.latencyMs} /></td>
                   <td style={{ fontSize: 11, color: c.error ? '#ef4444' : '#475569' }}>
-                    {c.error ?? c.note ?? ''}
+                    {c.error ?? (c.statusCode == null ? c.note : null) ?? ''}
                   </td>
                 </tr>
               ))}
