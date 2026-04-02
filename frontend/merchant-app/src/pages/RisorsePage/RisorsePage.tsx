@@ -11,10 +11,13 @@ interface Employee {
   id: number
   firstName: string
   lastName: string
+  fullName: string
   email: string
-  role?: string
+  phoneNumber?: string
   roleName?: string
-  isActive?: boolean
+  roleId?: number
+  isActive: boolean
+  hasUserAccount: boolean
 }
 
 interface Role {
@@ -26,6 +29,7 @@ interface NewEmployeeForm {
   firstName: string
   lastName: string
   email: string
+  phoneNumber: string
   roleId: string
 }
 
@@ -35,7 +39,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null)
-  const [formData, setFormData] = useState<NewEmployeeForm>({ firstName: '', lastName: '', email: '', roleId: '' })
+  const [formData, setFormData] = useState<NewEmployeeForm>({ firstName: '', lastName: '', email: '', phoneNumber: '', roleId: '' })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -67,7 +71,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
 
   const openAddModal = () => {
     setEditEmployee(null)
-    setFormData({ firstName: '', lastName: '', email: '', roleId: roles[0]?.id?.toString() ?? '' })
+    setFormData({ firstName: '', lastName: '', email: '', phoneNumber: '', roleId: roles[0]?.id?.toString() ?? '' })
     setFormError('')
     setShowModal(true)
   }
@@ -78,7 +82,8 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
       firstName: emp.firstName,
       lastName: emp.lastName,
       email: emp.email,
-      roleId: '',
+      phoneNumber: emp.phoneNumber ?? '',
+      roleId: emp.roleId?.toString() ?? '',
     })
     setFormError('')
     setShowModal(true)
@@ -93,16 +98,22 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
     setSaving(true)
     setFormError('')
     try {
-      const payload = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        roleId: formData.roleId ? Number(formData.roleId) : undefined,
-      }
       if (editEmployee) {
-        await apiClient.put(`/employees/${editEmployee.id}`, payload)
+        await apiClient.put(`/employees/${editEmployee.id}`, {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phoneNumber: formData.phoneNumber || undefined,
+          roleId: formData.roleId ? Number(formData.roleId) : editEmployee.roleId ?? 0,
+          isActive: editEmployee.isActive,
+        })
       } else {
-        await apiClient.post('/employees', payload)
+        await apiClient.post('/employees', {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          phoneNumber: formData.phoneNumber || undefined,
+          roleId: formData.roleId ? Number(formData.roleId) : 0,
+        })
       }
       setShowModal(false)
       await fetchEmployees()
@@ -175,11 +186,11 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                       </div>
                     </td>
                     <td>{emp.email}</td>
-                    <td>{emp.roleName ?? emp.role ?? '—'}</td>
+                    <td>{emp.roleName ?? '—'}</td>
                     <td>
-                      <span className={`status-badge ${emp.isActive !== false ? 'active' : 'inactive'}`}>
+                      <span className={`status-badge ${emp.isActive ? 'active' : 'inactive'}`}>
                         <span className="status-dot" />
-                        {emp.isActive !== false ? 'Attivo' : 'Inattivo'}
+                        {emp.isActive ? 'Attivo' : 'Inattivo'}
                       </span>
                     </td>
                     <td>

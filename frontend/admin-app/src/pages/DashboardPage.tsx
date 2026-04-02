@@ -7,9 +7,16 @@ interface Merchant {
   id: number
   companyName: string
   city?: string
-  status: string
+  isApproved: boolean
+  isActive: boolean
   createdAt: string
   employeeCount?: number
+}
+
+function getMerchantStatus(m: Merchant): string {
+  if (!m.isActive) return 'inactive'
+  if (!m.isApproved) return 'pending'
+  return 'active'
 }
 
 interface Stats {
@@ -32,8 +39,8 @@ export default function DashboardPage() {
       setMerchants(data)
       setStats({
         total: data.length,
-        active: data.filter((m) => m.status === 'active').length,
-        pending: data.filter((m) => m.status === 'pending').length,
+        active: data.filter((m) => getMerchantStatus(m) === 'active').length,
+        pending: data.filter((m) => getMerchantStatus(m) === 'pending').length,
         totalEmployees: data.reduce((sum, m) => sum + (m.employeeCount ?? 0), 0),
       })
     } catch {
@@ -67,7 +74,7 @@ export default function DashboardPage() {
     }
   }
 
-  const pendingMerchants = merchants.filter((m) => m.status === 'pending').slice(0, 8)
+  const pendingMerchants = merchants.filter((m) => getMerchantStatus(m) === 'pending').slice(0, 8)
 
   const statCards = [
     {

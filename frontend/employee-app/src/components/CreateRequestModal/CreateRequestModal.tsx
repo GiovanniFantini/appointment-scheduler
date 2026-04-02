@@ -4,6 +4,13 @@ import './CreateRequestModal.css'
 
 type RequestType = 'Ferie' | 'Permessi' | 'Malattia'
 
+// Mapping from RequestType string to server EventType enum value
+const REQUEST_TYPE_VALUES: Record<RequestType, number> = {
+  Ferie: 3,
+  Permessi: 4,
+  Malattia: 5,
+}
+
 interface Props {
   onClose: () => void
   onCreated: () => void
@@ -37,25 +44,18 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
 
     setLoading(true)
     try {
-      let startISO: string
-      let endISO: string | undefined
-
-      if (tuttoIlGiorno) {
-        startISO = dataInizio
-        endISO = dataFine || dataInizio
-      } else {
-        startISO = `${dataInizio}T${orarioDa}:00`
-        endISO = dataFine
-          ? `${dataFine}T${orarioA}:00`
-          : `${dataInizio}T${orarioA}:00`
-      }
-
+      // NOTE: POST /events è MerchantOnly — serve un endpoint dedicato per le richieste employee
       await apiClient.post('/events', {
         title: tipoLabels[tipo],
-        start: startISO,
-        end: endISO,
-        allDay: tuttoIlGiorno,
-        eventType: tipo,
+        eventType: REQUEST_TYPE_VALUES[tipo],
+        startDate: dataInizio,
+        endDate: dataFine || dataInizio,
+        isAllDay: tuttoIlGiorno,
+        startTime: tuttoIlGiorno ? undefined : orarioDa,
+        endTime: tuttoIlGiorno ? undefined : orarioA,
+        notificationEnabled: false,
+        ownerEmployeeIds: [],
+        coOwnerEmployeeIds: [],
         notes: note || undefined,
       })
 

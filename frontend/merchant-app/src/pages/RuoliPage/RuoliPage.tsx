@@ -5,22 +5,30 @@ import './RuoliPage.css'
 interface Feature {
   name: string
   icon: string
+  value: number
+}
+
+interface RoleFeatureDto {
+  feature: number
+  featureName: string
+  isEnabled: boolean
 }
 
 interface MerchantRole {
   id: number
   name: string
   isDefault?: boolean
-  features: string[]
+  features: RoleFeatureDto[]
+  memberCount?: number
 }
 
 const ALL_FEATURES: Feature[] = [
-  { name: 'Calendario', icon: '📅' },
-  { name: 'Richieste', icon: '📋' },
-  { name: 'Risorse', icon: '👥' },
-  { name: 'Ruoli', icon: '🔑' },
-  { name: 'Documenti', icon: '📁' },
-  { name: 'Report', icon: '📊' },
+  { name: 'Calendario', icon: '📅', value: 1 },
+  { name: 'Richieste', icon: '📋', value: 2 },
+  { name: 'Risorse', icon: '👥', value: 3 },
+  { name: 'Ruoli', icon: '🔑', value: 4 },
+  { name: 'Documenti', icon: '📁', value: 5 },
+  { name: 'Report', icon: '📊', value: 6 },
 ]
 
 const DEFAULT_ROLE_NAME = 'Responsabile App'
@@ -33,7 +41,8 @@ export default function RuoliPage() {
   const [newRoleName, setNewRoleName] = useState('')
   const [creating, setCreating] = useState(false)
   const [createError, setCreateError] = useState('')
-  const [localFeatures, setLocalFeatures] = useState<Record<number, string[]>>({})
+  // localFeatures: roleId -> array of enabled feature enum values (numbers)
+  const [localFeatures, setLocalFeatures] = useState<Record<number, number[]>>({})
 
   const fetchRoles = async () => {
     setLoading(true)
@@ -42,8 +51,10 @@ export default function RuoliPage() {
       if (Array.isArray(res.data)) {
         const data = res.data as MerchantRole[]
         setRoles(data)
-        const fm: Record<number, string[]> = {}
-        data.forEach(r => { fm[r.id] = r.features ?? [] })
+        const fm: Record<number, number[]> = {}
+        data.forEach(r => {
+          fm[r.id] = r.features.filter(f => f.isEnabled).map(f => f.feature)
+        })
         setLocalFeatures(fm)
       }
     } catch {
@@ -55,12 +66,12 @@ export default function RuoliPage() {
 
   useEffect(() => { fetchRoles() }, [])
 
-  const toggleFeature = (roleId: number, feature: string) => {
+  const toggleFeature = (roleId: number, featureValue: number) => {
     setLocalFeatures(prev => {
       const current = prev[roleId] ?? []
-      const updated = current.includes(feature)
-        ? current.filter(f => f !== feature)
-        : [...current, feature]
+      const updated = current.includes(featureValue)
+        ? current.filter(f => f !== featureValue)
+        : [...current, featureValue]
       return { ...prev, [roleId]: updated }
     })
   }
@@ -68,9 +79,13 @@ export default function RuoliPage() {
   const handleSaveRole = async (role: MerchantRole) => {
     setSavingId(role.id)
     try {
+      const enabledValues = localFeatures[role.id] ?? []
       await apiClient.put(`/merchant-roles/${role.id}`, {
         name: role.name,
-        features: localFeatures[role.id] ?? [],
+        features: ALL_FEATURES.map(feat => ({
+          feature: feat.value,
+          isEnabled: enabledValues.includes(feat.value),
+        })),
       })
     } catch {
       alert('Errore durante il salvataggio')
@@ -96,7 +111,10 @@ export default function RuoliPage() {
     setCreating(true)
     setCreateError('')
     try {
-      await apiClient.post('/merchant-roles', { name: newRoleName.trim(), features: [] })
+      await apiClient.post('/merchant-roles', {
+        name: newRoleName.trim(),
+        features: ALL_FEATURES.map(feat => ({ feature: feat.value, isEnabled: false })),
+      })
       setShowModal(false)
       setNewRoleName('')
       await fetchRoles()
@@ -146,8 +164,8 @@ export default function RuoliPage() {
                     <label className="toggle-switch">
                       <input
                         type="checkbox"
-                        checked={(localFeatures[role.id] ?? []).includes(feat.name)}
-                        onChange={() => toggleFeature(role.id, feat.name)}
+                        checked={(localFeatures[role.id] ?? []).includes(feat.value)}
+                        onChange={() => toggleFeature(role.id, feat.value)}
                         disabled={isDefaultRole(role)}
                       />
                       <span className="toggle-slider" />

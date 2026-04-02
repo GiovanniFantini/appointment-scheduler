@@ -13,7 +13,7 @@ interface User {
   email: string
   firstName: string
   lastName: string
-  // 1 = admin, 2 = consumer, 3 = merchant, 4 = employee
+  // 1 = Admin, 2 = Merchant, 3 = Employee
   accountType: number
 }
 

@@ -5,6 +5,15 @@ import './EventModal.css'
 export type EventType = 'Turno' | 'ChiusuraAziendale' | 'Ferie' | 'Permessi' | 'Malattia'
 export type RecurrenceType = 'Nessuna' | 'Giornaliera' | 'Settimanale' | 'Mensile'
 
+// Mapping from EventType string to server enum value
+const EVENT_TYPE_VALUES: Record<EventType, number> = {
+  Turno: 1,
+  ChiusuraAziendale: 2,
+  Ferie: 3,
+  Permessi: 4,
+  Malattia: 5,
+}
+
 export interface CalEvent {
   id?: number
   title: string
@@ -15,9 +24,10 @@ export interface CalEvent {
   startTime?: string
   endTime?: string
   isOnCall?: boolean
-  employeeIds?: number[]
+  ownerEmployeeIds?: number[]
+  coOwnerEmployeeIds?: number[]
   recurrence?: RecurrenceType
-  notify?: boolean
+  notificationEnabled?: boolean
   notes?: string
 }
 
@@ -48,9 +58,9 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const [startTime, setStartTime] = useState(event?.startTime ?? '09:00')
   const [endTime, setEndTime] = useState(event?.endTime ?? '17:00')
   const [isOnCall, setIsOnCall] = useState(event?.isOnCall ?? false)
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>(event?.employeeIds ?? [])
+  const [selectedOwnerIds, setSelectedOwnerIds] = useState<number[]>(event?.ownerEmployeeIds ?? [])
   const [recurrence, setRecurrence] = useState<RecurrenceType>(event?.recurrence ?? 'Nessuna')
-  const [notify, setNotify] = useState(event?.notify ?? false)
+  const [notificationEnabled, setNotificationEnabled] = useState(event?.notificationEnabled ?? false)
   const [notes, setNotes] = useState(event?.notes ?? '')
   const [showClone, setShowClone] = useState(false)
   const [cloneFrom, setCloneFrom] = useState('')
@@ -68,16 +78,17 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
   const buildPayload = () => ({
     title,
-    eventType,
+    eventType: EVENT_TYPE_VALUES[eventType],
     isAllDay,
     startDate,
     endDate: endDate || startDate,
     startTime: isAllDay ? undefined : startTime,
     endTime: isAllDay ? undefined : endTime,
     isOnCall: eventType === 'Turno' ? isOnCall : false,
-    employeeIds: selectedEmployeeIds,
-    recurrence,
-    notify,
+    ownerEmployeeIds: selectedOwnerIds,
+    coOwnerEmployeeIds: [],
+    recurrence: recurrence === 'Nessuna' ? null : recurrence,
+    notificationEnabled,
     notes,
   })
 
@@ -129,7 +140,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
   const handleEmployeeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Array.from(e.target.selectedOptions).map(o => Number(o.value))
-    setSelectedEmployeeIds(selected)
+    setSelectedOwnerIds(selected)
   }
 
   return (
@@ -214,7 +225,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
               <select
                 multiple
                 className="multi-select"
-                value={selectedEmployeeIds.map(String)}
+                value={selectedOwnerIds.map(String)}
                 onChange={handleEmployeeSelect}
               >
                 {employees.map(emp => (
@@ -238,12 +249,12 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
           <div className="checkbox-group">
             <input
               type="checkbox"
-              id="notify"
+              id="notificationEnabled"
               className="modal-checkbox"
-              checked={notify}
-              onChange={e => setNotify(e.target.checked)}
+              checked={notificationEnabled}
+              onChange={e => setNotificationEnabled(e.target.checked)}
             />
-            <label htmlFor="notify" className="checkbox-label">Invia notifica</label>
+            <label htmlFor="notificationEnabled" className="checkbox-label">Invia notifica</label>
           </div>
 
           <div className="modal-form-group">

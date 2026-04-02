@@ -9,19 +9,22 @@ import apiClient from '../../lib/axios'
 import EventDetailModal, { EventDetail } from '../../components/EventDetailModal/EventDetailModal'
 import './CalendarioPage.css'
 
+// Matches EventDto from server
 interface ApiEvent {
-  id: number | string
+  id: number
   title: string
-  start: string
-  end?: string
-  eventType?: string
-  allDay?: boolean
-  isOnCall?: boolean
-  participants?: Array<{ id: number; name: string }>
+  eventTypeName: string    // "Turno" | "Ferie" | "Permessi" | "Malattia" | "ChiusuraAziendale"
+  startDate: string        // "2024-01-15"
+  endDate?: string
+  isAllDay: boolean
+  startTime?: string       // "09:00:00"
+  endTime?: string
+  isOnCall: boolean
   notes?: string
+  participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
 }
 
-function getEventColor(eventType?: string): string {
+function getEventColor(eventTypeName?: string): string {
   const map: Record<string, string> = {
     Turno: '#3b82f6',
     Ferie: '#ec4899',
@@ -29,23 +32,35 @@ function getEventColor(eventType?: string): string {
     Malattia: '#f59e0b',
     ChiusuraAziendale: '#1f2937',
   }
-  return eventType ? (map[eventType] ?? '#6366f1') : '#6366f1'
+  return eventTypeName ? (map[eventTypeName] ?? '#6366f1') : '#6366f1'
 }
 
 function apiEventToFCEvent(e: ApiEvent): EventInput {
-  const color = getEventColor(e.eventType)
+  const color = getEventColor(e.eventTypeName)
+
+  let start: string
+  let end: string | undefined
+
+  if (e.isAllDay) {
+    start = e.startDate
+    end = e.endDate
+  } else {
+    start = e.startDate + (e.startTime ? `T${e.startTime}` : '')
+    end = (e.endDate ?? e.startDate) + (e.endTime ? `T${e.endTime}` : '')
+  }
+
   return {
     id: String(e.id),
     title: e.title,
-    start: e.start,
-    end: e.end,
-    allDay: e.allDay,
+    start,
+    end,
+    allDay: e.isAllDay,
     backgroundColor: color,
     borderColor: color,
     extendedProps: {
-      eventType: e.eventType,
+      eventTypeName: e.eventTypeName,
       isOnCall: e.isOnCall,
-      participants: e.participants,
+      participants: e.participants.map(p => ({ id: p.employeeId, name: p.fullName })),
       notes: e.notes,
     },
   }
@@ -62,8 +77,10 @@ export default function CalendarioPage() {
     failureCallback: (error: Error) => void
   ) => {
     try {
+      const from = info.startStr.split('T')[0]
+      const to = info.endStr.split('T')[0]
       const { data } = await apiClient.get<ApiEvent[]>('/events/employee', {
-        params: { start: info.startStr, end: info.endStr },
+        params: { from, to },
       })
       const events = Array.isArray(data) ? data.map(apiEventToFCEvent) : []
       successCallback(events)
@@ -81,7 +98,7 @@ export default function CalendarioPage() {
       start: info.event.startStr,
       end: info.event.endStr || undefined,
       allDay: info.event.allDay,
-      eventType: ep.eventType as string | undefined,
+      eventType: ep.eventTypeName as string | undefined,
       isOnCall: ep.isOnCall as boolean | undefined,
       participants: ep.participants as EventDetail['participants'],
       notes: ep.notes as string | undefined,

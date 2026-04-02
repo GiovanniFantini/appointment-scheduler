@@ -8,8 +8,15 @@ interface Merchant {
   companyName: string
   city?: string
   vatNumber?: string
-  status: string
+  isApproved: boolean
+  isActive: boolean
   createdAt: string
+}
+
+function getMerchantStatus(m: Merchant): string {
+  if (!m.isActive) return 'inactive'
+  if (!m.isApproved) return 'pending'
+  return 'active'
 }
 
 type TabKey = 'all' | 'pending' | 'active' | 'inactive'
@@ -56,7 +63,7 @@ export default function MerchantsPage() {
 
   const filtered = tab === 'all'
     ? merchants
-    : merchants.filter((m) => m.status === tab)
+    : merchants.filter((m) => getMerchantStatus(m) === tab)
 
   const handleApprove = async (id: number) => {
     setActionLoading(id)
@@ -95,7 +102,7 @@ export default function MerchantsPage() {
           >
             {t.label}
             {t.key !== 'all' && !loading && (
-              <> ({merchants.filter((m) => m.status === t.key).length})</>
+              <> ({merchants.filter((m) => getMerchantStatus(m) === t.key).length})</>
             )}
           </button>
         ))}
@@ -136,8 +143,8 @@ export default function MerchantsPage() {
                     <td className="td-secondary">{m.city ?? '—'}</td>
                     <td className="td-secondary">{m.vatNumber ?? '—'}</td>
                     <td>
-                        <span className={statusClass(m.status)}>
-                          {(m.status ? m.status.charAt(0).toUpperCase() + m.status.slice(1) : 'Unknown')}
+                        <span className={statusClass(getMerchantStatus(m))}>
+                          {getMerchantStatus(m).charAt(0).toUpperCase() + getMerchantStatus(m).slice(1)}
                         </span>
                     </td>
                     <td className="td-secondary">
@@ -158,7 +165,7 @@ export default function MerchantsPage() {
                         </button>
 
                         {/* Approve (show only if pending/inactive) */}
-                        {m.status !== 'active' && (
+                        {getMerchantStatus(m) !== 'active' && (
                           <button
                             className="btn-icon btn-icon-approve"
                             title="Approve"
@@ -172,7 +179,7 @@ export default function MerchantsPage() {
                         )}
 
                         {/* Reject (show only if pending/active) */}
-                        {m.status !== 'inactive' && m.status !== 'rejected' && (
+                        {getMerchantStatus(m) !== 'inactive' && (
                           <button
                             className="btn-icon btn-icon-reject"
                             title="Reject / Deactivate"

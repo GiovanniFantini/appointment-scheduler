@@ -3,13 +3,16 @@ import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
 import './RichiestePage.css'
 
-interface RequestEvent {
-  id: number | string
+// Matches EventDto from server
+interface ApiEvent {
+  id: number
   title: string
-  start: string
-  end?: string
-  eventType?: string
-  allDay?: boolean
+  eventTypeName: string    // "Ferie" | "Permessi" | "Malattia"
+  startDate: string        // "2024-01-15"
+  endDate?: string
+  isAllDay: boolean
+  startTime?: string
+  endTime?: string
   notes?: string
 }
 
@@ -31,16 +34,16 @@ function getEventTypeColor(type?: string): string {
   return type ? (map[type] ?? '#6366f1') : '#6366f1'
 }
 
-function formatDate(dateStr: string, allDay?: boolean): string {
+function formatDate(dateStr: string, isAllDay: boolean): string {
   const d = new Date(dateStr)
-  if (allDay) {
+  if (isAllDay) {
     return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
   }
   return d.toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 export default function RichiestePage() {
-  const [requests, setRequests] = useState<RequestEvent[]>([])
+  const [requests, setRequests] = useState<ApiEvent[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [error, setError] = useState('')
@@ -49,13 +52,12 @@ export default function RichiestePage() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await apiClient.get<RequestEvent[]>('/events/employee')
+      const { data } = await apiClient.get<ApiEvent[]>('/events/employee')
       const events = Array.isArray(data) ? data : []
       const filtered = events.filter(e =>
-        ['Ferie', 'Permessi', 'Malattia'].includes(e.eventType ?? '')
+        ['Ferie', 'Permessi', 'Malattia'].includes(e.eventTypeName ?? '')
       )
-      // Sort by start date desc
-      filtered.sort((a, b) => new Date(b.start).getTime() - new Date(a.start).getTime())
+      filtered.sort((a, b) => a.startDate < b.startDate ? 1 : -1)
       setRequests(filtered)
     } catch {
       setError('Errore nel caricamento delle richieste')
@@ -102,7 +104,7 @@ export default function RichiestePage() {
       ) : (
         <div className="requests-list">
           {requests.map(req => {
-            const color = getEventTypeColor(req.eventType)
+            const color = getEventTypeColor(req.eventTypeName)
             return (
               <div key={req.id} className="request-card" style={{ borderLeftColor: color }}>
                 <div className="request-card-top">
@@ -110,19 +112,19 @@ export default function RichiestePage() {
                     className="request-type-badge"
                     style={{ backgroundColor: color + '22', color }}
                   >
-                    {getEventTypeLabel(req.eventType)}
+                    {getEventTypeLabel(req.eventTypeName)}
                   </span>
                   <span className="request-status-badge">Inviata</span>
                 </div>
                 <div className="request-card-dates">
                   <div className="request-date">
                     <span className="request-date-label">Dal</span>
-                    <span className="request-date-value">{formatDate(req.start, req.allDay)}</span>
+                    <span className="request-date-value">{formatDate(req.startDate, req.isAllDay)}</span>
                   </div>
-                  {req.end && (
+                  {req.endDate && (
                     <div className="request-date">
                       <span className="request-date-label">Al</span>
-                      <span className="request-date-value">{formatDate(req.end, req.allDay)}</span>
+                      <span className="request-date-value">{formatDate(req.endDate, req.isAllDay)}</span>
                     </div>
                   )}
                 </div>

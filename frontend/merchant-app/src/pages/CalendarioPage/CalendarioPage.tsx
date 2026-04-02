@@ -18,18 +18,21 @@ interface CalendarioPageProps {
 
 interface ApiEvent {
   id: number
+  merchantId: number
   title: string
-  eventType: EventType
-  isAllDay: boolean
-  startDate: string
+  eventType: number        // numeric enum value from server
+  eventTypeName: string    // "Turno" | "ChiusuraAziendale" | etc.
+  startDate: string        // "2024-01-15"
   endDate?: string
-  startTime?: string
+  isAllDay: boolean
+  startTime?: string       // "09:00:00"
   endTime?: string
-  isOnCall?: boolean
-  employeeIds?: number[]
+  isOnCall: boolean
   recurrence?: string
-  notify?: boolean
+  notificationEnabled: boolean
   notes?: string
+  createdAt: string
+  participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
 }
 
 const EVENT_COLORS: Record<string, string> = {
@@ -46,23 +49,24 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
   return {
     id: e.id,
     title: e.title,
-    eventType: e.eventType,
+    eventType: e.eventTypeName as EventType,
     isAllDay: e.isAllDay,
     startDate: e.startDate,
     endDate: e.endDate,
     startTime: e.startTime,
     endTime: e.endTime,
     isOnCall: e.isOnCall,
-    employeeIds: e.employeeIds,
-    recurrence: e.recurrence as CalEvent['recurrence'],
-    notify: e.notify,
-    notes: e.notes,
+    ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
+    coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
+    recurrence: (e.recurrence ?? 'Nessuna') as CalEvent['recurrence'],
+    notificationEnabled: e.notificationEnabled,
+    notes: e.notes ?? undefined,
   }
 }
 
 function toFCEvent(e: ApiEvent): EventInput {
-  const color = EVENT_COLORS[e.eventType] ?? '#6366f1'
-  const textColor = e.eventType === 'ChiusuraAziendale' ? '#fff' : undefined
+  const color = EVENT_COLORS[e.eventTypeName] ?? '#6366f1'
+  const textColor = e.eventTypeName === 'ChiusuraAziendale' ? '#fff' : undefined
 
   let start: string
   let end: string | undefined
@@ -139,7 +143,6 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
   const handleSaved = () => {
     setModalOpen(false)
     setSelectedEvent(null)
-    // Re-fetch current range — FullCalendar will trigger datesSet
     const now = new Date()
     const from = now.toISOString().split('T')[0]
     const futureDate = new Date(now)

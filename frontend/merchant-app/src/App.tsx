@@ -16,7 +16,7 @@ export interface MerchantUser {
   email: string
   firstName: string
   lastName: string
-  accountType: string
+  accountType: number
   merchantId: number
   companyName?: string
   activeFeatures: string[]

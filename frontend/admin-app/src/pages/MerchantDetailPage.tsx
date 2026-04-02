@@ -5,18 +5,33 @@ import './MerchantDetailPage.css'
 
 interface MerchantDetail {
   id: number
+  userId: number
   companyName: string
-  city?: string
-  address?: string
   vatNumber?: string
-  status: string
-  createdAt: string
-  ownerFirstName?: string
-  ownerLastName?: string
-  ownerEmail?: string
+  address?: string
+  city?: string
+  postalCode?: string
+  country?: string
   phone?: string
-  employeeCount?: number
-  description?: string
+  businessEmail?: string
+  isApproved: boolean
+  isActive: boolean
+  createdAt: string
+  approvedAt?: string
+  owner?: {
+    id: number
+    email: string
+    firstName: string
+    lastName: string
+    phoneNumber?: string
+  }
+  employeeCount: number
+}
+
+function getMerchantStatus(m: MerchantDetail): string {
+  if (!m.isActive) return 'inactive'
+  if (!m.isApproved) return 'pending'
+  return 'active'
 }
 
 function chipClass(status: string) {
@@ -27,6 +42,15 @@ function chipClass(status: string) {
   }
 }
 
+interface EditData {
+  companyName: string
+  vatNumber: string
+  city: string
+  address: string
+  phone: string
+  businessEmail: string
+}
+
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
 
@@ -35,7 +59,7 @@ export default function MerchantDetailPage() {
   const [fetchError, setFetchError] = useState('')
 
   const [editMode, setEditMode] = useState(false)
-  const [editData, setEditData] = useState<Partial<MerchantDetail>>({})
+  const [editData, setEditData] = useState<EditData>({ companyName: '', vatNumber: '', city: '', address: '', phone: '', businessEmail: '' })
   const [saving, setSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [saveError, setSaveError] = useState('')
@@ -63,11 +87,11 @@ export default function MerchantDetailPage() {
     if (!merchant) return
     setEditData({
       companyName: merchant.companyName,
-      city: merchant.city,
-      address: merchant.address,
-      vatNumber: merchant.vatNumber,
-      phone: merchant.phone,
-      description: merchant.description,
+      vatNumber: merchant.vatNumber ?? '',
+      city: merchant.city ?? '',
+      address: merchant.address ?? '',
+      phone: merchant.phone ?? '',
+      businessEmail: merchant.businessEmail ?? '',
     })
     setEditMode(true)
     setSaveSuccess(false)
@@ -119,6 +143,8 @@ export default function MerchantDetailPage() {
   if (fetchError) return <div className="detail-error">{fetchError}</div>
   if (!merchant) return <div className="detail-error">Merchant not found.</div>
 
+  const status = getMerchantStatus(merchant)
+
   return (
     <div className="merchant-detail-page">
       {/* Header */}
@@ -131,18 +157,18 @@ export default function MerchantDetailPage() {
             Back to Merchants
           </Link>
           <h1 className="page-title">{merchant.companyName}</h1>
-          <span className={chipClass(merchant.status)}>
-            {(merchant.status ? merchant.status.charAt(0).toUpperCase() + merchant.status.slice(1) : 'Unknown')}
+          <span className={chipClass(status)}>
+            {status.charAt(0).toUpperCase() + status.slice(1)}
           </span>
         </div>
 
         <div className="detail-actions">
-          {merchant.status !== 'active' && (
+          {status !== 'active' && (
             <button className="btn-success" onClick={handleApprove} disabled={actionLoading}>
               Approve
             </button>
           )}
-          {merchant.status !== 'inactive' && merchant.status !== 'rejected' && (
+          {status !== 'inactive' && (
             <button className="btn-danger" onClick={handleReject} disabled={actionLoading}>
               Deactivate
             </button>
@@ -174,14 +200,14 @@ export default function MerchantDetailPage() {
                   { key: 'city', label: 'City' },
                   { key: 'address', label: 'Address' },
                   { key: 'phone', label: 'Phone' },
-                  { key: 'description', label: 'Description' },
-                ] as { key: keyof MerchantDetail; label: string }[]
+                  { key: 'businessEmail', label: 'Business Email' },
+                ] as { key: keyof EditData; label: string }[]
               ).map(({ key, label }) => (
                 <div key={key} className="edit-field">
                   <label className="edit-field-label">{label}</label>
                   <input
                     className="edit-input"
-                    value={(editData[key] as string) ?? ''}
+                    value={editData[key]}
                     onChange={(e) => setEditData((prev) => ({ ...prev, [key]: e.target.value }))}
                   />
                 </div>
@@ -227,6 +253,12 @@ export default function MerchantDetailPage() {
               </div>
             </div>
             <div className="info-field">
+              <div className="info-field-label">Business Email</div>
+              <div className={`info-field-value${merchant.businessEmail ? '' : ' secondary'}`}>
+                {merchant.businessEmail ?? '—'}
+              </div>
+            </div>
+            <div className="info-field">
               <div className="info-field-label">Registered</div>
               <div className="info-field-value">
                 {new Date(merchant.createdAt).toLocaleDateString()}
@@ -244,25 +276,25 @@ export default function MerchantDetailPage() {
         <div className="info-grid">
           <div className="info-field">
             <div className="info-field-label">First Name</div>
-            <div className={`info-field-value${merchant.ownerFirstName ? '' : ' secondary'}`}>
-              {merchant.ownerFirstName ?? '—'}
+            <div className={`info-field-value${merchant.owner?.firstName ? '' : ' secondary'}`}>
+              {merchant.owner?.firstName ?? '—'}
             </div>
           </div>
           <div className="info-field">
             <div className="info-field-label">Last Name</div>
-            <div className={`info-field-value${merchant.ownerLastName ? '' : ' secondary'}`}>
-              {merchant.ownerLastName ?? '—'}
+            <div className={`info-field-value${merchant.owner?.lastName ? '' : ' secondary'}`}>
+              {merchant.owner?.lastName ?? '—'}
             </div>
           </div>
           <div className="info-field">
             <div className="info-field-label">Email</div>
-            <div className={`info-field-value${merchant.ownerEmail ? '' : ' secondary'}`}>
-              {merchant.ownerEmail ?? '—'}
+            <div className={`info-field-value${merchant.owner?.email ? '' : ' secondary'}`}>
+              {merchant.owner?.email ?? '—'}
             </div>
           </div>
           <div className="info-field">
             <div className="info-field-label">Employees</div>
-            <div className="info-field-value">{merchant.employeeCount ?? 0}</div>
+            <div className="info-field-value">{merchant.employeeCount}</div>
           </div>
         </div>
       </div>

@@ -4,13 +4,16 @@ import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
 import './DashboardPage.css'
 
-interface CalendarEvent {
-  id: number | string
+// Matches EventDto from server
+interface ApiEvent {
+  id: number
   title: string
-  start: string
-  end?: string
-  eventType?: string
-  allDay?: boolean
+  eventTypeName: string    // "Turno" | "Ferie" | "Permessi" | "Malattia" | "ChiusuraAziendale"
+  startDate: string        // "2024-01-15"
+  endDate?: string
+  isAllDay: boolean
+  startTime?: string       // "09:00:00"
+  endTime?: string
 }
 
 interface Props {
@@ -40,9 +43,9 @@ function getEventTypeColor(type?: string): string {
 }
 
 export default function DashboardPage({ user }: Props) {
-  const [todayEvents, setTodayEvents] = useState<CalendarEvent[]>([])
-  const [weekEvents, setWeekEvents] = useState<CalendarEvent[]>([])
-  const [pendingRequests, setPendingRequests] = useState<CalendarEvent[]>([])
+  const [todayEvents, setTodayEvents] = useState<ApiEvent[]>([])
+  const [weekEvents, setWeekEvents] = useState<ApiEvent[]>([])
+  const [pendingRequests, setPendingRequests] = useState<ApiEvent[]>([])
   const [loading, setLoading] = useState(true)
 
   const today = new Date()
@@ -57,20 +60,14 @@ export default function DashboardPage({ user }: Props) {
 
   const fetchEvents = async () => {
     try {
-      const { data } = await apiClient.get<CalendarEvent[]>('/events/employee', {
-        params: { start: todayStr, end: weekEndStr },
+      const { data } = await apiClient.get<ApiEvent[]>('/events/employee', {
+        params: { from: todayStr, to: weekEndStr },
       })
       const events = Array.isArray(data) ? data : []
-      const tEvents = events.filter(e => {
-        const d = e.start?.split('T')[0]
-        return d === todayStr
-      })
-      const wEvents = events.filter(e => {
-        const d = e.start?.split('T')[0]
-        return d && d > todayStr && d <= weekEndStr
-      })
+      const tEvents = events.filter(e => e.startDate === todayStr)
+      const wEvents = events.filter(e => e.startDate > todayStr && e.startDate <= weekEndStr)
       const pReqs = events.filter(e =>
-        ['Ferie', 'Permessi', 'Malattia'].includes(e.eventType ?? '')
+        ['Ferie', 'Permessi', 'Malattia'].includes(e.eventTypeName ?? '')
       )
       setTodayEvents(tEvents)
       setWeekEvents(wEvents)
@@ -82,9 +79,9 @@ export default function DashboardPage({ user }: Props) {
     }
   }
 
-  const formatTime = (dateStr: string) => {
-    const d = new Date(dateStr)
-    return d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+  const formatTime = (e: ApiEvent) => {
+    if (e.isAllDay || !e.startTime) return ''
+    return e.startTime.substring(0, 5)
   }
 
   const dayOfWeek = today.toLocaleDateString('it-IT', { weekday: 'long' })
@@ -139,18 +136,18 @@ export default function DashboardPage({ user }: Props) {
                 <div
                   key={event.id}
                   className="event-item"
-                  style={{ borderLeftColor: getEventTypeColor(event.eventType) }}
+                  style={{ borderLeftColor: getEventTypeColor(event.eventTypeName) }}
                 >
                   <div className="event-item-title">{event.title}</div>
                   <div className="event-item-meta">
                     <span
                       className="event-type-badge"
-                      style={{ backgroundColor: getEventTypeColor(event.eventType) + '22', color: getEventTypeColor(event.eventType) }}
+                      style={{ backgroundColor: getEventTypeColor(event.eventTypeName) + '22', color: getEventTypeColor(event.eventTypeName) }}
                     >
-                      {getEventTypeLabel(event.eventType)}
+                      {getEventTypeLabel(event.eventTypeName)}
                     </span>
-                    {!event.allDay && event.start && (
-                      <span className="event-time">{formatTime(event.start)}</span>
+                    {!event.isAllDay && event.startTime && (
+                      <span className="event-time">{formatTime(event)}</span>
                     )}
                   </div>
                 </div>
