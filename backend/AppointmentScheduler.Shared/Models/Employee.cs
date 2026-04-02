@@ -24,4 +24,5 @@ public class Employee
     public ICollection<EmployeeMembership> Memberships { get; set; } = new List<EmployeeMembership>();
     public ICollection<EventParticipant> EventParticipations { get; set; } = new List<EventParticipant>();
     public ICollection<HRDocument> HRDocuments { get; set; } = new List<HRDocument>();
+    public ICollection<EmployeeRequest> Requests { get; set; } = new List<EmployeeRequest>();
 }

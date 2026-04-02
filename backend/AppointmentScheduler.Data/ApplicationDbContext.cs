@@ -31,6 +31,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<HRDocument> HRDocuments { get; set; }
     public DbSet<HRDocumentVersion> HRDocumentVersions { get; set; }
 
+    // Employee Requests
+    public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
+
     // Authentication
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
@@ -245,6 +248,33 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber }).IsUnique();
             entity.HasIndex(e => e.UploadStatus);
+        });
+
+        // ── EmployeeRequest ───────────────────────────────────────────────────
+        modelBuilder.Entity<EmployeeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.ReviewNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.Requests)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.EmployeeRequests)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.MerchantId, e.Status });
+            entity.HasIndex(e => new { e.EmployeeId, e.MerchantId });
         });
 
         // ── PasswordResetToken ────────────────────────────────────────────────

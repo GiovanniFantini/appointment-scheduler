@@ -20,6 +20,64 @@
   margin: 0;
 }
 
+/* Tabs */
+.richieste-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 4px;
+  width: fit-content;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-btn:hover {
+  color: #f1f5f9;
+  background: rgba(255,255,255,0.05);
+}
+
+.tab-btn.active {
+  background: #334155;
+  color: #f1f5f9;
+  font-weight: 600;
+}
+
+.tab-badge {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+.tab-badge.approved {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.tab-badge.rejected {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+/* Card */
 .richieste-card {
   background: #1e293b;
   border: 1px solid #334155;
@@ -51,6 +109,7 @@
   border-radius: 20px;
 }
 
+/* Request items */
 .richiesta-item {
   padding: 16px 20px;
   border-bottom: 1px solid #334155;
@@ -93,11 +152,13 @@
   color: #94a3b8;
 }
 
+/* Type badges */
 .richiesta-type {
   padding: 3px 10px;
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .richiesta-type.ferie {
@@ -115,6 +176,12 @@
   color: #f59e0b;
 }
 
+.richiesta-type.cambioturno {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0ea5e9;
+}
+
+/* Action buttons */
 .richiesta-actions {
   display: flex;
   gap: 8px;
@@ -132,8 +199,13 @@
   transition: all 0.15s;
 }
 
-.btn-approve:hover {
+.btn-approve:hover:not(:disabled) {
   background: rgba(16, 185, 129, 0.2);
+}
+
+.btn-approve:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-reject {
@@ -148,10 +220,35 @@
   transition: all 0.15s;
 }
 
-.btn-reject:hover {
+.btn-reject:hover:not(:disabled) {
   background: rgba(239, 68, 68, 0.2);
 }
 
+.btn-reject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status chip for approved/rejected */
+.status-chip {
+  padding: 3px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-chip.approved {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10b981;
+}
+
+.status-chip.rejected {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+/* Empty / loading state */
 .empty-state {
   padding: 48px;
   text-align: center;
@@ -168,14 +265,11 @@
 }
 
 .dev-notice {
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
   border-radius: 10px;
   padding: 14px 18px;
   font-size: 13px;
-  color: #f59e0b;
+  color: #ef4444;
   margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }

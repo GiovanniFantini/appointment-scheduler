@@ -1,40 +1,106 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import apiClient from '../../lib/axios'
 import './RichiestePage.css'
 
-interface Richiesta {
+interface EmployeeRequestDto {
   id: number
-  employeeName: string
-  initials: string
-  type: 'ferie' | 'permessi' | 'malattia'
-  dateRange: string
-  days: number
-  status: 'pending' | 'approved' | 'rejected'
+  employeeId: number
+  employeeFullName: string
+  employeeInitials: string
+  type: number
+  typeName: string
+  status: number
+  statusName: string
+  startDate: string
+  endDate?: string
+  notes?: string
+  reviewNotes?: string
+  reviewedAt?: string
+  createdAt: string
 }
 
-const MOCK_RICHIESTE: Richiesta[] = [
-  { id: 1, employeeName: 'Marco Bianchi', initials: 'MB', type: 'ferie', dateRange: '15 Apr - 22 Apr', days: 7, status: 'pending' },
-  { id: 2, employeeName: 'Sara Verdi', initials: 'SV', type: 'permessi', dateRange: '3 Apr 14:00 - 18:00', days: 0, status: 'pending' },
-  { id: 3, employeeName: 'Luigi Russo', initials: 'LR', type: 'malattia', dateRange: '1 Apr - 2 Apr', days: 2, status: 'pending' },
-]
+const TYPE_CSS: Record<string, string> = {
+  Ferie: 'ferie',
+  CambioTurno: 'cambioturno',
+  Permessi: 'permessi',
+  Malattia: 'malattia',
+}
 
 const TYPE_LABELS: Record<string, string> = {
-  ferie: 'Ferie',
-  permessi: 'Permessi',
-  malattia: 'Malattia',
+  Ferie: 'Ferie',
+  CambioTurno: 'Cambio Turno',
+  Permessi: 'Permessi',
+  Malattia: 'Malattia',
+}
+
+function formatDateRange(startDate: string, endDate?: string): string {
+  const fmt = (d: string) => {
+    const [y, m, day] = d.split('-')
+    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
+    return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`
+  }
+  if (!endDate || endDate === startDate) return fmt(startDate)
+  return `${fmt(startDate)} - ${fmt(endDate)}`
 }
 
 export default function RichiestePage() {
-  const [richieste, setRichieste] = useState<Richiesta[]>(MOCK_RICHIESTE)
+  const [richieste, setRichieste] = useState<EmployeeRequestDto[]>([])
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'pending' | 'approved' | 'rejected'>('pending')
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
+  const [error, setError] = useState('')
 
-  const handleApprove = (id: number) => {
-    setRichieste(prev => prev.map(r => r.id === id ? { ...r, status: 'approved' as const } : r))
+  const fetchRichieste = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await apiClient.get('/employee-requests')
+      if (Array.isArray(res.data)) {
+        setRichieste(res.data as EmployeeRequestDto[])
+      }
+    } catch {
+      setError('Errore nel caricamento delle richieste')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleReject = (id: number) => {
-    setRichieste(prev => prev.map(r => r.id === id ? { ...r, status: 'rejected' as const } : r))
+  useEffect(() => { fetchRichieste() }, [])
+
+  const handleApprove = async (id: number) => {
+    setActionLoading(id)
+    try {
+      await apiClient.post(`/employee-requests/${id}/approve`)
+      setRichieste(prev => prev.map(r => r.id === id ? { ...r, status: 1, statusName: 'Approved' } : r))
+    } catch {
+      alert('Errore durante l\'approvazione')
+    } finally {
+      setActionLoading(null)
+    }
   }
 
-  const pending = richieste.filter(r => r.status === 'pending')
+  const handleReject = async (id: number) => {
+    setActionLoading(id)
+    try {
+      await apiClient.post(`/employee-requests/${id}/reject`)
+      setRichieste(prev => prev.map(r => r.id === id ? { ...r, status: 2, statusName: 'Rejected' } : r))
+    } catch {
+      alert('Errore durante il rifiuto')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const filtered = richieste.filter(r => {
+    if (activeTab === 'pending') return r.status === 0
+    if (activeTab === 'approved') return r.status === 1
+    if (activeTab === 'rejected') return r.status === 2
+    return true
+  })
+
+  const pendingCount = richieste.filter(r => r.status === 0).length
+  const approvedCount = richieste.filter(r => r.status === 1).length
+  const rejectedCount = richieste.filter(r => r.status === 2).length
 
   return (
     <div className="richieste-page">
@@ -43,36 +109,82 @@ export default function RichiestePage() {
         <p className="page-subtitle">Gestisci le richieste dei dipendenti</p>
       </div>
 
-      <div className="dev-notice">
-        ⚠️ Gestione richieste in sviluppo — i dati mostrati sono di esempio
+      {error && <div className="dev-notice">{error}</div>}
+
+      <div className="richieste-tabs">
+        <button
+          className={`tab-btn ${activeTab === 'pending' ? 'active' : ''}`}
+          onClick={() => setActiveTab('pending')}
+        >
+          In attesa {pendingCount > 0 && <span className="tab-badge">{pendingCount}</span>}
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
+          onClick={() => setActiveTab('approved')}
+        >
+          Approvate {approvedCount > 0 && <span className="tab-badge approved">{approvedCount}</span>}
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'rejected' ? 'active' : ''}`}
+          onClick={() => setActiveTab('rejected')}
+        >
+          Rifiutate {rejectedCount > 0 && <span className="tab-badge rejected">{rejectedCount}</span>}
+        </button>
       </div>
 
       <div className="richieste-card">
-        <div className="card-header">
-          <h2 className="card-title">Richieste in attesa</h2>
-          <span className="badge">{pending.length}</span>
-        </div>
-
-        {pending.length === 0 ? (
+        {loading ? (
           <div className="empty-state">
-            <div className="empty-icon">✅</div>
-            <div className="empty-text">Nessuna richiesta in attesa</div>
+            <div className="empty-text">Caricamento...</div>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              {activeTab === 'pending' ? '✅' : activeTab === 'approved' ? '📋' : '❌'}
+            </div>
+            <div className="empty-text">
+              {activeTab === 'pending' ? 'Nessuna richiesta in attesa' :
+               activeTab === 'approved' ? 'Nessuna richiesta approvata' :
+               'Nessuna richiesta rifiutata'}
+            </div>
           </div>
         ) : (
-          pending.map(r => (
+          filtered.map(r => (
             <div key={r.id} className="richiesta-item">
-              <div className="richiesta-avatar">{r.initials}</div>
+              <div className="richiesta-avatar">{r.employeeInitials}</div>
               <div className="richiesta-info">
-                <div className="richiesta-name">{r.employeeName}</div>
+                <div className="richiesta-name">{r.employeeFullName}</div>
                 <div className="richiesta-detail">
-                  {r.dateRange}{r.days > 0 ? ` • ${r.days} giorni` : ''}
+                  {formatDateRange(r.startDate, r.endDate)}
+                  {r.notes && <> · {r.notes}</>}
                 </div>
               </div>
-              <span className={`richiesta-type ${r.type}`}>{TYPE_LABELS[r.type]}</span>
-              <div className="richiesta-actions">
-                <button className="btn-approve" onClick={() => handleApprove(r.id)}>Approva</button>
-                <button className="btn-reject" onClick={() => handleReject(r.id)}>Rifiuta</button>
-              </div>
+              <span className={`richiesta-type ${TYPE_CSS[r.typeName] ?? ''}`}>
+                {TYPE_LABELS[r.typeName] ?? r.typeName}
+              </span>
+              {activeTab === 'pending' && (
+                <div className="richiesta-actions">
+                  <button
+                    className="btn-approve"
+                    onClick={() => handleApprove(r.id)}
+                    disabled={actionLoading === r.id}
+                  >
+                    {actionLoading === r.id ? '...' : 'Approva'}
+                  </button>
+                  <button
+                    className="btn-reject"
+                    onClick={() => handleReject(r.id)}
+                    disabled={actionLoading === r.id}
+                  >
+                    {actionLoading === r.id ? '...' : 'Rifiuta'}
+                  </button>
+                </div>
+              )}
+              {activeTab !== 'pending' && (
+                <span className={`status-chip ${activeTab}`}>
+                  {activeTab === 'approved' ? 'Approvata' : 'Rifiutata'}
+                </span>
+              )}
             </div>
           ))
         )}

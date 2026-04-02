@@ -44,18 +44,20 @@ export default function DashboardPage({ user }: DashboardPageProps) {
         const from = today.toISOString().split('T')[0]
         const to = weekEnd.toISOString().split('T')[0]
 
-        const [empRes, evtRes] = await Promise.allSettled([
+        const [empRes, evtRes, reqRes] = await Promise.allSettled([
           apiClient.get('/employees'),
           apiClient.get(`/events?from=${from}&to=${to}`),
+          apiClient.get('/employee-requests?status=0'),
         ])
 
         const employees = empRes.status === 'fulfilled' ? (empRes.value.data as unknown[]) : []
         const events = evtRes.status === 'fulfilled' ? (evtRes.value.data as unknown[]) : []
+        const requests = reqRes.status === 'fulfilled' ? (reqRes.value.data as unknown[]) : []
 
         setStats({
           totalEmployees: Array.isArray(employees) ? employees.length : 0,
           upcomingEvents: Array.isArray(events) ? events.length : 0,
-          pendingRequests: 0,
+          pendingRequests: Array.isArray(requests) ? requests.length : 0,
         })
       } catch {
         // silently fail - stats are informational only

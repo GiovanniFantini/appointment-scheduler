@@ -72,6 +72,7 @@ try
     builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.AddScoped<IMerchantService, MerchantService>();
     builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+    builder.Services.AddScoped<IEmployeeRequestService, EmployeeRequestService>();
 
     // HR Documents (Azure Blob)
     builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();

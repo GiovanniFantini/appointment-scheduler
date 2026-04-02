@@ -49,9 +49,12 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return null;
 
+        var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = user.Merchant?.Id;
+        response.CompanyName = user.Merchant?.CompanyName;
+        response.ActiveFeatures = allFeatures;
         return response;
     }
 
@@ -141,6 +144,8 @@ public class AuthService : IAuthService
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = merchant.Id;
+        response.CompanyName = merchant.CompanyName;
+        response.ActiveFeatures = allFeatures.Select(f => f.ToString()).ToList();
         return response;
     }
 

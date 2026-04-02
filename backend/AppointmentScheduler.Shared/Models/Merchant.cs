@@ -24,4 +24,5 @@ public class Merchant
     public ICollection<MerchantRole> Roles { get; set; } = new List<MerchantRole>();
     public ICollection<Event> Events { get; set; } = new List<Event>();
     public ICollection<HRDocument> HRDocuments { get; set; } = new List<HRDocument>();
+    public ICollection<EmployeeRequest> EmployeeRequests { get; set; } = new List<EmployeeRequest>();
 }

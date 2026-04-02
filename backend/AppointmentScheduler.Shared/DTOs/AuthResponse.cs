@@ -13,6 +13,7 @@ public class AuthResponse
 
     // Merchant account
     public int? MerchantId { get; set; }
+    public string? CompanyName { get; set; }
 
     // Employee: lista aziende disponibili (pre-switch)
     public int? EmployeeId { get; set; }
