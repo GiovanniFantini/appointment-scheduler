@@ -1,4 +1,5 @@
 import { useState, FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
 import './LoginPage.css'
@@ -35,7 +36,8 @@ export default function LoginPage({ onLogin }: Props) {
     try {
       const { data } = await apiClient.post<AuthResponse>('/auth/employee/login', { email, password })
 
-      if (!data.companies || data.companies.length === 0) {
+      // Se merchantId è già impostato il backend ha già auto-selezionato l'azienda
+      if (!data.merchantId && (!data.companies || data.companies.length === 0)) {
         setError('Nessuna azienda associata al tuo account')
         setLoading(false)
         return
@@ -117,6 +119,10 @@ export default function LoginPage({ onLogin }: Props) {
             {loading ? <span className="btn-spinner" /> : 'Accedi'}
           </button>
         </form>
+        <div className="login-footer">
+          Non hai un account?{' '}
+          <Link to="/register">Registrati</Link>
+        </div>
       </div>
     </div>
   )

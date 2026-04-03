@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
+import { localDateStr } from '../../lib/dateUtils'
 import './DashboardPage.css'
 
 // Matches EventDto from server
@@ -49,10 +50,10 @@ export default function DashboardPage({ user }: Props) {
   const [loading, setLoading] = useState(true)
 
   const today = new Date()
-  const todayStr = today.toISOString().split('T')[0]
+  const todayStr = localDateStr(today)
   const weekEnd = new Date(today)
   weekEnd.setDate(today.getDate() + 7)
-  const weekEndStr = weekEnd.toISOString().split('T')[0]
+  const weekEndStr = localDateStr(weekEnd)
 
   useEffect(() => {
     fetchEvents()

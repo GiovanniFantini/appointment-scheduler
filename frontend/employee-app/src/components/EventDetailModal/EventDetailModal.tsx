@@ -1,3 +1,4 @@
+import { parseDateOnly } from '../../lib/dateUtils'
 import './EventDetailModal.css'
 
 export interface EventDetail {
@@ -41,7 +42,7 @@ function getEventTypeColor(type?: string): string {
 }
 
 function formatDateTime(dateStr: string, allDay?: boolean): string {
-  const d = new Date(dateStr)
+  const d = allDay ? parseDateOnly(dateStr) : new Date(dateStr)
   if (allDay) {
     return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
   }

@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import LoginPage from './pages/LoginPage/LoginPage'
+import RegisterPage from './pages/RegisterPage/RegisterPage'
 import SelectCompanyPage from './pages/SelectCompanyPage/SelectCompanyPage'
 import DashboardPage from './pages/DashboardPage/DashboardPage'
 import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
@@ -82,6 +83,16 @@ function App() {
               : needsCompanySelection
                 ? <Navigate to="/select-company" replace />
                 : <LoginPage onLogin={handleLogin} />
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            isAuthenticated
+              ? <Navigate to="/" replace />
+              : needsCompanySelection
+                ? <Navigate to="/select-company" replace />
+                : <RegisterPage />
           }
         />
         <Route

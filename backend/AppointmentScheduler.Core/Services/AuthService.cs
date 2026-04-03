@@ -161,7 +161,7 @@ public class AuthService : IAuthService
                     .ThenInclude(m => m.Role)
                         .ThenInclude(r => r.Features)
             .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower()
-                                   && u.AccountType == AccountType.Employee
+                                   && (u.AccountType == AccountType.Employee || u.AccountType == AccountType.Merchant)
                                    && u.IsActive);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
@@ -222,27 +222,30 @@ public class AuthService : IAuthService
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Crea il record Employee
-        var employee = new Employee
-        {
-            UserId = user.Id,
-            Email = email,
-            FirstName = request.FirstName,
-            LastName = request.LastName,
-            IsActive = true
-        };
-        _context.Employees.Add(employee);
-        await _context.SaveChangesAsync();
+        // Controlla se esiste già un Employee pre-creato dal merchant con questa email
+        var employee = await _context.Employees
+            .FirstOrDefaultAsync(e => e.Email == email && e.UserId == null);
 
-        // Collega gli EmployeeMemberships pre-caricati (se un merchant ha già aggiunto questa email)
-        var pendingMemberships = await _context.EmployeeMemberships
-            .Include(m => m.Employee)
-            .Where(m => m.Employee.Email == email && m.Employee.UserId == null)
-            .ToListAsync();
-
-        foreach (var membership in pendingMemberships)
+        if (employee != null)
         {
-            membership.Employee.UserId = user.Id;
+            // Collega l'Employee esistente (con le sue Memberships) al nuovo User
+            employee.UserId = user.Id;
+            employee.FirstName = request.FirstName;
+            employee.LastName = request.LastName;
+            employee.IsActive = true;
+        }
+        else
+        {
+            // Nessun Employee pre-caricato: crea uno nuovo
+            employee = new Employee
+            {
+                UserId = user.Id,
+                Email = email,
+                FirstName = request.FirstName,
+                LastName = request.LastName,
+                IsActive = true
+            };
+            _context.Employees.Add(employee);
         }
         await _context.SaveChangesAsync();
 
@@ -254,7 +257,7 @@ public class AuthService : IAuthService
     public async Task<AuthResponse?> SelectCompanyAsync(int userId, int merchantId)
     {
         var user = await _context.Users.FindAsync(userId);
-        if (user == null || user.AccountType != AccountType.Employee) return null;
+        if (user == null || (user.AccountType != AccountType.Employee && user.AccountType != AccountType.Merchant)) return null;
 
         var employee = await _context.Employees
             .Include(e => e.Memberships)

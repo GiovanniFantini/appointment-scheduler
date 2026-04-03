@@ -54,7 +54,9 @@ public class EventService : IEventService
         var query = _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
-            .Where(e => e.MerchantId == merchantId && e.Participants.Any(p => p.EmployeeId == employeeId))
+            .Where(e => e.MerchantId == merchantId &&
+                        (e.EventType == EventType.ChiusuraAziendale ||
+                         e.Participants.Any(p => p.EmployeeId == employeeId)))
             .AsQueryable();
 
         if (from.HasValue)
