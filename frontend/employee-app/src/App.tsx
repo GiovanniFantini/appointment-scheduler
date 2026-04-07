@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useState, useEffect } from 'react'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage'
 import SelectCompanyPage from './pages/SelectCompanyPage/SelectCompanyPage'
 import DashboardPage from './pages/DashboardPage/DashboardPage'
 import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
@@ -93,6 +95,22 @@ function App() {
               : needsCompanySelection
                 ? <Navigate to="/select-company" replace />
                 : <RegisterPage />
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            isAuthenticated
+              ? <Navigate to="/" replace />
+              : <ForgotPasswordPage />
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            isAuthenticated
+              ? <Navigate to="/" replace />
+              : <ResetPasswordPage />
           }
         />
         <Route

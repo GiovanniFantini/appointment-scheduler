@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react'
 import AppLayout from './components/AppLayout/AppLayout'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage/DashboardPage'
 import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
 import RichiestePage from './pages/RichiestePage/RichiestePage'
@@ -68,6 +70,8 @@ function App(_props: AppProps) {
       <Routes>
         <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
         <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
+        <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
+        <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPasswordPage />} />
         <Route element={user ? <AppLayout user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}>
           <Route path="/" element={<DashboardPage user={user!} />} />
           <Route path="/calendario" element={<CalendarioPage user={user!} />} />

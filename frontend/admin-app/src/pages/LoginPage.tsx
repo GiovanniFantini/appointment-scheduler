@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
 import './LoginPage.css'
 
@@ -157,6 +158,9 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <button type="submit" className="btn-login" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
+          <div style={{ textAlign: 'right', marginTop: -8 }}>
+            <Link to="/forgot-password" style={{ fontSize: 13, color: '#64748b', textDecoration: 'none' }}>Forgot password?</Link>
+          </div>
         </form>
 
         <p className="login-footer">Access restricted to platform administrators</p>

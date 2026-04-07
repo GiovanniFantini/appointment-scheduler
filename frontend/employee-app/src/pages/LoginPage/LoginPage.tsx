@@ -118,6 +118,9 @@ export default function LoginPage({ onLogin }: Props) {
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? <span className="btn-spinner" /> : 'Accedi'}
           </button>
+          <div style={{ textAlign: 'right', marginTop: -8 }}>
+            <Link to="/forgot-password" style={{ fontSize: '0.875rem', color: '#94a3b8', textDecoration: 'none' }}>Password dimenticata?</Link>
+          </div>
         </form>
         <div className="login-footer">
           Non hai un account?{' '}
