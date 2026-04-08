@@ -25,4 +25,22 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      const currentPath = window.location.pathname
+      const publicPaths = ['/login', '/forgot-password', '/reset-password']
+      const isPublicPage = publicPaths.some((p) => currentPath.includes(p))
+      if (!isPublicPage) {
+        console.warn('Sessione scaduta, redirect al login')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        window.location.href = '/login'
+      }
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default apiClient

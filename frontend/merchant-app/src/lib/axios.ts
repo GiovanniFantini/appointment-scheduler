@@ -34,10 +34,13 @@ apiClient.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname
-      if (!currentPath.includes('/login')) {
-        console.warn('Token scaduto, redirect al login')
-        const errorMessage = error.response?.data?.message || error.response?.data || 'Sessione scaduta'
-        console.error('Errore 401:', errorMessage)
+      const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password']
+      const isPublicPage = publicPaths.some((p) => currentPath.includes(p))
+      if (!isPublicPage) {
+        console.warn('Sessione scaduta, redirect al login')
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+        window.location.href = '/login'
       }
     }
 
