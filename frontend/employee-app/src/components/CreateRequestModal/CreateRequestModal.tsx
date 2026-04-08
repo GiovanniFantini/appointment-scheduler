@@ -4,11 +4,12 @@ import './CreateRequestModal.css'
 
 type RequestType = 'Ferie' | 'Permessi' | 'Malattia'
 
-// Mapping from RequestType string to server EventType enum value
+// Mapping from RequestType string to server EmployeeRequestType enum value
+// (see backend/AppointmentScheduler.Shared/Enums/EmployeeRequestType.cs)
 const REQUEST_TYPE_VALUES: Record<RequestType, number> = {
-  Ferie: 3,
-  Permessi: 4,
-  Malattia: 5,
+  Ferie: 1,
+  Permessi: 3,
+  Malattia: 4,
 }
 
 interface Props {
@@ -44,18 +45,10 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
 
     setLoading(true)
     try {
-      // NOTE: POST /events è MerchantOnly — serve un endpoint dedicato per le richieste employee
-      await apiClient.post('/events', {
-        title: tipoLabels[tipo],
-        eventType: REQUEST_TYPE_VALUES[tipo],
+      await apiClient.post('/employee-requests', {
+        type: REQUEST_TYPE_VALUES[tipo],
         startDate: dataInizio,
-        endDate: dataFine || dataInizio,
-        isAllDay: tuttoIlGiorno,
-        startTime: tuttoIlGiorno ? undefined : orarioDa,
-        endTime: tuttoIlGiorno ? undefined : orarioA,
-        notificationEnabled: false,
-        ownerEmployeeIds: [],
-        coOwnerEmployeeIds: [],
+        endDate: dataFine || undefined,
         notes: note || undefined,
       })
 

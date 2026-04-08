@@ -35,15 +35,33 @@ interface ApiEvent {
   participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
 }
 
+interface ApiEmployeeRequest {
+  id: number
+  employeeId: number
+  employeeFullName: string
+  typeName: string   // "Ferie" | "CambioTurno" | "Permessi" | "Malattia"
+  statusName: string // "Pending" | "Approved" | "Rejected"
+  startDate: string
+  endDate?: string
+  notes?: string
+}
+
 const EVENT_COLORS: Record<string, string> = {
   Turno: '#3b82f6',
   ChiusuraAziendale: '#1f2937',
   Ferie: '#ec4899',
   Permessi: '#8b5cf6',
   Malattia: '#f59e0b',
+  CambioTurno: '#0ea5e9',
 }
 
-const LEGEND_ITEMS = Object.entries(EVENT_COLORS).map(([label, color]) => ({ label, color }))
+const LEGEND_ITEMS = [
+  { label: 'Turno', color: EVENT_COLORS.Turno },
+  { label: 'ChiusuraAziendale', color: EVENT_COLORS.ChiusuraAziendale },
+  { label: 'Ferie', color: EVENT_COLORS.Ferie },
+  { label: 'Permessi', color: EVENT_COLORS.Permessi },
+  { label: 'Malattia', color: EVENT_COLORS.Malattia },
+]
 
 function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
   return {
@@ -61,6 +79,32 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
     recurrence: (e.recurrence ?? 'Nessuna') as CalEvent['recurrence'],
     notificationEnabled: e.notificationEnabled,
     notes: e.notes ?? undefined,
+  }
+}
+
+function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
+  const color = EVENT_COLORS[r.typeName] ?? '#6366f1'
+  const isPending = r.statusName === 'Pending'
+
+  // FullCalendar all-day end dates are exclusive, so add 1 day to endDate
+  const endExclusive = (() => {
+    const base = r.endDate ?? r.startDate
+    const d = new Date(base + 'T00:00:00')
+    d.setDate(d.getDate() + 1)
+    return d.toISOString().split('T')[0]
+  })()
+
+  return {
+    id: `req-${r.id}`,
+    title: `${r.typeName} – ${r.employeeFullName}${isPending ? ' (in attesa)' : ''}`,
+    start: r.startDate,
+    end: endExclusive,
+    allDay: true,
+    backgroundColor: isPending ? 'transparent' : color,
+    borderColor: color,
+    textColor: isPending ? color : '#fff',
+    classNames: isPending ? ['request-pending'] : ['request-approved'],
+    extendedProps: { apiRequest: r },
   }
 }
 
@@ -101,10 +145,28 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
 
   const fetchEvents = useCallback(async (from: string, to: string) => {
     try {
-      const res = await apiClient.get(`/events?from=${from}&to=${to}`)
-      if (Array.isArray(res.data)) {
-        setEvents((res.data as ApiEvent[]).map(toFCEvent))
-      }
+      const [eventsRes, requestsRes] = await Promise.all([
+        apiClient.get(`/events?from=${from}&to=${to}`),
+        apiClient.get(`/employee-requests`),
+      ])
+
+      const eventItems: EventInput[] = Array.isArray(eventsRes.data)
+        ? (eventsRes.data as ApiEvent[]).map(toFCEvent)
+        : []
+
+      // Filter out rejected and those outside the current range, then convert
+      const requestItems: EventInput[] = Array.isArray(requestsRes.data)
+        ? (requestsRes.data as ApiEmployeeRequest[])
+            .filter(r => r.statusName !== 'Rejected')
+            .filter(r => {
+              const start = r.startDate
+              const end = r.endDate ?? r.startDate
+              return end >= from && start <= to
+            })
+            .map(requestToFCEvent)
+        : []
+
+      setEvents([...eventItems, ...requestItems])
     } catch {
       // silently fail
     }
@@ -117,6 +179,11 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
   }
 
   const handleEventClick = (info: EventClickArg) => {
+    // Requests are read-only in the calendar view: navigate to Richieste page instead
+    if (info.event.extendedProps.apiRequest) {
+      window.location.href = '/richieste'
+      return
+    }
     const apiEvent = info.event.extendedProps.apiEvent as ApiEvent
     setSelectedEvent(apiEventToCalEvent(apiEvent))
     setDefaultDate('')
@@ -169,6 +236,14 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
         <div className="legend-item">
           <span className="legend-dot" style={{ background: '#3b82f6', border: '2px dashed rgba(255,255,255,0.5)' }} />
           Turno in reperibilità
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: 'transparent', border: '2px dashed #ec4899' }} />
+          Richiesta in attesa
+        </div>
+        <div className="legend-item">
+          <span className="legend-dot" style={{ background: '#ec4899' }} />
+          Richiesta approvata
         </div>
       </div>
 

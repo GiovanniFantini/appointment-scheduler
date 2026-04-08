@@ -3,47 +3,52 @@ import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
 import './RichiestePage.css'
 
-// Matches EventDto from server
-interface ApiEvent {
+// Matches EmployeeRequestDto from server
+interface ApiEmployeeRequest {
   id: number
-  title: string
-  eventTypeName: string    // "Ferie" | "Permessi" | "Malattia"
+  typeName: string         // "Ferie" | "CambioTurno" | "Permessi" | "Malattia"
+  statusName: string       // "Pending" | "Approved" | "Rejected"
   startDate: string        // "2024-01-15"
   endDate?: string
-  isAllDay: boolean
-  startTime?: string
-  endTime?: string
   notes?: string
 }
 
-function getEventTypeLabel(type?: string): string {
+function getRequestTypeLabel(type?: string): string {
   const map: Record<string, string> = {
     Ferie: 'Ferie',
+    CambioTurno: 'Cambio turno',
     Permessi: 'Permesso',
     Malattia: 'Malattia',
   }
   return type ? (map[type] ?? type) : 'Richiesta'
 }
 
-function getEventTypeColor(type?: string): string {
+function getRequestTypeColor(type?: string): string {
   const map: Record<string, string> = {
     Ferie: '#ec4899',
+    CambioTurno: '#0ea5e9',
     Permessi: '#8b5cf6',
     Malattia: '#f59e0b',
   }
   return type ? (map[type] ?? '#6366f1') : '#6366f1'
 }
 
-function formatDate(dateStr: string, isAllDay: boolean): string {
-  const d = new Date(dateStr)
-  if (isAllDay) {
-    return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+function getStatusLabel(status?: string): string {
+  const map: Record<string, string> = {
+    Pending: 'In attesa',
+    Approved: 'Approvata',
+    Rejected: 'Rifiutata',
   }
-  return d.toLocaleString('it-IT', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return status ? (map[status] ?? status) : 'In attesa'
+}
+
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
 export default function RichiestePage() {
-  const [requests, setRequests] = useState<ApiEvent[]>([])
+  const [requests, setRequests] = useState<ApiEmployeeRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [error, setError] = useState('')
@@ -52,13 +57,10 @@ export default function RichiestePage() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await apiClient.get<ApiEvent[]>('/events/employee')
-      const events = Array.isArray(data) ? data : []
-      const filtered = events.filter(e =>
-        ['Ferie', 'Permessi', 'Malattia'].includes(e.eventTypeName ?? '')
-      )
-      filtered.sort((a, b) => a.startDate < b.startDate ? 1 : -1)
-      setRequests(filtered)
+      const { data } = await apiClient.get<ApiEmployeeRequest[]>('/employee-requests/my')
+      const items = Array.isArray(data) ? data : []
+      items.sort((a, b) => a.startDate < b.startDate ? 1 : -1)
+      setRequests(items)
     } catch {
       setError('Errore nel caricamento delle richieste')
     } finally {
@@ -104,7 +106,7 @@ export default function RichiestePage() {
       ) : (
         <div className="requests-list">
           {requests.map(req => {
-            const color = getEventTypeColor(req.eventTypeName)
+            const color = getRequestTypeColor(req.typeName)
             return (
               <div key={req.id} className="request-card" style={{ borderLeftColor: color }}>
                 <div className="request-card-top">
@@ -112,19 +114,19 @@ export default function RichiestePage() {
                     className="request-type-badge"
                     style={{ backgroundColor: color + '22', color }}
                   >
-                    {getEventTypeLabel(req.eventTypeName)}
+                    {getRequestTypeLabel(req.typeName)}
                   </span>
-                  <span className="request-status-badge">Inviata</span>
+                  <span className="request-status-badge">{getStatusLabel(req.statusName)}</span>
                 </div>
                 <div className="request-card-dates">
                   <div className="request-date">
                     <span className="request-date-label">Dal</span>
-                    <span className="request-date-value">{formatDate(req.startDate, req.isAllDay)}</span>
+                    <span className="request-date-value">{formatDate(req.startDate)}</span>
                   </div>
                   {req.endDate && (
                     <div className="request-date">
                       <span className="request-date-label">Al</span>
-                      <span className="request-date-value">{formatDate(req.endDate, req.isAllDay)}</span>
+                      <span className="request-date-value">{formatDate(req.endDate)}</span>
                     </div>
                   )}
                 </div>
