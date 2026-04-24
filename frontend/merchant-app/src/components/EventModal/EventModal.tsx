@@ -60,6 +60,12 @@ interface ShiftConflictDto {
   message: string
 }
 
+interface ApiErrorResponse {
+  message?: string
+  errors?: Record<string, string[]>
+  title?: string
+}
+
 interface EventModalProps {
   event: Partial<CalEvent> | null
   defaultDate?: string
@@ -69,6 +75,24 @@ interface EventModalProps {
 
 const EVENT_TYPES: EventType[] = ['Turno', 'ChiusuraAziendale', 'Ferie', 'Permessi', 'Malattia']
 const RECURRENCE_TYPES: RecurrenceType[] = ['Nessuna', 'Giornaliera', 'Settimanale', 'Mensile']
+
+function toApiTime(value?: string): string | undefined {
+  if (!value) return undefined
+  // Browser time input returns HH:mm, while backend TimeOnly expects HH:mm:ss
+  if (/^\d{2}:\d{2}$/.test(value)) return `${value}:00`
+  return value
+}
+
+function getApiErrorMessage(data: ApiErrorResponse | undefined): string | undefined {
+  if (!data) return undefined
+  if (data.message) return data.message
+  if (data.errors) {
+    const first = Object.values(data.errors).flat()[0]
+    if (first) return first
+  }
+  if (data.title) return data.title
+  return undefined
+}
 
 export default function EventModal({ event, defaultDate, onClose, onSaved }: EventModalProps) {
   const isEdit = !!event?.id
@@ -135,8 +159,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     isAllDay,
     startDate,
     endDate: endDate || startDate,
-    startTime: isAllDay ? undefined : startTime,
-    endTime: isAllDay ? undefined : endTime,
+    startTime: isAllDay ? undefined : toApiTime(startTime),
+    endTime: isAllDay ? undefined : toApiTime(endTime),
     isOnCall: eventType === 'Turno' ? isOnCall : false,
     ownerEmployeeIds: selectedOwnerIds,
     coOwnerEmployeeIds: [],
@@ -144,11 +168,11 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
       .filter(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
       .map(o => ({
         employeeId: o.employeeId,
-        startTimeOverride: o.startTimeOverride || undefined,
-        endTimeOverride: o.endTimeOverride || undefined,
+        startTimeOverride: toApiTime(o.startTimeOverride),
+        endTimeOverride: toApiTime(o.endTimeOverride),
         participantNotes: o.participantNotes || undefined,
       })),
-    recurrence: recurrence === 'Nessuna' ? null : recurrence,
+    recurrence: recurrence === 'Nessuna' ? undefined : recurrence,
     notificationEnabled,
     notes,
   })
@@ -183,8 +207,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
         onSaved()
       }
     } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } }
-      setError(e.response?.data?.message ?? 'Errore durante il salvataggio')
+      const e = err as { response?: { data?: ApiErrorResponse } }
+      setError(getApiErrorMessage(e.response?.data) ?? 'Errore durante il salvataggio')
     } finally {
       setLoading(false)
     }
