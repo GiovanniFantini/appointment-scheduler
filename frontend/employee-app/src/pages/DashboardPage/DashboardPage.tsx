@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
-import { localDateStr } from '../../lib/dateUtils'
+import { formatBrowserDate, localDateStr } from '../../lib/dateUtils'
 import './DashboardPage.css'
 
 // Matches EventDto from server
@@ -85,8 +85,8 @@ export default function DashboardPage({ user }: Props) {
     return e.startTime.substring(0, 5)
   }
 
-  const dayOfWeek = today.toLocaleDateString('it-IT', { weekday: 'long' })
-  const dateStr = today.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+  const dayOfWeek = new Intl.DateTimeFormat(undefined, { weekday: 'long' }).format(today)
+  const dateStr = formatBrowserDate(today)
 
   return (
     <div className="dashboard-page">

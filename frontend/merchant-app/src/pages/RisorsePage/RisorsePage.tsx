@@ -1,6 +1,7 @@
 import { useState, useEffect, FormEvent } from 'react'
 import apiClient from '../../lib/axios'
 import { MerchantUser } from '../../App'
+import EmployeeShiftPanel from '../../components/EmployeeShiftPanel/EmployeeShiftPanel'
 import './RisorsePage.css'
 
 interface RisorsePageProps {
@@ -42,6 +43,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
   const [formData, setFormData] = useState<NewEmployeeForm>({ firstName: '', lastName: '', email: '', phoneNumber: '', roleId: '' })
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
+  const [shiftPanelEmployee, setShiftPanelEmployee] = useState<Employee | null>(null)
 
   const fetchEmployees = async () => {
     setLoading(true)
@@ -195,6 +197,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                     </td>
                     <td>
                       <div className="action-buttons">
+                        <button className="btn-edit" onClick={() => setShiftPanelEmployee(emp)}>Pianifica turni</button>
                         <button className="btn-edit" onClick={() => openEditModal(emp)}>Modifica</button>
                         <button className="btn-remove" onClick={() => handleRemove(emp)}>Rimuovi</button>
                       </div>
@@ -206,6 +209,14 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
           </table>
         </div>
       </div>
+
+      {shiftPanelEmployee && (
+        <EmployeeShiftPanel
+          employeeId={shiftPanelEmployee.id}
+          employeeFullName={`${shiftPanelEmployee.firstName} ${shiftPanelEmployee.lastName}`}
+          onClose={() => setShiftPanelEmployee(null)}
+        />
+      )}
 
       {showModal && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>

@@ -67,6 +67,7 @@ try
 
     // ── Application Services ───────────────────────────────────────────────
     builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IShiftConflictValidator, ShiftConflictValidator>();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<IMerchantRoleService, MerchantRoleService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();

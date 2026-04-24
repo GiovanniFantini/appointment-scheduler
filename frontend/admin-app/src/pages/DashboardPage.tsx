@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import { formatBrowserDate } from '../lib/dateUtils'
 import './DashboardPage.css'
 
 interface Merchant {
@@ -168,7 +169,7 @@ export default function DashboardPage() {
                   <span className="pending-company">{m.companyName}</span>
                   <span className="pending-meta">
                     {m.city ? `${m.city} · ` : ''}
-                    Registered {new Date(m.createdAt).toLocaleDateString()}
+                    Registered {formatBrowserDate(new Date(m.createdAt))}
                   </span>
                 </div>
                 <div className="pending-actions">

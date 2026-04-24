@@ -345,3 +345,63 @@
   border-top: 1px solid #334155;
   margin: 4px 0;
 }
+
+.modal-warning {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: #fbbf24;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-warning-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.modal-warning-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 0;
+  font-size: 12px;
+  color: #fde68a;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.overrides-section {
+  background: rgba(148, 163, 184, 0.05);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overrides-hint {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.override-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #334155;
+}
+
+.override-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.override-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f1f5f9;
+}

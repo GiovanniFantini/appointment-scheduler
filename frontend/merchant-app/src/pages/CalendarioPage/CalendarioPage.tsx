@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
@@ -14,6 +14,15 @@ import './CalendarioPage.css'
 
 interface CalendarioPageProps {
   user: MerchantUser
+}
+
+interface ApiEventParticipant {
+  employeeId: number
+  fullName: string
+  isOwner: boolean
+  startTimeOverride?: string
+  endTimeOverride?: string
+  participantNotes?: string
 }
 
 interface ApiEvent {
@@ -32,7 +41,7 @@ interface ApiEvent {
   notificationEnabled: boolean
   notes?: string
   createdAt: string
-  participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
+  participants: ApiEventParticipant[]
 }
 
 interface ApiEmployeeRequest {
@@ -43,6 +52,9 @@ interface ApiEmployeeRequest {
   statusName: string // "Pending" | "Approved" | "Rejected"
   startDate: string
   endDate?: string
+  startTime?: string
+  endTime?: string
+  eventId?: number | null
   notes?: string
 }
 
@@ -71,11 +83,19 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
     isAllDay: e.isAllDay,
     startDate: e.startDate,
     endDate: e.endDate,
-    startTime: e.startTime,
-    endTime: e.endTime,
+    startTime: e.startTime ? e.startTime.slice(0, 5) : undefined,
+    endTime: e.endTime ? e.endTime.slice(0, 5) : undefined,
     isOnCall: e.isOnCall,
     ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
     coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
+    participantOverrides: e.participants
+      .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes)
+      .map(p => ({
+        employeeId: p.employeeId,
+        startTimeOverride: p.startTimeOverride ? p.startTimeOverride.slice(0, 5) : undefined,
+        endTimeOverride: p.endTimeOverride ? p.endTimeOverride.slice(0, 5) : undefined,
+        participantNotes: p.participantNotes ?? undefined,
+      })),
     recurrence: (e.recurrence ?? 'Nessuna') as CalEvent['recurrence'],
     notificationEnabled: e.notificationEnabled,
     notes: e.notes ?? undefined,
@@ -85,6 +105,26 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
 function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
   const color = EVENT_COLORS[r.typeName] ?? '#6366f1'
   const isPending = r.statusName === 'Pending'
+  const hasHourly = !!(r.startTime && r.endTime)
+
+  // Hourly requests render as timed events on the specific date; full-day as all-day spans.
+  if (hasHourly) {
+    const start = `${r.startDate}T${r.startTime}`
+    const end = `${r.startDate}T${r.endTime}`
+    const hoursLabel = `${r.startTime!.slice(0, 5)}-${r.endTime!.slice(0, 5)}`
+    return {
+      id: `req-${r.id}`,
+      title: `${r.typeName} ${hoursLabel} – ${r.employeeFullName}${isPending ? ' (in attesa)' : ''}`,
+      start,
+      end,
+      allDay: false,
+      backgroundColor: isPending ? 'transparent' : color,
+      borderColor: color,
+      textColor: isPending ? color : '#fff',
+      classNames: isPending ? ['request-pending'] : ['request-approved'],
+      extendedProps: { apiRequest: r },
+    }
+  }
 
   // FullCalendar all-day end dates are exclusive, so add 1 day to endDate
   const endExclusive = (() => {
@@ -138,6 +178,7 @@ function toFCEvent(e: ApiEvent): EventInput {
 }
 
 export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
+  const calendarRef = useRef<FullCalendar>(null)
   const [events, setEvents] = useState<EventInput[]>([])
   const [selectedEvent, setSelectedEvent] = useState<Partial<CalEvent> | null>(null)
   const [defaultDate, setDefaultDate] = useState<string>('')
@@ -210,6 +251,20 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
   const handleSaved = () => {
     setModalOpen(false)
     setSelectedEvent(null)
+
+    // Refresh the exact range currently visible in the calendar
+    // so newly created events always appear immediately.
+    const api = calendarRef.current?.getApi()
+    if (api) {
+      const from = api.view.activeStart.toISOString().split('T')[0]
+      const toExclusive = new Date(api.view.activeEnd)
+      toExclusive.setDate(toExclusive.getDate() - 1)
+      const to = toExclusive.toISOString().split('T')[0]
+      fetchEvents(from, to)
+      return
+    }
+
+    // Fallback if calendar API is not available yet.
     const now = new Date()
     const from = now.toISOString().split('T')[0]
     const futureDate = new Date(now)
@@ -249,6 +304,7 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
 
       <div className="calendar-wrapper">
         <FullCalendar
+          ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
           locale={itLocale}

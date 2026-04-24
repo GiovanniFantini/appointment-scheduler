@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import { formatBrowserDate } from '../lib/dateUtils'
 import './MerchantDetailPage.css'
 
 interface MerchantDetail {
@@ -261,7 +262,7 @@ export default function MerchantDetailPage() {
             <div className="info-field">
               <div className="info-field-label">Registered</div>
               <div className="info-field-value">
-                {new Date(merchant.createdAt).toLocaleDateString()}
+                {formatBrowserDate(new Date(merchant.createdAt))}
               </div>
             </div>
           </div>

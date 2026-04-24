@@ -12,10 +12,12 @@ namespace AppointmentScheduler.Core.Services;
 public class EventService : IEventService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IShiftConflictValidator _conflictValidator;
 
-    public EventService(ApplicationDbContext context)
+    public EventService(ApplicationDbContext context, IShiftConflictValidator conflictValidator)
     {
         _context = context;
+        _conflictValidator = conflictValidator;
     }
 
     /// <summary>
@@ -109,14 +111,12 @@ public class EventService : IEventService
             CreatedAt = DateTime.UtcNow
         };
 
+        var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
+
         // Add owner participants
         foreach (var empId in request.OwnerEmployeeIds.Distinct())
         {
-            evt.Participants.Add(new EventParticipant
-            {
-                EmployeeId = empId,
-                IsOwner = true
-            });
+            evt.Participants.Add(BuildParticipant(empId, true, overrideMap));
         }
 
         // Add co-owner participants (not already added as owner)
@@ -125,11 +125,7 @@ public class EventService : IEventService
         {
             if (!ownerIds.Contains(empId))
             {
-                evt.Participants.Add(new EventParticipant
-                {
-                    EmployeeId = empId,
-                    IsOwner = false
-                });
+                evt.Participants.Add(BuildParticipant(empId, false, overrideMap));
             }
         }
 
@@ -141,7 +137,10 @@ public class EventService : IEventService
         foreach (var p in evt.Participants)
             await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
 
-        return MapToDto(evt);
+        var dto = MapToDto(evt);
+        if (evt.EventType == EventType.Turno)
+            dto.Warnings = await DetectConflictsForEventAsync(evt);
+        return dto;
     }
 
     /// <summary>
@@ -169,18 +168,17 @@ public class EventService : IEventService
         evt.Notes = request.Notes;
         evt.UpdatedAt = DateTime.UtcNow;
 
+        var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
+
         // Replace participants
         _context.EventParticipants.RemoveRange(evt.Participants);
         evt.Participants.Clear();
 
         foreach (var empId in request.OwnerEmployeeIds.Distinct())
         {
-            evt.Participants.Add(new EventParticipant
-            {
-                EventId = evt.Id,
-                EmployeeId = empId,
-                IsOwner = true
-            });
+            var p = BuildParticipant(empId, true, overrideMap);
+            p.EventId = evt.Id;
+            evt.Participants.Add(p);
         }
 
         var ownerIds = new HashSet<int>(request.OwnerEmployeeIds);
@@ -188,12 +186,9 @@ public class EventService : IEventService
         {
             if (!ownerIds.Contains(empId))
             {
-                evt.Participants.Add(new EventParticipant
-                {
-                    EventId = evt.Id,
-                    EmployeeId = empId,
-                    IsOwner = false
-                });
+                var p = BuildParticipant(empId, false, overrideMap);
+                p.EventId = evt.Id;
+                evt.Participants.Add(p);
             }
         }
 
@@ -204,7 +199,10 @@ public class EventService : IEventService
         foreach (var p in evt.Participants)
             await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
 
-        return MapToDto(evt);
+        var dto = MapToDto(evt);
+        if (evt.EventType == EventType.Turno)
+            dto.Warnings = await DetectConflictsForEventAsync(evt);
+        return dto;
     }
 
     /// <summary>
@@ -267,7 +265,10 @@ public class EventService : IEventService
                 clone.Participants.Add(new EventParticipant
                 {
                     EmployeeId = participant.EmployeeId,
-                    IsOwner = participant.IsOwner
+                    IsOwner = participant.IsOwner,
+                    StartTimeOverride = participant.StartTimeOverride,
+                    EndTimeOverride = participant.EndTimeOverride,
+                    ParticipantNotes = participant.ParticipantNotes
                 });
             }
 
@@ -286,7 +287,300 @@ public class EventService : IEventService
                 await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
         }
 
-        return cloned.Select(MapToDto).ToList();
+        var results = new List<EventDto>();
+        foreach (var clone in cloned)
+        {
+            var dto = MapToDto(clone);
+            if (clone.EventType == EventType.Turno)
+                dto.Warnings = await DetectConflictsForEventAsync(clone);
+            results.Add(dto);
+        }
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<List<EventDto>> CloneWeekAsync(int merchantId, int createdByUserId, CloneWeekRequest request)
+    {
+        if (request.NumberOfWeeks < 1)
+            return new List<EventDto>();
+
+        var sourceStart = request.SourceWeekStart;
+        var sourceEnd = sourceStart.AddDays(6);
+
+        var sourceQuery = _context.Events
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Employee)
+            .Where(e => e.MerchantId == merchantId
+                        && e.StartDate >= sourceStart
+                        && e.StartDate <= sourceEnd);
+
+        if (request.EmployeeFilter != null && request.EmployeeFilter.Count > 0)
+        {
+            var filter = request.EmployeeFilter;
+            sourceQuery = sourceQuery.Where(e => e.Participants.Any(p => filter.Contains(p.EmployeeId)));
+        }
+
+        var sources = await sourceQuery.ToListAsync();
+        if (sources.Count == 0)
+            return new List<EventDto>();
+
+        var cloned = new List<Event>();
+
+        for (int w = 0; w < request.NumberOfWeeks; w++)
+        {
+            foreach (var src in sources)
+            {
+                var dayOffset = src.StartDate.DayNumber - sourceStart.DayNumber;
+                var targetDate = request.TargetWeekStart.AddDays(7 * w + dayOffset);
+
+                var clone = new Event
+                {
+                    MerchantId = src.MerchantId,
+                    Title = src.Title,
+                    EventType = src.EventType,
+                    StartDate = targetDate,
+                    EndDate = src.EndDate.HasValue
+                        ? targetDate.AddDays(src.EndDate.Value.DayNumber - src.StartDate.DayNumber)
+                        : null,
+                    IsAllDay = src.IsAllDay,
+                    StartTime = src.StartTime,
+                    EndTime = src.EndTime,
+                    IsOnCall = src.IsOnCall,
+                    Recurrence = null,
+                    NotificationEnabled = src.NotificationEnabled,
+                    Notes = src.Notes,
+                    CreatedByUserId = createdByUserId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                foreach (var p in src.Participants)
+                {
+                    clone.Participants.Add(new EventParticipant
+                    {
+                        EmployeeId = p.EmployeeId,
+                        IsOwner = p.IsOwner,
+                        StartTimeOverride = p.StartTimeOverride,
+                        EndTimeOverride = p.EndTimeOverride,
+                        ParticipantNotes = p.ParticipantNotes
+                    });
+                }
+
+                cloned.Add(clone);
+            }
+        }
+
+        _context.Events.AddRange(cloned);
+        await _context.SaveChangesAsync();
+
+        foreach (var clone in cloned)
+        {
+            await _context.Entry(clone).Collection(e => e.Participants).LoadAsync();
+            foreach (var p in clone.Participants)
+                await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
+        }
+
+        var results = new List<EventDto>();
+        foreach (var clone in cloned)
+        {
+            var dto = MapToDto(clone);
+            if (clone.EventType == EventType.Turno)
+                dto.Warnings = await DetectConflictsForEventAsync(clone);
+            results.Add(dto);
+        }
+        return results;
+    }
+
+    /// <inheritdoc />
+    public async Task<List<EffectiveShiftDto>> GetEffectiveScheduleAsync(int employeeId, int merchantId, DateOnly from, DateOnly to)
+    {
+        if (from > to)
+            return new List<EffectiveShiftDto>();
+
+        // 1. Load shifts where this employee is a participant, in range.
+        var shifts = await _context.Events
+            .Include(e => e.Participants)
+            .Where(e => e.MerchantId == merchantId
+                        && e.EventType == EventType.Turno
+                        && e.StartDate >= from
+                        && e.StartDate <= to
+                        && e.Participants.Any(p => p.EmployeeId == employeeId))
+            .OrderBy(e => e.StartDate)
+            .ThenBy(e => e.StartTime)
+            .ToListAsync();
+
+        // 2. Load approved leaves for this employee overlapping the range.
+        var leaveTypes = new[] { EmployeeRequestType.Ferie, EmployeeRequestType.Malattia, EmployeeRequestType.Permessi };
+        var leaves = await _context.EmployeeRequests
+            .Where(r => r.MerchantId == merchantId
+                        && r.EmployeeId == employeeId
+                        && r.Status == RequestStatus.Approved
+                        && leaveTypes.Contains(r.Type)
+                        && r.StartDate <= to
+                        && (r.EndDate ?? r.StartDate) >= from)
+            .ToListAsync();
+
+        var result = new List<EffectiveShiftDto>();
+
+        foreach (var shift in shifts)
+        {
+            var participant = shift.Participants.First(p => p.EmployeeId == employeeId);
+            var canonicalStart = participant.StartTimeOverride ?? shift.StartTime;
+            var canonicalEnd = participant.EndTimeOverride ?? shift.EndTime;
+
+            var applicableLeaves = leaves.Where(l =>
+                    (l.EventId == null || l.EventId == shift.Id)
+                    && l.StartDate <= shift.StartDate
+                    && (l.EndDate ?? l.StartDate) >= shift.StartDate)
+                .ToList();
+
+            List<PresenceSegment> segments;
+            if (shift.IsAllDay || !canonicalStart.HasValue || !canonicalEnd.HasValue)
+            {
+                // All-day shift: any full-day leave absorbs the whole day; hourly leaves don't apply.
+                var absorbs = applicableLeaves.Any(l => !l.StartTime.HasValue || !l.EndTime.HasValue);
+                segments = absorbs
+                    ? new List<PresenceSegment>()
+                    : new List<PresenceSegment> { new PresenceSegment { From = null, To = null } };
+            }
+            else
+            {
+                segments = SubtractLeaves(canonicalStart.Value, canonicalEnd.Value, applicableLeaves);
+            }
+
+            result.Add(new EffectiveShiftDto
+            {
+                EventId = shift.Id,
+                EmployeeId = employeeId,
+                Title = shift.Title,
+                Date = shift.StartDate,
+                IsAllDay = shift.IsAllDay,
+                CanonicalStart = canonicalStart,
+                CanonicalEnd = canonicalEnd,
+                IsOnCall = shift.IsOnCall,
+                Segments = segments,
+                IsFullyAbsent = segments.Count == 0,
+                AppliedLeaves = applicableLeaves.Select(l => new AppliedLeaveDto
+                {
+                    RequestId = l.Id,
+                    Type = l.Type,
+                    IsFullDay = !l.StartTime.HasValue || !l.EndTime.HasValue,
+                    StartTime = l.StartTime,
+                    EndTime = l.EndTime,
+                    Notes = l.Notes
+                }).ToList()
+            });
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Sottrae gli intervalli dei permessi dalla fascia [start,end] e restituisce i segmenti di presenza residui.
+    /// </summary>
+    private static List<PresenceSegment> SubtractLeaves(TimeOnly start, TimeOnly end, IReadOnlyList<Shared.Models.EmployeeRequest> leaves)
+    {
+        // A full-day leave absorbs the whole shift.
+        if (leaves.Any(l => !l.StartTime.HasValue || !l.EndTime.HasValue))
+            return new List<PresenceSegment>();
+
+        // Start with a single segment [start,end], subtract each hourly leave in order.
+        var segments = new List<(TimeOnly From, TimeOnly To)> { (start, end) };
+
+        foreach (var leave in leaves.OrderBy(l => l.StartTime!.Value))
+        {
+            var lStart = leave.StartTime!.Value;
+            var lEnd = leave.EndTime!.Value;
+            var next = new List<(TimeOnly From, TimeOnly To)>();
+            foreach (var seg in segments)
+            {
+                // No overlap → keep as-is.
+                if (lEnd <= seg.From || lStart >= seg.To)
+                {
+                    next.Add(seg);
+                    continue;
+                }
+                // Leave covers whole segment → drop.
+                if (lStart <= seg.From && lEnd >= seg.To)
+                {
+                    continue;
+                }
+                // Leave cuts the start.
+                if (lStart <= seg.From && lEnd < seg.To)
+                {
+                    next.Add((lEnd, seg.To));
+                    continue;
+                }
+                // Leave cuts the end.
+                if (lStart > seg.From && lEnd >= seg.To)
+                {
+                    next.Add((seg.From, lStart));
+                    continue;
+                }
+                // Leave in the middle → splits segment.
+                next.Add((seg.From, lStart));
+                next.Add((lEnd, seg.To));
+            }
+            segments = next;
+        }
+
+        return segments.Select(s => new PresenceSegment { From = s.From, To = s.To }).ToList();
+    }
+
+    /// <summary>
+    /// Costruisce una mappa EmployeeId → override, scartando duplicati (primo prevale).
+    /// </summary>
+    private static Dictionary<int, ParticipantOverride> BuildOverrideMap(IEnumerable<ParticipantOverride>? overrides)
+    {
+        var map = new Dictionary<int, ParticipantOverride>();
+        if (overrides == null) return map;
+        foreach (var o in overrides)
+        {
+            if (!map.ContainsKey(o.EmployeeId))
+                map[o.EmployeeId] = o;
+        }
+        return map;
+    }
+
+    private static EventParticipant BuildParticipant(int employeeId, bool isOwner, IReadOnlyDictionary<int, ParticipantOverride> overrideMap)
+    {
+        var p = new EventParticipant
+        {
+            EmployeeId = employeeId,
+            IsOwner = isOwner
+        };
+        if (overrideMap.TryGetValue(employeeId, out var ov))
+        {
+            p.StartTimeOverride = ov.StartTimeOverride;
+            p.EndTimeOverride = ov.EndTimeOverride;
+            p.ParticipantNotes = ov.ParticipantNotes;
+        }
+        return p;
+    }
+
+    /// <summary>
+    /// Rileva i conflitti (non bloccanti) per tutti i partecipanti del turno appena creato/aggiornato/clonato.
+    /// </summary>
+    private async Task<List<ShiftConflictDto>> DetectConflictsForEventAsync(Event evt)
+    {
+        var all = new List<ShiftConflictDto>();
+        if (evt.EventType != EventType.Turno) return all;
+
+        // Group participants by effective (override-aware) time window so the validator
+        // checks the right window for each one.
+        var groups = evt.Participants
+            .GroupBy(p => (
+                Start: p.StartTimeOverride ?? evt.StartTime,
+                End: p.EndTimeOverride ?? evt.EndTime));
+
+        foreach (var group in groups)
+        {
+            var ids = group.Select(p => p.EmployeeId).ToList();
+            var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
+                evt.MerchantId, ids, evt.StartDate, group.Key.Start, group.Key.End, excludeEventId: evt.Id);
+            all.AddRange(conflicts);
+        }
+
+        return all;
     }
 
     private static EventDto MapToDto(Event evt)
@@ -313,7 +607,10 @@ public class EventService : IEventService
                 FullName = p.Employee != null
                     ? $"{p.Employee.FirstName} {p.Employee.LastName}"
                     : string.Empty,
-                IsOwner = p.IsOwner
+                IsOwner = p.IsOwner,
+                StartTimeOverride = p.StartTimeOverride,
+                EndTimeOverride = p.EndTimeOverride,
+                ParticipantNotes = p.ParticipantNotes
             }).ToList()
         };
     }

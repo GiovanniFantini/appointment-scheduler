@@ -1,4 +1,4 @@
-import { parseDateOnly } from '../../lib/dateUtils'
+import { formatBrowserDate, formatBrowserDateTime, parseDateOnly } from '../../lib/dateUtils'
 import './EventDetailModal.css'
 
 export interface EventDetail {
@@ -44,9 +44,9 @@ function getEventTypeColor(type?: string): string {
 function formatDateTime(dateStr: string, allDay?: boolean): string {
   const d = allDay ? parseDateOnly(dateStr) : new Date(dateStr)
   if (allDay) {
-    return d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+    return formatBrowserDate(d)
   }
-  return d.toLocaleString('it-IT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return formatBrowserDateTime(d)
 }
 
 export default function EventDetailModal({ event, onClose }: Props) {

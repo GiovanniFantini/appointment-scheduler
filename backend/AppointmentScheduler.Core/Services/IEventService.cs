@@ -42,4 +42,16 @@ public interface IEventService
     /// Clona un evento in un intervallo di date
     /// </summary>
     Task<List<EventDto>> CloneAsync(int id, int merchantId, CloneEventRequest request);
+
+    /// <summary>
+    /// Clona tutti i turni di una settimana sorgente su una o più settimane target,
+    /// mantenendo offset giornalieri, orari e partecipanti (con eventuali override).
+    /// </summary>
+    Task<List<EventDto>> CloneWeekAsync(int merchantId, int createdByUserId, CloneWeekRequest request);
+
+    /// <summary>
+    /// Calcola i turni effettivi di un dipendente in un range di date: per ogni turno canonico
+    /// sottrae i permessi/ferie approvati applicabili e restituisce i segmenti di presenza residui.
+    /// </summary>
+    Task<List<EffectiveShiftDto>> GetEffectiveScheduleAsync(int employeeId, int merchantId, DateOnly from, DateOnly to);
 }

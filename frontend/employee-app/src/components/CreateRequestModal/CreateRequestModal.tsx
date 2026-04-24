@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import apiClient from '../../lib/axios'
 import './CreateRequestModal.css'
 
@@ -17,6 +17,14 @@ interface Props {
   onCreated: () => void
 }
 
+interface ShiftOption {
+  id: number
+  title: string
+  startDate: string
+  startTime?: string
+  endTime?: string
+}
+
 export default function CreateRequestModal({ onClose, onCreated }: Props) {
   const [tipo, setTipo] = useState<RequestType>('Ferie')
   const [dataInizio, setDataInizio] = useState('')
@@ -27,12 +35,50 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
   const [note, setNote] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [linkedEventId, setLinkedEventId] = useState<number | null>(null)
+  const [availableShifts, setAvailableShifts] = useState<ShiftOption[]>([])
 
   const tipoLabels: Record<RequestType, string> = {
     Ferie: 'Ferie',
     Permessi: 'Permesso',
     Malattia: 'Malattia',
   }
+
+  // Hourly toggle + shift linking only for Permessi
+  const supportsHourly = tipo === 'Permessi'
+
+  // Load shifts for the selected start date when the user wants to link a permesso to a specific shift.
+  useEffect(() => {
+    if (tipo !== 'Permessi' || !dataInizio) {
+      setAvailableShifts([])
+      return
+    }
+    const ctrl = new AbortController()
+    apiClient.get<{ id: number; title: string; eventTypeName: string; startDate: string; startTime?: string; endTime?: string }[]>('/events/employee', {
+      params: { from: dataInizio, to: dataInizio },
+      signal: ctrl.signal,
+    }).then(res => {
+      const shifts = Array.isArray(res.data) ? res.data.filter(e => e.eventTypeName === 'Turno') : []
+      setAvailableShifts(shifts.map(s => ({
+        id: s.id,
+        title: s.title,
+        startDate: s.startDate,
+        startTime: s.startTime,
+        endTime: s.endTime,
+      })))
+    }).catch(() => {
+      setAvailableShifts([])
+    })
+    return () => ctrl.abort()
+  }, [tipo, dataInizio])
+
+  // Reset irrelevant fields when type changes
+  useEffect(() => {
+    if (!supportsHourly) {
+      setTuttoIlGiorno(true)
+      setLinkedEventId(null)
+    }
+  }, [supportsHourly])
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -43,12 +89,21 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
       return
     }
 
+    const sendHourly = supportsHourly && !tuttoIlGiorno
+    if (sendHourly && orarioA <= orarioDa) {
+      setError('L\'orario di fine deve essere successivo a quello di inizio')
+      return
+    }
+
     setLoading(true)
     try {
       await apiClient.post('/employee-requests', {
         type: REQUEST_TYPE_VALUES[tipo],
         startDate: dataInizio,
         endDate: dataFine || undefined,
+        startTime: sendHourly ? orarioDa : undefined,
+        endTime: sendHourly ? orarioA : undefined,
+        eventId: linkedEventId ?? undefined,
         notes: note || undefined,
       })
 
@@ -60,6 +115,13 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatShiftLabel = (s: ShiftOption): string => {
+    if (s.startTime && s.endTime) {
+      return `${s.title} (${s.startTime.slice(0, 5)}-${s.endTime.slice(0, 5)})`
+    }
+    return s.title
   }
 
   return (
@@ -116,16 +178,18 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="toggle-row">
-              <span className="form-label">Tutto il giorno</span>
-              <div className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
-                <div className="toggle-thumb" />
-              </div>
-            </label>
-          </div>
+          {supportsHourly && (
+            <div className="form-group">
+              <label className="toggle-row">
+                <span className="form-label">Tutto il giorno</span>
+                <div className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
+                  <div className="toggle-thumb" />
+                </div>
+              </label>
+            </div>
+          )}
 
-          {!tuttoIlGiorno && (
+          {supportsHourly && !tuttoIlGiorno && (
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Dalle</label>
@@ -145,6 +209,22 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
                   onChange={e => setOrarioA(e.target.value)}
                 />
               </div>
+            </div>
+          )}
+
+          {supportsHourly && availableShifts.length > 0 && (
+            <div className="form-group">
+              <label className="form-label">Collega a un turno (opzionale)</label>
+              <select
+                className="form-input"
+                value={linkedEventId ?? ''}
+                onChange={e => setLinkedEventId(e.target.value ? Number(e.target.value) : null)}
+              >
+                <option value="">Nessuno (tutti i turni del giorno)</option>
+                {availableShifts.map(s => (
+                  <option key={s.id} value={s.id}>{formatShiftLabel(s)}</option>
+                ))}
+              </select>
             </div>
           )}
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import apiClient from '../../lib/axios'
+import { formatBrowserDate, parseDateOnly } from '../../lib/dateUtils'
 import './RichiestePage.css'
 
 interface EmployeeRequestDto {
@@ -13,10 +14,18 @@ interface EmployeeRequestDto {
   statusName: string
   startDate: string
   endDate?: string
+  startTime?: string
+  endTime?: string
+  eventId?: number | null
   notes?: string
   reviewNotes?: string
   reviewedAt?: string
   createdAt: string
+}
+
+function formatTimeRange(startTime?: string, endTime?: string): string {
+  if (!startTime || !endTime) return ''
+  return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`
 }
 
 const TYPE_CSS: Record<string, string> = {
@@ -34,11 +43,7 @@ const TYPE_LABELS: Record<string, string> = {
 }
 
 function formatDateRange(startDate: string, endDate?: string): string {
-  const fmt = (d: string) => {
-    const [y, m, day] = d.split('-')
-    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu', 'Lug', 'Ago', 'Set', 'Ott', 'Nov', 'Dic']
-    return `${parseInt(day)} ${months[parseInt(m) - 1]} ${y}`
-  }
+  const fmt = (d: string) => formatBrowserDate(parseDateOnly(d))
   if (!endDate || endDate === startDate) return fmt(startDate)
   return `${fmt(startDate)} - ${fmt(endDate)}`
 }
@@ -156,6 +161,8 @@ export default function RichiestePage() {
                 <div className="richiesta-name">{r.employeeFullName}</div>
                 <div className="richiesta-detail">
                   {formatDateRange(r.startDate, r.endDate)}
+                  {r.startTime && r.endTime && <> · {formatTimeRange(r.startTime, r.endTime)}</>}
+                  {r.eventId != null && <> · turno #{r.eventId}</>}
                   {r.notes && <> · {r.notes}</>}
                 </div>
               </div>

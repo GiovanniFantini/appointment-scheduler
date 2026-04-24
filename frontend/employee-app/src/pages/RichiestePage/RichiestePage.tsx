@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
+import { formatBrowserDate, parseDateOnly } from '../../lib/dateUtils'
 import './RichiestePage.css'
 
 // Matches EmployeeRequestDto from server
@@ -10,7 +11,15 @@ interface ApiEmployeeRequest {
   statusName: string       // "Pending" | "Approved" | "Rejected"
   startDate: string        // "2024-01-15"
   endDate?: string
+  startTime?: string       // "12:00:00"
+  endTime?: string
+  eventId?: number | null
   notes?: string
+}
+
+function formatTime(t?: string): string {
+  if (!t) return ''
+  return t.slice(0, 5)
 }
 
 function getRequestTypeLabel(type?: string): string {
@@ -43,8 +52,7 @@ function getStatusLabel(status?: string): string {
 }
 
 function formatDate(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })
+  return formatBrowserDate(parseDateOnly(dateStr))
 }
 
 export default function RichiestePage() {
@@ -129,7 +137,16 @@ export default function RichiestePage() {
                       <span className="request-date-value">{formatDate(req.endDate)}</span>
                     </div>
                   )}
+                  {req.startTime && req.endTime && (
+                    <div className="request-date">
+                      <span className="request-date-label">Orario</span>
+                      <span className="request-date-value">{formatTime(req.startTime)} - {formatTime(req.endTime)}</span>
+                    </div>
+                  )}
                 </div>
+                {req.eventId != null && (
+                  <p className="request-notes"><strong>Collegato al turno #{req.eventId}</strong></p>
+                )}
                 {req.notes && (
                   <p className="request-notes">{req.notes}</p>
                 )}

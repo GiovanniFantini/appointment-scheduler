@@ -14,6 +14,13 @@ const EVENT_TYPE_VALUES: Record<EventType, number> = {
   Malattia: 5,
 }
 
+export interface ParticipantOverrideInput {
+  employeeId: number
+  startTimeOverride?: string
+  endTimeOverride?: string
+  participantNotes?: string
+}
+
 export interface CalEvent {
   id?: number
   title: string
@@ -26,6 +33,7 @@ export interface CalEvent {
   isOnCall?: boolean
   ownerEmployeeIds?: number[]
   coOwnerEmployeeIds?: number[]
+  participantOverrides?: ParticipantOverrideInput[]
   recurrence?: RecurrenceType
   notificationEnabled?: boolean
   notes?: string
@@ -35,6 +43,21 @@ interface Employee {
   id: number
   firstName: string
   lastName: string
+}
+
+interface ShiftConflictDto {
+  employeeId: number
+  employeeFullName: string
+  date: string
+  kind: number
+  kindName: string
+  requestId?: number
+  requestType?: number
+  conflictingEventId?: number
+  conflictingEventTitle?: string
+  conflictStart?: string
+  conflictEnd?: string
+  message: string
 }
 
 interface EventModalProps {
@@ -65,16 +88,46 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const [showClone, setShowClone] = useState(false)
   const [cloneFrom, setCloneFrom] = useState('')
   const [cloneTo, setCloneTo] = useState('')
+  const [cloneMode, setCloneMode] = useState<'daily' | 'weekly'>('daily')
+  const [cloneTargetWeek, setCloneTargetWeek] = useState('')
+  const [cloneWeeks, setCloneWeeks] = useState(1)
+  const [participantOverrides, setParticipantOverrides] = useState<ParticipantOverrideInput[]>(event?.participantOverrides ?? [])
+  const [showOverrides, setShowOverrides] = useState((event?.participantOverrides ?? []).length > 0)
 
   const [employees, setEmployees] = useState<Employee[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [warnings, setWarnings] = useState<ShiftConflictDto[]>([])
+  const [warningsAcknowledged, setWarningsAcknowledged] = useState(false)
+
+  const initialStartTime = event?.startTime ?? ''
+  const initialEndTime = event?.endTime ?? ''
+  const hasOverrides = participantOverrides.some(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
+  const timeChanged = isEdit && (startTime !== initialStartTime || endTime !== initialEndTime)
 
   useEffect(() => {
     apiClient.get('/employees').then(res => {
       if (Array.isArray(res.data)) setEmployees(res.data as Employee[])
     }).catch(() => {})
   }, [])
+
+  // Prune stale overrides when a participant is deselected
+  useEffect(() => {
+    setParticipantOverrides(prev => prev.filter(o => selectedOwnerIds.includes(o.employeeId)))
+  }, [selectedOwnerIds])
+
+  const upsertOverride = (employeeId: number, patch: Partial<ParticipantOverrideInput>) => {
+    setParticipantOverrides(prev => {
+      const existing = prev.find(o => o.employeeId === employeeId)
+      if (existing) {
+        return prev.map(o => o.employeeId === employeeId ? { ...o, ...patch } : o)
+      }
+      return [...prev, { employeeId, ...patch }]
+    })
+  }
+
+  const getOverride = (employeeId: number): ParticipantOverrideInput | undefined =>
+    participantOverrides.find(o => o.employeeId === employeeId)
 
   const buildPayload = () => ({
     title,
@@ -87,6 +140,14 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     isOnCall: eventType === 'Turno' ? isOnCall : false,
     ownerEmployeeIds: selectedOwnerIds,
     coOwnerEmployeeIds: [],
+    participantOverrides: participantOverrides
+      .filter(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
+      .map(o => ({
+        employeeId: o.employeeId,
+        startTimeOverride: o.startTimeOverride || undefined,
+        endTimeOverride: o.endTimeOverride || undefined,
+        participantNotes: o.participantNotes || undefined,
+      })),
     recurrence: recurrence === 'Nessuna' ? null : recurrence,
     notificationEnabled,
     notes,
@@ -95,21 +156,43 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const handleSave = async () => {
     if (!title.trim()) { setError('Il titolo è obbligatorio'); return }
     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
+
+    // Warn before persisting time changes when participant overrides exist
+    if (timeChanged && hasOverrides) {
+      const proceed = confirm(
+        'Hai modificato gli orari del turno, ma alcuni dipendenti hanno orari personalizzati. ' +
+        'Vuoi mantenerli? Premi OK per mantenere gli override, Annulla per abbandonare il salvataggio.'
+      )
+      if (!proceed) return
+    }
+
     setError('')
     setLoading(true)
     try {
-      if (isEdit) {
-        await apiClient.put(`/events/${event!.id}`, buildPayload())
+      const response = isEdit
+        ? await apiClient.put(`/events/${event!.id}`, buildPayload())
+        : await apiClient.post('/events', buildPayload())
+
+      const returned = (response?.data ?? {}) as { warnings?: ShiftConflictDto[] }
+      const w = Array.isArray(returned.warnings) ? returned.warnings : []
+      if (w.length > 0) {
+        setWarnings(w)
+        setWarningsAcknowledged(false)
+        // Don't close: let the user read the warnings and confirm
       } else {
-        await apiClient.post('/events', buildPayload())
+        onSaved()
       }
-      onSaved()
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
       setError(e.response?.data?.message ?? 'Errore durante il salvataggio')
     } finally {
       setLoading(false)
     }
+  }
+
+  const dismissWarnings = () => {
+    setWarnings([])
+    onSaved()
   }
 
   const handleDelete = async () => {
@@ -126,13 +209,38 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   }
 
   const handleClone = async () => {
-    if (!cloneFrom || !cloneTo) { setError('Seleziona date per la clonazione'); return }
+    if (cloneMode === 'daily') {
+      if (!cloneFrom || !cloneTo) { setError('Seleziona date per la clonazione'); return }
+      setLoading(true)
+      try {
+        await apiClient.post(`/events/${event!.id}/clone`, { fromDate: cloneFrom, toDate: cloneTo })
+        onSaved()
+      } catch {
+        setError('Errore durante la clonazione')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // weekly: requires the event's own startDate as source week anchor
+    if (!cloneTargetWeek) { setError('Seleziona la settimana target'); return }
+    if (!startDate) { setError('Il turno non ha una data di partenza'); return }
     setLoading(true)
     try {
-      await apiClient.post(`/events/${event!.id}/clone`, { fromDate: cloneFrom, toDate: cloneTo })
+      // Compute Monday of the event's week as source anchor (ISO week)
+      const d = new Date(startDate + 'T00:00:00')
+      const dow = d.getDay() === 0 ? 7 : d.getDay()
+      d.setDate(d.getDate() - (dow - 1))
+      const sourceWeekStart = d.toISOString().split('T')[0]
+      await apiClient.post('/events/clone-week', {
+        sourceWeekStart,
+        targetWeekStart: cloneTargetWeek,
+        numberOfWeeks: cloneWeeks,
+      })
       onSaved()
     } catch {
-      setError('Errore durante la clonazione')
+      setError('Errore durante la clonazione settimanale')
     } finally {
       setLoading(false)
     }
@@ -153,6 +261,37 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
         <div className="modal-body">
           {error && <div className="modal-error">{error}</div>}
+
+          {warnings.length > 0 && (
+            <div className="modal-warning">
+              <div className="modal-warning-title">
+                Conflitti rilevati ({warnings.length}):
+              </div>
+              <ul className="modal-warning-list">
+                {warnings.map((w, idx) => (
+                  <li key={idx}>
+                    <strong>{w.employeeFullName}</strong> — {w.message}
+                  </li>
+                ))}
+              </ul>
+              <label className="checkbox-group">
+                <input
+                  type="checkbox"
+                  className="modal-checkbox"
+                  checked={warningsAcknowledged}
+                  onChange={e => setWarningsAcknowledged(e.target.checked)}
+                />
+                <span className="checkbox-label">Ho letto gli avvisi, procedo comunque</span>
+              </label>
+              <button
+                className="btn-save"
+                disabled={!warningsAcknowledged}
+                onClick={dismissWarnings}
+              >
+                Chiudi
+              </button>
+            </div>
+          )}
 
           <div className="modal-form-group">
             <label className="modal-label">Titolo *</label>
@@ -237,6 +376,66 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             </div>
           )}
 
+          {eventType === 'Turno' && selectedOwnerIds.length > 0 && !isAllDay && (
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="showOverrides"
+                className="modal-checkbox"
+                checked={showOverrides}
+                onChange={e => setShowOverrides(e.target.checked)}
+              />
+              <label htmlFor="showOverrides" className="checkbox-label">
+                Orari personalizzati per partecipante
+              </label>
+            </div>
+          )}
+
+          {eventType === 'Turno' && showOverrides && !isAllDay && selectedOwnerIds.length > 0 && (
+            <div className="overrides-section">
+              <div className="overrides-hint">
+                Lascia vuoto per usare gli orari del turno ({startTime}-{endTime}).
+              </div>
+              {selectedOwnerIds.map(empId => {
+                const emp = employees.find(e => e.id === empId)
+                if (!emp) return null
+                const ov = getOverride(empId)
+                return (
+                  <div key={empId} className="override-row">
+                    <div className="override-name">{emp.firstName} {emp.lastName}</div>
+                    <div className="modal-row">
+                      <div className="modal-form-group">
+                        <label className="modal-label">Dalle</label>
+                        <input
+                          type="time"
+                          className="modal-input"
+                          value={ov?.startTimeOverride ?? ''}
+                          onChange={e => upsertOverride(empId, { startTimeOverride: e.target.value || undefined })}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label className="modal-label">Alle</label>
+                        <input
+                          type="time"
+                          className="modal-input"
+                          value={ov?.endTimeOverride ?? ''}
+                          onChange={e => upsertOverride(empId, { endTimeOverride: e.target.value || undefined })}
+                        />
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      className="modal-input"
+                      placeholder="Nota (es. rientra dopo visita)"
+                      value={ov?.participantNotes ?? ''}
+                      onChange={e => upsertOverride(empId, { participantNotes: e.target.value || undefined })}
+                    />
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
           <div className="modal-form-group">
             <label className="modal-label">Ricorrenza</label>
             <select className="modal-select" value={recurrence} onChange={e => setRecurrence(e.target.value as RecurrenceType)}>
@@ -283,16 +482,55 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
               {showClone && (
                 <div className="clone-section">
                   <div className="clone-section-title">Clonazione</div>
-                  <div className="modal-row">
-                    <div className="modal-form-group">
-                      <label className="modal-label">Da data</label>
-                      <input type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} />
-                    </div>
-                    <div className="modal-form-group">
-                      <label className="modal-label">A data</label>
-                      <input type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} />
-                    </div>
+                  <div className="modal-form-group">
+                    <label className="modal-label">Modalità</label>
+                    <select
+                      className="modal-select"
+                      value={cloneMode}
+                      onChange={e => setCloneMode(e.target.value as 'daily' | 'weekly')}
+                    >
+                      <option value="daily">Giornaliera (un clone per ogni giorno nel range)</option>
+                      <option value="weekly">Settimanale (clona intera settimana del turno su N settimane)</option>
+                    </select>
                   </div>
+                  {cloneMode === 'daily' && (
+                    <>
+                      <div className="modal-row">
+                        <div className="modal-form-group">
+                          <label className="modal-label">Da data</label>
+                          <input type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} />
+                        </div>
+                        <div className="modal-form-group">
+                          <label className="modal-label">A data</label>
+                          <input type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {cloneMode === 'weekly' && (
+                    <div className="modal-row">
+                      <div className="modal-form-group">
+                        <label className="modal-label">Settimana target (lun.)</label>
+                        <input
+                          type="date"
+                          className="modal-input"
+                          value={cloneTargetWeek}
+                          onChange={e => setCloneTargetWeek(e.target.value)}
+                        />
+                      </div>
+                      <div className="modal-form-group">
+                        <label className="modal-label">N. settimane</label>
+                        <input
+                          type="number"
+                          className="modal-input"
+                          min={1}
+                          max={52}
+                          value={cloneWeeks}
+                          onChange={e => setCloneWeeks(Math.max(1, Math.min(52, Number(e.target.value) || 1)))}
+                        />
+                      </div>
+                    </div>
+                  )}
                   <button className="btn-clone" onClick={handleClone} disabled={loading}>
                     Clona
                   </button>

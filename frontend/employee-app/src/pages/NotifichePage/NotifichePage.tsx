@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import apiClient from '../../lib/axios'
+import { formatBrowserDate } from '../../lib/dateUtils'
 import './NotifichePage.css'
 
 interface Notification {
@@ -23,7 +24,7 @@ function formatDate(dateStr: string): string {
   if (diffMins < 60) return `${diffMins} min fa`
   if (diffHours < 24) return `${diffHours} ore fa`
   if (diffDays === 1) return 'Ieri'
-  return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })
+  return formatBrowserDate(d)
 }
 
 export default function NotifichePage() {

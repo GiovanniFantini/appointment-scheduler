@@ -15,6 +15,22 @@ public class EmployeeRequest
     public DateOnly StartDate { get; set; }
     public DateOnly? EndDate { get; set; }
 
+    /// <summary>
+    /// Ora di inizio per permessi orari. Null = richiesta "tutto il giorno".
+    /// </summary>
+    public TimeOnly? StartTime { get; set; }
+
+    /// <summary>
+    /// Ora di fine per permessi orari. Null = richiesta "tutto il giorno".
+    /// </summary>
+    public TimeOnly? EndTime { get; set; }
+
+    /// <summary>
+    /// Turno specifico a cui la richiesta è collegata (opzionale).
+    /// Se null, la richiesta si applica a tutti i turni del dipendente nelle date coperte.
+    /// </summary>
+    public int? EventId { get; set; }
+
     public string? Notes { get; set; }
     public string? ReviewNotes { get; set; }
 
@@ -28,4 +44,5 @@ public class EmployeeRequest
     public Employee Employee { get; set; } = null!;
     public Merchant Merchant { get; set; } = null!;
     public User? ReviewedBy { get; set; }
+    public Event? Event { get; set; }
 }

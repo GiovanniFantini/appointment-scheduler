@@ -12,6 +12,7 @@ import RisorsePage from './pages/RisorsePage/RisorsePage'
 import RuoliPage from './pages/RuoliPage/RuoliPage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
+import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
 
 export interface MerchantUser {
   userId: number
@@ -75,6 +76,7 @@ function App(_props: AppProps) {
         <Route element={user ? <AppLayout user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}>
           <Route path="/" element={<DashboardPage user={user!} />} />
           <Route path="/calendario" element={<CalendarioPage user={user!} />} />
+          <Route path="/pianificazione" element={<PianificazionePage user={user!} />} />
           <Route path="/richieste" element={<RichiestePage />} />
           <Route path="/risorse" element={<RisorsePage user={user!} />} />
           <Route path="/ruoli" element={<RuoliPage />} />

@@ -169,6 +169,49 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
+    /// Calcola i turni effettivi del dipendente corrente (letti dal JWT) in un range di date,
+    /// applicando i permessi approvati.
+    /// </summary>
+    [HttpGet("employee/effective-schedule")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<List<EffectiveShiftDto>>> GetEmployeeEffectiveSchedule(
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to)
+    {
+        if (!TryGetEmployeeId(out int employeeId))
+            return BadRequest(new { message = "Employee ID non trovato nel token" });
+
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (from > to)
+            return BadRequest(new { message = "Data di inizio successiva alla data di fine" });
+
+        var schedule = await _eventService.GetEffectiveScheduleAsync(employeeId, merchantId, from, to);
+        return Ok(schedule);
+    }
+
+    /// <summary>
+    /// Calcola i turni effettivi di un dipendente specifico in un range di date (uso merchant).
+    /// </summary>
+    [HttpGet("employee/{employeeId}/effective-schedule")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<ActionResult<List<EffectiveShiftDto>>> GetEffectiveScheduleForEmployee(
+        int employeeId,
+        [FromQuery] DateOnly from,
+        [FromQuery] DateOnly to)
+    {
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (from > to)
+            return BadRequest(new { message = "Data di inizio successiva alla data di fine" });
+
+        var schedule = await _eventService.GetEffectiveScheduleAsync(employeeId, merchantId, from, to);
+        return Ok(schedule);
+    }
+
+    /// <summary>
     /// Clona un evento in un intervallo di date (un clone per ogni giorno)
     /// </summary>
     [HttpPost("{id}/clone")]
@@ -193,6 +236,37 @@ public class EventsController : ControllerBase
         catch (Exception ex)
         {
             return BadRequest(new { message = $"Errore nella clonazione dell'evento: {ex.Message}" });
+        }
+    }
+
+    /// <summary>
+    /// Clona tutti i turni di una settimana sorgente su una o più settimane target,
+    /// opzionalmente filtrando per dipendenti.
+    /// </summary>
+    [HttpPost("clone-week")]
+    [Authorize(Policy = "MerchantOnly")]
+    public async Task<ActionResult<List<EventDto>>> CloneWeek([FromBody] CloneWeekRequest request)
+    {
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!TryGetUserId(out int userId))
+            return BadRequest(new { message = "User ID non trovato nel token" });
+
+        if (request.NumberOfWeeks < 1)
+            return BadRequest(new { message = "Il numero di settimane deve essere almeno 1" });
+
+        if (request.NumberOfWeeks > 52)
+            return BadRequest(new { message = "Il numero massimo di settimane è 52" });
+
+        try
+        {
+            var cloned = await _eventService.CloneWeekAsync(merchantId, userId, request);
+            return Ok(cloned);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = $"Errore nella clonazione settimanale: {ex.Message}" });
         }
     }
 }

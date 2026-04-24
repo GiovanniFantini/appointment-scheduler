@@ -24,6 +24,28 @@ interface ApiEvent {
   participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
 }
 
+// Matches EffectiveShiftDto from server: a shift with leaves already subtracted into segments.
+interface ApiEffectiveShift {
+  eventId: number
+  employeeId: number
+  title: string
+  date: string
+  isAllDay: boolean
+  canonicalStart?: string
+  canonicalEnd?: string
+  segments: Array<{ from?: string; to?: string }>
+  appliedLeaves: Array<{
+    requestId: number
+    typeName: string
+    isFullDay: boolean
+    startTime?: string
+    endTime?: string
+    notes?: string
+  }>
+  isFullyAbsent: boolean
+  isOnCall: boolean
+}
+
 function getEventColor(eventTypeName?: string): string {
   const map: Record<string, string> = {
     Turno: '#3b82f6',
@@ -66,6 +88,76 @@ function apiEventToFCEvent(e: ApiEvent): EventInput {
   }
 }
 
+/**
+ * Converts an effective-shift into one or more FullCalendar events: one per presence segment.
+ * If the employee is fully absent, renders a greyed-out background event to preserve shift visibility.
+ */
+function effectiveShiftToFCEvents(s: ApiEffectiveShift): EventInput[] {
+  const baseColor = '#3b82f6' // Turno
+  const hasLeaves = s.appliedLeaves.length > 0
+
+  if (s.isFullyAbsent) {
+    return [{
+      id: `shift-${s.eventId}-absent`,
+      title: `${s.title} (assente)`,
+      start: s.date,
+      allDay: true,
+      backgroundColor: '#e5e7eb',
+      borderColor: '#9ca3af',
+      textColor: '#6b7280',
+      extendedProps: {
+        eventTypeName: 'Turno',
+        eventId: s.eventId,
+        isOnCall: s.isOnCall,
+        isEffective: true,
+        appliedLeaves: s.appliedLeaves,
+      },
+    }]
+  }
+
+  if (s.isAllDay || s.segments.length === 1 && !s.segments[0].from) {
+    return [{
+      id: `shift-${s.eventId}`,
+      title: s.title,
+      start: s.date,
+      allDay: true,
+      backgroundColor: baseColor,
+      borderColor: baseColor,
+      extendedProps: {
+        eventTypeName: 'Turno',
+        eventId: s.eventId,
+        isOnCall: s.isOnCall,
+        isEffective: true,
+        appliedLeaves: s.appliedLeaves,
+      },
+    }]
+  }
+
+  return s.segments.map((seg, idx) => {
+    const start = seg.from ? `${s.date}T${seg.from}` : s.date
+    const end = seg.to ? `${s.date}T${seg.to}` : undefined
+    const title = hasLeaves && s.segments.length > 1
+      ? `${s.title} (parte ${idx + 1}/${s.segments.length})`
+      : s.title
+    return {
+      id: `shift-${s.eventId}-seg-${idx}`,
+      title,
+      start,
+      end,
+      allDay: false,
+      backgroundColor: baseColor,
+      borderColor: baseColor,
+      extendedProps: {
+        eventTypeName: 'Turno',
+        eventId: s.eventId,
+        isOnCall: s.isOnCall,
+        isEffective: true,
+        appliedLeaves: s.appliedLeaves,
+      },
+    }
+  })
+}
+
 export default function CalendarioPage() {
   const calendarRef = useRef<FullCalendar>(null)
   const [selectedEvent, setSelectedEvent] = useState<EventDetail | null>(null)
@@ -79,11 +171,21 @@ export default function CalendarioPage() {
     try {
       const from = info.startStr.split('T')[0]
       const to = info.endStr.split('T')[0]
-      const { data } = await apiClient.get<ApiEvent[]>('/events/employee', {
-        params: { from, to },
-      })
-      const events = Array.isArray(data) ? data.map(apiEventToFCEvent) : []
-      successCallback(events)
+      // Parallel fetch: raw events (for non-Turno types) + effective schedule (for shifts with leaves applied)
+      const [rawRes, effectiveRes] = await Promise.all([
+        apiClient.get<ApiEvent[]>('/events/employee', { params: { from, to } }),
+        apiClient.get<ApiEffectiveShift[]>('/events/employee/effective-schedule', { params: { from, to } }),
+      ])
+
+      const raw = Array.isArray(rawRes.data) ? rawRes.data : []
+      const effective = Array.isArray(effectiveRes.data) ? effectiveRes.data : []
+
+      // Turni are rendered from the effective schedule (segmented by leaves).
+      // Everything else (Ferie, Permessi, Malattia, ChiusuraAziendale) comes from the raw feed.
+      const nonShiftEvents = raw.filter(e => e.eventTypeName !== 'Turno').map(apiEventToFCEvent)
+      const shiftEvents = effective.flatMap(effectiveShiftToFCEvents)
+
+      successCallback([...shiftEvents, ...nonShiftEvents])
     } catch (err) {
       failureCallback(err as Error)
       setError('Errore nel caricamento degli eventi')

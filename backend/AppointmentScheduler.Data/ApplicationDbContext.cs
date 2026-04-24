@@ -272,9 +272,15 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.ReviewedByUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            entity.HasOne(e => e.Event)
+                .WithMany()
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(e => e.MerchantId);
             entity.HasIndex(e => new { e.MerchantId, e.Status });
             entity.HasIndex(e => new { e.EmployeeId, e.MerchantId });
+            entity.HasIndex(e => e.EventId);
         });
 
         // ── PasswordResetToken ────────────────────────────────────────────────

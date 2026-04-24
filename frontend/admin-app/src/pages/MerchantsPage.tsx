@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import apiClient from '../lib/axios'
+import { formatBrowserDate } from '../lib/dateUtils'
 import './MerchantsPage.css'
 
 interface Merchant {
@@ -148,7 +149,7 @@ export default function MerchantsPage() {
                         </span>
                     </td>
                     <td className="td-secondary">
-                      {new Date(m.createdAt).toLocaleDateString()}
+                      {formatBrowserDate(new Date(m.createdAt))}
                     </td>
                     <td>
                       <div className="action-buttons">

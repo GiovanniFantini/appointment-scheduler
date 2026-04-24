@@ -11,3 +11,26 @@ export function parseDateOnly(str: string): Date {
   const [y, m, d] = str.split('-').map(Number)
   return new Date(y, m - 1, d)
 }
+
+function browserLocale(): string | undefined {
+  if (typeof navigator === 'undefined') return undefined
+  return navigator.languages?.[0] ?? navigator.language
+}
+
+export function formatBrowserDate(date: Date): string {
+  return new Intl.DateTimeFormat(browserLocale(), {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
+}
+
+export function formatBrowserDateTime(date: Date): string {
+  return new Intl.DateTimeFormat(browserLocale(), {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}

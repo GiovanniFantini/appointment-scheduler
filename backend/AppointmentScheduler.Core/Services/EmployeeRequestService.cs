@@ -42,6 +42,12 @@ public class EmployeeRequestService : IEmployeeRequestService
 
     public async Task<EmployeeRequestDto> CreateAsync(int employeeId, int merchantId, CreateEmployeeRequestRequest request)
     {
+        // Hourly leaves: keep StartTime/EndTime only if both provided and request type supports it.
+        var (startTime, endTime) = NormalizeHourlyRange(request.Type, request.StartTime, request.EndTime);
+
+        // Validate EventId belongs to the same merchant and the requesting employee is a participant.
+        int? eventId = await ResolveEventLinkAsync(request.EventId, employeeId, merchantId);
+
         var employeeRequest = new EmployeeRequest
         {
             EmployeeId = employeeId,
@@ -50,6 +56,9 @@ public class EmployeeRequestService : IEmployeeRequestService
             Status = RequestStatus.Pending,
             StartDate = request.StartDate,
             EndDate = request.EndDate,
+            StartTime = startTime,
+            EndTime = endTime,
+            EventId = eventId,
             Notes = request.Notes,
             CreatedAt = DateTime.UtcNow,
         };
@@ -76,6 +85,13 @@ public class EmployeeRequestService : IEmployeeRequestService
         employeeRequest.ReviewedAt = DateTime.UtcNow;
         employeeRequest.ReviewNotes = request?.ReviewNotes;
         employeeRequest.UpdatedAt = DateTime.UtcNow;
+
+        // Merchant può linkare/scollegare il turno in fase di review
+        if (request != null)
+        {
+            var resolved = await ResolveEventLinkAsync(request.EventId, employeeRequest.EmployeeId, merchantId);
+            employeeRequest.EventId = resolved;
+        }
 
         await _context.SaveChangesAsync();
 
@@ -136,10 +152,49 @@ public class EmployeeRequestService : IEmployeeRequestService
             StatusName = r.Status.ToString(),
             StartDate = r.StartDate,
             EndDate = r.EndDate,
+            StartTime = r.StartTime,
+            EndTime = r.EndTime,
+            EventId = r.EventId,
             Notes = r.Notes,
             ReviewNotes = r.ReviewNotes,
             ReviewedAt = r.ReviewedAt,
             CreatedAt = r.CreatedAt,
         };
+    }
+
+    /// <summary>
+    /// Ritorna la coppia (StartTime, EndTime) se entrambi valorizzati e il tipo supporta permessi orari;
+    /// altrimenti (null, null).
+    /// </summary>
+    private static (TimeOnly?, TimeOnly?) NormalizeHourlyRange(EmployeeRequestType type, TimeOnly? start, TimeOnly? end)
+    {
+        // Only Permessi supports hourly ranges. Ferie/Malattia are always full-day.
+        if (type != EmployeeRequestType.Permessi)
+            return (null, null);
+
+        if (!start.HasValue || !end.HasValue)
+            return (null, null);
+
+        if (end.Value <= start.Value)
+            return (null, null);
+
+        return (start, end);
+    }
+
+    /// <summary>
+    /// Valida che l'EventId passato sia un turno del merchant a cui il dipendente partecipa.
+    /// Ritorna null se non valido.
+    /// </summary>
+    private async Task<int?> ResolveEventLinkAsync(int? eventId, int employeeId, int merchantId)
+    {
+        if (!eventId.HasValue) return null;
+
+        var ok = await _context.Events.AnyAsync(e =>
+            e.Id == eventId.Value
+            && e.MerchantId == merchantId
+            && e.EventType == EventType.Turno
+            && e.Participants.Any(p => p.EmployeeId == employeeId));
+
+        return ok ? eventId : null;
     }
 }
