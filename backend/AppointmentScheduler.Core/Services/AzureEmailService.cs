@@ -29,10 +29,10 @@ public class AzureEmailService : IEmailService
             ?? "Appointment Scheduler";
 
         if (string.IsNullOrEmpty(connectionString) ||
-            connectionString == "CONFIGURE_IN_PRODUCTION_OR_USE_DEVELOPMENT_SETTINGS")
+            connectionString.Contains("CONFIGURE_IN_PRODUCTION_OR_USE_DEVELOPMENT_SETTINGS"))
         {
             _isConfigured = false;
-            _logger.LogWarning("Azure Communication Services non configurato. Le email non verranno inviate.");
+            _logger.LogWarning("Azure Communication Services non configurato (access key mancante o placeholder). Le email non verranno inviate.");
         }
         else
         {

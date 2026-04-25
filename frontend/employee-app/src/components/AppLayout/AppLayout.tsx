@@ -120,12 +120,12 @@ export default function AppLayout({ user, onLogout, onUserUpdate }: Props) {
       <aside className={`sidebar ${sidebarOpen ? 'sidebar--open' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="sidebar-brand-icon">E</div>
+            <div className="sidebar-brand-icon">
+              {user.companyName ? user.companyName.charAt(0).toUpperCase() : 'E'}
+            </div>
             <div className="sidebar-brand-text">
-              <span className="sidebar-brand-name">Employee Portal</span>
-              {user.companyName && (
-                <span className="sidebar-company-badge">{user.companyName}</span>
-              )}
+              <span className="sidebar-brand-name">{user.companyName ?? 'Employee Portal'}</span>
+              <span className="sidebar-company-badge">Area dipendente</span>
             </div>
           </div>
           <button className="sidebar-close" onClick={closeSidebar}>

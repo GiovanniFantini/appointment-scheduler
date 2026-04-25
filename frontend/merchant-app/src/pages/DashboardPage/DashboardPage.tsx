@@ -88,28 +88,28 @@ export default function DashboardPage({ user }: DashboardPageProps) {
       </div>
 
       <div className="stats-grid">
-        <div className="stat-card">
+        <Link to="/risorse" className="stat-card">
           <div className="stat-icon blue">👥</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.totalEmployees}</div>
             <div className="stat-label">Dipendenti totali</div>
           </div>
-        </div>
-        <div className="stat-card">
+        </Link>
+        <Link to="/calendario" className="stat-card">
           <div className="stat-icon indigo">📅</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.upcomingEvents}</div>
             <div className="stat-label">Eventi questa settimana</div>
           </div>
-        </div>
-        <div className="stat-card">
+        </Link>
+        <Link to="/richieste" className="stat-card">
           <div className="stat-icon amber">📋</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.pendingRequests}</div>
             <div className="stat-label">Richieste in attesa</div>
           </div>
-        </div>
-        <div className="stat-card">
+        </Link>
+        <div className="stat-card stat-card--static">
           <div className="stat-icon green">✅</div>
           <div className="stat-info">
             <div className="stat-value">{visibleLinks.length}</div>

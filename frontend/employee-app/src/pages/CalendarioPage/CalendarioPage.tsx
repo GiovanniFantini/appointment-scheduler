@@ -24,6 +24,19 @@ interface ApiEvent {
   participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
 }
 
+// Matches EmployeeRequestDto from server.
+interface ApiEmployeeRequest {
+  id: number
+  typeName: string   // "Ferie" | "Permessi" | "Malattia"
+  statusName: string // "Pending" | "Approved" | "Rejected"
+  startDate: string
+  endDate?: string
+  startTime?: string
+  endTime?: string
+  eventId?: number | null
+  notes?: string
+}
+
 // Matches EffectiveShiftDto from server: a shift with leaves already subtracted into segments.
 interface ApiEffectiveShift {
   eventId: number
@@ -158,6 +171,63 @@ function effectiveShiftToFCEvents(s: ApiEffectiveShift): EventInput[] {
   })
 }
 
+/**
+ * Converts an employee request (Ferie/Permessi/Malattia) into a FullCalendar event.
+ * Approved requests render solid; pending requests render as a dashed outline.
+ * Rejected requests are filtered out before this function is called.
+ */
+function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
+  const color = getEventColor(r.typeName)
+  const isPending = r.statusName === 'Pending'
+  const hasHourly = !!(r.startTime && r.endTime)
+  const statusSuffix = isPending ? ' (in attesa)' : ''
+
+  if (hasHourly) {
+    const start = `${r.startDate}T${r.startTime}`
+    const end = `${r.startDate}T${r.endTime}`
+    const hoursLabel = `${r.startTime!.slice(0, 5)}-${r.endTime!.slice(0, 5)}`
+    return {
+      id: `req-${r.id}`,
+      title: `${r.typeName} ${hoursLabel}${statusSuffix}`,
+      start,
+      end,
+      allDay: false,
+      backgroundColor: isPending ? 'transparent' : color,
+      borderColor: color,
+      textColor: isPending ? color : '#fff',
+      extendedProps: {
+        eventTypeName: r.typeName,
+        notes: r.notes,
+        isRequest: true,
+        statusName: r.statusName,
+      },
+    }
+  }
+
+  // FullCalendar all-day end is exclusive: add 1 day to endDate
+  const baseEnd = r.endDate ?? r.startDate
+  const d = new Date(baseEnd + 'T00:00:00')
+  d.setDate(d.getDate() + 1)
+  const endExclusive = d.toISOString().split('T')[0]
+
+  return {
+    id: `req-${r.id}`,
+    title: `${r.typeName}${statusSuffix}`,
+    start: r.startDate,
+    end: endExclusive,
+    allDay: true,
+    backgroundColor: isPending ? 'transparent' : color,
+    borderColor: color,
+    textColor: isPending ? color : '#fff',
+    extendedProps: {
+      eventTypeName: r.typeName,
+      notes: r.notes,
+      isRequest: true,
+      statusName: r.statusName,
+    },
+  }
+}
+
 export default function CalendarioPage() {
   const calendarRef = useRef<FullCalendar>(null)
   const [selectedEvent, setSelectedEvent] = useState<EventDetail | null>(null)
@@ -171,21 +241,39 @@ export default function CalendarioPage() {
     try {
       const from = info.startStr.split('T')[0]
       const to = info.endStr.split('T')[0]
-      // Parallel fetch: raw events (for non-Turno types) + effective schedule (for shifts with leaves applied)
-      const [rawRes, effectiveRes] = await Promise.all([
+      // Parallel fetch:
+      //  - raw events (ChiusuraAziendale and any merchant-created Ferie/Permessi/Malattia events)
+      //  - effective schedule (Turni with approved leaves applied as segments)
+      //  - employee's own requests (Ferie/Permessi/Malattia approved or pending) so the calendar
+      //    shows them as standalone blocks even when no shift exists on those days.
+      const [rawRes, effectiveRes, requestsRes] = await Promise.all([
         apiClient.get<ApiEvent[]>('/events/employee', { params: { from, to } }),
         apiClient.get<ApiEffectiveShift[]>('/events/employee/effective-schedule', { params: { from, to } }),
+        apiClient.get<ApiEmployeeRequest[]>('/employee-requests/my'),
       ])
 
       const raw = Array.isArray(rawRes.data) ? rawRes.data : []
       const effective = Array.isArray(effectiveRes.data) ? effectiveRes.data : []
+      const requests = Array.isArray(requestsRes.data) ? requestsRes.data : []
 
       // Turni are rendered from the effective schedule (segmented by leaves).
-      // Everything else (Ferie, Permessi, Malattia, ChiusuraAziendale) comes from the raw feed.
-      const nonShiftEvents = raw.filter(e => e.eventTypeName !== 'Turno').map(apiEventToFCEvent)
+      // ChiusuraAziendale comes from the raw feed.
+      const nonShiftEvents = raw
+        .filter(e => e.eventTypeName !== 'Turno')
+        .map(apiEventToFCEvent)
       const shiftEvents = effective.flatMap(effectiveShiftToFCEvents)
 
-      successCallback([...shiftEvents, ...nonShiftEvents])
+      // Render approved/pending leave requests; filter to current visible range.
+      const requestEvents = requests
+        .filter(r => r.statusName !== 'Rejected')
+        .filter(r => {
+          const rStart = r.startDate
+          const rEnd = r.endDate ?? r.startDate
+          return rEnd >= from && rStart <= to
+        })
+        .map(requestToFCEvent)
+
+      successCallback([...shiftEvents, ...nonShiftEvents, ...requestEvents])
     } catch (err) {
       failureCallback(err as Error)
       setError('Errore nel caricamento degli eventi')

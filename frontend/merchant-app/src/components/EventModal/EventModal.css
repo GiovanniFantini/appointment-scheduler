@@ -90,6 +90,14 @@
   transition: border-color 0.15s;
   width: 100%;
   box-sizing: border-box;
+  color-scheme: dark;
+}
+
+.modal-input[type="date"]::-webkit-calendar-picker-indicator,
+.modal-input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+  opacity: 0.8;
 }
 
 .modal-input:focus,

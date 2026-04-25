@@ -9,10 +9,12 @@ namespace AppointmentScheduler.Core.Services;
 public class EmployeeRequestService : IEmployeeRequestService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notificationService;
 
-    public EmployeeRequestService(ApplicationDbContext context)
+    public EmployeeRequestService(ApplicationDbContext context, INotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     public async Task<List<EmployeeRequestDto>> GetMerchantRequestsAsync(int merchantId, RequestStatus? status = null)
@@ -95,6 +97,8 @@ public class EmployeeRequestService : IEmployeeRequestService
 
         await _context.SaveChangesAsync();
 
+        await NotifyEmployeeAsync(employeeRequest, NotificationType.RequestApproved, "approvata");
+
         return MapToDto(employeeRequest);
     }
 
@@ -115,7 +119,36 @@ public class EmployeeRequestService : IEmployeeRequestService
 
         await _context.SaveChangesAsync();
 
+        await NotifyEmployeeAsync(employeeRequest, NotificationType.RequestRejected, "rifiutata");
+
         return MapToDto(employeeRequest);
+    }
+
+    /// <summary>
+    /// Crea una notifica per il dipendente sull'esito della review.
+    /// No-op se l'employee non è ancora associato a un User (pre-registrazione).
+    /// </summary>
+    private async Task NotifyEmployeeAsync(EmployeeRequest employeeRequest, NotificationType type, string outcomeLabel)
+    {
+        if (!employeeRequest.Employee.UserId.HasValue)
+            return;
+
+        var typeName = employeeRequest.Type.ToString();
+        var dateLabel = employeeRequest.EndDate.HasValue && employeeRequest.EndDate.Value != employeeRequest.StartDate
+            ? $"{employeeRequest.StartDate:dd/MM/yyyy} - {employeeRequest.EndDate.Value:dd/MM/yyyy}"
+            : $"{employeeRequest.StartDate:dd/MM/yyyy}";
+
+        var title = $"Richiesta {typeName} {outcomeLabel}";
+        var message = $"La tua richiesta di {typeName} del {dateLabel} è stata {outcomeLabel}.";
+        if (!string.IsNullOrWhiteSpace(employeeRequest.ReviewNotes))
+            message += $" Note: {employeeRequest.ReviewNotes}";
+
+        await _notificationService.CreateAsync(
+            employeeRequest.Employee.UserId.Value,
+            title,
+            message,
+            type,
+            employeeRequest.Id);
     }
 
     public async Task<List<EmployeeRequestDto>> GetEmployeeRequestsAsync(int employeeId, int merchantId, RequestStatus? status = null)

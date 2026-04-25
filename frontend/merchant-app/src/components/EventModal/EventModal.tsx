@@ -180,6 +180,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const handleSave = async () => {
     if (!title.trim()) { setError('Il titolo è obbligatorio'); return }
     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
+    if (!endDate) { setError('La data di fine è obbligatoria'); return }
+    if (endDate < startDate) { setError('La data di fine non può essere precedente alla data di inizio'); return }
 
     // Warn before persisting time changes when participant overrides exist
     if (timeChanged && hasOverrides) {
@@ -351,8 +353,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
               <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
             </div>
             <div className="modal-form-group">
-              <label className="modal-label">Data fine</label>
-              <input type="date" className="modal-input" value={endDate} onChange={e => setEndDate(e.target.value)} />
+              <label className="modal-label">Data fine *</label>
+              <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
             </div>
           </div>
 
