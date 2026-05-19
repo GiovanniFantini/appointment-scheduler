@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(echo \"EXIT=$?\")"
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Force)",
+      "Bash(Select-Object Name, Mode)"
     ]
   }
 }

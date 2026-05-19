@@ -10,6 +10,7 @@ import MerchantDetailPage from './pages/MerchantDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
 import DebugPage from './pages/DebugPage'
+import EmailTestPage from './pages/EmailTestPage'
 
 interface User {
   userId: number
@@ -165,6 +166,19 @@ function App() {
             user ? (
               <AppLayout user={user} onLogout={handleLogout} pageTitle="Debug">
                 <DebugPage />
+              </AppLayout>
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
+
+        <Route
+          path="/tools/email"
+          element={
+            user ? (
+              <AppLayout user={user} onLogout={handleLogout} pageTitle="Email Test">
+                <EmailTestPage />
               </AppLayout>
             ) : (
               <Navigate to="/login" replace />

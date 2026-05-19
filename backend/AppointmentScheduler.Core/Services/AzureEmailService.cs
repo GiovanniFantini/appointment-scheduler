@@ -13,6 +13,7 @@ public class AzureEmailService : IEmailService
     private readonly string _senderAddress;
     private readonly string _senderDisplayName;
     private readonly bool _isConfigured;
+    private readonly string? _endpointHost;
     private readonly EmailClient? _emailClient;
 
     /// <summary>Inizializza il servizio leggendo la configurazione da IConfiguration.</summary>
@@ -32,11 +33,13 @@ public class AzureEmailService : IEmailService
             connectionString.Contains("CONFIGURE_IN_PRODUCTION_OR_USE_DEVELOPMENT_SETTINGS"))
         {
             _isConfigured = false;
+            _endpointHost = ExtractEndpointHost(connectionString);
             _logger.LogWarning("Azure Communication Services non configurato (access key mancante o placeholder). Le email non verranno inviate.");
         }
         else
         {
             _isConfigured = true;
+            _endpointHost = ExtractEndpointHost(connectionString);
             _emailClient = new EmailClient(connectionString);
         }
     }
@@ -82,5 +85,26 @@ public class AzureEmailService : IEmailService
                 toAddress, ex.Status, ex.ErrorCode);
             throw;
         }
+    }
+
+    /// <inheritdoc />
+    public EmailServiceStatus GetStatus() =>
+        new(_isConfigured, _senderAddress, _senderDisplayName, _endpointHost);
+
+    private static string? ExtractEndpointHost(string? connectionString)
+    {
+        if (string.IsNullOrEmpty(connectionString)) return null;
+
+        foreach (var part in connectionString.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var trimmed = part.Trim();
+            if (!trimmed.StartsWith("endpoint=", StringComparison.OrdinalIgnoreCase)) continue;
+
+            var value = trimmed.Substring("endpoint=".Length).Trim();
+            if (Uri.TryCreate(value, UriKind.Absolute, out var uri)) return uri.Host;
+            return value;
+        }
+
+        return null;
     }
 }

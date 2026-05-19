@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import apiClient from '../lib/axios'
 import './DebugPage.css'
+
+interface EmailServiceStatus {
+  isConfigured: boolean
+  senderAddress: string
+  senderDisplayName: string
+  endpointHost: string | null
+}
 
 type ServiceStatus = 'idle' | 'checking' | 'online' | 'offline'
 
@@ -139,6 +147,9 @@ export default function DebugPage() {
     ENDPOINTS.map(e => ({ ...e, status: 'idle' }))
   )
   const [running, setRunning] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<EmailServiceStatus | null>(null)
+  const [emailStatusError, setEmailStatusError] = useState<string | null>(null)
+  const [emailStatusLoading, setEmailStatusLoading] = useState(false)
 
   const runChecks = useCallback(async () => {
     setRunning(true)
@@ -182,8 +193,26 @@ export default function DebugPage() {
     setRunning(false)
   }, [])
 
+  const loadEmailStatus = useCallback(async () => {
+    setEmailStatusLoading(true)
+    setEmailStatusError(null)
+    try {
+      const res = await apiClient.get<EmailServiceStatus>('/admin/tools/email/status')
+      setEmailStatus(res.data)
+    } catch (err: unknown) {
+      const e = err as { message?: string; response?: { status?: number } }
+      setEmailStatusError(
+        e.response?.status ? `HTTP ${e.response.status}` : e.message ?? 'Errore di rete'
+      )
+      setEmailStatus(null)
+    } finally {
+      setEmailStatusLoading(false)
+    }
+  }, [])
+
   // Auto-run on mount
   useEffect(() => { runChecks() }, [runChecks])
+  useEffect(() => { loadEmailStatus() }, [loadEmailStatus])
 
   const envRows = buildEnvRows()
   const sessionRows = buildSessionRows()
@@ -228,6 +257,68 @@ export default function DebugPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      {/* ── Email Service ── */}
+      <section className="dbg-section">
+        <div className="dbg-section-header">
+          <h2 className="dbg-section-title">Email Service (Azure Communication Services)</h2>
+          <button className="dbg-run-btn" onClick={loadEmailStatus} disabled={emailStatusLoading}>
+            {emailStatusLoading ? 'Caricamento…' : 'Aggiorna'}
+          </button>
+        </div>
+        <div className="dbg-card">
+          {emailStatusError && (
+            <div style={{ color: '#ef4444', fontSize: 13 }}>
+              Impossibile recuperare lo stato: {emailStatusError}
+            </div>
+          )}
+          {emailStatus && (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <span
+                  style={{
+                    fontSize: 12,
+                    padding: '3px 10px',
+                    borderRadius: 999,
+                    fontWeight: 600,
+                    background: emailStatus.isConfigured ? '#052e16' : '#450a0a',
+                    color: emailStatus.isConfigured ? '#22c55e' : '#ef4444',
+                    border: `1px solid ${emailStatus.isConfigured ? '#22c55e44' : '#ef444444'}`,
+                  }}
+                >
+                  {emailStatus.isConfigured ? 'Configurato' : 'Non configurato'}
+                </span>
+                <Link to="/tools/email" style={{ fontSize: 12, color: '#0ea5e9' }}>
+                  Vai al test email →
+                </Link>
+              </div>
+              <KVTable
+                rows={{
+                  'senderAddress': emailStatus.senderAddress,
+                  'senderDisplayName': emailStatus.senderDisplayName,
+                  'endpointHost': emailStatus.endpointHost ?? '(non disponibile)',
+                }}
+              />
+              {!emailStatus.isConfigured && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: '10px 12px',
+                    background: '#450a0a44',
+                    border: '1px solid #ef444466',
+                    borderRadius: 6,
+                    color: '#fecaca',
+                    fontSize: 13,
+                  }}
+                >
+                  Le email <strong>non vengono inviate</strong>: connection string ACS mancante o
+                  segnaposto. Configurare <code>AzureCommunicationServices:ConnectionString</code>.
+                </div>
+              )}
+            </>
+          )}
         </div>
       </section>
 
