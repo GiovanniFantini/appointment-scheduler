@@ -27,7 +27,14 @@ public class EventParticipant
     /// <summary>Note specifiche per il singolo partecipante (es. "rientra dopo visita").</summary>
     public string? ParticipantNotes { get; set; }
 
+    /// <summary>
+    /// Mansione con cui il dipendente partecipa al turno (es. "Cassiere"). Opzionale:
+    /// solo quando il merchant usa le mansioni e il turno ha un fabbisogno.
+    /// </summary>
+    public int? SkillId { get; set; }
+
     // Navigation properties
     public Event Event { get; set; } = null!;
     public Employee Employee { get; set; } = null!;
+    public Skill? Skill { get; set; }
 }

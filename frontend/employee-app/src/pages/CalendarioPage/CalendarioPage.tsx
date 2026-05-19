@@ -21,7 +21,25 @@ interface ApiEvent {
   endTime?: string
   isOnCall: boolean
   notes?: string
-  participants: Array<{ employeeId: number; fullName: string; isOwner: boolean }>
+  participants: Array<{
+    employeeId: number
+    fullName: string
+    isOwner: boolean
+    skillId?: number | null
+    skillName?: string | null
+    skillColor?: string | null
+  }>
+}
+
+function getCurrentEmployeeId(): number | null {
+  try {
+    const raw = localStorage.getItem('user')
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { employeeId?: number }
+    return parsed.employeeId ?? null
+  } catch {
+    return null
+  }
 }
 
 // Matches EmployeeRequestDto from server.
@@ -95,7 +113,13 @@ function apiEventToFCEvent(e: ApiEvent): EventInput {
     extendedProps: {
       eventTypeName: e.eventTypeName,
       isOnCall: e.isOnCall,
-      participants: e.participants.map(p => ({ id: p.employeeId, name: p.fullName })),
+      participants: e.participants.map(p => ({
+        id: p.employeeId,
+        name: p.fullName,
+        skillName: p.skillName ?? null,
+        skillColor: p.skillColor ?? null,
+      })),
+      apiEvent: e,
       notes: e.notes,
     },
   }
@@ -282,6 +306,15 @@ export default function CalendarioPage() {
 
   const handleEventClick = (info: EventClickArg) => {
     const ep = info.event.extendedProps
+    const apiEvent = ep.apiEvent as ApiEvent | undefined
+    const myId = getCurrentEmployeeId()
+    let myParticipantSkill: { name: string; color: string } | null = null
+    if (apiEvent && myId) {
+      const me = apiEvent.participants.find(p => p.employeeId === myId)
+      if (me?.skillName) {
+        myParticipantSkill = { name: me.skillName, color: me.skillColor ?? '#3b82f6' }
+      }
+    }
     setSelectedEvent({
       id: info.event.id,
       title: info.event.title,
@@ -291,6 +324,7 @@ export default function CalendarioPage() {
       eventType: ep.eventTypeName as string | undefined,
       isOnCall: ep.isOnCall as boolean | undefined,
       participants: ep.participants as EventDetail['participants'],
+      myParticipantSkill,
       notes: ep.notes as string | undefined,
     })
   }

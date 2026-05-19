@@ -9,6 +9,7 @@ import DashboardPage from './pages/DashboardPage/DashboardPage'
 import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
 import RichiestePage from './pages/RichiestePage/RichiestePage'
 import RisorsePage from './pages/RisorsePage/RisorsePage'
+import MansioniPage from './pages/MansioniPage/MansioniPage'
 import RuoliPage from './pages/RuoliPage/RuoliPage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
@@ -79,6 +80,7 @@ function App(_props: AppProps) {
           <Route path="/pianificazione" element={<PianificazionePage user={user!} />} />
           <Route path="/richieste" element={<RichiestePage />} />
           <Route path="/risorse" element={<RisorsePage user={user!} />} />
+          <Route path="/mansioni" element={<MansioniPage />} />
           <Route path="/ruoli" element={<RuoliPage />} />
           <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />

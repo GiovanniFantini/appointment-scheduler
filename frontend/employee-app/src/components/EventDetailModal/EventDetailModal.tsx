@@ -1,6 +1,13 @@
 import { formatBrowserDate, formatBrowserDateTime, parseDateOnly } from '../../lib/dateUtils'
 import './EventDetailModal.css'
 
+export interface EventDetailParticipant {
+  id: number
+  name: string
+  skillName?: string | null
+  skillColor?: string | null
+}
+
 export interface EventDetail {
   id: number | string
   title: string
@@ -9,7 +16,9 @@ export interface EventDetail {
   eventType?: string
   allDay?: boolean
   isOnCall?: boolean
-  participants?: Array<{ id: number; name: string }>
+  participants?: EventDetailParticipant[]
+  /** Mansione con cui l'utente corrente partecipa al turno (se applicabile). */
+  myParticipantSkill?: { name: string; color: string } | null
   notes?: string
   extendedProps?: Record<string, unknown>
 }
@@ -77,6 +86,14 @@ export default function EventDetailModal({ event, onClose }: Props) {
             {isOnCall && (
               <span className="oncall-badge">Reperibile</span>
             )}
+            {event.myParticipantSkill && (
+              <span
+                className="my-skill-badge"
+                style={{ backgroundColor: event.myParticipantSkill.color + '22', color: event.myParticipantSkill.color, borderColor: event.myParticipantSkill.color + '66' }}
+              >
+                Partecipi come: {event.myParticipantSkill.name}
+              </span>
+            )}
           </div>
         </div>
 
@@ -105,7 +122,17 @@ export default function EventDetailModal({ event, onClose }: Props) {
               <span className="event-detail-label">Partecipanti</span>
               <div className="participants-list">
                 {participants.map(p => (
-                  <span key={p.id} className="participant-chip">{p.name}</span>
+                  <span key={p.id} className="participant-chip">
+                    {p.name}
+                    {p.skillName && (
+                      <span
+                        className="participant-skill-tag"
+                        style={{ backgroundColor: (p.skillColor ?? '#3b82f6') + '33', color: p.skillColor ?? '#3b82f6' }}
+                      >
+                        {p.skillName}
+                      </span>
+                    )}
+                  </span>
                 ))}
               </div>
             </div>

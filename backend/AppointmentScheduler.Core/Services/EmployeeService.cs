@@ -25,6 +25,8 @@ public class EmployeeService : IEmployeeService
     {
         var memberships = await _context.EmployeeMemberships
             .Include(m => m.Employee)
+                .ThenInclude(e => e.Skills)
+                    .ThenInclude(es => es.Skill)
             .Include(m => m.Role)
                 .ThenInclude(r => r.Features)
             .Where(m => m.MerchantId == merchantId && m.IsActive)
@@ -32,7 +34,7 @@ public class EmployeeService : IEmployeeService
             .ThenBy(m => m.Employee.FirstName)
             .ToListAsync();
 
-        return memberships.Select(m => MapToDto(m.Employee, m)).ToList();
+        return memberships.Select(m => MapToDto(m.Employee, m, merchantId)).ToList();
     }
 
     /// <summary>
@@ -42,6 +44,8 @@ public class EmployeeService : IEmployeeService
     {
         var membership = await _context.EmployeeMemberships
             .Include(m => m.Employee)
+                .ThenInclude(e => e.Skills)
+                    .ThenInclude(es => es.Skill)
             .Include(m => m.Role)
                 .ThenInclude(r => r.Features)
             .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
@@ -49,7 +53,7 @@ public class EmployeeService : IEmployeeService
         if (membership == null)
             return null;
 
-        return MapToDto(membership.Employee, membership);
+        return MapToDto(membership.Employee, membership, merchantId);
     }
 
     /// <summary>
@@ -112,6 +116,8 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync();
 
+        await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
+
         // Return with full membership context
         return (await GetByIdAsync(employee.Id, merchantId))!;
     }
@@ -142,11 +148,16 @@ public class EmployeeService : IEmployeeService
 
         await _context.SaveChangesAsync();
 
+        await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
+
         // Reload role with features
         await _context.Entry(membership).Reference(m => m.Role).LoadAsync();
         await _context.Entry(membership.Role).Collection(r => r.Features).LoadAsync();
+        await _context.Entry(employee).Collection(e => e.Skills).LoadAsync();
+        foreach (var es in employee.Skills)
+            await _context.Entry(es).Reference(x => x.Skill).LoadAsync();
 
-        return MapToDto(employee, membership);
+        return MapToDto(employee, membership, merchantId);
     }
 
     /// <summary>
@@ -165,12 +176,60 @@ public class EmployeeService : IEmployeeService
         return true;
     }
 
-    private static EmployeeDto MapToDto(Employee employee, EmployeeMembership membership)
+    /// <summary>
+    /// Sincronizza l'elenco delle mansioni di un employee con quelle passate (additive + remove).
+    /// Considera solo Skill che appartengono al merchant corrente per evitare assegnazioni cross-tenant.
+    /// </summary>
+    private async Task SyncEmployeeSkillsAsync(int employeeId, int merchantId, List<int> skillIds)
+    {
+        var validSkillIds = await _context.Skills
+            .Where(s => s.MerchantId == merchantId && skillIds.Contains(s.Id))
+            .Select(s => s.Id)
+            .ToListAsync();
+        var desired = new HashSet<int>(validSkillIds);
+
+        var existing = await _context.EmployeeSkills
+            .Where(es => es.EmployeeId == employeeId
+                         && _context.Skills.Any(s => s.Id == es.SkillId && s.MerchantId == merchantId))
+            .ToListAsync();
+
+        var existingSet = existing.Select(e => e.SkillId).ToHashSet();
+
+        // Remove
+        var toRemove = existing.Where(e => !desired.Contains(e.SkillId)).ToList();
+        if (toRemove.Count > 0)
+            _context.EmployeeSkills.RemoveRange(toRemove);
+
+        // Add
+        foreach (var sid in desired.Where(s => !existingSet.Contains(s)))
+        {
+            _context.EmployeeSkills.Add(new EmployeeSkill
+            {
+                EmployeeId = employeeId,
+                SkillId = sid,
+                AssignedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    private static EmployeeDto MapToDto(Employee employee, EmployeeMembership membership, int merchantId)
     {
         var activeFeatures = membership.Role?.Features
             .Where(f => f.IsEnabled)
             .Select(f => f.Feature.ToString())
             .ToList() ?? new List<string>();
+
+        var skills = employee.Skills
+            .Where(es => es.Skill != null && es.Skill.MerchantId == merchantId)
+            .Select(es => new EmployeeSkillDto
+            {
+                SkillId = es.SkillId,
+                SkillName = es.Skill!.Name,
+                SkillColor = es.Skill!.Color
+            })
+            .ToList();
 
         return new EmployeeDto
         {
@@ -184,7 +243,8 @@ public class EmployeeService : IEmployeeService
             CreatedAt = employee.CreatedAt,
             RoleId = membership.RoleId,
             RoleName = membership.Role?.Name,
-            ActiveFeatures = activeFeatures
+            ActiveFeatures = activeFeatures,
+            Skills = skills
         };
     }
 }

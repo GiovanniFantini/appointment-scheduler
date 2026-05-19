@@ -3,7 +3,9 @@
     "allow": [
       "Bash(echo \"EXIT=$?\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Force)",
-      "Bash(Select-Object Name, Mode)"
+      "Bash(Select-Object Name, Mode)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\backend\\\\\" -Directory -ErrorAction SilentlyContinue | Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Directory)"
     ]
   }
 }

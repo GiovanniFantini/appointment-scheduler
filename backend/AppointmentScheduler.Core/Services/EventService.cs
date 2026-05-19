@@ -28,6 +28,10 @@ public class EventService : IEventService
         var query = _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Skill)
+            .Include(e => e.RequiredSkills)
+                .ThenInclude(rs => rs.Skill)
             .Where(e => e.MerchantId == merchantId)
             .AsQueryable();
 
@@ -56,6 +60,10 @@ public class EventService : IEventService
         var query = _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Skill)
+            .Include(e => e.RequiredSkills)
+                .ThenInclude(rs => rs.Skill)
             .Where(e => e.MerchantId == merchantId &&
                         (e.EventType == EventType.ChiusuraAziendale ||
                          e.Participants.Any(p => p.EmployeeId == employeeId)))
@@ -83,6 +91,10 @@ public class EventService : IEventService
         var evt = await _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Skill)
+            .Include(e => e.RequiredSkills)
+                .ThenInclude(rs => rs.Skill)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         return evt == null ? null : MapToDto(evt);
@@ -112,11 +124,12 @@ public class EventService : IEventService
         };
 
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
+        var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
 
         // Add owner participants
         foreach (var empId in request.OwnerEmployeeIds.Distinct())
         {
-            evt.Participants.Add(BuildParticipant(empId, true, overrideMap));
+            evt.Participants.Add(BuildParticipant(empId, true, overrideMap, skillMap));
         }
 
         // Add co-owner participants (not already added as owner)
@@ -125,17 +138,24 @@ public class EventService : IEventService
         {
             if (!ownerIds.Contains(empId))
             {
-                evt.Participants.Add(BuildParticipant(empId, false, overrideMap));
+                evt.Participants.Add(BuildParticipant(empId, false, overrideMap, skillMap));
             }
+        }
+
+        // Fabbisogno mansioni
+        foreach (var rs in request.RequiredSkills.Where(r => r.Quantity > 0).DistinctBy(r => r.SkillId))
+        {
+            evt.RequiredSkills.Add(new EventRequiredSkill
+            {
+                SkillId = rs.SkillId,
+                Quantity = rs.Quantity
+            });
         }
 
         _context.Events.Add(evt);
         await _context.SaveChangesAsync();
 
-        // Reload with navigation properties
-        await _context.Entry(evt).Collection(e => e.Participants).LoadAsync();
-        foreach (var p in evt.Participants)
-            await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
+        await ReloadEventNavigationAsync(evt);
 
         var dto = MapToDto(evt);
         if (evt.EventType == EventType.Turno)
@@ -150,6 +170,7 @@ public class EventService : IEventService
     {
         var evt = await _context.Events
             .Include(e => e.Participants)
+            .Include(e => e.RequiredSkills)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         if (evt == null)
@@ -169,6 +190,7 @@ public class EventService : IEventService
         evt.UpdatedAt = DateTime.UtcNow;
 
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
+        var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
 
         // Replace participants
         _context.EventParticipants.RemoveRange(evt.Participants);
@@ -176,7 +198,7 @@ public class EventService : IEventService
 
         foreach (var empId in request.OwnerEmployeeIds.Distinct())
         {
-            var p = BuildParticipant(empId, true, overrideMap);
+            var p = BuildParticipant(empId, true, overrideMap, skillMap);
             p.EventId = evt.Id;
             evt.Participants.Add(p);
         }
@@ -186,18 +208,28 @@ public class EventService : IEventService
         {
             if (!ownerIds.Contains(empId))
             {
-                var p = BuildParticipant(empId, false, overrideMap);
+                var p = BuildParticipant(empId, false, overrideMap, skillMap);
                 p.EventId = evt.Id;
                 evt.Participants.Add(p);
             }
         }
 
+        // Replace RequiredSkills
+        _context.EventRequiredSkills.RemoveRange(evt.RequiredSkills);
+        evt.RequiredSkills.Clear();
+        foreach (var rs in request.RequiredSkills.Where(r => r.Quantity > 0).DistinctBy(r => r.SkillId))
+        {
+            evt.RequiredSkills.Add(new EventRequiredSkill
+            {
+                EventId = evt.Id,
+                SkillId = rs.SkillId,
+                Quantity = rs.Quantity
+            });
+        }
+
         await _context.SaveChangesAsync();
 
-        // Reload with Employee navigation
-        await _context.Entry(evt).Collection(e => e.Participants).LoadAsync();
-        foreach (var p in evt.Participants)
-            await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
+        await ReloadEventNavigationAsync(evt);
 
         var dto = MapToDto(evt);
         if (evt.EventType == EventType.Turno)
@@ -230,6 +262,10 @@ public class EventService : IEventService
         var original = await _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Skill)
+            .Include(e => e.RequiredSkills)
+                .ThenInclude(rs => rs.Skill)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         if (original == null)
@@ -268,7 +304,16 @@ public class EventService : IEventService
                     IsOwner = participant.IsOwner,
                     StartTimeOverride = participant.StartTimeOverride,
                     EndTimeOverride = participant.EndTimeOverride,
-                    ParticipantNotes = participant.ParticipantNotes
+                    ParticipantNotes = participant.ParticipantNotes,
+                    SkillId = participant.SkillId
+                });
+            }
+            foreach (var rs in original.RequiredSkills)
+            {
+                clone.RequiredSkills.Add(new EventRequiredSkill
+                {
+                    SkillId = rs.SkillId,
+                    Quantity = rs.Quantity
                 });
             }
 
@@ -279,13 +324,8 @@ public class EventService : IEventService
         _context.Events.AddRange(cloned);
         await _context.SaveChangesAsync();
 
-        // Reload participants with Employee for all clones
         foreach (var clone in cloned)
-        {
-            await _context.Entry(clone).Collection(e => e.Participants).LoadAsync();
-            foreach (var p in clone.Participants)
-                await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
-        }
+            await ReloadEventNavigationAsync(clone);
 
         var results = new List<EventDto>();
         foreach (var clone in cloned)
@@ -310,6 +350,10 @@ public class EventService : IEventService
         var sourceQuery = _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Skill)
+            .Include(e => e.RequiredSkills)
+                .ThenInclude(rs => rs.Skill)
             .Where(e => e.MerchantId == merchantId
                         && e.StartDate >= sourceStart
                         && e.StartDate <= sourceEnd);
@@ -361,7 +405,16 @@ public class EventService : IEventService
                         IsOwner = p.IsOwner,
                         StartTimeOverride = p.StartTimeOverride,
                         EndTimeOverride = p.EndTimeOverride,
-                        ParticipantNotes = p.ParticipantNotes
+                        ParticipantNotes = p.ParticipantNotes,
+                        SkillId = p.SkillId
+                    });
+                }
+                foreach (var rs in src.RequiredSkills)
+                {
+                    clone.RequiredSkills.Add(new EventRequiredSkill
+                    {
+                        SkillId = rs.SkillId,
+                        Quantity = rs.Quantity
                     });
                 }
 
@@ -373,11 +426,7 @@ public class EventService : IEventService
         await _context.SaveChangesAsync();
 
         foreach (var clone in cloned)
-        {
-            await _context.Entry(clone).Collection(e => e.Participants).LoadAsync();
-            foreach (var p in clone.Participants)
-                await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
-        }
+            await ReloadEventNavigationAsync(clone);
 
         var results = new List<EventDto>();
         foreach (var clone in cloned)
@@ -541,7 +590,11 @@ public class EventService : IEventService
         return map;
     }
 
-    private static EventParticipant BuildParticipant(int employeeId, bool isOwner, IReadOnlyDictionary<int, ParticipantOverride> overrideMap)
+    private static EventParticipant BuildParticipant(
+        int employeeId,
+        bool isOwner,
+        IReadOnlyDictionary<int, ParticipantOverride> overrideMap,
+        IReadOnlyDictionary<int, int?> skillMap)
     {
         var p = new EventParticipant
         {
@@ -554,7 +607,61 @@ public class EventService : IEventService
             p.EndTimeOverride = ov.EndTimeOverride;
             p.ParticipantNotes = ov.ParticipantNotes;
         }
+        if (skillMap.TryGetValue(employeeId, out var skillId))
+        {
+            p.SkillId = skillId;
+        }
         return p;
+    }
+
+    private static Dictionary<int, int?> BuildParticipantSkillMap(IEnumerable<ParticipantSkillAssignment>? assignments)
+    {
+        var map = new Dictionary<int, int?>();
+        if (assignments == null) return map;
+        foreach (var a in assignments)
+        {
+            map[a.EmployeeId] = a.SkillId;
+        }
+        return map;
+    }
+
+    private async Task ReloadEventNavigationAsync(Event evt)
+    {
+        await _context.Entry(evt).Collection(e => e.Participants).LoadAsync();
+        foreach (var p in evt.Participants)
+        {
+            await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
+            if (p.SkillId.HasValue)
+                await _context.Entry(p).Reference(x => x.Skill).LoadAsync();
+        }
+        await _context.Entry(evt).Collection(e => e.RequiredSkills).LoadAsync();
+        foreach (var rs in evt.RequiredSkills)
+            await _context.Entry(rs).Reference(x => x.Skill).LoadAsync();
+    }
+
+    private static CoverageStatus CalculateCoverage(Event evt, out Dictionary<int, int> coveredBySkill)
+    {
+        var covered = new Dictionary<int, int>();
+        coveredBySkill = covered;
+
+        if (evt.RequiredSkills.Count == 0)
+            return CoverageStatus.None;
+
+        foreach (var p in evt.Participants.Where(x => x.SkillId.HasValue))
+        {
+            var sid = p.SkillId!.Value;
+            covered[sid] = covered.GetValueOrDefault(sid) + 1;
+        }
+
+        if (evt.Participants.Count == 0)
+            return CoverageStatus.Empty;
+
+        var allCovered = evt.RequiredSkills.All(rs => covered.GetValueOrDefault(rs.SkillId) >= rs.Quantity);
+        if (allCovered)
+            return CoverageStatus.Covered;
+
+        var anyCovered = evt.RequiredSkills.Any(rs => covered.GetValueOrDefault(rs.SkillId) > 0);
+        return anyCovered ? CoverageStatus.Partial : CoverageStatus.Empty;
     }
 
     /// <summary>
@@ -580,11 +687,65 @@ public class EventService : IEventService
             all.AddRange(conflicts);
         }
 
+        all.AddRange(await DetectSkillMismatchesAsync(evt));
+
         return all;
+    }
+
+    /// <summary>
+    /// Verifica che ogni partecipante assegnato a una mansione la possieda effettivamente in EmployeeSkills.
+    /// </summary>
+    private async Task<List<ShiftConflictDto>> DetectSkillMismatchesAsync(Event evt)
+    {
+        var result = new List<ShiftConflictDto>();
+        var assigned = evt.Participants.Where(p => p.SkillId.HasValue).ToList();
+        if (assigned.Count == 0) return result;
+
+        var employeeIds = assigned.Select(p => p.EmployeeId).Distinct().ToList();
+        // Carichiamo le righe (employeeId, skillId) e raggruppiamo in memoria: più safe
+        // rispetto a GroupBy lato EF, e il payload è limitato dalla cardinalità dei partecipanti.
+        var rows = await _context.EmployeeSkills
+            .Where(es => employeeIds.Contains(es.EmployeeId))
+            .Select(es => new { es.EmployeeId, es.SkillId })
+            .ToListAsync();
+        var ownedByEmployee = rows
+            .GroupBy(r => r.EmployeeId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.SkillId).ToHashSet());
+
+        foreach (var p in assigned)
+        {
+            var sid = p.SkillId!.Value;
+            var owned = ownedByEmployee.GetValueOrDefault(p.EmployeeId);
+            if (owned != null && owned.Contains(sid)) continue;
+
+            var skillName = p.Skill?.Name
+                ?? evt.RequiredSkills.FirstOrDefault(rs => rs.SkillId == sid)?.Skill?.Name
+                ?? "mansione";
+
+            var fullName = p.Employee != null
+                ? $"{p.Employee.FirstName} {p.Employee.LastName}".Trim()
+                : string.Empty;
+
+            result.Add(new ShiftConflictDto
+            {
+                EmployeeId = p.EmployeeId,
+                EmployeeFullName = fullName,
+                Date = evt.StartDate,
+                Kind = ShiftConflictKind.SkillMismatch,
+                SkillId = sid,
+                SkillName = skillName,
+                Message = $"{(string.IsNullOrEmpty(fullName) ? "Il dipendente" : fullName)} è assegnato come {skillName} ma non possiede la mansione."
+            });
+        }
+
+        return result;
     }
 
     private static EventDto MapToDto(Event evt)
     {
+        var coverage = CalculateCoverage(evt, out var coveredBySkillOut);
+        var coveredBySkill = coveredBySkillOut;
+
         return new EventDto
         {
             Id = evt.Id,
@@ -601,6 +762,7 @@ public class EventService : IEventService
             NotificationEnabled = evt.NotificationEnabled,
             Notes = evt.Notes,
             CreatedAt = evt.CreatedAt,
+            CoverageStatus = coverage,
             Participants = evt.Participants.Select(p => new EventParticipantDto
             {
                 EmployeeId = p.EmployeeId,
@@ -610,7 +772,18 @@ public class EventService : IEventService
                 IsOwner = p.IsOwner,
                 StartTimeOverride = p.StartTimeOverride,
                 EndTimeOverride = p.EndTimeOverride,
-                ParticipantNotes = p.ParticipantNotes
+                ParticipantNotes = p.ParticipantNotes,
+                SkillId = p.SkillId,
+                SkillName = p.Skill?.Name,
+                SkillColor = p.Skill?.Color
+            }).ToList(),
+            RequiredSkills = evt.RequiredSkills.Select(rs => new EventRequiredSkillDto
+            {
+                SkillId = rs.SkillId,
+                SkillName = rs.Skill?.Name ?? string.Empty,
+                SkillColor = rs.Skill?.Color ?? "#3b82f6",
+                Quantity = rs.Quantity,
+                CoveredQuantity = coveredBySkill.GetValueOrDefault(rs.SkillId)
             }).ToList()
         };
     }

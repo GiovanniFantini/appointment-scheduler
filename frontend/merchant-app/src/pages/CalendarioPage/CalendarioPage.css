@@ -185,3 +185,244 @@
   border-radius: 2px;
   flex-shrink: 0;
 }
+
+/* ── Header actions (toolbar) ─────────────────────────────────── */
+.calendario-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: #475569;
+}
+
+/* ── Coverage dot e icone su card calendario ─────────────────── */
+.fc-coverage-dot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
+
+.fc-recurring-icon {
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  font-size: 11px;
+  pointer-events: none;
+}
+
+.fc-event {
+  position: relative;
+}
+
+/* ── Toolbar filtri (mansioni + dipendente) ─────────────────────── */
+.calendar-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+}
+
+.calendar-filters-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.calendar-filters-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calendar-filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.skill-filter-chip {
+  background: transparent;
+  border: 1.5px solid #475569;
+  color: #94a3b8;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.skill-filter-chip:hover {
+  filter: brightness(1.15);
+}
+
+.skill-filter-chip.active {
+  font-weight: 600;
+}
+
+.skill-filter-clear {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.skill-filter-clear:hover {
+  background: rgba(255,255,255,0.06);
+  color: #f1f5f9;
+}
+
+.calendar-filter-select {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  min-width: 160px;
+}
+
+.calendar-filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+/* ── Popover hover sulla card evento (stile Google Calendar) ──── */
+.event-hover-popover {
+  position: absolute;
+  transform: translateX(-50%);
+  z-index: 4000;
+  min-width: 240px;
+  max-width: 320px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 12px 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+  color: #e2e8f0;
+  font-size: 13px;
+  pointer-events: none;
+  animation: fadeIn 0.12s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.event-hover-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #f1f5f9;
+  margin-bottom: 2px;
+}
+
+.event-hover-meta {
+  color: #94a3b8;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.event-hover-section {
+  margin-top: 8px;
+}
+
+.event-hover-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+  letter-spacing: 0.05em;
+}
+
+.event-hover-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.event-hover-chip {
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.event-hover-participants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.event-hover-participants li {
+  font-size: 12px;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-hover-chip-inline {
+  display: inline-block;
+  font-size: 10px;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+.event-hover-coverage {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #1f2937;
+  font-size: 12px;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.event-hover-coverage-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}

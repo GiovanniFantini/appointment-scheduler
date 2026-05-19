@@ -2,6 +2,18 @@ using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.Shared.DTOs;
 
+public enum CoverageStatus
+{
+    /// <summary>Nessun fabbisogno definito o nessun partecipante.</summary>
+    None = 0,
+    /// <summary>Fabbisogno presente ma nessun partecipante con la mansione richiesta.</summary>
+    Empty = 1,
+    /// <summary>Almeno una mansione richiesta non è coperta dalla quantità necessaria.</summary>
+    Partial = 2,
+    /// <summary>Tutte le mansioni richieste sono coperte.</summary>
+    Covered = 3
+}
+
 public class EventDto
 {
     public int Id { get; set; }
@@ -21,6 +33,13 @@ public class EventDto
     public DateTime CreatedAt { get; set; }
     public List<EventParticipantDto> Participants { get; set; } = new();
 
+    /// <summary>Fabbisogno mansioni per il turno (lista vuota se non definito).</summary>
+    public List<EventRequiredSkillDto> RequiredSkills { get; set; } = new();
+
+    /// <summary>Stato copertura calcolato lato server in base a RequiredSkills e Participants.SkillId.</summary>
+    public CoverageStatus CoverageStatus { get; set; } = CoverageStatus.None;
+    public string CoverageStatusName => CoverageStatus.ToString();
+
     /// <summary>
     /// Avvisi non bloccanti emessi durante la mutation (create/update/clone):
     /// conflitti con ferie approvate, sovrapposizioni di turni, ecc.
@@ -37,6 +56,11 @@ public class EventParticipantDto
     public TimeOnly? StartTimeOverride { get; set; }
     public TimeOnly? EndTimeOverride { get; set; }
     public string? ParticipantNotes { get; set; }
+
+    /// <summary>Mansione con cui il dipendente partecipa al turno (opzionale).</summary>
+    public int? SkillId { get; set; }
+    public string? SkillName { get; set; }
+    public string? SkillColor { get; set; }
 }
 
 /// <summary>
@@ -67,6 +91,8 @@ public class CreateEventRequest
     public List<int> OwnerEmployeeIds { get; set; } = new();
     public List<int> CoOwnerEmployeeIds { get; set; } = new();
     public List<ParticipantOverride> ParticipantOverrides { get; set; } = new();
+    public List<EventRequiredSkillInput> RequiredSkills { get; set; } = new();
+    public List<ParticipantSkillAssignment> ParticipantSkills { get; set; } = new();
 }
 
 public class UpdateEventRequest
@@ -85,6 +111,8 @@ public class UpdateEventRequest
     public List<int> OwnerEmployeeIds { get; set; } = new();
     public List<int> CoOwnerEmployeeIds { get; set; } = new();
     public List<ParticipantOverride> ParticipantOverrides { get; set; } = new();
+    public List<EventRequiredSkillInput> RequiredSkills { get; set; } = new();
+    public List<ParticipantSkillAssignment> ParticipantSkills { get; set; } = new();
 }
 
 public class CloneEventRequest
@@ -111,12 +139,14 @@ public class CloneWeekRequest
 public enum ShiftConflictKind
 {
     LeaveOverlap = 1,
-    ShiftOverlap = 2
+    ShiftOverlap = 2,
+    SkillMismatch = 3
 }
 
 /// <summary>
 /// Avviso non bloccante: segnala che l'assegnazione di un dipendente a un turno
-/// si sovrappone con ferie approvate o con un altro turno.
+/// si sovrappone con ferie approvate, con un altro turno, oppure che la mansione
+/// con cui partecipa non è tra quelle dichiarate sull'employee.
 /// </summary>
 public class ShiftConflictDto
 {
@@ -137,6 +167,10 @@ public class ShiftConflictDto
 
     public TimeOnly? ConflictStart { get; set; }
     public TimeOnly? ConflictEnd { get; set; }
+
+    /// <summary>Mansione richiesta non posseduta dal dipendente (solo per SkillMismatch).</summary>
+    public int? SkillId { get; set; }
+    public string? SkillName { get; set; }
 
     public string Message { get; set; } = string.Empty;
 }

@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import apiClient from '../../lib/axios'
+import { skillsApi, Skill, SuggestedEmployee } from '../../lib/api/skills'
 import './EventModal.css'
 
 export type EventType = 'Turno' | 'ChiusuraAziendale' | 'Ferie' | 'Permessi' | 'Malattia'
@@ -21,6 +22,16 @@ export interface ParticipantOverrideInput {
   participantNotes?: string
 }
 
+export interface ParticipantSkillInput {
+  employeeId: number
+  skillId?: number | null
+}
+
+export interface RequiredSkillInput {
+  skillId: number
+  quantity: number
+}
+
 export interface CalEvent {
   id?: number
   title: string
@@ -34,6 +45,8 @@ export interface CalEvent {
   ownerEmployeeIds?: number[]
   coOwnerEmployeeIds?: number[]
   participantOverrides?: ParticipantOverrideInput[]
+  participantSkills?: ParticipantSkillInput[]
+  requiredSkills?: RequiredSkillInput[]
   recurrence?: RecurrenceType
   notificationEnabled?: boolean
   notes?: string
@@ -43,6 +56,7 @@ interface Employee {
   id: number
   firstName: string
   lastName: string
+  skills?: { skillId: number; skillName: string; skillColor: string }[]
 }
 
 interface ShiftConflictDto {
@@ -50,13 +64,15 @@ interface ShiftConflictDto {
   employeeFullName: string
   date: string
   kind: number
-  kindName: string
+  kindName: 'LeaveOverlap' | 'ShiftOverlap' | 'SkillMismatch' | string
   requestId?: number
   requestType?: number
   conflictingEventId?: number
   conflictingEventTitle?: string
   conflictStart?: string
   conflictEnd?: string
+  skillId?: number
+  skillName?: string
   message: string
 }
 
@@ -117,8 +133,15 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const [cloneWeeks, setCloneWeeks] = useState(1)
   const [participantOverrides, setParticipantOverrides] = useState<ParticipantOverrideInput[]>(event?.participantOverrides ?? [])
   const [showOverrides, setShowOverrides] = useState((event?.participantOverrides ?? []).length > 0)
+  const [requiredSkills, setRequiredSkills] = useState<RequiredSkillInput[]>(event?.requiredSkills ?? [])
+  const [participantSkills, setParticipantSkills] = useState<ParticipantSkillInput[]>(event?.participantSkills ?? [])
+  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [repeatWeekly, setRepeatWeekly] = useState(false)
+  const [repeatUntil, setRepeatUntil] = useState('')
+  const [suggestedBySkill, setSuggestedBySkill] = useState<Record<number, SuggestedEmployee[]>>({})
 
   const [employees, setEmployees] = useState<Employee[]>([])
+  const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [warnings, setWarnings] = useState<ShiftConflictDto[]>([])
@@ -133,6 +156,18 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     apiClient.get('/employees').then(res => {
       if (Array.isArray(res.data)) setEmployees(res.data as Employee[])
     }).catch(() => {})
+    skillsApi.list().then(list => setSkills(list.filter(s => s.isActive))).catch(() => {})
+  }, [])
+
+  // Inizializza repeatWeekly da una recurrence preesistente (formato semplice: "WEEKLY;UNTIL=YYYY-MM-DD")
+  useEffect(() => {
+    const r = event?.recurrence
+    if (typeof r === 'string' && r.startsWith('WEEKLY')) {
+      setRepeatWeekly(true)
+      const m = r.match(/UNTIL=(\d{4}-\d{2}-\d{2})/)
+      if (m) setRepeatUntil(m[1])
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Prune stale overrides when a participant is deselected
@@ -153,6 +188,76 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const getOverride = (employeeId: number): ParticipantOverrideInput | undefined =>
     participantOverrides.find(o => o.employeeId === employeeId)
 
+  const setParticipantSkill = (employeeId: number, skillId: number | null) => {
+    setParticipantSkills(prev => {
+      const existing = prev.find(p => p.employeeId === employeeId)
+      if (existing) {
+        return prev.map(p => p.employeeId === employeeId ? { ...p, skillId } : p)
+      }
+      return [...prev, { employeeId, skillId }]
+    })
+  }
+
+  const getParticipantSkillId = (employeeId: number): number | null => {
+    const p = participantSkills.find(x => x.employeeId === employeeId)
+    return p?.skillId ?? null
+  }
+
+  const addRequiredSkill = (skillId: number) => {
+    setRequiredSkills(prev => {
+      if (prev.some(r => r.skillId === skillId)) return prev
+      return [...prev, { skillId, quantity: 1 }]
+    })
+  }
+
+  const updateRequiredQuantity = (skillId: number, delta: number) => {
+    setRequiredSkills(prev =>
+      prev
+        .map(r => r.skillId === skillId ? { ...r, quantity: Math.max(0, r.quantity + delta) } : r)
+        .filter(r => r.quantity > 0)
+    )
+  }
+
+  const removeRequiredSkill = (skillId: number) => {
+    setRequiredSkills(prev => prev.filter(r => r.skillId !== skillId))
+  }
+
+  // Conteggio copertura per mansione (in tempo reale)
+  const coverageBySkill = useMemo(() => {
+    const map: Record<number, number> = {}
+    for (const p of participantSkills) {
+      if (p.skillId != null) map[p.skillId] = (map[p.skillId] ?? 0) + 1
+    }
+    return map
+  }, [participantSkills])
+
+  // Fetch suggerimenti per ogni mansione richiesta quando cambiano data/orari/fabbisogno
+  useEffect(() => {
+    if (eventType !== 'Turno' || step !== 3) return
+    if (!startDate) return
+    const target: Record<number, SuggestedEmployee[]> = {}
+    let cancelled = false
+    Promise.all(
+      requiredSkills.map(rs =>
+        skillsApi.getSuggested(rs.skillId, {
+          date: startDate,
+          startTime: isAllDay ? undefined : toApiTime(startTime),
+          endTime: isAllDay ? undefined : toApiTime(endTime),
+          excludeEventId: event?.id,
+        }).then(list => { target[rs.skillId] = list })
+         .catch(() => { target[rs.skillId] = [] })
+      )
+    ).then(() => {
+      if (!cancelled) setSuggestedBySkill(target)
+    })
+    return () => { cancelled = true }
+  }, [step, requiredSkills, startDate, startTime, endTime, isAllDay, eventType, event?.id])
+
+  const computeRecurrence = (): string | undefined => {
+    if (repeatWeekly && repeatUntil) return `WEEKLY;UNTIL=${repeatUntil}`
+    return recurrence === 'Nessuna' ? undefined : recurrence
+  }
+
   const buildPayload = () => ({
     title,
     eventType: EVENT_TYPE_VALUES[eventType],
@@ -172,7 +277,15 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
         endTimeOverride: toApiTime(o.endTimeOverride),
         participantNotes: o.participantNotes || undefined,
       })),
-    recurrence: recurrence === 'Nessuna' ? undefined : recurrence,
+    requiredSkills: eventType === 'Turno'
+      ? requiredSkills.filter(r => r.quantity > 0)
+      : [],
+    participantSkills: eventType === 'Turno'
+      ? participantSkills
+          .filter(p => selectedOwnerIds.includes(p.employeeId) && p.skillId != null)
+          .map(p => ({ employeeId: p.employeeId, skillId: p.skillId }))
+      : [],
+    recurrence: computeRecurrence(),
     notificationEnabled,
     notes,
   })
@@ -281,9 +394,25 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal-container">
         <div className="modal-header">
-          <h2 className="modal-title">{isEdit ? 'Modifica Evento' : 'Nuovo Evento'}</h2>
+          <h2 className="modal-title">{isEdit ? 'Modifica Turno' : 'Nuovo Turno'}</h2>
           <button className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
+
+        {eventType === 'Turno' && (
+          <div className="wizard-stepper">
+            <div className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
+              <span className="step-num">1</span><span className="step-label">Quando</span>
+            </div>
+            <div className="step-sep" />
+            <div className={`step ${step === 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
+              <span className="step-num">2</span><span className="step-label">Cosa serve</span>
+            </div>
+            <div className="step-sep" />
+            <div className={`step ${step === 3 ? 'active' : ''}`} onClick={() => setStep(3)}>
+              <span className="step-num">3</span><span className="step-label">Chi</span>
+            </div>
+          </div>
+        )}
 
         <div className="modal-body">
           {error && <div className="modal-error">{error}</div>}
@@ -319,74 +448,234 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             </div>
           )}
 
-          <div className="modal-form-group">
-            <label className="modal-label">Titolo *</label>
-            <input
-              type="text"
-              className="modal-input"
-              placeholder="Inserisci titolo evento"
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-            />
-          </div>
-
-          <div className="modal-form-group">
-            <label className="modal-label">Tipologia *</label>
-            <select className="modal-select" value={eventType} onChange={e => setEventType(e.target.value as EventType)}>
-              {EVENT_TYPES.map(t => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="toggle-group">
-            <label className="toggle-switch">
-              <input type="checkbox" checked={isAllDay} onChange={e => setIsAllDay(e.target.checked)} />
-              <span className="toggle-slider" />
-            </label>
-            <span className="toggle-label">Tutto il giorno</span>
-          </div>
-
-          <div className="modal-row">
-            <div className="modal-form-group">
-              <label className="modal-label">Data inizio *</label>
-              <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
-            </div>
-            <div className="modal-form-group">
-              <label className="modal-label">Data fine *</label>
-              <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
-            </div>
-          </div>
-
-          {!isAllDay && (
-            <div className="modal-row">
+          {(eventType !== 'Turno' || step === 1) && (
+            <>
               <div className="modal-form-group">
-                <label className="modal-label">Orario da</label>
-                <input type="time" className="modal-input" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                <label className="modal-label">Titolo</label>
+                <input
+                  type="text"
+                  className="modal-input"
+                  placeholder={eventType === 'Turno' ? 'Es. Mattina' : 'Inserisci titolo'}
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                />
               </div>
+
               <div className="modal-form-group">
-                <label className="modal-label">Orario a</label>
-                <input type="time" className="modal-input" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                <label className="modal-label">Tipologia *</label>
+                <select className="modal-select" value={eventType} onChange={e => setEventType(e.target.value as EventType)}>
+                  {EVENT_TYPES.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
               </div>
+
+              <div className="toggle-group">
+                <label className="toggle-switch">
+                  <input type="checkbox" checked={isAllDay} onChange={e => setIsAllDay(e.target.checked)} />
+                  <span className="toggle-slider" />
+                </label>
+                <span className="toggle-label">Tutto il giorno</span>
+              </div>
+
+              <div className="modal-row">
+                <div className="modal-form-group">
+                  <label className="modal-label">Data inizio *</label>
+                  <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                </div>
+                <div className="modal-form-group">
+                  <label className="modal-label">Data fine *</label>
+                  <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
+                </div>
+              </div>
+
+              {!isAllDay && (
+                <div className="modal-row">
+                  <div className="modal-form-group">
+                    <label className="modal-label">Orario da</label>
+                    <input type="time" className="modal-input" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                  </div>
+                  <div className="modal-form-group">
+                    <label className="modal-label">Orario a</label>
+                    <input type="time" className="modal-input" value={endTime} onChange={e => setEndTime(e.target.value)} />
+                  </div>
+                </div>
+              )}
+
+              {eventType === 'Turno' && (
+                <>
+                  <div className="checkbox-group">
+                    <input
+                      type="checkbox"
+                      id="isOnCall"
+                      className="modal-checkbox"
+                      checked={isOnCall}
+                      onChange={e => setIsOnCall(e.target.checked)}
+                    />
+                    <label htmlFor="isOnCall" className="checkbox-label">Reperibilità</label>
+                  </div>
+                  <div className="repeat-block">
+                    <div className="checkbox-group">
+                      <input
+                        type="checkbox"
+                        id="repeatWeekly"
+                        className="modal-checkbox"
+                        checked={repeatWeekly}
+                        onChange={e => setRepeatWeekly(e.target.checked)}
+                      />
+                      <label htmlFor="repeatWeekly" className="checkbox-label">Ripeti ogni settimana</label>
+                    </div>
+                    {repeatWeekly && (
+                      <div className="modal-form-group">
+                        <label className="modal-label">Fino al</label>
+                        <input
+                          type="date"
+                          className="modal-input"
+                          min={startDate || undefined}
+                          value={repeatUntil}
+                          onChange={e => setRepeatUntil(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {eventType === 'Turno' && step === 2 && (
+            <div className="wizard-step-content">
+              {skills.length === 0 ? (
+                <div className="step-empty">
+                  <div className="step-empty-icon">🏷</div>
+                  <div className="step-empty-title">Nessuna mansione configurata</div>
+                  <p className="step-empty-text">
+                    Le mansioni servono a dichiarare di cosa ha bisogno il turno (es. 1 Cassiere + 1 Repartista).
+                    Sono opzionali: se non ne hai bisogno, salta questo passaggio.
+                  </p>
+                  <a className="link-button" href="/mansioni" target="_blank" rel="noreferrer">+ Crea una mansione</a>
+                </div>
+              ) : (
+                <>
+                  <p className="wizard-hint">
+                    Dichiara di cosa hai bisogno per questo turno. Se non ti serve, vai avanti senza scegliere nulla.
+                  </p>
+                  <div className="skill-picker">
+                    {skills.map(s => {
+                      const already = requiredSkills.some(r => r.skillId === s.id)
+                      if (already) return null
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          className="skill-pick-chip"
+                          style={{ borderColor: s.color + '88', color: s.color }}
+                          onClick={() => addRequiredSkill(s.id)}
+                        >+ {s.name}</button>
+                      )
+                    })}
+                  </div>
+                  {requiredSkills.length > 0 && (
+                    <ul className="required-list">
+                      {requiredSkills.map(rs => {
+                        const s = skills.find(x => x.id === rs.skillId)
+                        if (!s) return null
+                        return (
+                          <li key={rs.skillId} className="required-row" style={{ borderColor: s.color + '55' }}>
+                            <span className="required-badge" style={{ background: s.color }}>{s.name.charAt(0)}</span>
+                            <span className="required-name">{s.name}</span>
+                            <div className="qty-control">
+                              <button type="button" onClick={() => updateRequiredQuantity(rs.skillId, -1)}>−</button>
+                              <span className="qty-value">{rs.quantity}</span>
+                              <button type="button" onClick={() => updateRequiredQuantity(rs.skillId, +1)}>+</button>
+                            </div>
+                            <button type="button" className="required-remove" onClick={() => removeRequiredSkill(rs.skillId)}>✕</button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </>
+              )}
             </div>
           )}
 
-          {eventType === 'Turno' && (
-            <div className="checkbox-group">
-              <input
-                type="checkbox"
-                id="isOnCall"
-                className="modal-checkbox"
-                checked={isOnCall}
-                onChange={e => setIsOnCall(e.target.checked)}
-              />
-              <label htmlFor="isOnCall" className="checkbox-label">Reperibilità</label>
+          {eventType === 'Turno' && step === 3 && (
+            <div className="wizard-step-content">
+              {requiredSkills.length > 0 ? (
+                <>
+                  {requiredSkills.map(rs => {
+                    const s = skills.find(x => x.id === rs.skillId)
+                    if (!s) return null
+                    const covered = coverageBySkill[rs.skillId] ?? 0
+                    const isCovered = covered >= rs.quantity
+                    const suggested = suggestedBySkill[rs.skillId] ?? []
+                    return (
+                      <div key={rs.skillId} className="coverage-group">
+                        <div className="coverage-header" style={{ borderColor: s.color }}>
+                          <span className="required-badge sm" style={{ background: s.color }}>{s.name.charAt(0)}</span>
+                          <span className="coverage-name">{s.name}</span>
+                          <span className={`coverage-status ${isCovered ? 'ok' : 'warn'}`}>
+                            {covered}/{rs.quantity} {isCovered ? '✓' : '⚠'}
+                          </span>
+                        </div>
+                        <ul className="suggested-list">
+                          {suggested.length === 0 && (
+                            <li className="suggested-empty">Nessun dipendente con questa mansione.</li>
+                          )}
+                          {suggested.map(emp => {
+                            const isSelected = selectedOwnerIds.includes(emp.employeeId)
+                            const currentSkill = getParticipantSkillId(emp.employeeId)
+                            const isCoveringThis = isSelected && currentSkill === rs.skillId
+                            return (
+                              <li key={emp.employeeId} className={`suggested-row ${!emp.isAvailable ? 'unavailable' : ''}`}>
+                                <div className="suggested-info">
+                                  <span className="suggested-name">{emp.fullName}</span>
+                                  {!emp.isAvailable && emp.unavailableReason && (
+                                    <span className="suggested-reason">{emp.unavailableReason}</span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  className={`suggested-add ${isCoveringThis ? 'added' : ''}`}
+                                  disabled={!emp.isAvailable && !isCoveringThis}
+                                  onClick={() => {
+                                    if (isCoveringThis) {
+                                      // Toggle off: rimuovi mansione e dal partecipante se solo qui
+                                      setParticipantSkill(emp.employeeId, null)
+                                      setSelectedOwnerIds(prev => prev.filter(id => id !== emp.employeeId))
+                                    } else {
+                                      if (!isSelected) {
+                                        setSelectedOwnerIds(prev => [...prev, emp.employeeId])
+                                      }
+                                      setParticipantSkill(emp.employeeId, rs.skillId)
+                                    }
+                                  }}
+                                >{isCoveringThis ? '✓ Aggiunto' : 'Aggiungi'}</button>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    )
+                  })}
+                </>
+              ) : (
+                <>
+                  <p className="wizard-hint">Seleziona i partecipanti del turno.</p>
+                </>
+              )}
             </div>
           )}
 
-          {employees.length > 0 && (
+          {(
+            (eventType !== 'Turno' && employees.length > 0) ||
+            (eventType === 'Turno' && step === 3 && requiredSkills.length === 0 && employees.length > 0)
+          ) && (
             <div className="modal-form-group">
-              <label className="modal-label">Titolari (Ctrl+click per selezione multipla)</label>
+              <label className="modal-label">
+                {eventType === 'Turno' ? 'Partecipanti' : 'Persone coinvolte'} (Ctrl+click per selezione multipla)
+              </label>
               <select
                 multiple
                 className="multi-select"
@@ -402,7 +691,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             </div>
           )}
 
-          {eventType === 'Turno' && selectedOwnerIds.length > 0 && !isAllDay && (
+          {eventType === 'Turno' && step === 3 && selectedOwnerIds.length > 0 && !isAllDay && (
             <div className="checkbox-group">
               <input
                 type="checkbox"
@@ -417,7 +706,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             </div>
           )}
 
-          {eventType === 'Turno' && showOverrides && !isAllDay && selectedOwnerIds.length > 0 && (
+          {eventType === 'Turno' && step === 3 && showOverrides && !isAllDay && selectedOwnerIds.length > 0 && (
             <div className="overrides-section">
               <div className="overrides-hint">
                 Lascia vuoto per usare gli orari del turno ({startTime}-{endTime}).
@@ -462,37 +751,43 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             </div>
           )}
 
-          <div className="modal-form-group">
-            <label className="modal-label">Ricorrenza</label>
-            <select className="modal-select" value={recurrence} onChange={e => setRecurrence(e.target.value as RecurrenceType)}>
-              {RECURRENCE_TYPES.map(r => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
+          {(eventType !== 'Turno' || step === 3) && (
+            <>
+              {eventType !== 'Turno' && (
+                <div className="modal-form-group">
+                  <label className="modal-label">Ricorrenza</label>
+                  <select className="modal-select" value={recurrence} onChange={e => setRecurrence(e.target.value as RecurrenceType)}>
+                    {RECURRENCE_TYPES.map(r => (
+                      <option key={r} value={r}>{r}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-          <div className="checkbox-group">
-            <input
-              type="checkbox"
-              id="notificationEnabled"
-              className="modal-checkbox"
-              checked={notificationEnabled}
-              onChange={e => setNotificationEnabled(e.target.checked)}
-            />
-            <label htmlFor="notificationEnabled" className="checkbox-label">Invia notifica</label>
-          </div>
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="notificationEnabled"
+                  className="modal-checkbox"
+                  checked={notificationEnabled}
+                  onChange={e => setNotificationEnabled(e.target.checked)}
+                />
+                <label htmlFor="notificationEnabled" className="checkbox-label">Invia notifica</label>
+              </div>
 
-          <div className="modal-form-group">
-            <label className="modal-label">Note</label>
-            <textarea
-              className="modal-textarea"
-              placeholder="Note aggiuntive..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-            />
-          </div>
+              <div className="modal-form-group">
+                <label className="modal-label">Note</label>
+                <textarea
+                  className="modal-textarea"
+                  placeholder="Note aggiuntive..."
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                />
+              </div>
+            </>
+          )}
 
-          {isEdit && (
+          {isEdit && (eventType !== 'Turno' || step === 3) && (
             <>
               <hr className="section-sep" />
               <div className="checkbox-group">
@@ -571,10 +866,31 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
             <button className="btn-delete" onClick={handleDelete} disabled={loading}>Elimina</button>
           )}
           <div className="modal-footer-right">
+            {eventType === 'Turno' && step > 1 && (
+              <button className="btn-cancel" onClick={() => setStep(prev => (prev > 1 ? (prev - 1) as 1 | 2 | 3 : prev))}>
+                ← Indietro
+              </button>
+            )}
             <button className="btn-cancel" onClick={onClose}>Annulla</button>
-            <button className="btn-save" onClick={handleSave} disabled={loading}>
-              {loading ? 'Salvataggio...' : 'Salva'}
-            </button>
+            {eventType === 'Turno' && step < 3 ? (
+              <button
+                className="btn-save"
+                onClick={() => {
+                  if (step === 1) {
+                    if (!startDate) { setError('La data di inizio è obbligatoria'); return }
+                    if (!endDate) setEndDate(startDate)
+                  }
+                  setError('')
+                  setStep(prev => (prev + 1) as 1 | 2 | 3)
+                }}
+              >
+                {step === 2 && requiredSkills.length === 0 ? 'Salta →' : 'Avanti →'}
+              </button>
+            ) : (
+              <button className="btn-save" onClick={handleSave} disabled={loading}>
+                {loading ? 'Salvataggio...' : 'Salva'}
+              </button>
+            )}
           </div>
         </div>
       </div>

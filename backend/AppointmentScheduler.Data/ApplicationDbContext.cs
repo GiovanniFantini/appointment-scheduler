@@ -24,6 +24,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Event> Events { get; set; }
     public DbSet<EventParticipant> EventParticipants { get; set; }
 
+    // Skills (mansioni/qualifiche)
+    public DbSet<Skill> Skills { get; set; }
+    public DbSet<EmployeeSkill> EmployeeSkills { get; set; }
+    public DbSet<EventRequiredSkill> EventRequiredSkills { get; set; }
+
     // Notifications
     public DbSet<Notification> Notifications { get; set; }
 
@@ -172,6 +177,65 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => new { e.EventId, e.EmployeeId }).IsUnique();
             entity.HasIndex(e => e.EmployeeId);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.Participations)
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── Skill ─────────────────────────────────────────────────────────────
+        modelBuilder.Entity<Skill>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Color).IsRequired().HasMaxLength(20);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.Skills)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.MerchantId, e.Name }).IsUnique();
+            entity.HasIndex(e => e.MerchantId);
+        });
+
+        // ── EmployeeSkill ─────────────────────────────────────────────────────
+        modelBuilder.Entity<EmployeeSkill>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany(emp => emp.Skills)
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.EmployeeSkills)
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.EmployeeId, e.SkillId }).IsUnique();
+            entity.HasIndex(e => e.SkillId);
+        });
+
+        // ── EventRequiredSkill ────────────────────────────────────────────────
+        modelBuilder.Entity<EventRequiredSkill>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Event)
+                .WithMany(ev => ev.RequiredSkills)
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Skill)
+                .WithMany(s => s.EventRequiredSkills)
+                .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.EventId, e.SkillId }).IsUnique();
+            entity.HasIndex(e => e.SkillId);
         });
 
         // ── Notification ──────────────────────────────────────────────────────

@@ -17,6 +17,12 @@ interface ApiEvent {
   endTime?: string
 }
 
+interface MySkill {
+  skillId: number
+  skillName: string
+  skillColor: string
+}
+
 interface Props {
   user: EmployeeUser
 }
@@ -47,6 +53,7 @@ export default function DashboardPage({ user }: Props) {
   const [todayEvents, setTodayEvents] = useState<ApiEvent[]>([])
   const [weekEvents, setWeekEvents] = useState<ApiEvent[]>([])
   const [pendingRequests, setPendingRequests] = useState<ApiEvent[]>([])
+  const [mySkills, setMySkills] = useState<MySkill[]>([])
   const [loading, setLoading] = useState(true)
 
   const today = new Date()
@@ -57,6 +64,7 @@ export default function DashboardPage({ user }: Props) {
 
   useEffect(() => {
     fetchEvents()
+    fetchMySkills()
   }, [])
 
   const fetchEvents = async () => {
@@ -80,6 +88,15 @@ export default function DashboardPage({ user }: Props) {
     }
   }
 
+  const fetchMySkills = async () => {
+    try {
+      const { data } = await apiClient.get<MySkill[]>('/employee-profile/me/skills')
+      setMySkills(Array.isArray(data) ? data : [])
+    } catch {
+      // mansioni opzionali — silently ignore
+    }
+  }
+
   const formatTime = (e: ApiEvent) => {
     if (e.isAllDay || !e.startTime) return ''
     return e.startTime.substring(0, 5)
@@ -100,6 +117,24 @@ export default function DashboardPage({ user }: Props) {
           )}
         </div>
       </div>
+
+      {/* Le mie mansioni */}
+      {mySkills.length > 0 && (
+        <div className="my-skills-section">
+          <div className="my-skills-label">Le mie mansioni</div>
+          <div className="my-skills-chips">
+            {mySkills.map(s => (
+              <span
+                key={s.skillId}
+                className="my-skill-chip"
+                style={{ background: s.skillColor, color: '#fff' }}
+              >
+                {s.skillName}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="dashboard-stats">

@@ -25,4 +25,5 @@ public class Employee
     public ICollection<EventParticipant> EventParticipations { get; set; } = new List<EventParticipant>();
     public ICollection<HRDocument> HRDocuments { get; set; } = new List<HRDocument>();
     public ICollection<EmployeeRequest> Requests { get; set; } = new List<EmployeeRequest>();
+    public ICollection<EmployeeSkill> Skills { get; set; } = new List<EmployeeSkill>();
 }

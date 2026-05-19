@@ -47,4 +47,5 @@ public class Event
     public Merchant Merchant { get; set; } = null!;
     public User CreatedBy { get; set; } = null!;
     public ICollection<EventParticipant> Participants { get; set; } = new List<EventParticipant>();
+    public ICollection<EventRequiredSkill> RequiredSkills { get; set; } = new List<EventRequiredSkill>();
 }
