@@ -8,7 +8,13 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Directory)",
       "Bash(xargs head -30)",
       "Bash(xargs cat)",
-      "Bash(mkdir -p \"C:/Users/fantigi1/.claude/plans\" 2>/dev/null; ls \"C:/Users/fantigi1/.claude/plans\")"
+      "Bash(mkdir -p \"C:/Users/fantigi1/.claude/plans\" 2>/dev/null; ls \"C:/Users/fantigi1/.claude/plans\")",
+      "Bash(grep -E \"\\\\.cs$\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\backend\\\\AppointmentScheduler.Shared\\\\Models\" -Filter *.cs -Recurse)",
+      "Bash(Select-Object FullName)",
+      "Bash(grep -c '```mermaid' docs/FLUSSI-UTENTE.md)",
+      "Bash(grep -c '```' docs/FLUSSI-UTENTE.md)",
+      "Bash(grep -n -B3 '```mermaid' docs/FLUSSI-UTENTE.md)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"
