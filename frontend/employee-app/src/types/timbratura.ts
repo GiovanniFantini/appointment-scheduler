@@ -1,135 +1,206 @@
-export enum AnomalyType {
-  LateCheckIn = 0,
-  EarlyCheckIn = 1,
-  LateCheckOut = 2,
-  EarlyCheckOut = 3,
-  MissingCheckIn = 4,
-  MissingCheckOut = 5,
-  ExtendedBreak = 6,
-  UnusualPattern = 7,
+// Tipi della feature Timbratura, allineati ai DTO del backend
+// (AppointmentScheduler.Shared/DTOs/TimeClockDto.cs).
+// Gli enum rispecchiano i valori C# (base 1).
+
+export enum TimeEntryType {
+  ClockIn = 1,
+  ClockOut = 2,
+  BreakStart = 3,
+  BreakEnd = 4,
+}
+
+export enum TimeEntrySource {
+  Web = 1,
+  Mobile = 2,
+  Manual = 3,
+}
+
+export enum TimeEntryStatus {
+  Ok = 1,
+  Anomaly = 2,
+  Corrected = 3,
+  PendingReview = 4,
+}
+
+export interface TimeEntryDto {
+  id: number
+  employeeId: number
+  employeeName: string
+  branchId: number
+  branchName: string
+  eventId: number
+  eventParticipantId: number
+  eventTitle: string
+  type: TimeEntryType
+  typeName: string
+  source: TimeEntrySource
+  status: TimeEntryStatus
+  statusName: string
+  workDate: string
+  actualTimestampUtc: string
+  expectedTime?: string
+  deviationMinutes?: number
+  latitude?: number
+  longitude?: number
+  gpsAccuracyMeters?: number
+  distanceFromBranchMeters?: number
+  geofenceOk?: boolean
+  notes?: string
+  isManualCorrection: boolean
+  createdAt: string
+}
+
+export interface TimeClockShiftDto {
+  eventId: number
+  eventParticipantId: number
+  title: string
+  branchId: number
+  branchName: string
+  date: string
+  startTime?: string
+  endTime?: string
+}
+
+export interface CurrentClockStatusDto {
+  timeClockEnabled: boolean
+  isClockedIn: boolean
+  isOnBreak: boolean
+  clockInAtUtc?: string
+  breakStartAtUtc?: string
+  currentShift?: TimeClockShiftDto
+  workedMinutesToday: number
+  statusMessage: string
+  suggestedAction?: string
+  requiresGeolocation: boolean
+  showClockPrompt: boolean
+  todayEntries: TimeEntryDto[]
+}
+
+export interface ClockActionResultDto {
+  success: boolean
+  message: string
+  entry: TimeEntryDto
+  status: CurrentClockStatusDto
+  anomaly?: TimeClockAnomalyDto
+  hasAnomaly: boolean
+  workedShiftMinutes?: number
+}
+
+// ── Anomalie ─────────────────────────────────────────────────────────────
+
+export enum TimeClockAnomalyType {
+  LateClockIn = 1,
+  EarlyClockIn = 2,
+  LateClockOut = 3,
+  EarlyClockOut = 4,
+  MissingClockIn = 5,
+  MissingClockOut = 6,
+  ExtendedBreak = 7,
   LocationMismatch = 8,
+  OvertimeDetected = 9,
 }
 
-export enum AnomalyReason {
-  Traffic = 0,
-  AuthorizedLeave = 1,
-  TimeRecovery = 2,
-  PersonalEmergency = 3,
-  Forgotten = 4,
-  TechnicalIssue = 5,
-  SmartWorking = 6,
-  Other = 7,
-  NotSpecified = 8,
+export enum TimeClockAnomalyReason {
+  NotSpecified = 0,
+  Traffic = 1,
+  AuthorizedLeave = 2,
+  TimeRecovery = 3,
+  PersonalEmergency = 4,
+  Forgotten = 5,
+  TechnicalIssue = 6,
+  SmartWorking = 7,
+  Other = 8,
 }
 
-export enum OvertimeType {
-  Paid = 0,
-  BankedHours = 1,
-  TimeRecovery = 2,
-  Voluntary = 3,
-  Pending = 4,
+export enum TimeClockAnomalyStatus {
+  Open = 1,
+  Justified = 2,
+  Approved = 3,
+  Rejected = 4,
 }
 
-export interface TimbratureResponse {
-  success: boolean;
-  message: string;
-  context?: string;
-  nextSteps?: string;
-  empatheticMessage?: string;
-  hasAnomaly: boolean;
-  anomalyType?: AnomalyType;
-  anomalyId?: number;
-  quickResolutionOptions?: string[];
-  suggestedBreakTime?: string;
-  totalShiftHours?: number;
-  hasOvertime: boolean;
-  overtimeMinutes?: number;
-  timestamp: string;
+export interface TimeClockAnomalyDto {
+  id: number
+  employeeId: number
+  employeeName: string
+  eventId?: number
+  eventParticipantId?: number
+  eventTitle?: string
+  timeEntryId?: number
+  type: TimeClockAnomalyType
+  typeName: string
+  status: TimeClockAnomalyStatus
+  statusName: string
+  severity: number
+  workDate: string
+  deviationMinutes?: number
+  overtimeMinutes?: number
+  employeeReason?: TimeClockAnomalyReason
+  employeeReasonName?: string
+  employeeNotes?: string
+  justifiedAt?: string
+  reviewNotes?: string
+  reviewedAt?: string
+  createdAt: string
 }
 
-export interface CurrentStatusResponse {
-  isCheckedIn: boolean;
-  isOnBreak: boolean;
-  checkInTime?: string;
-  breakStartTime?: string;
-  statusMessage: string;
-  suggestedAction?: string;
-  currentShift?: any;
-  currentBreak?: ShiftBreak;
-  totalWorkedHoursToday: number;
-  totalWorkedHoursThisWeek: number;
+export interface JustifyAnomalyRequest {
+  reason: TimeClockAnomalyReason
+  notes?: string
 }
 
-export interface ShiftBreak {
-  id: number;
-  shiftId: number;
-  breakStartTime: string;
-  breakEndTime?: string;
-  durationMinutes: number;
-  breakType: string;
-  isAutoSuggested: boolean;
-  notes?: string;
-  isShortBreak: boolean;
+export interface WellbeingStatsDto {
+  workedMinutesThisWeek: number
+  workedMinutesThisMonth: number
+  overtimeMinutesThisWeek: number
+  overtimeMinutesThisMonth: number
+  openAnomalies: number
+  consecutiveWorkedDays: number
+  hasWellbeingAlert: boolean
+  wellbeingMessage?: string
 }
 
-export interface ShiftAnomaly {
-  id: number;
-  shiftId: number;
-  type: AnomalyType;
-  severity: number;
-  empatheticMessage: string;
-  employeeReason?: AnomalyReason;
-  employeeNotes?: string;
-  isResolved: boolean;
-  resolutionMethod?: string;
-  merchantNotes?: string;
-  detectedAt: string;
-  resolvedAt?: string;
-  requiresMerchantReview: boolean;
+/** Payload per le azioni di timbratura (clock-in/out, break). */
+export interface ClockActionRequest {
+  eventParticipantId?: number
+  latitude?: number
+  longitude?: number
+  gpsAccuracyMeters?: number
+  notes?: string
 }
 
-export interface WellbeingStats {
-  hoursThisWeek: number;
-  hoursThisMonth: number;
-  overtimeThisWeek: number;
-  overtimeThisMonth: number;
-  hasWellbeingAlert: boolean;
-  wellbeingMessage?: string;
-  consecutiveLongDays: number;
-  lastDayOff?: string;
+// ── Settings (usati dalla merchant-app) ─────────────────────────────────
+
+export interface BranchTimeClockSettingsDto {
+  branchId: number
+  branchName: string
+  isEnabled: boolean
+  clockingRequired: boolean
+  graceInMinutes: number
+  graceOutMinutes: number
+  earlyClockInToleranceMinutes: number
+  lateClockOutToleranceMinutes: number
+  geofencingEnabled: boolean
+  geofenceRadiusMeters: number
+  breakTrackingEnabled: boolean
+  maxBreakMinutes: number
+  roundingMinutes: number
+  requirePhoto: boolean
+  branchLatitude?: number
+  branchLongitude?: number
 }
 
-export interface CheckInRequest {
-  shiftId: number;
-  location?: string;
-  notes?: string;
-}
-
-export interface CheckOutRequest {
-  shiftId: number;
-  location?: string;
-  notes?: string;
-}
-
-export interface StartBreakRequest {
-  shiftId: number;
-  breakType?: string;
-  notes?: string;
-}
-
-export interface EndBreakRequest {
-  breakId: number;
-  notes?: string;
-}
-
-export interface ResolveAnomalyRequest {
-  anomalyId: number;
-  reason: AnomalyReason;
-  notes?: string;
-}
-
-export interface ClassifyOvertimeRequest {
-  overtimeId: number;
-  type: OvertimeType;
-  notes?: string;
+export interface UpdateTimeClockSettingsRequest {
+  isEnabled: boolean
+  clockingRequired: boolean
+  graceInMinutes: number
+  graceOutMinutes: number
+  earlyClockInToleranceMinutes: number
+  lateClockOutToleranceMinutes: number
+  geofencingEnabled: boolean
+  geofenceRadiusMeters: number
+  breakTrackingEnabled: boolean
+  maxBreakMinutes: number
+  roundingMinutes: number
+  requirePhoto: boolean
 }

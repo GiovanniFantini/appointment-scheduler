@@ -10,6 +10,7 @@ import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
 import RichiestePage from './pages/RichiestePage/RichiestePage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import NotifichePage from './pages/NotifichePage/NotifichePage'
+import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
 import AppLayout from './components/AppLayout/AppLayout'
 
 export interface EmployeeUser {
@@ -136,6 +137,14 @@ function App() {
           }
         >
           <Route index element={<DashboardPage user={user!} />} />
+          <Route
+            path="timbratura"
+            element={
+              user?.activeFeatures?.includes('Timbratura')
+                ? <TimbraturaPage />
+                : <Navigate to="/" replace />
+            }
+          />
           <Route
             path="calendario"
             element={

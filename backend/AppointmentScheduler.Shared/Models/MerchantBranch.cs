@@ -32,8 +32,18 @@ public class MerchantBranch
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>
+    /// Coordinate geografiche della filiale, usate per il geofence della
+    /// timbratura. Null se non configurate.
+    /// </summary>
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
     // Navigation properties
     public Merchant Merchant { get; set; } = null!;
     public ICollection<Department> Departments { get; set; } = new List<Department>();
     public ICollection<Event> Events { get; set; } = new List<Event>();
+
+    /// <summary>Configurazione timbratura della filiale (1:1, opzionale). </summary>
+    public BranchTimeClockSettings? TimeClockSettings { get; set; }
 }

@@ -15,6 +15,10 @@ public class MerchantBranchDto
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
 
+    /// <summary>Coordinate per il geofence della timbratura. Null se non impostate.</summary>
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
+
     /// <summary>Reparti della filiale.</summary>
     public List<DepartmentDto> Departments { get; set; } = new();
 
@@ -31,6 +35,8 @@ public class CreateBranchRequest
     public string? PostalCode { get; set; }
     public string? Country { get; set; }
     public string? Phone { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }
 
 public class UpdateBranchRequest
@@ -43,4 +49,6 @@ public class UpdateBranchRequest
     public string? Country { get; set; }
     public string? Phone { get; set; }
     public bool IsActive { get; set; } = true;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

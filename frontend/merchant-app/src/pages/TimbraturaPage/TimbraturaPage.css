@@ -1,0 +1,372 @@
+.timbratura-page {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #f1f5f9;
+}
+
+.page-header-row { margin-bottom: 20px; }
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+  max-width: 720px;
+  line-height: 1.5;
+}
+
+.btn-primary {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary:hover:not(:disabled) { background: #4f46e5; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.tcm-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #334155;
+  margin-bottom: 20px;
+}
+
+.tcm-tab {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+
+.tcm-tab--active {
+  color: #f1f5f9;
+  border-bottom-color: #6366f1;
+}
+
+/* ── Branch selector ──────────────────────────────────────────── */
+.tcm-branch-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tcm-branch-label {
+  font-size: 13px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.tcm-branch-select,
+.tcm-field-input {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #f1f5f9;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.tcm-branch-select:disabled { opacity: 0.6; }
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.tcm-config {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tcm-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.tcm-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin-bottom: 12px;
+}
+
+.tcm-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+}
+
+.tcm-toggle-row--disabled { opacity: 0.55; }
+
+.tcm-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tcm-toggle-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f1f5f9;
+}
+
+.tcm-toggle-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.4;
+  max-width: 560px;
+}
+
+.tcm-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.tcm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.tcm-field-label {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.tcm-field-input:disabled { opacity: 0.5; }
+
+.tcm-geo-btn {
+  margin-top: 12px;
+  background: #334155;
+  color: #e2e8f0;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.tcm-geo-btn:hover { background: #475569; }
+
+.tcm-save-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.tcm-saved {
+  color: #4ade80;
+  font-size: 13px;
+}
+
+.tcm-error {
+  background: #ef44441a;
+  color: #fca5a5;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+/* ── Toggle switch (scoped, replicato da RuoliPage) ──────────── */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: #334155;
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  left: 3px;
+  top: 3px;
+  background: #94a3b8;
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: rgba(99, 102, 241, 0.3);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(16px);
+  background: #6366f1;
+}
+
+.toggle-switch input:disabled + .toggle-slider { cursor: not-allowed; }
+
+/* ── Presenze ─────────────────────────────────────────────────── */
+.tcm-presenze {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tcm-filter-row {
+  display: flex;
+  gap: 14px;
+}
+
+.tcm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  overflow: hidden;
+  font-size: 13px;
+}
+
+.tcm-table th {
+  text-align: left;
+  padding: 10px 14px;
+  color: #94a3b8;
+  font-weight: 600;
+  background: #0f172a;
+  border-bottom: 1px solid #334155;
+}
+
+.tcm-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #1e293b;
+  color: #e2e8f0;
+}
+
+.tcm-table tr:last-child td { border-bottom: none; }
+
+.tcm-type-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #6366f122;
+  color: #a5b4fc;
+}
+.tcm-type-badge[data-type='1'] { background: #22c55e22; color: #4ade80; }
+.tcm-type-badge[data-type='2'] { background: #ef444422; color: #fca5a5; }
+.tcm-type-badge[data-type='3'],
+.tcm-type-badge[data-type='4'] { background: #f59e0b22; color: #fbbf24; }
+
+.tcm-dev-late { color: #fca5a5; }
+.tcm-dev-early { color: #fbbf24; }
+
+.tcm-tag {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #6366f122;
+  color: #a5b4fc;
+  margin-right: 6px;
+}
+.tcm-tag--warn { background: #ef444422; color: #fca5a5; }
+
+.tcm-type-badge[data-anomaly-status='1'] { background: #f59e0b22; color: #fbbf24; }
+.tcm-type-badge[data-anomaly-status='2'] { background: #6366f122; color: #a5b4fc; }
+.tcm-type-badge[data-anomaly-status='3'] { background: #22c55e22; color: #4ade80; }
+.tcm-type-badge[data-anomaly-status='4'] { background: #ef444422; color: #fca5a5; }
+
+.tcm-muted { color: #64748b; }
+
+.tcm-action-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.tcm-btn-approve,
+.tcm-btn-reject {
+  border: none;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.tcm-btn-approve { background: #22c55e; color: #fff; }
+.tcm-btn-reject { background: #ef4444; color: #fff; }
+.tcm-btn-approve:disabled,
+.tcm-btn-reject:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Report ───────────────────────────────────────────────────── */
+.tcm-report-summary {
+  display: flex;
+  gap: 14px;
+}
+
+.tcm-summary-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tcm-summary-label {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.tcm-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+/* ── Stati ────────────────────────────────────────────────────── */
+.tcm-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px;
+}
+
+.tcm-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid #334155;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: tcm-spin 0.8s linear infinite;
+}
+
+@keyframes tcm-spin { to { transform: rotate(360deg); } }
+
+.tcm-empty {
+  color: #64748b;
+  text-align: center;
+  padding: 30px;
+  font-size: 14px;
+}

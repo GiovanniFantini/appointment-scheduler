@@ -9,5 +9,6 @@ public enum MerchantFeature
     Documenti = 5,
     Report = 6,
     Mansioni = 7,
-    Filiali = 8
+    Filiali = 8,
+    Timbratura = 9
 }

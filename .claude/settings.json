@@ -5,7 +5,13 @@
       "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Force)",
       "Bash(Select-Object Name, Mode)",
       "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\backend\\\\\" -Directory -ErrorAction SilentlyContinue | Select-Object Name)",
-      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Directory)"
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Directory)",
+      "Bash(xargs head -30)",
+      "Bash(xargs cat)",
+      "Bash(mkdir -p \"C:/Users/fantigi1/.claude/plans\" 2>/dev/null; ls \"C:/Users/fantigi1/.claude/plans\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\fantigi1\\.claude\\plans"
     ]
   }
 }

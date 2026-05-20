@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
 import { formatBrowserDate, localDateStr } from '../../lib/dateUtils'
+import TimeClockWidget from '../../components/TimeClockWidget/TimeClockWidget'
 import './DashboardPage.css'
 
 // Matches EventDto from server
@@ -117,6 +118,11 @@ export default function DashboardPage({ user }: Props) {
           )}
         </div>
       </div>
+
+      {/* Timbratura: il widget si auto-nasconde se non c'è un turno da timbrare */}
+      {user.activeFeatures?.includes('Timbratura') && (
+        <TimeClockWidget compact />
+      )}
 
       {/* Le mie mansioni */}
       {mySkills.length > 0 && (

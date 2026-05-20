@@ -15,6 +15,7 @@ import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
 import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
 import FilialiPage from './pages/FilialiPage/FilialiPage'
+import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
 import { BranchProvider } from './contexts/BranchContext'
 
 export interface MerchantUser {
@@ -94,6 +95,7 @@ function App(_props: AppProps) {
           <Route path="/risorse" element={<RisorsePage user={user!} />} />
           <Route path="/mansioni" element={<MansioniPage />} />
           <Route path="/filiali" element={<FilialiPage />} />
+          <Route path="/timbratura" element={<TimbraturaPage />} />
           <Route path="/ruoli" element={<RuoliPage />} />
           <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />

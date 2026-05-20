@@ -85,6 +85,8 @@ public class BranchService : IBranchService
             PostalCode = request.PostalCode,
             Country = request.Country,
             Phone = request.Phone,
+            Latitude = request.Latitude,
+            Longitude = request.Longitude,
             IsHeadquarters = isFirst,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -136,6 +138,8 @@ public class BranchService : IBranchService
         branch.PostalCode = request.PostalCode;
         branch.Country = request.Country;
         branch.Phone = request.Phone;
+        branch.Latitude = request.Latitude;
+        branch.Longitude = request.Longitude;
         branch.IsActive = request.IsActive;
         branch.UpdatedAt = DateTime.UtcNow;
 
@@ -297,6 +301,8 @@ public class BranchService : IBranchService
         IsHeadquarters = b.IsHeadquarters,
         IsActive = b.IsActive,
         CreatedAt = b.CreatedAt,
+        Latitude = b.Latitude,
+        Longitude = b.Longitude,
         EmployeeCount = employeeCount,
         Departments = b.Departments
             .OrderBy(d => d.Name)

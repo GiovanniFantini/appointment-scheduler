@@ -44,6 +44,11 @@ public class ApplicationDbContext : DbContext
     // Employee Requests
     public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
 
+    // Time Clocking (timbratura)
+    public DbSet<TimeEntry> TimeEntries { get; set; }
+    public DbSet<BranchTimeClockSettings> BranchTimeClockSettings { get; set; }
+    public DbSet<TimeClockAnomaly> TimeClockAnomalies { get; set; }
+
     // Authentication
     public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
@@ -429,6 +434,113 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => new { e.MerchantId, e.Status });
             entity.HasIndex(e => new { e.EmployeeId, e.MerchantId });
             entity.HasIndex(e => e.EventId);
+        });
+
+        // ── TimeEntry ─────────────────────────────────────────────────────────
+        modelBuilder.Entity<TimeEntry>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Event)
+                .WithMany()
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.EventParticipant)
+                .WithMany()
+                .HasForeignKey(e => e.EventParticipantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.CorrectedBy)
+                .WithMany()
+                .HasForeignKey(e => e.CorrectedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.EmployeeId, e.WorkDate });
+            entity.HasIndex(e => new { e.MerchantId, e.WorkDate });
+            entity.HasIndex(e => new { e.BranchId, e.WorkDate });
+            entity.HasIndex(e => e.EventParticipantId);
+            entity.HasIndex(e => e.Status);
+        });
+
+        // ── BranchTimeClockSettings ───────────────────────────────────────────
+        modelBuilder.Entity<BranchTimeClockSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Branch)
+                .WithOne(b => b.TimeClockSettings)
+                .HasForeignKey<BranchTimeClockSettings>(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Restrict per evitare cascade-path multipli verso Merchant
+            // (la riga viene comunque rimossa in cascade dalla filiale).
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.BranchId).IsUnique();
+            entity.HasIndex(e => e.MerchantId);
+        });
+
+        // ── TimeClockAnomaly ──────────────────────────────────────────────────
+        modelBuilder.Entity<TimeClockAnomaly>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EmployeeNotes).HasMaxLength(1000);
+            entity.Property(e => e.ReviewNotes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany()
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Event)
+                .WithMany()
+                .HasForeignKey(e => e.EventId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.EventParticipant)
+                .WithMany()
+                .HasForeignKey(e => e.EventParticipantId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.TimeEntry)
+                .WithMany()
+                .HasForeignKey(e => e.TimeEntryId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.ReviewedBy)
+                .WithMany()
+                .HasForeignKey(e => e.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.MerchantId, e.Status });
+            entity.HasIndex(e => new { e.EmployeeId, e.WorkDate });
+            entity.HasIndex(e => e.TimeEntryId);
+            entity.HasIndex(e => e.Type);
         });
 
         // ── PasswordResetToken ────────────────────────────────────────────────

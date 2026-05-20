@@ -3,6 +3,7 @@ using System;
 using AppointmentScheduler.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AppointmentScheduler.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260520135818_AddTimeClocking")]
+    partial class AddTimeClocking
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -728,12 +731,6 @@ namespace AppointmentScheduler.Data.Migrations
                     b.Property<bool>("IsHeadquarters")
                         .HasColumnType("boolean");
 
-                    b.Property<double?>("Latitude")
-                        .HasColumnType("double precision");
-
-                    b.Property<double?>("Longitude")
-                        .HasColumnType("double precision");
-
                     b.Property<int>("MerchantId")
                         .HasColumnType("integer");
 
@@ -927,92 +924,6 @@ namespace AppointmentScheduler.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Skills");
-                });
-
-            modelBuilder.Entity("AppointmentScheduler.Shared.Models.TimeClockAnomaly", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("DeviationMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("EmployeeId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("EmployeeNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<int?>("EmployeeReason")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("EventId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("EventParticipantId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("JustifiedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("MerchantId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("OvertimeMinutes")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("ReviewNotes")
-                        .HasMaxLength(1000)
-                        .HasColumnType("character varying(1000)");
-
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("ReviewedByUserId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Severity")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("TimeEntryId")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("WorkDate")
-                        .HasColumnType("date");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EventId");
-
-                    b.HasIndex("EventParticipantId");
-
-                    b.HasIndex("ReviewedByUserId");
-
-                    b.HasIndex("TimeEntryId");
-
-                    b.HasIndex("Type");
-
-                    b.HasIndex("EmployeeId", "WorkDate");
-
-                    b.HasIndex("MerchantId", "Status");
-
-                    b.ToTable("TimeClockAnomalies");
                 });
 
             modelBuilder.Entity("AppointmentScheduler.Shared.Models.TimeEntry", b =>
@@ -1526,53 +1437,6 @@ namespace AppointmentScheduler.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Merchant");
-                });
-
-            modelBuilder.Entity("AppointmentScheduler.Shared.Models.TimeClockAnomaly", b =>
-                {
-                    b.HasOne("AppointmentScheduler.Shared.Models.Employee", "Employee")
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppointmentScheduler.Shared.Models.Event", "Event")
-                        .WithMany()
-                        .HasForeignKey("EventId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AppointmentScheduler.Shared.Models.EventParticipant", "EventParticipant")
-                        .WithMany()
-                        .HasForeignKey("EventParticipantId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AppointmentScheduler.Shared.Models.Merchant", "Merchant")
-                        .WithMany()
-                        .HasForeignKey("MerchantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppointmentScheduler.Shared.Models.User", "ReviewedBy")
-                        .WithMany()
-                        .HasForeignKey("ReviewedByUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.HasOne("AppointmentScheduler.Shared.Models.TimeEntry", "TimeEntry")
-                        .WithMany()
-                        .HasForeignKey("TimeEntryId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Event");
-
-                    b.Navigation("EventParticipant");
-
-                    b.Navigation("Merchant");
-
-                    b.Navigation("ReviewedBy");
-
-                    b.Navigation("TimeEntry");
                 });
 
             modelBuilder.Entity("AppointmentScheduler.Shared.Models.TimeEntry", b =>
