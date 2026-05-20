@@ -53,6 +53,8 @@ public class EventsController : ControllerBase
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
         [FromQuery] EventType? type,
+        [FromQuery] int? branchId = null,
+        [FromQuery] int? departmentId = null,
         [FromQuery] int? merchantId = null)
     {
         int resolvedMerchantId;
@@ -67,7 +69,8 @@ public class EventsController : ControllerBase
                 return BadRequest(new { message = "Merchant ID non trovato nel token" });
         }
 
-        var events = await _eventService.GetMerchantEventsAsync(resolvedMerchantId, from, to, type);
+        var events = await _eventService.GetMerchantEventsAsync(
+            resolvedMerchantId, from, to, type, branchId, departmentId);
         return Ok(events);
     }
 
@@ -142,12 +145,20 @@ public class EventsController : ControllerBase
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        var evt = await _eventService.UpdateAsync(id, merchantId, request);
+        try
+        {
+            var evt = await _eventService.UpdateAsync(id, merchantId, request);
 
-        if (evt == null)
-            return NotFound(new { message = "Evento non trovato o non autorizzato" });
+            if (evt == null)
+                return NotFound(new { message = "Evento non trovato o non autorizzato" });
 
-        return Ok(evt);
+            return Ok(evt);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Validazioni di dominio (filiale/reparto non validi): 400, non 500.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

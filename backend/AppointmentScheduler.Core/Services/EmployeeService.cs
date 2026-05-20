@@ -29,6 +29,9 @@ public class EmployeeService : IEmployeeService
                     .ThenInclude(es => es.Skill)
             .Include(m => m.Role)
                 .ThenInclude(r => r.Features)
+            .Include(m => m.HomeBranch)
+            .Include(m => m.HomeDepartment)
+            .Include(m => m.BranchAccess)
             .Where(m => m.MerchantId == merchantId && m.IsActive)
             .OrderBy(m => m.Employee.LastName)
             .ThenBy(m => m.Employee.FirstName)
@@ -48,6 +51,9 @@ public class EmployeeService : IEmployeeService
                     .ThenInclude(es => es.Skill)
             .Include(m => m.Role)
                 .ThenInclude(r => r.Features)
+            .Include(m => m.HomeBranch)
+            .Include(m => m.HomeDepartment)
+            .Include(m => m.BranchAccess)
             .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
 
         if (membership == null)
@@ -91,32 +97,42 @@ public class EmployeeService : IEmployeeService
             await _context.SaveChangesAsync();
         }
 
+        var homeBranchId = await ResolveHomeBranchIdAsync(merchantId, request.HomeBranchId);
+        var homeDepartmentId = await ValidateDepartmentForBranchAsync(homeBranchId, request.HomeDepartmentId);
+
         // Check for existing membership (even inactive)
         var existingMembership = await _context.EmployeeMemberships
             .FirstOrDefaultAsync(m => m.EmployeeId == employee.Id && m.MerchantId == merchantId);
 
+        EmployeeMembership membershipEntity;
         if (existingMembership != null)
         {
             // Reactivate existing membership
             existingMembership.IsActive = true;
             existingMembership.RoleId = request.RoleId;
+            existingMembership.HomeBranchId = homeBranchId;
+            existingMembership.HomeDepartmentId = homeDepartmentId;
+            membershipEntity = existingMembership;
         }
         else
         {
-            var membership = new EmployeeMembership
+            membershipEntity = new EmployeeMembership
             {
                 EmployeeId = employee.Id,
                 MerchantId = merchantId,
                 RoleId = request.RoleId,
+                HomeBranchId = homeBranchId,
+                HomeDepartmentId = homeDepartmentId,
                 IsActive = true,
                 JoinedAt = DateTime.UtcNow
             };
-            _context.EmployeeMemberships.Add(membership);
+            _context.EmployeeMemberships.Add(membershipEntity);
         }
 
         await _context.SaveChangesAsync();
 
         await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
+        await SyncBranchAccessAsync(membershipEntity.Id, merchantId, homeBranchId, request.AllowedBranchIds);
 
         // Return with full membership context
         return (await GetByIdAsync(employee.Id, merchantId))!;
@@ -131,10 +147,14 @@ public class EmployeeService : IEmployeeService
             .Include(m => m.Employee)
             .Include(m => m.Role)
                 .ThenInclude(r => r.Features)
+            .Include(m => m.BranchAccess)
             .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
 
         if (membership == null)
             return null;
+
+        var homeBranchId = await ResolveHomeBranchIdAsync(merchantId, request.HomeBranchId);
+        var homeDepartmentId = await ValidateDepartmentForBranchAsync(homeBranchId, request.HomeDepartmentId);
 
         var employee = membership.Employee;
         employee.FirstName = request.FirstName;
@@ -145,14 +165,21 @@ public class EmployeeService : IEmployeeService
 
         membership.RoleId = request.RoleId;
         membership.IsActive = request.IsActive;
+        membership.HomeBranchId = homeBranchId;
+        membership.HomeDepartmentId = homeDepartmentId;
 
         await _context.SaveChangesAsync();
 
         await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
+        await SyncBranchAccessAsync(membership.Id, merchantId, homeBranchId, request.AllowedBranchIds);
 
         // Reload role with features
         await _context.Entry(membership).Reference(m => m.Role).LoadAsync();
         await _context.Entry(membership.Role).Collection(r => r.Features).LoadAsync();
+        await _context.Entry(membership).Reference(m => m.HomeBranch).LoadAsync();
+        if (membership.HomeDepartmentId.HasValue)
+            await _context.Entry(membership).Reference(m => m.HomeDepartment).LoadAsync();
+        await _context.Entry(membership).Collection(m => m.BranchAccess).LoadAsync();
         await _context.Entry(employee).Collection(e => e.Skills).LoadAsync();
         foreach (var es in employee.Skills)
             await _context.Entry(es).Reference(x => x.Skill).LoadAsync();
@@ -214,6 +241,85 @@ public class EmployeeService : IEmployeeService
         await _context.SaveChangesAsync();
     }
 
+    /// <summary>
+    /// Risolve la filiale primaria: se non specificata/non valida, usa la HQ del merchant.
+    /// </summary>
+    private async Task<int> ResolveHomeBranchIdAsync(int merchantId, int? requestedBranchId)
+    {
+        if (requestedBranchId.HasValue && requestedBranchId.Value > 0)
+        {
+            var ok = await _context.MerchantBranches
+                .AnyAsync(b => b.Id == requestedBranchId.Value && b.MerchantId == merchantId);
+            if (ok)
+                return requestedBranchId.Value;
+            throw new InvalidOperationException("Filiale non valida per questo merchant.");
+        }
+
+        var hq = await _context.MerchantBranches
+            .Where(b => b.MerchantId == merchantId)
+            .OrderByDescending(b => b.IsHeadquarters)
+            .ThenBy(b => b.Id)
+            .Select(b => (int?)b.Id)
+            .FirstOrDefaultAsync();
+
+        if (hq == null)
+            throw new InvalidOperationException("Il merchant non ha filiali configurate.");
+
+        return hq.Value;
+    }
+
+    /// <summary>
+    /// Verifica che il reparto (se valorizzato) appartenga alla filiale indicata.
+    /// Ritorna il departmentId valido oppure null.
+    /// </summary>
+    private async Task<int?> ValidateDepartmentForBranchAsync(int branchId, int? departmentId)
+    {
+        if (!departmentId.HasValue || departmentId.Value <= 0)
+            return null;
+
+        var ok = await _context.Departments
+            .AnyAsync(d => d.Id == departmentId.Value && d.BranchId == branchId);
+        if (!ok)
+            throw new InvalidOperationException("Il reparto selezionato non appartiene alla filiale primaria.");
+
+        return departmentId.Value;
+    }
+
+    /// <summary>
+    /// Sincronizza le filiali aggiuntive consentite del dipendente. La HomeBranch è
+    /// sempre implicitamente consentita e viene esclusa dalla tabella EmployeeBranchAccess.
+    /// Considera solo filiali appartenenti al merchant (anti cross-tenant).
+    /// </summary>
+    private async Task SyncBranchAccessAsync(int membershipId, int merchantId, int homeBranchId, List<int> allowedBranchIds)
+    {
+        var validBranchIds = await _context.MerchantBranches
+            .Where(b => b.MerchantId == merchantId && allowedBranchIds.Contains(b.Id))
+            .Select(b => b.Id)
+            .ToListAsync();
+        // La HomeBranch è già consentita: non duplicarla in EmployeeBranchAccess.
+        var desired = new HashSet<int>(validBranchIds.Where(id => id != homeBranchId));
+
+        var existing = await _context.EmployeeBranchAccess
+            .Where(a => a.MembershipId == membershipId)
+            .ToListAsync();
+        var existingSet = existing.Select(a => a.BranchId).ToHashSet();
+
+        var toRemove = existing.Where(a => !desired.Contains(a.BranchId)).ToList();
+        if (toRemove.Count > 0)
+            _context.EmployeeBranchAccess.RemoveRange(toRemove);
+
+        foreach (var bid in desired.Where(b => !existingSet.Contains(b)))
+        {
+            _context.EmployeeBranchAccess.Add(new EmployeeBranchAccess
+            {
+                MembershipId = membershipId,
+                BranchId = bid
+            });
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
     private static EmployeeDto MapToDto(Employee employee, EmployeeMembership membership, int merchantId)
     {
         var activeFeatures = membership.Role?.Features
@@ -244,7 +350,13 @@ public class EmployeeService : IEmployeeService
             RoleId = membership.RoleId,
             RoleName = membership.Role?.Name,
             ActiveFeatures = activeFeatures,
-            Skills = skills
+            Skills = skills,
+            HomeBranchId = membership.HomeBranchId,
+            HomeBranchName = membership.HomeBranch?.Name,
+            HomeDepartmentId = membership.HomeDepartmentId,
+            HomeDepartmentName = membership.HomeDepartment?.Name,
+            HomeDepartmentColor = membership.HomeDepartment?.Color,
+            AllowedBranchIds = membership.BranchAccess?.Select(a => a.BranchId).ToList() ?? new List<int>()
         };
     }
 }

@@ -75,6 +75,7 @@ try
     builder.Services.AddScoped<IEmployeeService, EmployeeService>();
     builder.Services.AddScoped<IEmployeeRequestService, EmployeeRequestService>();
     builder.Services.AddScoped<ISkillService, SkillService>();
+    builder.Services.AddScoped<IBranchService, BranchService>();
 
     // HR Documents (Azure Blob)
     builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();

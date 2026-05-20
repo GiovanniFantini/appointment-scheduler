@@ -98,6 +98,22 @@ public class AuthService : IAuthService
         _context.Merchants.Add(merchant);
         await _context.SaveChangesAsync();
 
+        // Crea la filiale HQ di default (sede principale).
+        var headquarters = new MerchantBranch
+        {
+            MerchantId = merchant.Id,
+            Name = string.IsNullOrWhiteSpace(request.CompanyName) ? "Sede principale" : request.CompanyName,
+            Address = request.Address,
+            City = request.City,
+            PostalCode = request.PostalCode,
+            Country = request.Country,
+            Phone = request.BusinessPhone,
+            IsHeadquarters = true,
+            IsActive = true
+        };
+        _context.MerchantBranches.Add(headquarters);
+        await _context.SaveChangesAsync();
+
         // Crea il ruolo "Responsabile App" con tutte le feature attive
         var defaultRole = new MerchantRole
         {
@@ -137,6 +153,7 @@ public class AuthService : IAuthService
             EmployeeId = ownerEmployee.Id,
             MerchantId = merchant.Id,
             RoleId = defaultRole.Id,
+            HomeBranchId = headquarters.Id,
             IsActive = true
         });
         await _context.SaveChangesAsync();

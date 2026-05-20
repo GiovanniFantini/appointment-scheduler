@@ -18,6 +18,19 @@ public class EventDto
 {
     public int Id { get; set; }
     public int MerchantId { get; set; }
+
+    /// <summary>Filiale dell'evento. Sempre valorizzata.</summary>
+    public int BranchId { get; set; }
+    public string BranchName { get; set; } = string.Empty;
+
+    /// <summary>Reparto dell'evento. Null = turno trasversale / Jolly.</summary>
+    public int? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
+    public string? DepartmentColor { get; set; }
+
+    /// <summary>Se true l'evento (es. chiusura) vale per tutte le filiali.</summary>
+    public bool AppliesToAllBranches { get; set; }
+
     public string Title { get; set; } = string.Empty;
     public EventType EventType { get; set; }
     public string EventTypeName => EventType.ToString();
@@ -61,6 +74,11 @@ public class EventParticipantDto
     public int? SkillId { get; set; }
     public string? SkillName { get; set; }
     public string? SkillColor { get; set; }
+
+    /// <summary>Reparto con cui il partecipante lavora in questo turno (opzionale — caso Jolly).</summary>
+    public int? DepartmentId { get; set; }
+    public string? DepartmentName { get; set; }
+    public string? DepartmentColor { get; set; }
 }
 
 /// <summary>
@@ -73,10 +91,20 @@ public class ParticipantOverride
     public TimeOnly? StartTimeOverride { get; set; }
     public TimeOnly? EndTimeOverride { get; set; }
     public string? ParticipantNotes { get; set; }
+
+    /// <summary>Reparto con cui questo partecipante lavora nel turno (opzionale — caso Jolly).</summary>
+    public int? DepartmentId { get; set; }
 }
 
 public class CreateEventRequest
 {
+    /// <summary>Filiale dell'evento. Obbligatoria.</summary>
+    public int BranchId { get; set; }
+    /// <summary>Reparto dell'evento. Null = turno trasversale / Jolly.</summary>
+    public int? DepartmentId { get; set; }
+    /// <summary>Se true l'evento vale per tutte le filiali (es. chiusura aziendale).</summary>
+    public bool AppliesToAllBranches { get; set; } = false;
+
     public string Title { get; set; } = string.Empty;
     public EventType EventType { get; set; }
     public DateOnly StartDate { get; set; }
@@ -97,6 +125,13 @@ public class CreateEventRequest
 
 public class UpdateEventRequest
 {
+    /// <summary>Filiale dell'evento. Obbligatoria.</summary>
+    public int BranchId { get; set; }
+    /// <summary>Reparto dell'evento. Null = turno trasversale / Jolly.</summary>
+    public int? DepartmentId { get; set; }
+    /// <summary>Se true l'evento vale per tutte le filiali (es. chiusura aziendale).</summary>
+    public bool AppliesToAllBranches { get; set; } = false;
+
     public string Title { get; set; } = string.Empty;
     public EventType EventType { get; set; }
     public DateOnly StartDate { get; set; }
@@ -131,6 +166,16 @@ public class CloneWeekRequest
     public int NumberOfWeeks { get; set; } = 1;
     /// <summary>Se valorizzato, clona solo i turni che hanno almeno uno di questi dipendenti come partecipante.</summary>
     public List<int>? EmployeeFilter { get; set; }
+
+    /// <summary>
+    /// Se valorizzato, clona solo i turni di questa filiale. Null = tutte le filiali.
+    /// </summary>
+    public int? SourceBranchId { get; set; }
+
+    /// <summary>
+    /// Filiale di destinazione dei cloni. Null = ogni clone mantiene la filiale dell'originale.
+    /// </summary>
+    public int? TargetBranchId { get; set; }
 }
 
 /// <summary>
@@ -140,13 +185,15 @@ public enum ShiftConflictKind
 {
     LeaveOverlap = 1,
     ShiftOverlap = 2,
-    SkillMismatch = 3
+    SkillMismatch = 3,
+    BranchMismatch = 4
 }
 
 /// <summary>
 /// Avviso non bloccante: segnala che l'assegnazione di un dipendente a un turno
-/// si sovrappone con ferie approvate, con un altro turno, oppure che la mansione
-/// con cui partecipa non è tra quelle dichiarate sull'employee.
+/// si sovrappone con ferie approvate, con un altro turno, che la mansione con cui
+/// partecipa non è tra quelle dichiarate sull'employee, oppure che il dipendente
+/// è assegnato a una filiale per cui non è abilitato (BranchMismatch).
 /// </summary>
 public class ShiftConflictDto
 {
@@ -171,6 +218,10 @@ public class ShiftConflictDto
     /// <summary>Mansione richiesta non posseduta dal dipendente (solo per SkillMismatch).</summary>
     public int? SkillId { get; set; }
     public string? SkillName { get; set; }
+
+    /// <summary>Filiale a cui il dipendente non è abilitato (solo per BranchMismatch).</summary>
+    public int? BranchId { get; set; }
+    public string? BranchName { get; set; }
 
     public string Message { get; set; } = string.Empty;
 }

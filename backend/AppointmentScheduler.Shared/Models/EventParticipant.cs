@@ -33,8 +33,16 @@ public class EventParticipant
     /// </summary>
     public int? SkillId { get; set; }
 
+    /// <summary>
+    /// Reparto con cui il singolo partecipante lavora in QUESTO turno. Opzionale:
+    /// permette a un Jolly di fare un reparto diverso turno per turno
+    /// (es. cassa in un turno, magazzino in un altro). Null = eredita Event.DepartmentId.
+    /// </summary>
+    public int? DepartmentId { get; set; }
+
     // Navigation properties
     public Event Event { get; set; } = null!;
     public Employee Employee { get; set; } = null!;
     public Skill? Skill { get; set; }
+    public Department? Department { get; set; }
 }

@@ -9,9 +9,12 @@ namespace AppointmentScheduler.Core.Services;
 public interface IEventService
 {
     /// <summary>
-    /// Recupera tutti gli eventi di un merchant, con filtri opzionali
+    /// Recupera tutti gli eventi di un merchant, con filtri opzionali.
+    /// branchId null = tutte le filiali; departmentId null = tutti i reparti.
+    /// Gli eventi con AppliesToAllBranches compaiono in qualsiasi filtro filiale.
     /// </summary>
-    Task<List<EventDto>> GetMerchantEventsAsync(int merchantId, DateOnly? from, DateOnly? to, EventType? type);
+    Task<List<EventDto>> GetMerchantEventsAsync(int merchantId, DateOnly? from, DateOnly? to, EventType? type,
+        int? branchId = null, int? departmentId = null);
 
     /// <summary>
     /// Recupera gli eventi di un dipendente in un merchant specifico

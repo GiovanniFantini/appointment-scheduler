@@ -14,6 +14,8 @@ import RuoliPage from './pages/RuoliPage/RuoliPage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
 import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
+import FilialiPage from './pages/FilialiPage/FilialiPage'
+import { BranchProvider } from './contexts/BranchContext'
 
 export interface MerchantUser {
   userId: number
@@ -74,13 +76,24 @@ function App(_props: AppProps) {
         <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPasswordPage />} />
-        <Route element={user ? <AppLayout user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}>
+        <Route
+          element={
+            user
+              ? (
+                <BranchProvider>
+                  <AppLayout user={user} onLogout={handleLogout} />
+                </BranchProvider>
+              )
+              : <Navigate to="/login" />
+          }
+        >
           <Route path="/" element={<DashboardPage user={user!} />} />
           <Route path="/calendario" element={<CalendarioPage user={user!} />} />
           <Route path="/pianificazione" element={<PianificazionePage user={user!} />} />
           <Route path="/richieste" element={<RichiestePage />} />
           <Route path="/risorse" element={<RisorsePage user={user!} />} />
           <Route path="/mansioni" element={<MansioniPage />} />
+          <Route path="/filiali" element={<FilialiPage />} />
           <Route path="/ruoli" element={<RuoliPage />} />
           <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />

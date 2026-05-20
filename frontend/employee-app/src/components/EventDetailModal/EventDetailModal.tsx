@@ -63,6 +63,8 @@ export default function EventDetailModal({ event, onClose }: Props) {
   const isOnCall = event.isOnCall ?? (event.extendedProps?.isOnCall as boolean | undefined)
   const participants = event.participants ?? (event.extendedProps?.participants as EventDetail['participants'] | undefined)
   const notes = event.notes ?? (event.extendedProps?.notes as string | undefined)
+  const branchName = event.extendedProps?.branchName as string | undefined
+  const departmentName = event.extendedProps?.departmentName as string | null | undefined
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -114,6 +116,15 @@ export default function EventDetailModal({ event, onClose }: Props) {
             <div className="event-detail-row">
               <span className="event-detail-label">Durata</span>
               <span className="event-detail-value">Tutto il giorno</span>
+            </div>
+          )}
+
+          {branchName && (
+            <div className="event-detail-row">
+              <span className="event-detail-label">Filiale</span>
+              <span className="event-detail-value">
+                🏢 {branchName}{departmentName ? ` · ${departmentName}` : ''}
+              </span>
             </div>
           )}
 

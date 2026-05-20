@@ -19,6 +19,7 @@ public class MerchantDto
 
     public UserDto? Owner { get; set; }
     public int EmployeeCount { get; set; }
+    public int BranchCount { get; set; }
 }
 
 public class CreateMerchantRequest

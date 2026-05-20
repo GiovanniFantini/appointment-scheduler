@@ -87,12 +87,20 @@ public class EmployeesController : ControllerBase
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        var employee = await _employeeService.UpdateAsync(id, merchantId, request);
+        try
+        {
+            var employee = await _employeeService.UpdateAsync(id, merchantId, request);
 
-        if (employee == null)
-            return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
+            if (employee == null)
+                return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
 
-        return Ok(employee);
+            return Ok(employee);
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Validazioni di dominio (filiale/reparto non validi): 400, non 500.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

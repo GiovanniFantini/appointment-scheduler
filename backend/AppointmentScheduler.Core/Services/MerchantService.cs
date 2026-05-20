@@ -24,6 +24,7 @@ public class MerchantService : IMerchantService
         var merchants = await _context.Merchants
             .Include(m => m.User)
             .Include(m => m.EmployeeMemberships)
+            .Include(m => m.Branches)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
 
@@ -38,6 +39,7 @@ public class MerchantService : IMerchantService
         var merchants = await _context.Merchants
             .Include(m => m.User)
             .Include(m => m.EmployeeMemberships)
+            .Include(m => m.Branches)
             .Where(m => !m.IsApproved)
             .OrderBy(m => m.CreatedAt)
             .ToListAsync();
@@ -53,6 +55,7 @@ public class MerchantService : IMerchantService
         var merchant = await _context.Merchants
             .Include(m => m.User)
             .Include(m => m.EmployeeMemberships)
+            .Include(m => m.Branches)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         return merchant == null ? null : MapToDto(merchant);
@@ -102,6 +105,7 @@ public class MerchantService : IMerchantService
         var merchant = await _context.Merchants
             .Include(m => m.User)
             .Include(m => m.EmployeeMemberships)
+            .Include(m => m.Branches)
             .FirstOrDefaultAsync(m => m.Id == id);
 
         if (merchant == null)
@@ -148,7 +152,8 @@ public class MerchantService : IMerchantService
                 LastName = m.User.LastName,
                 PhoneNumber = m.User.PhoneNumber
             } : null,
-            EmployeeCount = m.EmployeeMemberships.Count(em => em.IsActive)
+            EmployeeCount = m.EmployeeMemberships.Count(em => em.IsActive),
+            BranchCount = m.Branches.Count
         };
     }
 }

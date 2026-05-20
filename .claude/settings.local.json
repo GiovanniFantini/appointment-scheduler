@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Depth 2)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Format-Table -AutoSize)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(grep \"\\\\.cs$\")",
+      "Bash(grep -r \"ClaimsPrincipal\\\\|User\\\\\\\\.Claims\\\\|merchant\" c:/Repos/appointment-scheduler/backend/AppointmentScheduler.API/Controllers/*.cs)",
+      "Bash(curl -s -X POST http://localhost:5099/api/auth/register/merchant -H \"Content-Type: application/json\" -d '{\"email\":\"test-multi2@branch.it\",\"password\":\"Password1!\",\"firstName\":\"Test\",\"lastName\":\"Branch\",\"companyName\":\"Multi SRL\"}' -w \"\\\\nHTTP %{http_code}\\\\n\")",
+      "Bash(taskkill //F //PID 44028)",
+      "Bash(taskkill //F //IM AppointmentScheduler.API.exe)"
+    ]
+  }
+}

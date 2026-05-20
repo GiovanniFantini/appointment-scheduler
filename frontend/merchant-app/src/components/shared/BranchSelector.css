@@ -1,0 +1,38 @@
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.branch-selector-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 4px 10px;
+}
+
+.branch-selector-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.branch-selector-select {
+  background: transparent;
+  color: #f1f5f9;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 5px 4px;
+  cursor: pointer;
+  outline: none;
+  min-width: 130px;
+}
+
+.branch-selector-select option {
+  background: #1e293b;
+  color: #f1f5f9;
+}

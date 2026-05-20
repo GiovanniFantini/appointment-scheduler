@@ -14,6 +14,9 @@ interface ApiEvent {
   id: number
   title: string
   eventTypeName: string    // "Turno" | "Ferie" | "Permessi" | "Malattia" | "ChiusuraAziendale"
+  branchName?: string
+  departmentName?: string | null
+  departmentColor?: string | null
   startDate: string        // "2024-01-15"
   endDate?: string
   isAllDay: boolean
@@ -102,6 +105,8 @@ function apiEventToFCEvent(e: ApiEvent): EventInput {
     end = (e.endDate ?? e.startDate) + (e.endTime ? `T${e.endTime}` : '')
   }
 
+  // Il nome filiale/reparto NON va nel titolo (sarebbe rumore per chi ha una
+  // sola sede): resta in extendedProps e viene mostrato nel modale di dettaglio.
   return {
     id: String(e.id),
     title: e.title,
@@ -113,6 +118,8 @@ function apiEventToFCEvent(e: ApiEvent): EventInput {
     extendedProps: {
       eventTypeName: e.eventTypeName,
       isOnCall: e.isOnCall,
+      branchName: e.branchName,
+      departmentName: e.departmentName,
       participants: e.participants.map(p => ({
         id: p.employeeId,
         name: p.fullName,
@@ -326,6 +333,10 @@ export default function CalendarioPage() {
       participants: ep.participants as EventDetail['participants'],
       myParticipantSkill,
       notes: ep.notes as string | undefined,
+      extendedProps: {
+        branchName: ep.branchName,
+        departmentName: ep.departmentName,
+      },
     })
   }
 

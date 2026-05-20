@@ -8,5 +8,6 @@ public enum MerchantFeature
     Ruoli = 4,
     Documenti = 5,
     Report = 6,
-    Mansioni = 7
+    Mansioni = 7,
+    Filiali = 8
 }

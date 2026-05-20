@@ -4,6 +4,8 @@ import EventModal from '../../components/EventModal/EventModal'
 import type { CalEvent } from '../../components/EventModal/EventModal'
 import { MerchantUser } from '../../App'
 import { formatBrowserDate } from '../../lib/dateUtils'
+import { useBranch } from '../../contexts/BranchContext'
+import BranchSelector from '../../components/shared/BranchSelector'
 import './PianificazionePage.css'
 
 interface Props {
@@ -21,6 +23,9 @@ interface ApiEvent {
   id: number
   title: string
   eventTypeName: string
+  branchId: number
+  departmentId?: number | null
+  appliesToAllBranches?: boolean
   startDate: string
   endDate?: string
   isAllDay: boolean
@@ -34,6 +39,7 @@ interface ApiEvent {
     startTimeOverride?: string
     endTimeOverride?: string
     participantNotes?: string
+    departmentId?: number | null
   }>
 }
 
@@ -59,6 +65,7 @@ function addDays(d: Date, n: number): Date {
 const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
 export default function PianificazionePage(_: Props) {
+  const { activeBranchId, activeDepartmentId, isMultiBranch } = useBranch()
   const [weekStart, setWeekStart] = useState<Date>(mondayOf(new Date()))
   const [employees, setEmployees] = useState<Employee[]>([])
   const [events, setEvents] = useState<ApiEvent[]>([])
@@ -79,16 +86,19 @@ export default function PianificazionePage(_: Props) {
     try {
       const from = toISO(weekStart)
       const to = toISO(weekEnd)
+      const eventParams: Record<string, string | number> = { from, to }
+      if (activeBranchId != null) eventParams.branchId = activeBranchId
+      if (activeDepartmentId != null) eventParams.departmentId = activeDepartmentId
       const [empRes, evRes] = await Promise.all([
         apiClient.get<Employee[]>('/employees'),
-        apiClient.get<ApiEvent[]>('/events', { params: { from, to } }),
+        apiClient.get<ApiEvent[]>('/events', { params: eventParams }),
       ])
       setEmployees((Array.isArray(empRes.data) ? empRes.data : []).filter(e => e.isActive))
       setEvents(Array.isArray(evRes.data) ? evRes.data.filter(e => e.eventTypeName === 'Turno') : [])
     } finally {
       setLoading(false)
     }
-  }, [weekStart, weekEnd])
+  }, [weekStart, weekEnd, activeBranchId, activeDepartmentId])
 
   useEffect(() => {
     fetchData()
@@ -132,6 +142,9 @@ export default function PianificazionePage(_: Props) {
         id: e.id,
         title: e.title,
         eventType: 'Turno',
+        branchId: e.branchId,
+        departmentId: e.departmentId ?? null,
+        appliesToAllBranches: e.appliesToAllBranches ?? false,
         isAllDay: e.isAllDay,
         startDate: e.startDate,
         endDate: e.endDate,
@@ -141,12 +154,13 @@ export default function PianificazionePage(_: Props) {
         ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
         coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
         participantOverrides: e.participants
-          .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes)
+          .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes || p.departmentId != null)
           .map(p => ({
             employeeId: p.employeeId,
             startTimeOverride: p.startTimeOverride?.slice(0, 5),
             endTimeOverride: p.endTimeOverride?.slice(0, 5),
             participantNotes: p.participantNotes,
+            departmentId: p.departmentId ?? null,
           })),
         recurrence: 'Nessuna',
         notificationEnabled: false,
@@ -169,6 +183,9 @@ export default function PianificazionePage(_: Props) {
         sourceWeekStart: toISO(weekStart),
         targetWeekStart: cloneTargetWeek,
         numberOfWeeks: cloneWeeks,
+        // Se è selezionata una filiale, clona solo i suoi turni nella stessa filiale.
+        sourceBranchId: activeBranchId ?? undefined,
+        targetBranchId: activeBranchId ?? undefined,
       })
       const count = Array.isArray(res.data) ? res.data.length : 0
       setCloneMessage(`${count} turno/i clonato/i.`)
@@ -206,6 +223,7 @@ export default function PianificazionePage(_: Props) {
           <h1 className="page-title">Pianificazione</h1>
           <p className="page-subtitle">Vista settimanale turni per risorsa</p>
         </div>
+        {isMultiBranch && <BranchSelector />}
       </div>
 
       <div className="pianif-toolbar">

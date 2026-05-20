@@ -15,6 +15,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Merchant> Merchants { get; set; }
     public DbSet<Employee> Employees { get; set; }
 
+    // Branches & Departments (filiali / reparti)
+    public DbSet<MerchantBranch> MerchantBranches { get; set; }
+    public DbSet<Department> Departments { get; set; }
+    public DbSet<EmployeeBranchAccess> EmployeeBranchAccess { get; set; }
+
     // Membership & Roles
     public DbSet<EmployeeMembership> EmployeeMemberships { get; set; }
     public DbSet<MerchantRole> MerchantRoles { get; set; }
@@ -76,6 +81,58 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.BusinessEmail).HasMaxLength(256);
         });
 
+        // ── MerchantBranch ────────────────────────────────────────────────────
+        modelBuilder.Entity<MerchantBranch>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Code).HasMaxLength(50);
+            entity.Property(e => e.Phone).HasMaxLength(30);
+
+            entity.HasOne(e => e.Merchant)
+                .WithMany(m => m.Branches)
+                .HasForeignKey(e => e.MerchantId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.MerchantId);
+        });
+
+        // ── Department ────────────────────────────────────────────────────────
+        modelBuilder.Entity<Department>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Color).IsRequired().HasMaxLength(20);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany(b => b.Departments)
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.BranchId, e.Name }).IsUnique();
+        });
+
+        // ── EmployeeBranchAccess ──────────────────────────────────────────────
+        modelBuilder.Entity<EmployeeBranchAccess>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Membership)
+                .WithMany(m => m.BranchAccess)
+                .HasForeignKey(e => e.MembershipId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.MembershipId, e.BranchId }).IsUnique();
+            entity.HasIndex(e => e.BranchId);
+        });
+
         // ── Employee ──────────────────────────────────────────────────────────
         modelBuilder.Entity<Employee>(entity =>
         {
@@ -106,8 +163,19 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.RoleId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(e => e.HomeBranch)
+                .WithMany()
+                .HasForeignKey(e => e.HomeBranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.HomeDepartment)
+                .WithMany()
+                .HasForeignKey(e => e.HomeDepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(e => new { e.EmployeeId, e.MerchantId }).IsUnique();
             entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => e.HomeBranchId);
         });
 
         // ── MerchantRole ──────────────────────────────────────────────────────
@@ -155,8 +223,19 @@ public class ApplicationDbContext : DbContext
                 .HasForeignKey(e => e.CreatedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(e => e.Branch)
+                .WithMany(b => b.Events)
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Department)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(e => e.MerchantId);
             entity.HasIndex(e => new { e.MerchantId, e.StartDate });
+            entity.HasIndex(e => new { e.BranchId, e.StartDate });
             entity.HasIndex(e => e.EventType);
         });
 
@@ -181,6 +260,11 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Skill)
                 .WithMany(s => s.Participations)
                 .HasForeignKey(e => e.SkillId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.Department)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
 

@@ -17,11 +17,13 @@ public interface IShiftConflictValidator
     /// <param name="start">Ora di inizio del turno (null se all-day).</param>
     /// <param name="end">Ora di fine del turno (null se all-day).</param>
     /// <param name="excludeEventId">Se valorizzato, esclude questo eventId dal controllo sovrapposizione (utile in update).</param>
+    /// <param name="branchId">Se valorizzato, segnala i dipendenti non abilitati a questa filiale (BranchMismatch).</param>
     Task<List<ShiftConflictDto>> DetectAssignmentConflictsAsync(
         int merchantId,
         IReadOnlyList<int> employeeIds,
         DateOnly date,
         TimeOnly? start,
         TimeOnly? end,
-        int? excludeEventId = null);
+        int? excludeEventId = null,
+        int? branchId = null);
 }

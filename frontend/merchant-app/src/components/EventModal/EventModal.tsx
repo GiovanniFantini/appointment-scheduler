@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import apiClient from '../../lib/axios'
 import { skillsApi, Skill, SuggestedEmployee } from '../../lib/api/skills'
+import { useBranch } from '../../contexts/BranchContext'
 import './EventModal.css'
 
 export type EventType = 'Turno' | 'ChiusuraAziendale' | 'Ferie' | 'Permessi' | 'Malattia'
@@ -20,6 +21,8 @@ export interface ParticipantOverrideInput {
   startTimeOverride?: string
   endTimeOverride?: string
   participantNotes?: string
+  /** Reparto con cui il partecipante lavora in questo turno (caso Jolly). */
+  departmentId?: number | null
 }
 
 export interface ParticipantSkillInput {
@@ -42,6 +45,9 @@ export interface CalEvent {
   startTime?: string
   endTime?: string
   isOnCall?: boolean
+  branchId?: number
+  departmentId?: number | null
+  appliesToAllBranches?: boolean
   ownerEmployeeIds?: number[]
   coOwnerEmployeeIds?: number[]
   participantOverrides?: ParticipantOverrideInput[]
@@ -64,7 +70,7 @@ interface ShiftConflictDto {
   employeeFullName: string
   date: string
   kind: number
-  kindName: 'LeaveOverlap' | 'ShiftOverlap' | 'SkillMismatch' | string
+  kindName: 'LeaveOverlap' | 'ShiftOverlap' | 'SkillMismatch' | 'BranchMismatch' | string
   requestId?: number
   requestType?: number
   conflictingEventId?: number
@@ -73,6 +79,8 @@ interface ShiftConflictDto {
   conflictEnd?: string
   skillId?: number
   skillName?: string
+  branchId?: number
+  branchName?: string
   message: string
 }
 
@@ -112,9 +120,13 @@ function getApiErrorMessage(data: ApiErrorResponse | undefined): string | undefi
 
 export default function EventModal({ event, defaultDate, onClose, onSaved }: EventModalProps) {
   const isEdit = !!event?.id
+  const { activeBranches, isMultiBranch, defaultBranchId } = useBranch()
 
   const [title, setTitle] = useState(event?.title ?? '')
   const [eventType, setEventType] = useState<EventType>(event?.eventType ?? 'Turno')
+  const [branchId, setBranchId] = useState<number | null>(event?.branchId ?? defaultBranchId)
+  const [departmentId, setDepartmentId] = useState<number | null>(event?.departmentId ?? null)
+  const [appliesToAllBranches, setAppliesToAllBranches] = useState(event?.appliesToAllBranches ?? false)
   const [isAllDay, setIsAllDay] = useState(event?.isAllDay ?? false)
   const [startDate, setStartDate] = useState(event?.startDate ?? defaultDate ?? '')
   const [endDate, setEndDate] = useState(event?.endDate ?? '')
@@ -158,6 +170,16 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     }).catch(() => {})
     skillsApi.list().then(list => setSkills(list.filter(s => s.isActive))).catch(() => {})
   }, [])
+
+  // In creazione, se il modale è aperto prima che il BranchContext finisca di
+  // caricare le filiali, branchId resta null: appena defaultBranchId è disponibile
+  // lo si allinea (solo se l'utente non ha ancora scelto una filiale).
+  useEffect(() => {
+    if (!isEdit && branchId == null && defaultBranchId != null) {
+      setBranchId(defaultBranchId)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultBranchId])
 
   // Inizializza repeatWeekly da una recurrence preesistente (formato semplice: "WEEKLY;UNTIL=YYYY-MM-DD")
   useEffect(() => {
@@ -261,6 +283,9 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const buildPayload = () => ({
     title,
     eventType: EVENT_TYPE_VALUES[eventType],
+    branchId: branchId ?? 0,
+    departmentId: departmentId,
+    appliesToAllBranches: eventType === 'ChiusuraAziendale' ? appliesToAllBranches : false,
     isAllDay,
     startDate,
     endDate: endDate || startDate,
@@ -270,12 +295,13 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     ownerEmployeeIds: selectedOwnerIds,
     coOwnerEmployeeIds: [],
     participantOverrides: participantOverrides
-      .filter(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
+      .filter(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes || o.departmentId != null)
       .map(o => ({
         employeeId: o.employeeId,
         startTimeOverride: toApiTime(o.startTimeOverride),
         endTimeOverride: toApiTime(o.endTimeOverride),
         participantNotes: o.participantNotes || undefined,
+        departmentId: o.departmentId ?? undefined,
       })),
     requiredSkills: eventType === 'Turno'
       ? requiredSkills.filter(r => r.quantity > 0)
@@ -292,6 +318,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
   const handleSave = async () => {
     if (!title.trim()) { setError('Il titolo è obbligatorio'); return }
+    if (isMultiBranch && !branchId) { setError('Seleziona la filiale dell\'evento'); return }
     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
     if (!endDate) { setError('La data di fine è obbligatoria'); return }
     if (endDate < startDate) { setError('La data di fine non può essere precedente alla data di inizio'); return }
@@ -401,7 +428,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
         {eventType === 'Turno' && (
           <div className="wizard-stepper">
             <div className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
-              <span className="step-num">1</span><span className="step-label">Quando</span>
+              <span className="step-num">1</span><span className="step-label">{isMultiBranch ? 'Dove e quando' : 'Quando'}</span>
             </div>
             <div className="step-sep" />
             <div className={`step ${step === 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
@@ -469,6 +496,74 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                   ))}
                 </select>
               </div>
+
+              {isMultiBranch && (
+                <div className="modal-row">
+                  {/* Dropdown filiale solo con più di una sede: con una sola filiale
+                      (es. fabbrica con soli reparti) sarebbe un menu inutile. */}
+                  {activeBranches.length > 1 && (
+                    <div className="modal-form-group">
+                      <label className="modal-label">Filiale *</label>
+                      <select
+                        className="modal-select"
+                        value={branchId ?? ''}
+                        onChange={e => {
+                          setBranchId(e.target.value ? Number(e.target.value) : null)
+                          // Il reparto dipende dalla filiale: cambiando filiale si
+                          // azzera sia quello dell'evento sia quelli dei partecipanti
+                          // (Jolly), altrimenti punterebbero a reparti di un'altra
+                          // filiale e il backend rifiuterebbe il salvataggio.
+                          setDepartmentId(null)
+                          setParticipantOverrides(prev =>
+                            prev.map(o => o.departmentId != null ? { ...o, departmentId: null } : o))
+                        }}
+                      >
+                        <option value="">Seleziona filiale…</option>
+                        {activeBranches.map(b => (
+                          <option key={b.id} value={b.id}>
+                            {b.name}{b.isHeadquarters ? ' (sede principale)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {(() => {
+                    const selBranch = activeBranches.find(b => b.id === branchId)
+                    const depts = selBranch?.departments.filter(d => d.isActive) ?? []
+                    if (depts.length === 0) return null
+                    return (
+                      <div className="modal-form-group">
+                        <label className="modal-label">Reparto</label>
+                        <select
+                          className="modal-select"
+                          value={departmentId ?? ''}
+                          onChange={e => setDepartmentId(e.target.value ? Number(e.target.value) : null)}
+                        >
+                          <option value="">— Nessuno / Jolly —</option>
+                          {depts.map(d => (
+                            <option key={d.id} value={d.id}>{d.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )
+                  })()}
+                </div>
+              )}
+
+              {isMultiBranch && eventType === 'ChiusuraAziendale' && (
+                <div className="checkbox-group">
+                  <input
+                    type="checkbox"
+                    id="appliesToAllBranches"
+                    className="modal-checkbox"
+                    checked={appliesToAllBranches}
+                    onChange={e => setAppliesToAllBranches(e.target.checked)}
+                  />
+                  <label htmlFor="appliesToAllBranches" className="checkbox-label">
+                    Vale per tutte le filiali
+                  </label>
+                </div>
+              )}
 
               <div className="toggle-group">
                 <label className="toggle-switch">
@@ -877,6 +972,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                 className="btn-save"
                 onClick={() => {
                   if (step === 1) {
+                    if (isMultiBranch && !branchId) { setError('Seleziona la filiale del turno'); return }
                     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
                     if (!endDate) setEndDate(startDate)
                   }

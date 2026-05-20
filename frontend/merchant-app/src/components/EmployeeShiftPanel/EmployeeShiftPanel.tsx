@@ -35,6 +35,9 @@ interface ApiEvent {
   id: number
   title: string
   eventTypeName: string
+  branchId: number
+  departmentId?: number | null
+  appliesToAllBranches?: boolean
   startDate: string
   endDate?: string
   isAllDay: boolean
@@ -49,6 +52,7 @@ interface ApiEvent {
     startTimeOverride?: string
     endTimeOverride?: string
     participantNotes?: string
+    departmentId?: number | null
   }>
 }
 
@@ -153,6 +157,9 @@ export default function EmployeeShiftPanel({ employeeId, employeeFullName, onClo
         id: e.id,
         title: e.title,
         eventType: e.eventTypeName as CalEvent['eventType'],
+        branchId: e.branchId,
+        departmentId: e.departmentId ?? null,
+        appliesToAllBranches: e.appliesToAllBranches ?? false,
         isAllDay: e.isAllDay,
         startDate: e.startDate,
         endDate: e.endDate,
@@ -162,12 +169,13 @@ export default function EmployeeShiftPanel({ employeeId, employeeFullName, onClo
         ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
         coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
         participantOverrides: e.participants
-          .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes)
+          .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes || p.departmentId != null)
           .map(p => ({
             employeeId: p.employeeId,
             startTimeOverride: p.startTimeOverride?.slice(0, 5),
             endTimeOverride: p.endTimeOverride?.slice(0, 5),
             participantNotes: p.participantNotes,
+            departmentId: p.departmentId ?? null,
           })),
         recurrence: 'Nessuna',
         notificationEnabled: false,

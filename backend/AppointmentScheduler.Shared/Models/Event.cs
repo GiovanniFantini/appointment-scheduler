@@ -11,6 +11,25 @@ public class Event
     public int Id { get; set; }
     public int MerchantId { get; set; }
 
+    /// <summary>
+    /// Filiale a cui appartiene l'evento. Sempre valorizzata: i merchant mono-sede
+    /// puntano alla loro unica filiale HQ.
+    /// </summary>
+    public int BranchId { get; set; }
+
+    /// <summary>
+    /// Reparto a cui è legato l'evento. Null = turno trasversale / non legato a un
+    /// reparto specifico (caso Jolly).
+    /// </summary>
+    public int? DepartmentId { get; set; }
+
+    /// <summary>
+    /// Se true, l'evento (tipicamente una ChiusuraAziendale) vale per tutte le
+    /// filiali del merchant: BranchId resta valorizzato (la HQ) ma in lettura
+    /// l'evento si proietta su ogni calendario filiale.
+    /// </summary>
+    public bool AppliesToAllBranches { get; set; } = false;
+
     public string Title { get; set; } = string.Empty;
     public EventType EventType { get; set; }
 
@@ -45,6 +64,8 @@ public class Event
 
     // Navigation properties
     public Merchant Merchant { get; set; } = null!;
+    public MerchantBranch Branch { get; set; } = null!;
+    public Department? Department { get; set; }
     public User CreatedBy { get; set; } = null!;
     public ICollection<EventParticipant> Participants { get; set; } = new List<EventParticipant>();
     public ICollection<EventRequiredSkill> RequiredSkills { get; set; } = new List<EventRequiredSkill>();

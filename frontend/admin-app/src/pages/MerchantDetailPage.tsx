@@ -27,6 +27,7 @@ interface MerchantDetail {
     phoneNumber?: string
   }
   employeeCount: number
+  branchCount: number
 }
 
 function getMerchantStatus(m: MerchantDetail): string {
@@ -296,6 +297,10 @@ export default function MerchantDetailPage() {
           <div className="info-field">
             <div className="info-field-label">Employees</div>
             <div className="info-field-value">{merchant.employeeCount}</div>
+          </div>
+          <div className="info-field">
+            <div className="info-field-label">Branches</div>
+            <div className="info-field-value">{merchant.branchCount}</div>
           </div>
         </div>
       </div>

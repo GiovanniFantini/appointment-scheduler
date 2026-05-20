@@ -11,6 +11,8 @@ import EventModal from '../../components/EventModal/EventModal'
 import type { CalEvent, EventType } from '../../components/EventModal/EventModal'
 import CopyWeekDialog from '../../components/CopyWeekDialog/CopyWeekDialog'
 import { skillsApi, type Skill } from '../../lib/api/skills'
+import { useBranch } from '../../contexts/BranchContext'
+import BranchSelector from '../../components/shared/BranchSelector'
 import { MerchantUser } from '../../App'
 import './CalendarioPage.css'
 
@@ -34,6 +36,9 @@ interface ApiEventParticipant {
   skillId?: number | null
   skillName?: string | null
   skillColor?: string | null
+  departmentId?: number | null
+  departmentName?: string | null
+  departmentColor?: string | null
 }
 
 interface ApiRequiredSkill {
@@ -47,6 +52,12 @@ interface ApiRequiredSkill {
 interface ApiEvent {
   id: number
   merchantId: number
+  branchId: number
+  branchName?: string
+  departmentId?: number | null
+  departmentName?: string | null
+  departmentColor?: string | null
+  appliesToAllBranches?: boolean
   title: string
   eventType: number        // numeric enum value from server
   eventTypeName: string    // "Turno" | "ChiusuraAziendale" | etc.
@@ -102,6 +113,9 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
     id: e.id,
     title: e.title,
     eventType: e.eventTypeName as EventType,
+    branchId: e.branchId,
+    departmentId: e.departmentId ?? null,
+    appliesToAllBranches: e.appliesToAllBranches ?? false,
     isAllDay: e.isAllDay,
     startDate: e.startDate,
     endDate: e.endDate,
@@ -111,12 +125,13 @@ function apiEventToCalEvent(e: ApiEvent): Partial<CalEvent> {
     ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
     coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
     participantOverrides: e.participants
-      .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes)
+      .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes || p.departmentId != null)
       .map(p => ({
         employeeId: p.employeeId,
         startTimeOverride: p.startTimeOverride ? p.startTimeOverride.slice(0, 5) : undefined,
         endTimeOverride: p.endTimeOverride ? p.endTimeOverride.slice(0, 5) : undefined,
         participantNotes: p.participantNotes ?? undefined,
+        departmentId: p.departmentId ?? null,
       })),
     participantSkills: e.participants
       .filter(p => p.skillId != null)
@@ -132,6 +147,9 @@ function apiEventToUpdatePayload(e: ApiEvent) {
   return {
     title: e.title,
     eventType: e.eventType,
+    branchId: e.branchId,
+    departmentId: e.departmentId ?? null,
+    appliesToAllBranches: e.appliesToAllBranches ?? false,
     startDate: e.startDate,
     endDate: e.endDate ?? e.startDate,
     isAllDay: e.isAllDay,
@@ -144,12 +162,13 @@ function apiEventToUpdatePayload(e: ApiEvent) {
     ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
     coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
     participantOverrides: e.participants
-      .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes)
+      .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes || p.departmentId != null)
       .map(p => ({
         employeeId: p.employeeId,
         startTimeOverride: p.startTimeOverride,
         endTimeOverride: p.endTimeOverride,
         participantNotes: p.participantNotes,
+        departmentId: p.departmentId ?? null,
       })),
     requiredSkills: (e.requiredSkills ?? []).map(rs => ({ skillId: rs.skillId, quantity: rs.quantity })),
     participantSkills: e.participants
@@ -214,7 +233,7 @@ function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
   }
 }
 
-function toFCEvent(e: ApiEvent): EventInput {
+function toFCEvent(e: ApiEvent, showBranchBadge: boolean): EventInput {
   // Per i Turni con mansione richiesta, usa il colore della mansione "principale"
   // (la prima della lista) come pillola — UX stile Google Calendar.
   let color = EVENT_COLORS[e.eventTypeName] ?? '#6366f1'
@@ -234,9 +253,13 @@ function toFCEvent(e: ApiEvent): EventInput {
     end = (e.endDate ?? e.startDate) + (e.endTime ? `T${e.endTime}` : '')
   }
 
+  // In vista "Tutte le filiali" prefissa il nome della filiale per dare contesto.
+  const prefix = showBranchBadge && e.branchName ? `[${e.branchName}] ` : ''
+  const deptSuffix = e.departmentName ? ` · ${e.departmentName}` : ''
+
   return {
     id: String(e.id),
-    title: e.title,
+    title: `${prefix}${e.title}${deptSuffix}`,
     start,
     end,
     allDay: e.isAllDay,
@@ -250,6 +273,7 @@ function toFCEvent(e: ApiEvent): EventInput {
 
 export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
   const calendarRef = useRef<FullCalendar>(null)
+  const { activeBranchId, activeDepartmentId, isMultiBranch } = useBranch()
   const [events, setEvents] = useState<EventInput[]>([])
   const [selectedEvent, setSelectedEvent] = useState<Partial<CalEvent> | null>(null)
   const [defaultDate, setDefaultDate] = useState<string>('')
@@ -275,13 +299,18 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
 
   const fetchEvents = useCallback(async (from: string, to: string) => {
     try {
+      const params = new URLSearchParams({ from, to })
+      if (activeBranchId != null) params.set('branchId', String(activeBranchId))
+      if (activeDepartmentId != null) params.set('departmentId', String(activeDepartmentId))
       const [eventsRes, requestsRes] = await Promise.all([
-        apiClient.get(`/events?from=${from}&to=${to}`),
+        apiClient.get(`/events?${params.toString()}`),
         apiClient.get(`/employee-requests`),
       ])
 
+      // Badge filiale solo quando si vedono più filiali insieme (vista "Tutte").
+      const showBranchBadge = isMultiBranch && activeBranchId == null
       const eventItems: EventInput[] = Array.isArray(eventsRes.data)
-        ? (eventsRes.data as ApiEvent[]).map(toFCEvent)
+        ? (eventsRes.data as ApiEvent[]).map(e => toFCEvent(e, showBranchBadge))
         : []
 
       // Filter out rejected and those outside the current range, then convert
@@ -300,7 +329,7 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
     } catch {
       // silently fail
     }
-  }, [])
+  }, [activeBranchId, activeDepartmentId, isMultiBranch])
 
   const handleDatesSet = (info: DatesSetArg) => {
     const from = info.startStr.split('T')[0]
@@ -468,6 +497,16 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
     })
   }
 
+  // Quando cambia la filiale/reparto attivi, ricarica il range visibile.
+  useEffect(() => {
+    const api = calendarRef.current?.getApi()
+    if (!api) return
+    const from = api.view.activeStart.toISOString().split('T')[0]
+    const toExclusive = new Date(api.view.activeEnd)
+    toExclusive.setDate(toExclusive.getDate() - 1)
+    fetchEvents(from, toExclusive.toISOString().split('T')[0])
+  }, [fetchEvents])
+
   // Lunedì della settimana corrente in vista, usato dal CopyWeekDialog
   const currentWeekStart = (() => {
     const api = calendarRef.current?.getApi()
@@ -483,6 +522,7 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
       <div className="calendario-header">
         <h1 className="calendario-title">Calendario</h1>
         <div className="calendario-actions">
+          {isMultiBranch && <BranchSelector />}
           {currentView === 'timeGridWeek' && (
             <button className="btn-secondary" onClick={() => setCopyDialogOpen(true)}>
               📋 Copia settimana scorsa

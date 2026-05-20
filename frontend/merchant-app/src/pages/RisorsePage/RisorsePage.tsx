@@ -2,6 +2,7 @@ import { useState, useEffect, FormEvent } from 'react'
 import apiClient from '../../lib/axios'
 import { MerchantUser } from '../../App'
 import { skillsApi, Skill } from '../../lib/api/skills'
+import { useBranch } from '../../contexts/BranchContext'
 import EmployeeShiftPanel from '../../components/EmployeeShiftPanel/EmployeeShiftPanel'
 import './RisorsePage.css'
 
@@ -27,6 +28,11 @@ interface Employee {
   isActive: boolean
   hasUserAccount: boolean
   skills?: EmployeeSkill[]
+  homeBranchId?: number | null
+  homeBranchName?: string | null
+  homeDepartmentId?: number | null
+  homeDepartmentName?: string | null
+  allowedBranchIds?: number[]
 }
 
 interface Role {
@@ -41,20 +47,30 @@ interface NewEmployeeForm {
   phoneNumber: string
   roleId: string
   skillIds: number[]
+  homeBranchId: string
+  homeDepartmentId: string
+  allowedBranchIds: number[]
+}
+
+const emptyForm: NewEmployeeForm = {
+  firstName: '', lastName: '', email: '', phoneNumber: '', roleId: '',
+  skillIds: [], homeBranchId: '', homeDepartmentId: '', allowedBranchIds: [],
 }
 
 export default function RisorsePage({ user: _user }: RisorsePageProps) {
+  const { activeBranches, isMultiBranch } = useBranch()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [roles, setRoles] = useState<Role[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editEmployee, setEditEmployee] = useState<Employee | null>(null)
-  const [formData, setFormData] = useState<NewEmployeeForm>({ firstName: '', lastName: '', email: '', phoneNumber: '', roleId: '', skillIds: [] })
+  const [formData, setFormData] = useState<NewEmployeeForm>(emptyForm)
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState('')
   const [shiftPanelEmployee, setShiftPanelEmployee] = useState<Employee | null>(null)
   const [filterSkillId, setFilterSkillId] = useState<number | null>(null)
+  const [filterBranchId, setFilterBranchId] = useState<number | null>(null)
 
   const fetchEmployees = async () => {
     setLoading(true)
@@ -94,7 +110,12 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
 
   const openAddModal = () => {
     setEditEmployee(null)
-    setFormData({ firstName: '', lastName: '', email: '', phoneNumber: '', roleId: roles[0]?.id?.toString() ?? '', skillIds: [] })
+    const hq = activeBranches.find(b => b.isHeadquarters) ?? activeBranches[0]
+    setFormData({
+      ...emptyForm,
+      roleId: roles[0]?.id?.toString() ?? '',
+      homeBranchId: hq?.id?.toString() ?? '',
+    })
     setFormError('')
     setShowModal(true)
   }
@@ -108,6 +129,9 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
       phoneNumber: emp.phoneNumber ?? '',
       roleId: emp.roleId?.toString() ?? '',
       skillIds: emp.skills?.map(s => s.skillId) ?? [],
+      homeBranchId: emp.homeBranchId?.toString() ?? '',
+      homeDepartmentId: emp.homeDepartmentId?.toString() ?? '',
+      allowedBranchIds: emp.allowedBranchIds ?? [],
     })
     setFormError('')
     setShowModal(true)
@@ -129,6 +153,11 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
     setSaving(true)
     setFormError('')
     try {
+      const branchFields = {
+        homeBranchId: formData.homeBranchId ? Number(formData.homeBranchId) : null,
+        homeDepartmentId: formData.homeDepartmentId ? Number(formData.homeDepartmentId) : null,
+        allowedBranchIds: formData.allowedBranchIds,
+      }
       if (editEmployee) {
         await apiClient.put(`/employees/${editEmployee.id}`, {
           firstName: formData.firstName,
@@ -137,6 +166,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
           roleId: formData.roleId ? Number(formData.roleId) : editEmployee.roleId ?? 0,
           isActive: editEmployee.isActive,
           skillIds: formData.skillIds,
+          ...branchFields,
         })
       } else {
         await apiClient.post('/employees', {
@@ -146,6 +176,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
           phoneNumber: formData.phoneNumber || undefined,
           roleId: formData.roleId ? Number(formData.roleId) : 0,
           skillIds: formData.skillIds,
+          ...branchFields,
         })
       }
       setShowModal(false)
@@ -171,9 +202,19 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
   const getInitials = (emp: Employee) =>
     `${emp.firstName?.[0] ?? ''}${emp.lastName?.[0] ?? ''}`.toUpperCase()
 
-  const filteredEmployees = filterSkillId == null
-    ? employees
-    : employees.filter(e => e.skills?.some(s => s.skillId === filterSkillId))
+  const filteredEmployees = employees.filter(e => {
+    if (filterSkillId != null && !e.skills?.some(s => s.skillId === filterSkillId)) return false
+    if (filterBranchId != null) {
+      const inHome = e.homeBranchId === filterBranchId
+      const inAllowed = e.allowedBranchIds?.includes(filterBranchId) ?? false
+      if (!inHome && !inAllowed) return false
+    }
+    return true
+  })
+
+  // Numero colonne tabella (per il colSpan delle righe stato vuoto/loading):
+  // Dipendente, Email, Ruolo, [Sede], [Mansioni], Stato, Azioni
+  const tableColumnCount = 5 + (isMultiBranch ? 1 : 0) + (skills.length > 0 ? 1 : 0)
 
   return (
     <div className="risorse-page">
@@ -186,6 +227,27 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
           + Aggiungi Dipendente
         </button>
       </div>
+
+      {isMultiBranch && (
+        <div className="risorse-filter-bar">
+          <span className="filter-label">Filtra per filiale:</span>
+          <button
+            type="button"
+            className={`filter-chip ${filterBranchId == null ? 'active' : ''}`}
+            onClick={() => setFilterBranchId(null)}
+          >Tutte</button>
+          {activeBranches.map(b => (
+            <button
+              key={b.id}
+              type="button"
+              className={`filter-chip ${filterBranchId === b.id ? 'active' : ''}`}
+              onClick={() => setFilterBranchId(b.id)}
+            >
+              🏢 {b.name}
+            </button>
+          ))}
+        </div>
+      )}
 
       {skills.length > 0 && (
         <div className="risorse-filter-bar">
@@ -218,6 +280,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                 <th>Dipendente</th>
                 <th>Email</th>
                 <th>Ruolo</th>
+                {isMultiBranch && <th>Sede</th>}
                 {skills.length > 0 && <th>Mansioni</th>}
                 <th>Stato</th>
                 <th>Azioni</th>
@@ -226,11 +289,11 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
             <tbody>
               {loading ? (
                 <tr className="loading-row">
-                  <td colSpan={skills.length > 0 ? 6 : 5}>Caricamento...</td>
+                  <td colSpan={tableColumnCount}>Caricamento...</td>
                 </tr>
               ) : filteredEmployees.length === 0 ? (
                 <tr>
-                  <td colSpan={skills.length > 0 ? 6 : 5}>
+                  <td colSpan={tableColumnCount}>
                     <div className="empty-state">
                       <div className="empty-icon">👥</div>
                       <div className="empty-text">Nessun dipendente trovato</div>
@@ -248,6 +311,25 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                     </td>
                     <td>{emp.email}</td>
                     <td>{emp.roleName ?? '—'}</td>
+                    {isMultiBranch && (
+                      <td>
+                        {emp.homeBranchName ? (
+                          <div className="branch-cell">
+                            <span className="branch-cell-name">🏢 {emp.homeBranchName}</span>
+                            {emp.homeDepartmentName && (
+                              <span className="branch-cell-dept">{emp.homeDepartmentName}</span>
+                            )}
+                            {emp.allowedBranchIds && emp.allowedBranchIds.length > 0 && (
+                              <span className="branch-cell-extra">
+                                +{emp.allowedBranchIds.length} {emp.allowedBranchIds.length === 1 ? 'sede' : 'sedi'}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="dash">—</span>
+                        )}
+                      </td>
+                    )}
                     {skills.length > 0 && (
                       <td>
                         {emp.skills && emp.skills.length > 0 ? (
@@ -355,6 +437,83 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                     ))}
                   </select>
                 </div>
+                {isMultiBranch && (() => {
+                  const homeBranch = activeBranches.find(b => b.id === Number(formData.homeBranchId))
+                  const homeDepts = homeBranch?.departments.filter(d => d.isActive) ?? []
+                  const extraBranches = activeBranches.filter(b => b.id !== Number(formData.homeBranchId))
+                  return (
+                    <>
+                      <div className="form-row">
+                        {/* Dropdown sede solo con più filiali: con una sola sede
+                            (es. fabbrica con soli reparti) sarebbe un menu inutile. */}
+                        {activeBranches.length > 1 && (
+                          <div className="form-group">
+                            <label className="form-label">Sede principale</label>
+                            <select
+                              className="form-select"
+                              value={formData.homeBranchId}
+                              onChange={e => setFormData(p => ({
+                                ...p,
+                                homeBranchId: e.target.value,
+                                homeDepartmentId: '', // il reparto dipende dalla filiale
+                                allowedBranchIds: p.allowedBranchIds.filter(id => id !== Number(e.target.value)),
+                              }))}
+                            >
+                              {activeBranches.map(b => (
+                                <option key={b.id} value={b.id}>
+                                  {b.name}{b.isHeadquarters ? ' (sede principale)' : ''}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {homeDepts.length > 0 && (
+                          <div className="form-group">
+                            <label className="form-label">Reparto</label>
+                            <select
+                              className="form-select"
+                              value={formData.homeDepartmentId}
+                              onChange={e => setFormData(p => ({ ...p, homeDepartmentId: e.target.value }))}
+                            >
+                              <option value="">— Nessuno / Jolly —</option>
+                              {homeDepts.map(d => (
+                                <option key={d.id} value={d.id}>{d.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                      {extraBranches.length > 0 && (
+                        <div className="form-group">
+                          <label className="form-label">Filiali aggiuntive consentite</label>
+                          <div className="skill-picker">
+                            {extraBranches.map(b => {
+                              const selected = formData.allowedBranchIds.includes(b.id)
+                              return (
+                                <button
+                                  key={b.id}
+                                  type="button"
+                                  className={`skill-pick-chip ${selected ? 'selected' : ''}`}
+                                  onClick={() => setFormData(p => ({
+                                    ...p,
+                                    allowedBranchIds: selected
+                                      ? p.allowedBranchIds.filter(id => id !== b.id)
+                                      : [...p.allowedBranchIds, b.id],
+                                  }))}
+                                >
+                                  {selected ? '✓ ' : '+ '}{b.name}
+                                </button>
+                              )
+                            })}
+                          </div>
+                          <p className="form-hint">
+                            Il dipendente potrà essere assegnato a turni di queste filiali oltre alla sede principale.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
                 {skills.length > 0 && (
                   <div className="form-group">
                     <label className="form-label">Mansioni</label>

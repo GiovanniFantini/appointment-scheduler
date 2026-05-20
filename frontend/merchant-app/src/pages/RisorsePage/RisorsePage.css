@@ -411,6 +411,28 @@ tr:hover td {
   color: #475569;
 }
 
+.branch-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.branch-cell-name {
+  font-size: 13px;
+  color: #f1f5f9;
+}
+
+.branch-cell-dept {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.branch-cell-extra {
+  font-size: 10px;
+  color: #6366f1;
+  font-weight: 600;
+}
+
 .skill-picker {
   display: flex;
   flex-wrap: wrap;

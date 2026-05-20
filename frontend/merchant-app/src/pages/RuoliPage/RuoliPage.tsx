@@ -29,6 +29,8 @@ const ALL_FEATURES: Feature[] = [
   { name: 'Ruoli', icon: '🔑', value: 4 },
   { name: 'Documenti', icon: '📁', value: 5 },
   { name: 'Report', icon: '📊', value: 6 },
+  { name: 'Mansioni', icon: '🏷', value: 7 },
+  { name: 'Filiali', icon: '🏢', value: 8 },
 ]
 
 const DEFAULT_ROLE_NAME = 'Responsabile App'

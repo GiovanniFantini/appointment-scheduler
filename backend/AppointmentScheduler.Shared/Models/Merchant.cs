@@ -20,6 +20,7 @@ public class Merchant
 
     // Navigation properties
     public User User { get; set; } = null!;
+    public ICollection<MerchantBranch> Branches { get; set; } = new List<MerchantBranch>();
     public ICollection<EmployeeMembership> EmployeeMemberships { get; set; } = new List<EmployeeMembership>();
     public ICollection<MerchantRole> Roles { get; set; } = new List<MerchantRole>();
     public ICollection<Event> Events { get; set; } = new List<Event>();

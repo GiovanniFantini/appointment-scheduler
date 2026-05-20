@@ -25,7 +25,8 @@ public class ShiftConflictValidator : IShiftConflictValidator
         DateOnly date,
         TimeOnly? start,
         TimeOnly? end,
-        int? excludeEventId = null)
+        int? excludeEventId = null,
+        int? branchId = null)
     {
         var result = new List<ShiftConflictDto>();
 
@@ -70,10 +71,13 @@ public class ShiftConflictValidator : IShiftConflictValidator
             });
         }
 
-        // Shift overlap: other events (Turno) with the same date where the employee is participant
+        // Shift overlap: other events (Turno) with the same date where the employee is participant.
+        // Volutamente NON filtrato per BranchId: un doppio turno in due filiali diverse lo stesso
+        // giorno è proprio il conflitto che vogliamo rilevare.
         var otherShifts = await _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
+            .Include(e => e.Branch)
             .Where(e => e.MerchantId == merchantId
                         && e.EventType == EventType.Turno
                         && e.StartDate == date
@@ -101,6 +105,7 @@ public class ShiftConflictValidator : IShiftConflictValidator
                 if (!overlaps)
                     continue;
 
+                var branchSuffix = other.Branch != null ? $" — {other.Branch.Name}" : string.Empty;
                 result.Add(new ShiftConflictDto
                 {
                     EmployeeId = participant.EmployeeId,
@@ -111,10 +116,59 @@ public class ShiftConflictValidator : IShiftConflictValidator
                     ConflictingEventTitle = other.Title,
                     ConflictStart = pStart,
                     ConflictEnd = pEnd,
-                    Message = $"Sovrapposizione con turno \"{other.Title}\""
+                    Message = $"Sovrapposizione con turno \"{other.Title}\"{branchSuffix}"
                         + (pStart.HasValue && pEnd.HasValue ? $" ({pStart:HH\\:mm}-{pEnd:HH\\:mm})" : string.Empty)
                 });
             }
+        }
+
+        // Branch mismatch: employee assigned to a branch outside his HomeBranch ∪ EmployeeBranchAccess.
+        if (branchId.HasValue)
+            result.AddRange(await DetectBranchMismatchesAsync(merchantId, ids, date, branchId.Value));
+
+        return result;
+    }
+
+    /// <summary>
+    /// Segnala i dipendenti assegnati a un turno di una filiale per cui non sono abilitati
+    /// (né HomeBranch né tra le EmployeeBranchAccess). Warning non bloccante.
+    /// </summary>
+    private async Task<List<ShiftConflictDto>> DetectBranchMismatchesAsync(
+        int merchantId, IReadOnlyList<int> employeeIds, DateOnly date, int branchId)
+    {
+        var result = new List<ShiftConflictDto>();
+
+        var branch = await _context.MerchantBranches
+            .FirstOrDefaultAsync(b => b.Id == branchId && b.MerchantId == merchantId);
+        if (branch == null)
+            return result;
+
+        var memberships = await _context.EmployeeMemberships
+            .Include(m => m.Employee)
+            .Include(m => m.BranchAccess)
+            .Where(m => m.MerchantId == merchantId
+                        && m.IsActive
+                        && employeeIds.Contains(m.EmployeeId))
+            .ToListAsync();
+
+        foreach (var m in memberships)
+        {
+            var allowed = m.HomeBranchId == branchId
+                          || m.BranchAccess.Any(a => a.BranchId == branchId);
+            if (allowed)
+                continue;
+
+            var fullName = FullName(m.Employee);
+            result.Add(new ShiftConflictDto
+            {
+                EmployeeId = m.EmployeeId,
+                EmployeeFullName = fullName,
+                Date = date,
+                Kind = ShiftConflictKind.BranchMismatch,
+                BranchId = branchId,
+                BranchName = branch.Name,
+                Message = $"{(string.IsNullOrEmpty(fullName) ? "Il dipendente" : fullName)} non è abilitato alla filiale \"{branch.Name}\"."
+            });
         }
 
         return result;

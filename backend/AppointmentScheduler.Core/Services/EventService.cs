@@ -23,15 +23,20 @@ public class EventService : IEventService
     /// <summary>
     /// Recupera tutti gli eventi di un merchant con filtri opzionali
     /// </summary>
-    public async Task<List<EventDto>> GetMerchantEventsAsync(int merchantId, DateOnly? from, DateOnly? to, EventType? type)
+    public async Task<List<EventDto>> GetMerchantEventsAsync(int merchantId, DateOnly? from, DateOnly? to, EventType? type,
+        int? branchId = null, int? departmentId = null)
     {
         var query = _context.Events
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Employee)
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Skill)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Department)
             .Include(e => e.RequiredSkills)
                 .ThenInclude(rs => rs.Skill)
+            .Include(e => e.Branch)
+            .Include(e => e.Department)
             .Where(e => e.MerchantId == merchantId)
             .AsQueryable();
 
@@ -43,6 +48,15 @@ public class EventService : IEventService
 
         if (type.HasValue)
             query = query.Where(e => e.EventType == type.Value);
+
+        // Filtro filiale: gli eventi AppliesToAllBranches compaiono in qualsiasi filiale.
+        if (branchId.HasValue)
+            query = query.Where(e => e.BranchId == branchId.Value || e.AppliesToAllBranches);
+
+        // Filtro reparto: gli eventi che valgono per tutte le filiali (es. chiusure
+        // aziendali) restano sempre visibili anche quando si filtra per reparto.
+        if (departmentId.HasValue)
+            query = query.Where(e => e.DepartmentId == departmentId.Value || e.AppliesToAllBranches);
 
         var events = await query
             .OrderBy(e => e.StartDate)
@@ -62,8 +76,12 @@ public class EventService : IEventService
                 .ThenInclude(p => p.Employee)
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Skill)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Department)
             .Include(e => e.RequiredSkills)
                 .ThenInclude(rs => rs.Skill)
+            .Include(e => e.Branch)
+            .Include(e => e.Department)
             .Where(e => e.MerchantId == merchantId &&
                         (e.EventType == EventType.ChiusuraAziendale ||
                          e.Participants.Any(p => p.EmployeeId == employeeId)))
@@ -93,8 +111,12 @@ public class EventService : IEventService
                 .ThenInclude(p => p.Employee)
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Skill)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Department)
             .Include(e => e.RequiredSkills)
                 .ThenInclude(rs => rs.Skill)
+            .Include(e => e.Branch)
+            .Include(e => e.Department)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         return evt == null ? null : MapToDto(evt);
@@ -105,9 +127,16 @@ public class EventService : IEventService
     /// </summary>
     public async Task<EventDto> CreateAsync(int merchantId, int createdByUserId, CreateEventRequest request)
     {
+        var branchId = await ResolveBranchIdAsync(merchantId, request.BranchId);
+        await ValidateDepartmentAsync(branchId, request.DepartmentId);
+        await ValidateParticipantDepartmentsAsync(branchId, request.ParticipantOverrides);
+
         var evt = new Event
         {
             MerchantId = merchantId,
+            BranchId = branchId,
+            DepartmentId = request.DepartmentId,
+            AppliesToAllBranches = request.AppliesToAllBranches,
             Title = request.Title,
             EventType = request.EventType,
             StartDate = request.StartDate,
@@ -176,6 +205,13 @@ public class EventService : IEventService
         if (evt == null)
             return null;
 
+        var branchId = await ResolveBranchIdAsync(merchantId, request.BranchId);
+        await ValidateDepartmentAsync(branchId, request.DepartmentId);
+        await ValidateParticipantDepartmentsAsync(branchId, request.ParticipantOverrides);
+
+        evt.BranchId = branchId;
+        evt.DepartmentId = request.DepartmentId;
+        evt.AppliesToAllBranches = request.AppliesToAllBranches;
         evt.Title = request.Title;
         evt.EventType = request.EventType;
         evt.StartDate = request.StartDate;
@@ -264,8 +300,12 @@ public class EventService : IEventService
                 .ThenInclude(p => p.Employee)
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Skill)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Department)
             .Include(e => e.RequiredSkills)
                 .ThenInclude(rs => rs.Skill)
+            .Include(e => e.Branch)
+            .Include(e => e.Department)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         if (original == null)
@@ -279,6 +319,9 @@ public class EventService : IEventService
             var clone = new Event
             {
                 MerchantId = original.MerchantId,
+                BranchId = original.BranchId,
+                DepartmentId = original.DepartmentId,
+                AppliesToAllBranches = original.AppliesToAllBranches,
                 Title = original.Title,
                 EventType = original.EventType,
                 StartDate = current,
@@ -305,7 +348,8 @@ public class EventService : IEventService
                     StartTimeOverride = participant.StartTimeOverride,
                     EndTimeOverride = participant.EndTimeOverride,
                     ParticipantNotes = participant.ParticipantNotes,
-                    SkillId = participant.SkillId
+                    SkillId = participant.SkillId,
+                    DepartmentId = participant.DepartmentId
                 });
             }
             foreach (var rs in original.RequiredSkills)
@@ -352,8 +396,12 @@ public class EventService : IEventService
                 .ThenInclude(p => p.Employee)
             .Include(e => e.Participants)
                 .ThenInclude(p => p.Skill)
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Department)
             .Include(e => e.RequiredSkills)
                 .ThenInclude(rs => rs.Skill)
+            .Include(e => e.Branch)
+            .Include(e => e.Department)
             .Where(e => e.MerchantId == merchantId
                         && e.StartDate >= sourceStart
                         && e.StartDate <= sourceEnd);
@@ -364,9 +412,23 @@ public class EventService : IEventService
             sourceQuery = sourceQuery.Where(e => e.Participants.Any(p => filter.Contains(p.EmployeeId)));
         }
 
+        // Filtra per filiale sorgente se specificato.
+        if (request.SourceBranchId.HasValue)
+        {
+            var srcBranch = request.SourceBranchId.Value;
+            sourceQuery = sourceQuery.Where(e => e.BranchId == srcBranch);
+        }
+
         var sources = await sourceQuery.ToListAsync();
         if (sources.Count == 0)
             return new List<EventDto>();
+
+        // Se è richiesta una filiale di destinazione, verifica che appartenga al merchant.
+        int? targetBranchId = null;
+        if (request.TargetBranchId.HasValue)
+        {
+            targetBranchId = await ResolveBranchIdAsync(merchantId, request.TargetBranchId.Value);
+        }
 
         var cloned = new List<Event>();
 
@@ -377,9 +439,17 @@ public class EventService : IEventService
                 var dayOffset = src.StartDate.DayNumber - sourceStart.DayNumber;
                 var targetDate = request.TargetWeekStart.AddDays(7 * w + dayOffset);
 
+                // Filiale del clone: target esplicita o quella dell'originale.
+                // Se la filiale cambia, il reparto (figlio della filiale) non è più valido → null.
+                var cloneBranchId = targetBranchId ?? src.BranchId;
+                var cloneDepartmentId = cloneBranchId == src.BranchId ? src.DepartmentId : null;
+
                 var clone = new Event
                 {
                     MerchantId = src.MerchantId,
+                    BranchId = cloneBranchId,
+                    DepartmentId = cloneDepartmentId,
+                    AppliesToAllBranches = src.AppliesToAllBranches,
                     Title = src.Title,
                     EventType = src.EventType,
                     StartDate = targetDate,
@@ -406,7 +476,9 @@ public class EventService : IEventService
                         StartTimeOverride = p.StartTimeOverride,
                         EndTimeOverride = p.EndTimeOverride,
                         ParticipantNotes = p.ParticipantNotes,
-                        SkillId = p.SkillId
+                        SkillId = p.SkillId,
+                        // Se la filiale del clone cambia, il reparto del partecipante non è più valido.
+                        DepartmentId = cloneBranchId == src.BranchId ? p.DepartmentId : null
                     });
                 }
                 foreach (var rs in src.RequiredSkills)
@@ -606,6 +678,7 @@ public class EventService : IEventService
             p.StartTimeOverride = ov.StartTimeOverride;
             p.EndTimeOverride = ov.EndTimeOverride;
             p.ParticipantNotes = ov.ParticipantNotes;
+            p.DepartmentId = ov.DepartmentId;
         }
         if (skillMap.TryGetValue(employeeId, out var skillId))
         {
@@ -627,16 +700,84 @@ public class EventService : IEventService
 
     private async Task ReloadEventNavigationAsync(Event evt)
     {
+        await _context.Entry(evt).Reference(e => e.Branch).LoadAsync();
+        if (evt.DepartmentId.HasValue)
+            await _context.Entry(evt).Reference(e => e.Department).LoadAsync();
         await _context.Entry(evt).Collection(e => e.Participants).LoadAsync();
         foreach (var p in evt.Participants)
         {
             await _context.Entry(p).Reference(x => x.Employee).LoadAsync();
             if (p.SkillId.HasValue)
                 await _context.Entry(p).Reference(x => x.Skill).LoadAsync();
+            if (p.DepartmentId.HasValue)
+                await _context.Entry(p).Reference(x => x.Department).LoadAsync();
         }
         await _context.Entry(evt).Collection(e => e.RequiredSkills).LoadAsync();
         foreach (var rs in evt.RequiredSkills)
             await _context.Entry(rs).Reference(x => x.Skill).LoadAsync();
+    }
+
+    /// <summary>
+    /// Risolve la filiale di un evento: se branchId è 0/non valido, ricade sulla HQ del
+    /// merchant (caso mono-sede). Verifica sempre che la filiale appartenga al merchant.
+    /// </summary>
+    private async Task<int> ResolveBranchIdAsync(int merchantId, int branchId)
+    {
+        if (branchId > 0)
+        {
+            var ok = await _context.MerchantBranches
+                .AnyAsync(b => b.Id == branchId && b.MerchantId == merchantId);
+            if (ok)
+                return branchId;
+            throw new InvalidOperationException("Filiale non valida per questo merchant.");
+        }
+
+        // Fallback: HQ (o, se manca, la prima filiale del merchant).
+        var hq = await _context.MerchantBranches
+            .Where(b => b.MerchantId == merchantId)
+            .OrderByDescending(b => b.IsHeadquarters)
+            .ThenBy(b => b.Id)
+            .Select(b => (int?)b.Id)
+            .FirstOrDefaultAsync();
+
+        if (hq == null)
+            throw new InvalidOperationException("Il merchant non ha filiali configurate.");
+
+        return hq.Value;
+    }
+
+    /// <summary>
+    /// Verifica che il reparto (se valorizzato) appartenga alla filiale dell'evento.
+    /// </summary>
+    private async Task ValidateDepartmentAsync(int branchId, int? departmentId)
+    {
+        if (!departmentId.HasValue)
+            return;
+
+        var ok = await _context.Departments
+            .AnyAsync(d => d.Id == departmentId.Value && d.BranchId == branchId);
+        if (!ok)
+            throw new InvalidOperationException("Il reparto selezionato non appartiene alla filiale dell'evento.");
+    }
+
+    /// <summary>
+    /// Verifica che tutti i reparti assegnati ai partecipanti (caso Jolly) appartengano
+    /// alla filiale dell'evento. Previene assegnazioni cross-filiale di reparti.
+    /// </summary>
+    private async Task ValidateParticipantDepartmentsAsync(int branchId, IEnumerable<ParticipantOverride>? overrides)
+    {
+        var ids = overrides?
+            .Where(o => o.DepartmentId.HasValue)
+            .Select(o => o.DepartmentId!.Value)
+            .Distinct()
+            .ToList();
+        if (ids == null || ids.Count == 0)
+            return;
+
+        var validCount = await _context.Departments
+            .CountAsync(d => ids.Contains(d.Id) && d.BranchId == branchId);
+        if (validCount != ids.Count)
+            throw new InvalidOperationException("Un reparto assegnato a un partecipante non appartiene alla filiale dell'evento.");
     }
 
     private static CoverageStatus CalculateCoverage(Event evt, out Dictionary<int, int> coveredBySkill)
@@ -683,7 +824,8 @@ public class EventService : IEventService
         {
             var ids = group.Select(p => p.EmployeeId).ToList();
             var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
-                evt.MerchantId, ids, evt.StartDate, group.Key.Start, group.Key.End, excludeEventId: evt.Id);
+                evt.MerchantId, ids, evt.StartDate, group.Key.Start, group.Key.End,
+                excludeEventId: evt.Id, branchId: evt.BranchId);
             all.AddRange(conflicts);
         }
 
@@ -750,6 +892,12 @@ public class EventService : IEventService
         {
             Id = evt.Id,
             MerchantId = evt.MerchantId,
+            BranchId = evt.BranchId,
+            BranchName = evt.Branch?.Name ?? string.Empty,
+            DepartmentId = evt.DepartmentId,
+            DepartmentName = evt.Department?.Name,
+            DepartmentColor = evt.Department?.Color,
+            AppliesToAllBranches = evt.AppliesToAllBranches,
             Title = evt.Title,
             EventType = evt.EventType,
             StartDate = evt.StartDate,
@@ -775,7 +923,10 @@ public class EventService : IEventService
                 ParticipantNotes = p.ParticipantNotes,
                 SkillId = p.SkillId,
                 SkillName = p.Skill?.Name,
-                SkillColor = p.Skill?.Color
+                SkillColor = p.Skill?.Color,
+                DepartmentId = p.DepartmentId,
+                DepartmentName = p.Department?.Name,
+                DepartmentColor = p.Department?.Color
             }).ToList(),
             RequiredSkills = evt.RequiredSkills.Select(rs => new EventRequiredSkillDto
             {
