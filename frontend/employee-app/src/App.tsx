@@ -14,6 +14,8 @@ import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
 import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
 import AppLayout from './components/AppLayout/AppLayout'
 
+export type FeatureAccessLevel = 'ReadOnly' | 'Operator' | 'Manager'
+
 export interface EmployeeUser {
   userId: number
   email: string
@@ -24,6 +26,9 @@ export interface EmployeeUser {
   merchantId?: number
   companyName?: string
   activeFeatures: string[]
+  // Livello di accesso per feature (post company-switch).
+  // Valorizzato solo per le feature che usano i livelli (Magazzino).
+  featureLevels?: Record<string, FeatureAccessLevel>
   companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
 }
 
@@ -174,7 +179,7 @@ function App() {
             path="magazzino"
             element={
               user?.activeFeatures?.includes('Magazzino')
-                ? <MagazzinoPage />
+                ? <MagazzinoPage accessLevel={user.featureLevels?.['Magazzino'] ?? 'ReadOnly'} />
                 : <Navigate to="/" replace />
             }
           />

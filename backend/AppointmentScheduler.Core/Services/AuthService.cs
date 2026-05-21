@@ -58,11 +58,14 @@ public class AuthService : IAuthService
             return null;
 
         var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
-        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id, features: allFeatures);
+        var featureLevels = BuildMerchantFeatureLevels();
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id,
+            features: allFeatures, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList());
         var response = BuildAuthResponse(user, token);
         response.MerchantId = user.Merchant?.Id;
         response.CompanyName = user.Merchant?.CompanyName;
         response.ActiveFeatures = allFeatures;
+        response.FeatureLevels = featureLevels;
         return response;
     }
 
@@ -141,7 +144,11 @@ public class AuthService : IAuthService
             {
                 RoleId = defaultRole.Id,
                 Feature = feature,
-                IsEnabled = true
+                IsEnabled = true,
+                // Il ruolo predefinito ha pieni poteri: livello Manager sul Magazzino.
+                AccessLevel = feature == MerchantFeature.Magazzino
+                    ? FeatureAccessLevel.Manager
+                    : null
             });
         }
         await _context.SaveChangesAsync();
@@ -169,11 +176,14 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         var featureNames = allFeatures.Select(f => f.ToString()).ToList();
-        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id, features: featureNames);
+        var featureLevels = BuildMerchantFeatureLevels();
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id,
+            features: featureNames, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList());
         var response = BuildAuthResponse(user, token);
         response.MerchantId = merchant.Id;
         response.CompanyName = merchant.CompanyName;
         response.ActiveFeatures = featureNames;
+        response.FeatureLevels = featureLevels;
         return response;
     }
 
@@ -302,24 +312,50 @@ public class AuthService : IAuthService
 
         if (membership == null) return null;
 
-        var features = membership.Role.Features
+        var enabledFeatures = membership.Role.Features
             .Where(f => f.IsEnabled)
+            .ToList();
+
+        var features = enabledFeatures
             .Select(f => f.Feature.ToString())
             .ToList();
 
+        // Livello di accesso per feature. Significativo solo dove valorizzato
+        // (Magazzino): una feature abilitata senza livello è trattata come ReadOnly.
+        var featureLevels = enabledFeatures
+            .Where(f => f.AccessLevel.HasValue)
+            .ToDictionary(
+                f => f.Feature.ToString(),
+                f => f.AccessLevel!.Value.ToString());
+
         var token = GenerateJwtToken(userId, user.Email, "Employee",
-            merchantId: merchantId, employeeId: employee.Id, features: features);
+            merchantId: merchantId, employeeId: employee.Id, features: features,
+            featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList());
 
         var response = BuildAuthResponse(user, token);
         response.EmployeeId = employee.Id;
         response.MerchantId = merchantId;
         response.ActiveFeatures = features;
+        response.FeatureLevels = featureLevels;
         return response;
     }
 
+    // ── Feature Levels ─────────────────────────────────────────────────────
+    /// <summary>
+    /// Livelli di accesso del Merchant: il merchant è configuratore con pieni
+    /// poteri, quindi ha sempre il livello massimo (Manager) sulle feature che
+    /// usano i livelli (oggi solo Magazzino).
+    /// </summary>
+    private static Dictionary<string, string> BuildMerchantFeatureLevels()
+        => new()
+        {
+            [MerchantFeature.Magazzino.ToString()] = FeatureAccessLevel.Manager.ToString(),
+        };
+
     // ── JWT Generation ─────────────────────────────────────────────────────
     public string GenerateJwtToken(int userId, string email, string role,
-        int? merchantId = null, int? employeeId = null, List<string>? features = null)
+        int? merchantId = null, int? employeeId = null, List<string>? features = null,
+        List<string>? featureLevels = null)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"]
@@ -345,6 +381,12 @@ public class AuthService : IAuthService
         if (features != null)
             foreach (var feature in features)
                 claims.Add(new Claim("Feature", feature));
+
+        // Claim aggiuntivo, separato da "Feature" per non rompere i consumatori
+        // esistenti. Valore nel formato "<Feature>:<Level>" (es. "Magazzino:Manager").
+        if (featureLevels != null)
+            foreach (var featureLevel in featureLevels)
+                claims.Add(new Claim("FeatureLevel", featureLevel));
 
         var token = new JwtSecurityToken(
             issuer: jwtSettings["Issuer"],

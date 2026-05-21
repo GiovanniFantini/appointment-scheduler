@@ -1007,11 +1007,14 @@ stateDiagram-v2
 
 ## 11. Magazzino
 
-`Magazzino` è una **funzione RBAC** disponibile sia nell'App Merchant sia
-nell'App Employee: un perimetro completo per gestire articoli, stock e acquisti
-senza introdurre un secondo sistema di permessi.
+`Magazzino` è una **funzione RBAC** che, coerentemente con l'architettura della
+piattaforma (App Merchant = configuratore, App Employee = operatività), si divide così:
 
-Il perimetro comprende:
+- **App Employee** → tutta l'**operatività**: articoli, stock, movimenti, rettifiche,
+  fornitori, ordini di acquisto, ricezioni. Modulata su un **livello di accesso** del ruolo.
+- **App Merchant** → solo i **report** (panoramica, valorizzazione, sotto scorta).
+
+Il perimetro funzionale comprende:
 
 - articoli di magazzino
 - saldo stock per filiale
@@ -1019,7 +1022,7 @@ Il perimetro comprende:
 - fornitori
 - ordini acquisto
 - ricezioni
-- report operativi base
+- report
 
 Vincoli di prodotto e comportamento del sistema:
 
@@ -1028,248 +1031,141 @@ Vincoli di prodotto e comportamento del sistema:
 - ogni rettifica o ricezione scrive un **movimento** e aggiorna il **saldo**
 - lo stock negativo non è consentito
 - il barcode è un **dato ricercabile**; la scansione camera/device non rientra nel perimetro del modulo
-- il dipendente vede solo il perimetro **consultativo / operativo leggero**; non crea articoli, non modifica fornitori e non esegue rettifiche
 
-### 11.1 Accesso e visibilità
+### 11.1 Livelli di accesso (Employee)
 
-- Il **Merchant** vede `Magazzino` in menu e dashboard se la feature è attiva.
-- L'**Employee** vede `Magazzino` solo se il suo ruolo include la feature.
+A differenza delle altre feature — il cui permesso è binario (abilitata / non abilitata) —
+la feature `Magazzino` usa un **livello di accesso** (`FeatureAccessLevel`), che il
+Merchant configura per ciascun ruolo dalla pagina Ruoli ([§7](#7-ruoli-merchant)).
+
+| Livello | Cosa può fare il dipendente |
+|---------|------------------------------|
+| **ReadOnly** | Solo consultazione: stock, articoli, movimenti, sotto scorta, fornitori, ordini. |
+| **Operator** | Anche operatività quotidiana: rettifiche stock, ricezione merci. |
+| **Manager** | Anche anagrafiche e ordini: crea/modifica articoli e fornitori, crea/invia/annulla ordini. |
+
+Una feature `Magazzino` abilitata senza livello esplicito è trattata come `ReadOnly`.
+Il backend verifica il livello su ogni endpoint operativo: una richiesta con livello
+insufficiente riceve **403 Forbidden**.
+
+### 11.2 Accesso e visibilità
+
+- L'**Employee** vede `Magazzino` solo se il suo ruolo include la feature; la UI mostra
+  o nasconde i comandi operativi in base al livello (`ReadOnly`/`Operator`/`Manager`).
+- Il **Merchant** vede `Magazzino` (solo report) in menu e dashboard se la feature è attiva.
 - Senza feature, la voce di menu non compare e l'apertura diretta dell'URL riporta alla dashboard (come descritto in [§2](#2-rbac-ruoli-e-gate-di-accesso)).
-- Il Merchant può lavorare su **tutte le filiali** o filtrare una filiale specifica.
-- L'Employee può lavorare solo sulle filiali a lui consentite: la **filiale primaria** e le eventuali filiali aggiuntive assegnate.
+- L'Employee può lavorare solo sulle filiali a lui consentite: la **filiale primaria** e le eventuali filiali aggiuntive assegnate. Le scritture su filiali non consentite vengono rifiutate dal backend.
 
-### 11.2 Pagina Magazzino (Merchant)
+### 11.3 Pagina Magazzino (Employee)
 
-La pagina Merchant è organizzata in un **header** con filtro filiale e in sei
-**tab operative**:
+La pagina Employee è organizzata in un **header** con selettore di filiale operativa
+e in cinque **tab**:
 - `Panoramica`
 - `Articoli`
 - `Movimenti`
 - `Fornitori`
 - `Ordini acquisto`
-- `Report`
 
-**Comandi e campi — Header e tab Magazzino (Merchant)**
+I comandi di scrittura compaiono solo se il livello del dipendente lo consente.
+
+**Comandi e campi — Header e tab Magazzino (Employee)**
 
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
-| Filtro filiale | Select | Mostra dati consolidati su tutte le filiali oppure su una sola filiale. | Se nessuna filiale è selezionata, panoramica e report sono aggregati; le azioni operative che richiedono contesto usano un selettore dedicato. |
-| Tab Panoramica / Articoli / Movimenti / Fornitori / Ordini acquisto / Report | Tab | Cambiano la vista operativa del modulo. | Nessun salvataggio automatico allo switch; eventuali modali aperti restano l'unico punto di modifica. |
+| Filiale operativa | Select | Cambia la filiale su cui leggere e operare. | Mostra solo le filiali consentite alla membership del dipendente. |
+| Tab Panoramica / Articoli / Movimenti / Fornitori / Ordini acquisto | Tab | Cambiano la vista del modulo. | Nessun salvataggio automatico allo switch. |
 | Banner di notice / errore | Messaggio inline | Mostra l'esito di azioni come creazione articolo, rettifica, invio ordine, ricezione. | Informativo; visibile solo quando esiste un esito da mostrare. |
 
-### 11.3 Tab Panoramica (Merchant)
+### 11.4 Tab Panoramica (Employee)
 
-La panoramica riassume lo stato del modulo sul filtro attivo. Il Merchant vede:
-- numero di articoli attivi
-- fornitori attivi
-- ordini aperti
-- valore totale dello stock
-- elenco sintetico dei sotto scorta
-- elenco sintetico di ordini aperti e ultimi movimenti
+La panoramica riassume lo stato del modulo sulla filiale selezionata: articoli visibili,
+fornitori attivi, ordini aperti, valore stock, sintesi sotto scorta, ordini aperti e
+ultimi movimenti. È in **sola lettura** per tutti i livelli.
 
-**Comandi e campi — Tab Panoramica**
+### 11.5 Tab Articoli (Employee)
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Stato operativo | Riquadro KPI | Mostra articoli attivi, fornitori attivi, ordini aperti e valore stock. | Sola lettura; riflette il filtro filiale in alto. |
-| Sotto scorta | Lista sintetica | Evidenzia gli articoli che richiedono riordino. | Sola lettura; se non ci sono anomalie compare lo stato vuoto. |
-| Gestisci ordini | Bottone-link | Porta alla tab `Ordini acquisto`. | — |
-| Apri movimenti / Apri report | Bottoni-link | Portano alle tab `Movimenti` e `Report`. | — |
-
-### 11.4 Tab Articoli (Merchant)
-
-La tab Articoli è il catalogo operativo degli SKU. Ogni scheda mostra:
-- SKU e nome
-- barcode se presente
-- unità di misura
-- quantità totale
-- valore totale
-- soglia di riordino
-- saldi per filiale
+La tab Articoli è il catalogo degli SKU: SKU, nome, barcode, unità di misura, quantità,
+valore, soglia di riordino e saldi per filiale.
 
 **Comandi e campi — Tab Articoli**
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Ricerca SKU / nome / barcode | Campo testo | Filtra il catalogo. | Match testuale case-insensitive lato UI sui dati già caricati. |
-| + Nuovo articolo | Bottone | Apre il modale di creazione articolo. | — |
-| Modifica | Bottone sulla scheda | Apre il modale di modifica dell'articolo. | — |
-| Rettifica stock | Bottone sulla scheda | Porta alla tab `Movimenti` preimpostando l'articolo. | Il contesto filiale viene precompilato dalla prima filiale con saldo o dalla filiale di default. |
-| Badge `Disattivo` | Etichetta | Segnala che l'articolo esiste ma non è attivo. | Sola lettura. |
+| Elemento | Tipo | Cosa fa | Livello richiesto |
+|----------|------|---------|-------------------|
+| Ricerca SKU / nome / barcode | Campo testo | Filtra il catalogo. | ReadOnly |
+| + Nuovo articolo | Bottone | Apre il modale di creazione articolo. | Manager |
+| Modifica | Bottone sulla scheda | Apre il modale di modifica dell'articolo. | Manager |
+| Rettifica stock | Bottone sulla scheda | Porta alla tab `Movimenti` preimpostando l'articolo. | Operator |
 
-**Comandi e campi — Modale articolo**
+Il **modale articolo** (SKU, nome, barcode, unità di misura, soglia di riordino,
+descrizione, flag attivo in modifica) è disponibile solo al livello `Manager`. SKU
+obbligatorio e univoco per merchant; un nuovo articolo nasce attivo.
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| SKU | Campo testo | Codice univoco dell'articolo. | Obbligatorio; il sistema rifiuta duplicati nello stesso merchant. |
-| Nome | Campo testo | Nome dell'articolo. | Obbligatorio. |
-| Barcode | Campo testo | Salva il barcode come dato ricercabile. | Facoltativo; nessuna scansione device. |
-| Unità di misura | Campo testo | Imposta l'unità operativa (`pz`, ecc.). | Se vuoto, il sistema usa `pz`. |
-| Soglia di riordino | Campo numerico | Soglia di riordino. | Non può essere negativo. |
-| Descrizione | Area testo | Note descrittive sull'articolo. | Facoltativa. |
-| Articolo attivo | Checkbox | Attiva/disattiva l'articolo (solo in modifica). | Non compare in creazione; un nuovo articolo nasce attivo. |
-| Annulla / Salva articolo | Bottoni | Chiudono o salvano il modale. | `Salva` disattivato durante il salvataggio. |
+### 11.6 Tab Movimenti (Employee)
 
-### 11.5 Tab Movimenti (Merchant)
+La tab Movimenti consente di registrare una **rettifica manuale** (livello `Operator`)
+e di consultare il **ledger cronologico** (tutti i livelli).
 
-La tab Movimenti ha due funzioni:
-- registrare una **rettifica manuale**
-- consultare il **ledger cronologico**
+Il form di rettifica (filiale, articolo, delta quantità, costo unitario, motivo
+obbligatorio) compare solo dai livelli `Operator` in su. Il backend blocca rettifiche
+che porterebbero lo stock sotto zero. Le ricezioni da ordine acquisto producono
+movimenti in automatico.
 
-La rettifica manuale è l'unica variazione stock inseribile direttamente.
-Le ricezioni da ordine acquisto producono movimenti in automatico.
+### 11.7 Tab Fornitori (Employee)
 
-**Comandi e campi — Form rettifica stock**
+La tab Fornitori è la rubrica acquisti: in **sola lettura** per `ReadOnly`/`Operator`;
+i comandi `+ Nuovo fornitore` e `Modifica` (modale con ragione sociale, contatti,
+P.IVA, note, flag attivo) compaiono solo al livello `Manager`.
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Filiale | Select | Sceglie la filiale su cui registrare la rettifica. | Obbligatoria; deve appartenere al merchant. |
-| Articolo | Select | Sceglie l'articolo da rettificare. | Obbligatorio. |
-| Delta quantità | Campo numerico | Inserisce la variazione positiva o negativa. | Obbligatorio; non può essere `0`. |
-| Costo unitario | Campo numerico | Imposta il costo della rettifica positiva oppure, se lasciato vuoto, usa il costo medio noto. | Facoltativo sulle rettifiche negative. |
-| Motivo (obbligatorio) | Area testo | Motivo della rettifica. | Obbligatorio. |
-| Registra rettifica | Bottone | Salva il movimento e aggiorna il saldo. | Disattivato durante il salvataggio; il sistema blocca rettifiche che porterebbero lo stock sotto zero. |
+### 11.8 Tab Ordini acquisto e ricezioni (Employee)
 
-**Comandi e campi — Ledger movimenti**
-
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Tabella movimenti | Lista | Mostra data, tipo, filiale, quantità, valore e dettaglio del movimento. | Sola lettura; riflette il filtro filiale in alto. |
-
-### 11.6 Tab Fornitori (Merchant)
-
-La tab Fornitori contiene la rubrica acquisti del merchant.
-
-**Comandi e campi — Tab Fornitori**
-
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| + Nuovo fornitore | Bottone | Apre il modale di creazione fornitore. | — |
-| Scheda fornitore | Card | Mostra nome, referente, contatto e partita IVA. | Sola lettura. |
-| Modifica | Bottone sulla scheda | Apre il modale di modifica del fornitore. | — |
-| Badge `Disattivo` | Etichetta | Segnala che il fornitore esiste ma non è più attivo. | Sola lettura. |
-
-**Comandi e campi — Modale fornitore**
-
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Ragione sociale | Campo testo | Nome del fornitore. | Obbligatorio. |
-| Referente / Email / Telefono / P.IVA | Campi testo | Dati di contatto e identificativi. | Tutti facoltativi. |
-| Note | Area testo | Informazioni aggiuntive sul fornitore. | Facoltative. |
-| Fornitore attivo | Checkbox | Attiva/disattiva il fornitore (solo in modifica). | I fornitori nuovi nascono attivi. |
-| Annulla / Salva fornitore | Bottoni | Chiudono o salvano il modale. | `Salva` disattivato durante il salvataggio. |
-
-### 11.7 Tab Ordini acquisto e ricezioni (Merchant)
-
-La tab Ordini acquisto governa il ciclo:
-- creazione ordine in `Draft`
-- invio ordine
-- ricezione parziale o totale
-- chiusura automatica quando tutte le righe sono completamente ricevute
-
-Gli stati possibili sono:
-- `Draft`
-- `Inviato`
-- `Parzialmente ricevuto`
-- `Chiuso`
-- `Annullato`
+La tab Ordini acquisto governa il ciclo `Draft → Inviato → (Parzialmente ricevuto) →
+Chiuso`, con possibilità di `Annullato`.
 
 **Comandi e campi — Tab Ordini acquisto**
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| + Nuovo ordine | Bottone | Apre il modale di creazione ordine acquisto. | — |
-| Badge stato | Etichetta | Mostra lo stato corrente dell'ordine. | Sola lettura. |
-| Tabella righe ordine | Lista | Mostra articolo, quantità ordinata, quantità ricevuta e costo. | Sola lettura dentro la scheda ordine. |
-| Ricezioni registrate | Lista sintetica | Mostra le ricezioni già effettuate per quell'ordine. | Sola lettura. |
-| Invia ordine | Bottone | Porta l'ordine da `Draft` a `Inviato`. | Disponibile solo su ordini `Draft`. |
-| Registra ricezione | Bottone | Apre il modale di ricezione. | Disponibile solo su ordini `Inviato` o `Parzialmente ricevuto`. |
-| Annulla | Bottone | Annulla l'ordine. | Non disponibile sugli ordini chiusi; il sistema rifiuta l'annullamento se esiste già una ricezione. |
+| Elemento | Tipo | Cosa fa | Livello richiesto |
+|----------|------|---------|-------------------|
+| Lista ordini, righe, ricezioni | Liste | Consultazione dello stato e dello storico. | ReadOnly |
+| + Nuovo ordine | Bottone | Apre il modale di creazione ordine. | Manager |
+| Invia ordine | Bottone | Porta l'ordine da `Draft` a `Inviato`. | Manager |
+| Annulla | Bottone | Annulla l'ordine. | Manager |
+| Registra ricezione | Bottone | Apre il modale di ricezione merci. | Operator |
 
-**Comandi e campi — Modale nuovo ordine**
+Quando una ricezione viene registrata, il sistema crea il documento di ricezione,
+aggiorna le quantità ricevute, genera movimenti `Ricezione acquisto`, aggiorna i saldi
+di filiale, ricalcola il costo medio ponderato e chiude automaticamente l'ordine se
+tutte le righe risultano completamente ricevute.
 
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Filiale | Select | Sceglie la filiale destinataria. | Obbligatoria. |
-| Fornitore | Select | Sceglie il fornitore dell'ordine. | Obbligatorio; propone fornitori attivi. |
-| Consegna prevista | Campo data | Data attesa di ricezione. | Facoltativa. |
-| Note | Area testo | Note operative sull'ordine. | Facoltative. |
-| Righe ordine | Lista dinamica | Ogni riga definisce articolo, quantità e costo unitario. | L'ordine deve avere almeno una riga; quantità maggiore di `0`; costo non negativo. |
-| + Riga / Rimuovi | Bottoni | Aggiungono o rimuovono righe. | L'ultima riga non può essere rimossa se è l'unica presente. |
-| Annulla / Crea ordine | Bottoni | Chiudono o creano l'ordine. | `Crea ordine` disattivato durante il salvataggio. |
+### 11.9 Magazzino del Merchant (solo report)
 
-**Comandi e campi — Modale ricezione**
+Coerentemente con il ruolo di **configuratore** dell'app Merchant, la pagina Magazzino
+del Merchant espone **solo i report**, in sola lettura:
+
+**Comandi e campi — Pagina Magazzino (Merchant)**
 
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
-| Riga residua | Riga dati | Mostra solo le righe dell'ordine con quantità ancora da ricevere. | Le righe completamente ricevute non compaiono. |
-| Quantità ricevuta | Campo numerico | Inserisce la quantità effettivamente ricevuta. | Deve essere maggiore di `0` e non può superare il residuo della riga ordine. |
-| Costo unitario | Campo numerico | Conferma o corregge il costo unitario della ricezione. | Se vuoto usa il costo dell'ordine; non può essere negativo. |
-| Note ricezione | Area testo | Note operative sulla consegna. | Facoltative. |
-| Annulla / Registra ricezione | Bottoni | Chiudono o registrano la ricezione. | `Registra` disattivato durante il salvataggio. |
+| Filtro filiale | Select | Mostra dati consolidati su tutte le filiali oppure su una sola. | Sola lettura. |
+| Panoramica | Riquadro KPI | Articoli attivi, fornitori attivi, ordini aperti, valore stock. | Sola lettura. |
+| Tabella valorizzazione | Lista | Articolo, filiale, quantità, costo medio, valore. | Sola lettura. |
+| Tabella sotto scorta | Lista | Articoli sotto soglia e riordino suggerito. | Sola lettura. |
 
-Quando una ricezione viene registrata, il sistema:
-- crea il documento di ricezione
-- aggiorna quantità ricevuta sulle righe ordine
-- genera movimenti di tipo `Ricezione acquisto`
-- aggiorna i saldi di filiale
-- ricalcola il costo medio ponderato dell'articolo
-- chiude automaticamente l'ordine se tutte le righe risultano completamente ricevute
-
-### 11.8 Tab Report (Merchant)
-
-La tab Report presenta due viste operative:
-- `Valorizzazione stock`
-- `Sotto scorta`
-
-**Comandi e campi — Tab Report**
-
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Tabella valorizzazione | Lista | Mostra articolo, filiale, quantità, costo medio e valore. | Sola lettura; usa il filtro filiale in alto. |
-| Tabella sotto scorta | Lista | Mostra gli articoli sotto soglia e il riordino suggerito. | Sola lettura; se non ci sono righe compare lo stato vuoto. |
-
-### 11.9 Magazzino del dipendente (Employee)
-
-La versione Employee del modulo è volutamente più stretta: serve per
-**consultazione operativa** e priorità di lavoro, non per amministrazione.
-
-Il dipendente può:
-- scegliere una delle filiali a lui consentite
-- cercare articoli per SKU, nome o barcode
-- vedere quantità, valore e soglia di riordino
-- vedere articoli sotto scorta
-- vedere gli ultimi movimenti
-
-Il dipendente non può:
-- creare o modificare articoli
-- creare o modificare fornitori
-- creare, inviare o annullare ordini acquisto
-- registrare rettifiche manuali
-
-**Comandi e campi — Pagina Magazzino (Employee)**
-
-| Elemento | Tipo | Cosa fa | Controlli |
-|----------|------|---------|-----------|
-| Filiale operativa | Select | Cambia la filiale su cui leggere i dati. | Mostra solo filiali consentite alla membership del dipendente. |
-| KPI articoli / sotto scorta / ordini aperti / valore stock | Riquadri | Riassumono il contesto operativo della filiale selezionata. | Sola lettura. |
-| Scope operativo | Badge | Mostra la filiale attualmente in consultazione. | Sola lettura. |
-| Ricerca SKU / nome / barcode | Campo testo | Filtra gli articoli visibili. | Match testuale lato UI sui dati caricati. |
-| Lista stock disponibile | Card list | Mostra articoli, barcode, quantità, valore e soglia. | Sola lettura; evidenzia `Da riordinare` se quantità <= soglia. |
-| Sotto scorta | Lista sintetica | Mostra priorità di riordino. | Sola lettura. |
-| Ultimi movimenti | Lista sintetica | Mostra tipo movimento, data, filiale e quantità. | Sola lettura. |
+Il Merchant non dispone di alcun comando operativo sul Magazzino: articoli, movimenti,
+rettifiche, fornitori e ordini si gestiscono esclusivamente dall'app Employee.
 
 ### Corner case — Magazzino
 
 | Situazione | Comportamento |
 |------------|---------------|
 | Utente senza feature `Magazzino` | La voce di menu non compare; l'URL diretto riporta alla dashboard. |
-| Merchant con filtro `Tutte le filiali` | Panoramica e report sono aggregati; le azioni operative che scrivono dati richiedono una filiale esplicita nel form. |
+| Employee con livello `ReadOnly` | Vede tutte le tab ma nessun comando di scrittura; il backend risponde 403 a un'eventuale chiamata diretta. |
+| Employee con livello `Operator` che tenta di creare un articolo o un ordine | Il backend risponde 403 Forbidden. |
+| Feature `Magazzino` abilitata su un ruolo senza livello esplicito | Trattata come `ReadOnly`. |
 | Articolo nuovo senza saldi | Compare nel catalogo con quantità totale a `0` e senza righe saldo. |
 | Rettifica negativa che porterebbe lo stock sotto zero | Il sistema rifiuta il salvataggio. |
 | Ricezione con quantità superiore al residuo | Il sistema rifiuta il salvataggio. |
 | Ricezione finale dell'ultima riga residua | L'ordine passa automaticamente a `Chiuso`. |
-| Employee che seleziona una filiale non consentita | Il backend rifiuta la richiesta e la UI mostra un errore. |
+| Employee che seleziona/opera su una filiale non consentita | Il backend rifiuta la richiesta e la UI mostra un errore. |
 | Ricerca barcode | Funziona come ricerca testuale sul valore salvato; non apre la fotocamera e non esegue scansione hardware. |
 
 ---

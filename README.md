@@ -35,8 +35,15 @@ appointment-scheduler/
 | Tipo | Descrizione |
 |---|---|
 | **Admin** | God mode — gestisce merchant, report piattaforma, utenti |
-| **Merchant** | Persona giuridica/azienda — gestisce eventi, risorse, ruoli |
-| **Employee** | Dipendente/risorsa — vede il proprio calendario, fa richieste |
+| **Merchant** | Persona giuridica/azienda — **configuratore**: filiali, reparti, ruoli, mansioni, report |
+| **Employee** | Dipendente/risorsa — app **operativa**: calendario, timbratura, magazzino, richieste |
+
+### Principio architetturale: Merchant = configuratore, Employee = operatività
+
+L'app **Merchant** è un configuratore (configurazioni anagrafiche + report).
+L'app **Employee** è l'app operativa dove il dipendente svolge il lavoro quotidiano.
+Le funzionalità operative vivono sotto `api/employee/*`; il Merchant riceve solo
+configurazione e report. Vedi [.claude/instructions.md](.claude/instructions.md).
 
 ## Entità Centrale: Evento
 
@@ -61,7 +68,20 @@ I ruoli sono custom per azienda. Feature disponibili:
 
 Il ruolo **"Responsabile App"** viene creato automaticamente con tutte le feature attive.
 
-Il modulo **Magazzino** copre articoli, saldi per filiale, movimenti, fornitori, ordini acquisto, ricezioni e report operativi base.
+Per la maggior parte delle feature il permesso è binario (abilitata / non abilitata).
+La feature **Magazzino** usa invece un **livello di accesso** (`FeatureAccessLevel`),
+configurabile per ruolo dall'app Merchant:
+
+| Livello | Cosa può fare il dipendente sul Magazzino |
+|---|---|
+| **ReadOnly** | Consultazione: stock, articoli, movimenti, sotto scorta, fornitori, ordini |
+| **Operator** | Anche: rettifiche stock, ricevimento merci |
+| **Manager** | Anche: anagrafiche articoli/fornitori, creazione e gestione ordini di acquisto |
+
+Il modulo **Magazzino** copre articoli, saldi per filiale, movimenti, fornitori, ordini
+acquisto, ricezioni e report. L'**operatività** vive sull'app Employee
+(`api/employee/inventory`, modulata sul livello del ruolo); l'app Merchant mantiene solo
+i **report** (`api/merchant/inventory/reports`).
 
 ## Colori Calendario (Employee view)
 
@@ -77,7 +97,7 @@ Il modulo **Magazzino** copre articoli, saldi per filiale, movimenti, fornitori,
 
 ## Multi-Company Employee
 
-Un dipendente può appartenere a più aziende. Al login, se ha più aziende, vede la schermata di selezione. Il JWT company-specific include `MerchantId`, `EmployeeId` e le `Feature[]` abilitate.
+Un dipendente può appartenere a più aziende. Al login, se ha più aziende, vede la schermata di selezione. Il JWT company-specific include `MerchantId`, `EmployeeId`, le `Feature[]` abilitate e i claim `FeatureLevel` (`"<Feature>:<Level>"`) per le feature che usano i livelli di accesso (Magazzino).
 
 ## Setup Locale
 

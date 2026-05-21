@@ -16,6 +16,7 @@ interface AuthResponse {
   companyName?: string
   companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
   activeFeatures: string[]
+  featureLevels?: Record<string, 'ReadOnly' | 'Operator' | 'Manager'>
 }
 
 interface Props {
@@ -53,6 +54,7 @@ export default function LoginPage({ onLogin }: Props) {
         merchantId: data.merchantId,
         companyName: data.companyName,
         activeFeatures: data.activeFeatures ?? [],
+        featureLevels: data.featureLevels ?? {},
         companies: data.companies,
       }
 

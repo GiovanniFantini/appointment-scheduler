@@ -8,10 +8,22 @@ interface Feature {
   value: number
 }
 
+// Livelli di accesso operativo. Significativi solo per la feature Magazzino.
+type FeatureAccessLevel = 'ReadOnly' | 'Operator' | 'Manager'
+
+const MAGAZZINO_FEATURE_VALUE = 10
+
+const MAGAZZINO_LEVELS: Array<{ value: FeatureAccessLevel; label: string }> = [
+  { value: 'ReadOnly', label: 'Sola lettura' },
+  { value: 'Operator', label: 'Operatore (rettifiche, ricezioni)' },
+  { value: 'Manager', label: 'Manager (anche anagrafiche e ordini)' },
+]
+
 interface RoleFeatureDto {
   feature: number
   featureName: string
   isEnabled: boolean
+  accessLevel?: FeatureAccessLevel | null
 }
 
 interface MerchantRole {
@@ -47,6 +59,8 @@ export default function RuoliPage() {
   const [createError, setCreateError] = useState('')
   // localFeatures: roleId -> array of enabled feature enum values (numbers)
   const [localFeatures, setLocalFeatures] = useState<Record<number, number[]>>({})
+  // magazzinoLevels: roleId -> livello di accesso al Magazzino (se abilitato)
+  const [magazzinoLevels, setMagazzinoLevels] = useState<Record<number, FeatureAccessLevel>>({})
 
   const fetchRoles = async () => {
     setLoading(true)
@@ -56,10 +70,15 @@ export default function RuoliPage() {
         const data = res.data as MerchantRole[]
         setRoles(data)
         const fm: Record<number, number[]> = {}
+        const lm: Record<number, FeatureAccessLevel> = {}
         data.forEach(r => {
           fm[r.id] = r.features.filter(f => f.isEnabled).map(f => f.feature)
+          const magazzino = r.features.find(f => f.feature === MAGAZZINO_FEATURE_VALUE)
+          // Default sicuro: una feature Magazzino abilitata senza livello è ReadOnly.
+          lm[r.id] = magazzino?.accessLevel ?? 'ReadOnly'
         })
         setLocalFeatures(fm)
+        setMagazzinoLevels(lm)
       }
     } catch {
       setRoles([])
@@ -78,7 +97,26 @@ export default function RuoliPage() {
         : [...current, featureValue]
       return { ...prev, [roleId]: updated }
     })
+    // Abilitando il Magazzino senza un livello già scelto, parte da ReadOnly.
+    if (featureValue === MAGAZZINO_FEATURE_VALUE) {
+      setMagazzinoLevels(prev => ({ ...prev, [roleId]: prev[roleId] ?? 'ReadOnly' }))
+    }
   }
+
+  const setMagazzinoLevel = (roleId: number, level: FeatureAccessLevel) => {
+    setMagazzinoLevels(prev => ({ ...prev, [roleId]: level }))
+  }
+
+  /** Costruisce il payload feature, includendo il livello per il Magazzino. */
+  const buildFeaturesPayload = (roleId: number, enabledValues: number[]) =>
+    ALL_FEATURES.map(feat => {
+      const isEnabled = enabledValues.includes(feat.value)
+      const base = { feature: feat.value, isEnabled }
+      if (feat.value === MAGAZZINO_FEATURE_VALUE && isEnabled) {
+        return { ...base, accessLevel: magazzinoLevels[roleId] ?? 'ReadOnly' }
+      }
+      return base
+    })
 
   const handleSaveRole = async (role: MerchantRole) => {
     setSavingId(role.id)
@@ -86,10 +124,7 @@ export default function RuoliPage() {
       const enabledValues = localFeatures[role.id] ?? []
       await apiClient.put(`/merchant-roles/${role.id}`, {
         name: role.name,
-        features: ALL_FEATURES.map(feat => ({
-          feature: feat.value,
-          isEnabled: enabledValues.includes(feat.value),
-        })),
+        features: buildFeaturesPayload(role.id, enabledValues),
       })
     } catch {
       alert('Errore durante il salvataggio')
@@ -159,23 +194,44 @@ export default function RuoliPage() {
               </div>
               <div className="role-card-body">
                 <div className="features-label">Funzionalità</div>
-                {ALL_FEATURES.map(feat => (
-                  <div key={feat.name} className="feature-toggle-row">
-                    <span className="feature-name">
-                      <span className="feature-icon">{feat.icon}</span>
-                      {feat.name}
-                    </span>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={(localFeatures[role.id] ?? []).includes(feat.value)}
-                        onChange={() => toggleFeature(role.id, feat.value)}
-                        disabled={isDefaultRole(role)}
-                      />
-                      <span className="toggle-slider" />
-                    </label>
-                  </div>
-                ))}
+                {ALL_FEATURES.map(feat => {
+                  const isEnabled = (localFeatures[role.id] ?? []).includes(feat.value)
+                  const showLevelSelector = feat.value === MAGAZZINO_FEATURE_VALUE && isEnabled
+                  return (
+                    <div key={feat.name}>
+                      <div className="feature-toggle-row">
+                        <span className="feature-name">
+                          <span className="feature-icon">{feat.icon}</span>
+                          {feat.name}
+                        </span>
+                        <label className="toggle-switch">
+                          <input
+                            type="checkbox"
+                            checked={isEnabled}
+                            onChange={() => toggleFeature(role.id, feat.value)}
+                            disabled={isDefaultRole(role)}
+                          />
+                          <span className="toggle-slider" />
+                        </label>
+                      </div>
+                      {showLevelSelector && (
+                        <div className="feature-level-row">
+                          <span className="feature-level-label">Livello di accesso</span>
+                          <select
+                            className="feature-level-select"
+                            value={magazzinoLevels[role.id] ?? 'ReadOnly'}
+                            onChange={e => setMagazzinoLevel(role.id, e.target.value as FeatureAccessLevel)}
+                            disabled={isDefaultRole(role)}
+                          >
+                            {MAGAZZINO_LEVELS.map(level => (
+                              <option key={level.value} value={level.value}>{level.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
               <div className="role-card-footer">
                 <button

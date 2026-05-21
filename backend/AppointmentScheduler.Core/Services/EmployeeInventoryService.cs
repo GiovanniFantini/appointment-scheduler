@@ -1,5 +1,6 @@
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,10 +9,20 @@ namespace AppointmentScheduler.Core.Services;
 public class EmployeeInventoryService : IEmployeeInventoryService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IInventoryService _inventoryService;
+    private readonly ISupplierService _supplierService;
+    private readonly IPurchaseOrderService _purchaseOrderService;
 
-    public EmployeeInventoryService(ApplicationDbContext context)
+    public EmployeeInventoryService(
+        ApplicationDbContext context,
+        IInventoryService inventoryService,
+        ISupplierService supplierService,
+        IPurchaseOrderService purchaseOrderService)
     {
         _context = context;
+        _inventoryService = inventoryService;
+        _supplierService = supplierService;
+        _purchaseOrderService = purchaseOrderService;
     }
 
     public async Task<EmployeeInventoryOverviewDto> GetOverviewAsync(int employeeId, int merchantId, int? branchId = null)
@@ -162,6 +173,152 @@ public class EmployeeInventoryService : IEmployeeInventoryService
             ReorderPoint = balance.Item.ReorderPoint,
             SuggestedReorderQuantity = balance.Item.ReorderPoint - balance.QuantityOnHand,
         }).ToList();
+    }
+
+    // ── Letture aggiuntive ──────────────────────────────────────────────────
+
+    public async Task<List<SupplierDto>> GetSuppliersAsync(int employeeId, int merchantId, bool includeInactive = true)
+    {
+        await EnsureMembershipAsync(employeeId, merchantId);
+        return await _supplierService.GetSuppliersAsync(merchantId, includeInactive);
+    }
+
+    public async Task<List<PurchaseOrderDto>> GetPurchaseOrdersAsync(int employeeId, int merchantId, int? branchId = null, PurchaseOrderStatus? status = null)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+
+        if (branchId.HasValue)
+        {
+            EnsureBranchAccessible(branchId.Value, accessibleBranchIds);
+            return await _purchaseOrderService.GetOrdersAsync(merchantId, branchId.Value, status);
+        }
+
+        // Senza filtro esplicito: restituisce solo gli ordini delle filiali accessibili.
+        var orders = await _purchaseOrderService.GetOrdersAsync(merchantId, null, status);
+        return orders.Where(o => accessibleBranchIds.Contains(o.BranchId)).ToList();
+    }
+
+    public async Task<PurchaseOrderDto?> GetPurchaseOrderByIdAsync(int employeeId, int merchantId, int orderId)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        var order = await _purchaseOrderService.GetOrderByIdAsync(orderId, merchantId);
+        if (order == null)
+            return null;
+        EnsureBranchAccessible(order.BranchId, accessibleBranchIds);
+        return order;
+    }
+
+    // ── Operatività quotidiana (Operator) ───────────────────────────────────
+
+    public async Task<InventoryMovementDto> CreateAdjustmentAsync(int employeeId, int merchantId, int userId, CreateInventoryAdjustmentRequest request)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        EnsureBranchAccessible(request.BranchId, accessibleBranchIds);
+        return await _inventoryService.CreateAdjustmentAsync(merchantId, userId, request);
+    }
+
+    public async Task<PurchaseOrderDto?> ReceiveOrderAsync(int employeeId, int merchantId, int userId, int orderId, CreateGoodsReceiptRequest request)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        var order = await _purchaseOrderService.GetOrderByIdAsync(orderId, merchantId);
+        if (order == null)
+            return null;
+        EnsureBranchAccessible(order.BranchId, accessibleBranchIds);
+        return await _purchaseOrderService.ReceiveOrderAsync(orderId, merchantId, userId, request);
+    }
+
+    // ── Anagrafiche e gestione ordini (Manager) ─────────────────────────────
+
+    public async Task<InventoryItemDto> CreateItemAsync(int employeeId, int merchantId, CreateInventoryItemRequest request)
+    {
+        await EnsureMembershipAsync(employeeId, merchantId);
+        return await _inventoryService.CreateItemAsync(merchantId, request);
+    }
+
+    public async Task<InventoryItemDto?> UpdateItemAsync(int employeeId, int merchantId, int itemId, UpdateInventoryItemRequest request)
+    {
+        await EnsureMembershipAsync(employeeId, merchantId);
+        return await _inventoryService.UpdateItemAsync(itemId, merchantId, request);
+    }
+
+    public async Task<SupplierDto> CreateSupplierAsync(int employeeId, int merchantId, CreateSupplierRequest request)
+    {
+        await EnsureMembershipAsync(employeeId, merchantId);
+        return await _supplierService.CreateSupplierAsync(merchantId, request);
+    }
+
+    public async Task<SupplierDto?> UpdateSupplierAsync(int employeeId, int merchantId, int supplierId, UpdateSupplierRequest request)
+    {
+        await EnsureMembershipAsync(employeeId, merchantId);
+        return await _supplierService.UpdateSupplierAsync(supplierId, merchantId, request);
+    }
+
+    public async Task<PurchaseOrderDto> CreatePurchaseOrderAsync(int employeeId, int merchantId, int userId, CreatePurchaseOrderRequest request)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        EnsureBranchAccessible(request.BranchId, accessibleBranchIds);
+        return await _purchaseOrderService.CreateOrderAsync(merchantId, userId, request);
+    }
+
+    public async Task<PurchaseOrderDto?> MarkPurchaseOrderSentAsync(int employeeId, int merchantId, int orderId)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        var order = await _purchaseOrderService.GetOrderByIdAsync(orderId, merchantId);
+        if (order == null)
+            return null;
+        EnsureBranchAccessible(order.BranchId, accessibleBranchIds);
+        return await _purchaseOrderService.MarkAsSentAsync(orderId, merchantId);
+    }
+
+    public async Task<PurchaseOrderDto?> CancelPurchaseOrderAsync(int employeeId, int merchantId, int orderId)
+    {
+        var accessibleBranchIds = await ResolveAccessibleBranchIdsAsync(employeeId, merchantId);
+        var order = await _purchaseOrderService.GetOrderByIdAsync(orderId, merchantId);
+        if (order == null)
+            return null;
+        EnsureBranchAccessible(order.BranchId, accessibleBranchIds);
+        return await _purchaseOrderService.CancelOrderAsync(orderId, merchantId);
+    }
+
+    // ── Validazione perimetro ───────────────────────────────────────────────
+
+    /// <summary>
+    /// Verifica che il dipendente abbia una membership attiva sul merchant.
+    /// Usato dalle operazioni non legate a una filiale (articoli, fornitori).
+    /// </summary>
+    private async Task EnsureMembershipAsync(int employeeId, int merchantId)
+    {
+        var exists = await _context.EmployeeMemberships
+            .AnyAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
+        if (!exists)
+            throw new InvalidOperationException("Membership dipendente non trovato.");
+    }
+
+    /// <summary>
+    /// Restituisce gli ID delle filiali su cui il dipendente può operare
+    /// (filiale principale + accessi aggiuntivi).
+    /// </summary>
+    private async Task<HashSet<int>> ResolveAccessibleBranchIdsAsync(int employeeId, int merchantId)
+    {
+        var membership = await _context.EmployeeMemberships
+            .AsNoTracking()
+            .Include(m => m.BranchAccess)
+            .FirstOrDefaultAsync(m => m.EmployeeId == employeeId && m.MerchantId == merchantId && m.IsActive);
+
+        if (membership == null)
+            throw new InvalidOperationException("Membership dipendente non trovato.");
+
+        return membership.BranchAccess
+            .Select(a => a.BranchId)
+            .Append(membership.HomeBranchId)
+            .Distinct()
+            .ToHashSet();
+    }
+
+    private static void EnsureBranchAccessible(int branchId, HashSet<int> accessibleBranchIds)
+    {
+        if (!accessibleBranchIds.Contains(branchId))
+            throw new InvalidOperationException("Filiale non accessibile per il dipendente.");
     }
 
     private async Task<EmployeeInventoryScope> ResolveScopeAsync(int employeeId, int merchantId, int? requestedBranchId)

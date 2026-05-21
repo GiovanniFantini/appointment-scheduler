@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -64,7 +65,8 @@ public class MerchantRoleService : IMerchantRoleService
             role.Features.Add(new RoleFeature
             {
                 Feature = featureRequest.Feature,
-                IsEnabled = featureRequest.IsEnabled
+                IsEnabled = featureRequest.IsEnabled,
+                AccessLevel = ResolveAccessLevel(featureRequest)
             });
         }
 
@@ -102,7 +104,8 @@ public class MerchantRoleService : IMerchantRoleService
             {
                 RoleId = role.Id,
                 Feature = featureRequest.Feature,
-                IsEnabled = featureRequest.IsEnabled
+                IsEnabled = featureRequest.IsEnabled,
+                AccessLevel = ResolveAccessLevel(featureRequest)
             });
         }
 
@@ -185,9 +188,25 @@ public class MerchantRoleService : IMerchantRoleService
             Features = role.Features.Select(f => new RoleFeatureDto
             {
                 Feature = f.Feature,
-                IsEnabled = f.IsEnabled
+                IsEnabled = f.IsEnabled,
+                AccessLevel = f.AccessLevel
             }).ToList(),
             MemberCount = role.Memberships.Count(m => m.IsActive)
         };
+    }
+
+    /// <summary>
+    /// Determina il livello di accesso da persistere per una feature.
+    /// Il livello è significativo solo per la feature Magazzino: se la feature è
+    /// abilitata senza livello esplicito, il default è ReadOnly. Per le altre
+    /// feature il livello resta null.
+    /// </summary>
+    private static FeatureAccessLevel? ResolveAccessLevel(MerchantFeatureRequest request)
+    {
+        if (request.Feature != MerchantFeature.Magazzino)
+            return null;
+        if (!request.IsEnabled)
+            return null;
+        return request.AccessLevel ?? FeatureAccessLevel.ReadOnly;
     }
 }

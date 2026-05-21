@@ -21,6 +21,11 @@ public class AuthResponse
 
     // Features attive (post company-switch)
     public List<string> ActiveFeatures { get; set; } = new();
+
+    // Livello di accesso per feature (post company-switch).
+    // Valorizzato solo per le feature che usano i livelli (Magazzino).
+    // Chiave = nome feature, valore = nome livello (ReadOnly/Operator/Manager).
+    public Dictionary<string, string> FeatureLevels { get; set; } = new();
 }
 
 /// <summary>

@@ -10,5 +10,5 @@ public interface IAuthService
     Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request);
     Task<AuthResponse?> SelectCompanyAsync(int userId, int merchantId);
     Task<AuthResponse?> LoginAdminAsync(LoginRequest request);
-    string GenerateJwtToken(int userId, string email, string role, int? merchantId = null, int? employeeId = null, List<string>? features = null);
+    string GenerateJwtToken(int userId, string email, string role, int? merchantId = null, int? employeeId = null, List<string>? features = null, List<string>? featureLevels = null);
 }

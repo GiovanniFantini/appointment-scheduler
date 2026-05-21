@@ -1,10 +1,16 @@
+using AppointmentScheduler.API.Authorization;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppointmentScheduler.API.Controllers;
 
+/// <summary>
+/// Magazzino lato Merchant: solo i report. L'operatività vive sull'app Employee
+/// (<see cref="EmployeeInventoryController"/>).
+/// </summary>
 [ApiController]
 [Route("api/merchant/inventory/reports")]
 [Authorize(Policy = "MerchantOnly")]
@@ -24,15 +30,12 @@ public class InventoryReportsController : ControllerBase
         return !string.IsNullOrEmpty(claim) && int.TryParse(claim, out merchantId);
     }
 
-    private bool HasMagazzinoFeature()
-        => User.FindAll("Feature").Any(c => c.Value == "Magazzino");
-
     [HttpGet("dashboard")]
     public async Task<ActionResult<InventoryDashboardDto>> GetDashboard([FromQuery] int? branchId = null)
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Token non valido" });
-        if (!HasMagazzinoFeature())
+        if (!User.HasFeature(MerchantFeature.Magazzino))
             return Forbid();
 
         var dashboard = await _inventoryReportingService.GetDashboardAsync(merchantId, branchId);
@@ -44,7 +47,7 @@ public class InventoryReportsController : ControllerBase
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Token non valido" });
-        if (!HasMagazzinoFeature())
+        if (!User.HasFeature(MerchantFeature.Magazzino))
             return Forbid();
 
         var rows = await _inventoryReportingService.GetValuationAsync(merchantId, branchId);
@@ -56,7 +59,7 @@ public class InventoryReportsController : ControllerBase
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Token non valido" });
-        if (!HasMagazzinoFeature())
+        if (!User.HasFeature(MerchantFeature.Magazzino))
             return Forbid();
 
         var rows = await _inventoryReportingService.GetLowStockAsync(merchantId, branchId);

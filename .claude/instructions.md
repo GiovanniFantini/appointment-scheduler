@@ -72,6 +72,36 @@ AppointmentScheduler.Data/      # DbContext, repositories, migrations
 AppointmentScheduler.Shared/    # Models, DTOs, enums
 ```
 
+### Principio architetturale CRITICO: Merchant = configuratore, Employee = operatività
+
+La piattaforma è B2B2E con 4 app frontend (`admin-app`, `merchant-app`, `employee-app`, `consumer-app`)
+e un unico backend.
+
+- L'app **Merchant** è un **configuratore**: gestisce configurazioni anagrafiche
+  (filiali, reparti, ruoli, mansioni) e **report**. NON è un'app operativa.
+- L'app **Employee** è l'app **operativa**: il dipendente/risorsa svolge qui il lavoro
+  quotidiano (timbratura, magazzino, richieste, calendario).
+
+**Regola per nuove feature:** ogni funzionalità operativa va esposta sotto `api/employee/*`
+e nell'`employee-app`, mai sotto `api/merchant/*`. Il Merchant riceve solo le viste di
+configurazione e i report. Esempio di riferimento: il modulo **Magazzino** — l'operatività
+(articoli, rettifiche, fornitori, ordini, ricezioni) è in `EmployeeInventoryController`;
+il Merchant ha solo `InventoryReportsController`.
+
+### Autorizzazione
+
+- Policy ASP.NET: `AdminOnly`, `MerchantOnly`, `EmployeeOnly` (in `Program.cs`).
+- I ruoli employee NON sono ruoli ASP.NET Identity: sono entità custom `MerchantRole`,
+  ognuna con una collezione di `RoleFeature` (feature + flag `IsEnabled` + `AccessLevel` opzionale).
+- Il JWT porta due tipi di claim per le feature:
+  - `Feature` → presenza binaria della feature (es. `"Magazzino"`). Usato da tutte le feature.
+  - `FeatureLevel` → livello di accesso nel formato `"<Feature>:<Level>"` (es. `"Magazzino:Manager"`).
+    Emesso solo per le feature che usano i livelli (oggi solo Magazzino).
+- L'enum `FeatureAccessLevel` (`ReadOnly`/`Operator`/`Manager`) modula l'operatività per ruolo.
+- Helper `FeatureClaims` (`AppointmentScheduler.API/Authorization`): `HasFeature`,
+  `GetFeatureLevel`, `RequireFeatureLevel`. Un endpoint operativo che non supera il
+  controllo di livello deve rispondere **403 Forbidden** (`Forbid()`), non `BadRequest`.
+
 ### Servizi - Sempre con interfaccia
 ```csharp
 // Interfaccia
