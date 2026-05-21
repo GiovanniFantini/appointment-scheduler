@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.Shared.Helpers;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -449,7 +450,7 @@ public class TimeClockService : ITimeClockService
             Source = TimeEntrySource.Manual,
             Status = TimeEntryStatus.Corrected,
             WorkDate = participant.Event.StartDate,
-            ActualTimestampUtc = request.ActualTimestampUtc,
+            ActualTimestampUtc = DateTimeUtc.Coerce(request.ActualTimestampUtc),
             Notes = request.Notes,
             IsManualCorrection = true,
             CorrectedByUserId = userId,

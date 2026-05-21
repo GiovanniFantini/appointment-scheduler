@@ -1,6 +1,7 @@
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.Shared.Helpers;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -71,7 +72,7 @@ public class PurchaseOrderService : IPurchaseOrderService
             OrderNumber = GenerateDocumentNumber("PO"),
             Status = PurchaseOrderStatus.Draft,
             OrderedAt = DateTime.UtcNow,
-            ExpectedDeliveryDate = request.ExpectedDeliveryDate,
+            ExpectedDeliveryDate = DateTimeUtc.Coerce(request.ExpectedDeliveryDate),
             Notes = NormalizeOptional(request.Notes),
             CreatedByUserId = userId,
             CreatedAt = DateTime.UtcNow,
