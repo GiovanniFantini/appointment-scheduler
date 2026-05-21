@@ -506,10 +506,10 @@ export default function MagazzinoPage({ accessLevel }: Props) {
   const handleSendOrder = async (order: PurchaseOrder) => {
     try {
       await inventoryApi.sendOrder(order.id)
-      setNotice(`Ordine ${order.orderNumber} inviato.`)
+      setNotice(`Ordine ${order.orderNumber} confermato.`)
       await loadInventory()
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Errore durante l’invio dell’ordine.'))
+      setError(getApiErrorMessage(err, 'Errore durante la conferma dell’ordine.'))
     }
   }
 
@@ -983,10 +983,10 @@ export default function MagazzinoPage({ accessLevel }: Props) {
       <div className="inventory-section-head">
         <div>
           <h2>Ordini acquisto</h2>
-          <p>Dal draft alla ricezione parziale o totale senza uscire dal modulo.</p>
+          <p>Dalla bozza alla ricezione parziale o totale senza uscire dal modulo.</p>
         </div>
         <div className="inventory-toolbar-row">
-          {draftOrders.length > 0 && <span className="inventory-muted-chip">{draftOrders.length} draft</span>}
+          {draftOrders.length > 0 && <span className="inventory-muted-chip">{draftOrders.length} in bozza</span>}
           {canManage && (
             <button className="inventory-primary-btn" onClick={openCreateOrder}>+ Nuovo ordine</button>
           )}
@@ -1062,7 +1062,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
                 {hasActions && (
                   <div className="inventory-order-actions">
-                    {canSend && <button className="inventory-secondary-btn" onClick={() => handleSendOrder(order)}>Invia ordine</button>}
+                    {canSend && <button className="inventory-secondary-btn" onClick={() => handleSendOrder(order)}>Conferma ordine</button>}
                     {canReceiveOrder && <button className="inventory-primary-btn" onClick={() => openReceiveOrder(order)}>Registra ricezione</button>}
                     {canCancel && <button className="inventory-danger-btn" onClick={() => handleCancelOrder(order)}>Annulla</button>}
                   </div>
@@ -1270,7 +1270,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               <button className="inventory-link-btn" onClick={() => setOrderModalOpen(false)}>Chiudi</button>
             </div>
             <form className="inventory-form-grid" onSubmit={handleOrderSubmit}>
-              <label>
+              <label className="inventory-form-field">
                 Filiale
                 <select value={orderForm.branchId} onChange={event => setOrderForm(prev => ({ ...prev, branchId: event.target.value }))} required>
                   <option value="">Seleziona filiale</option>
@@ -1279,7 +1279,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
                   ))}
                 </select>
               </label>
-              <label>
+              <label className="inventory-form-field">
                 Fornitore
                 <select value={orderForm.supplierId} onChange={event => setOrderForm(prev => ({ ...prev, supplierId: event.target.value }))} required>
                   <option value="">Seleziona fornitore</option>
@@ -1288,11 +1288,11 @@ export default function MagazzinoPage({ accessLevel }: Props) {
                   ))}
                 </select>
               </label>
-              <label>
+              <label className="inventory-form-field">
                 Consegna prevista
                 <input type="date" value={orderForm.expectedDeliveryDate} onChange={event => setOrderForm(prev => ({ ...prev, expectedDeliveryDate: event.target.value }))} />
               </label>
-              <label className="inventory-form-grid-full">
+              <label className="inventory-form-field inventory-form-grid-full">
                 Note
                 <textarea value={orderForm.notes} onChange={event => setOrderForm(prev => ({ ...prev, notes: event.target.value }))} />
               </label>
@@ -1305,14 +1305,23 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
                 {orderForm.lines.map((line, index) => (
                   <div key={`line-${index}`} className="inventory-line-item-row">
-                    <select value={line.itemId} onChange={event => updateOrderLine(index, { itemId: event.target.value })} required>
-                      <option value="">Articolo</option>
-                      {items.filter(item => item.isActive).map(item => (
-                        <option key={item.id} value={item.id}>{item.sku} · {item.name}</option>
-                      ))}
-                    </select>
-                    <input type="number" step="0.001" placeholder="Quantità" value={line.quantityOrdered} onChange={event => updateOrderLine(index, { quantityOrdered: event.target.value })} required />
-                    <input type="number" step="0.0001" placeholder="Costo unitario" value={line.unitCost} onChange={event => updateOrderLine(index, { unitCost: event.target.value })} required />
+                    <label className="inventory-line-item-field">
+                      Articolo
+                      <select value={line.itemId} onChange={event => updateOrderLine(index, { itemId: event.target.value })} required>
+                        <option value="">Seleziona articolo</option>
+                        {items.filter(item => item.isActive).map(item => (
+                          <option key={item.id} value={item.id}>{item.sku} · {item.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="inventory-line-item-field">
+                      Quantità
+                      <input type="number" step="0.001" value={line.quantityOrdered} onChange={event => updateOrderLine(index, { quantityOrdered: event.target.value })} required />
+                    </label>
+                    <label className="inventory-line-item-field">
+                      Costo unitario
+                      <input type="number" step="0.0001" value={line.unitCost} onChange={event => updateOrderLine(index, { unitCost: event.target.value })} required />
+                    </label>
                     <button type="button" className="inventory-danger-btn inventory-danger-btn--ghost" onClick={() => removeOrderLine(index)} disabled={orderForm.lines.length === 1}>Rimuovi</button>
                   </div>
                 ))}
@@ -1351,14 +1360,20 @@ export default function MagazzinoPage({ accessLevel }: Props) {
                         <strong>{line.itemSku} · {line.itemName}</strong>
                         <span>Residuo {formatQuantity(remaining)}</span>
                       </div>
-                      <input type="number" step="0.001" value={draft.quantityReceived} onChange={event => updateReceiptLine(line.id, { quantityReceived: event.target.value })} required />
-                      <input type="number" step="0.0001" value={draft.unitCost} onChange={event => updateReceiptLine(line.id, { unitCost: event.target.value })} required />
+                      <label className="inventory-receipt-field">
+                        Quantità ricevuta
+                        <input type="number" step="0.001" value={draft.quantityReceived} onChange={event => updateReceiptLine(line.id, { quantityReceived: event.target.value })} required />
+                      </label>
+                      <label className="inventory-receipt-field">
+                        Costo unitario
+                        <input type="number" step="0.0001" value={draft.unitCost} onChange={event => updateReceiptLine(line.id, { unitCost: event.target.value })} required />
+                      </label>
                     </div>
                   )
                 })}
               </div>
 
-              <label className="inventory-form-grid-full">
+              <label className="inventory-form-field inventory-form-grid-full">
                 Note ricezione
                 <textarea value={receiptNotes} onChange={event => setReceiptNotes(event.target.value)} />
               </label>

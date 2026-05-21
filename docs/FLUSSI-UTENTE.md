@@ -1074,7 +1074,7 @@ I comandi di scrittura compaiono solo se il livello del dipendente lo consente.
 |----------|------|---------|-----------|
 | Filiale operativa | Select | Cambia la filiale su cui leggere e operare. | Mostra solo le filiali consentite alla membership del dipendente. |
 | Tab Panoramica / Articoli / Movimenti / Fornitori / Ordini acquisto | Tab | Cambiano la vista del modulo. | Nessun salvataggio automatico allo switch. |
-| Banner di notice / errore | Messaggio inline | Mostra l'esito di azioni come creazione articolo, rettifica, invio ordine, ricezione. | Informativo; visibile solo quando esiste un esito da mostrare. |
+| Banner di notice / errore | Messaggio inline | Mostra l'esito di azioni come creazione articolo, rettifica, conferma ordine, ricezione. | Informativo; visibile solo quando esiste un esito da mostrare. |
 
 ### 11.4 Tab Panoramica (Employee)
 
@@ -1127,7 +1127,7 @@ Chiuso`, con possibilità di `Annullato`.
 |----------|------|---------|-------------------|
 | Lista ordini, righe, ricezioni | Liste | Consultazione dello stato e dello storico. | ReadOnly |
 | + Nuovo ordine | Bottone | Apre il modale di creazione ordine. | Manager |
-| Invia ordine | Bottone | Porta l'ordine da `Draft` a `Inviato`. | Manager |
+| Conferma ordine | Bottone | Porta l'ordine da `Bozza` a `Inviato`. | Manager |
 | Annulla | Bottone | Annulla l'ordine. | Manager |
 | Registra ricezione | Bottone | Apre il modale di ricezione merci. | Operator |
 

@@ -428,6 +428,7 @@
 }
 
 .inventory-form-grid label,
+.inventory-form-field,
 .inventory-toggle-label {
   display: flex;
   flex-direction: column;
@@ -469,11 +470,22 @@
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
   gap: 10px;
-  align-items: center;
+  align-items: end;
 }
 
 .inventory-receipt-row {
   grid-template-columns: 2fr 1fr 1fr;
+}
+
+.inventory-line-item-field,
+.inventory-receipt-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: #cbd5e1;
+  font-size: 13px;
+  font-weight: 500;
 }
 
 .inventory-modal-overlay {
