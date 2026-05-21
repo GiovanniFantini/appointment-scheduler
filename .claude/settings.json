@@ -25,7 +25,8 @@
       "PowerShell(dotnet ef migrations add AddRoleFeatureAccessLevel --project backend/AppointmentScheduler.Data --startup-project backend/AppointmentScheduler.API --no-build 2>&1)",
       "PowerShell(dotnet ef database update --project backend/AppointmentScheduler.Data --startup-project backend/AppointmentScheduler.API --no-build 2>&1)",
       "Bash(rm InventoryController.cs SuppliersController.cs PurchaseOrdersController.cs)",
-      "Bash(ls Inventory*.cs Supplier*.cs Purchase*.cs)"
+      "Bash(ls Inventory*.cs Supplier*.cs Purchase*.cs)",
+      "Bash(Select-Object -Last 15)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

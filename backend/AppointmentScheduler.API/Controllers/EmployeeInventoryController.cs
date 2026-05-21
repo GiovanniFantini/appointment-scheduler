@@ -267,6 +267,16 @@ public class EmployeeInventoryController : ControllerBase
         {
             return Conflict(new { message = "Lo stock è stato modificato da un'altra operazione. Riprova." });
         }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Errore di persistenza durante il ricevimento dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore durante il salvataggio del ricevimento merci." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore inatteso durante il ricevimento dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore inatteso durante il ricevimento merci." });
+        }
     }
 
     // ── Anagrafiche e gestione ordini (Manager) ─────────────────────────────
@@ -362,6 +372,16 @@ public class EmployeeInventoryController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Errore di persistenza durante la creazione dell'ordine acquisto per employeeId {EmployeeId}, merchantId {MerchantId}, branchId {BranchId}, supplierId {SupplierId}", employeeId, merchantId, request.BranchId, request.SupplierId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore durante il salvataggio dell'ordine acquisto." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore inatteso durante la creazione dell'ordine acquisto per employeeId {EmployeeId}, merchantId {MerchantId}, branchId {BranchId}, supplierId {SupplierId}", employeeId, merchantId, request.BranchId, request.SupplierId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore inatteso durante la creazione dell'ordine acquisto." });
+        }
     }
 
     [HttpPost("purchase-orders/{id}/send")]
@@ -382,6 +402,16 @@ public class EmployeeInventoryController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Errore di persistenza durante l'invio dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore durante l'invio dell'ordine acquisto." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore inatteso durante l'invio dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore inatteso durante l'invio dell'ordine acquisto." });
+        }
     }
 
     [HttpPost("purchase-orders/{id}/cancel")]
@@ -401,6 +431,16 @@ public class EmployeeInventoryController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Errore di persistenza durante l'annullamento dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore durante l'annullamento dell'ordine acquisto." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore inatteso durante l'annullamento dell'ordine acquisto {OrderId} per employeeId {EmployeeId}, merchantId {MerchantId}", id, employeeId, merchantId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore inatteso durante l'annullamento dell'ordine acquisto." });
         }
     }
 }
