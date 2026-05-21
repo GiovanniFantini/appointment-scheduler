@@ -31,6 +31,15 @@ interface PreviewEvent {
   endTime?: string
 }
 
+interface ShiftConflict {
+  employeeFullName: string
+  message: string
+}
+
+interface ClonedEvent {
+  warnings?: ShiftConflict[]
+}
+
 export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: CopyWeekDialogProps) {
   const sourceWeekStart = addDays(currentWeekStart, -7)
   const targetWeekStart = currentWeekStart
@@ -38,6 +47,9 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  // Conflitti aggregati su tutti i turni clonati: mostrati come riepilogo
+  // post-copia, perché la clonazione non passa dal modale turno.
+  const [conflicts, setConflicts] = useState<ShiftConflict[] | null>(null)
 
   useEffect(() => {
     const from = sourceWeekStart
@@ -55,12 +67,19 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
     setSubmitting(true)
     setError('')
     try {
-      await apiClient.post('/events/clone-week', {
+      const res = await apiClient.post('/events/clone-week', {
         sourceWeekStart,
         targetWeekStart,
         numberOfWeeks: 1,
       })
-      onCopied()
+      const cloned = Array.isArray(res.data) ? (res.data as ClonedEvent[]) : []
+      const allConflicts = cloned.flatMap(c => c.warnings ?? [])
+      if (allConflicts.length > 0) {
+        // Mostra il riepilogo conflitti: la copia è già avvenuta, l'utente conferma la lettura.
+        setConflicts(allConflicts)
+      } else {
+        onCopied()
+      }
     } catch {
       setError('Errore durante la copia della settimana')
     } finally {
@@ -76,54 +95,79 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
           <button className="copy-close" onClick={onClose}>✕</button>
         </div>
         <div className="copy-body">
-          <div className="copy-range">
-            <div className="copy-arrow">
-              <div className="copy-week">
-                <div className="copy-week-label">Da</div>
-                <div className="copy-week-range">{formatRange(sourceWeekStart)}</div>
+          {conflicts ? (
+            <>
+              <div className="copy-conflicts-intro">
+                I turni sono stati copiati. Alcuni presentano conflitti da verificare:
               </div>
-              <span className="copy-arrow-symbol">→</span>
-              <div className="copy-week">
-                <div className="copy-week-label">A</div>
-                <div className="copy-week-range">{formatRange(targetWeekStart)}</div>
-              </div>
-            </div>
-          </div>
-
-          {error && <div className="copy-error">{error}</div>}
-
-          <h3 className="copy-section-title">Turni che verranno copiati ({preview.length})</h3>
-          {loading ? (
-            <div className="copy-empty">Caricamento...</div>
-          ) : preview.length === 0 ? (
-            <div className="copy-empty">
-              Nessun turno nella settimana scorsa da copiare.
-            </div>
+              <ul className="copy-conflicts-list">
+                {conflicts.map((c, idx) => (
+                  <li key={idx} className="copy-conflict-item">
+                    <strong>{c.employeeFullName}</strong> — {c.message}
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
-            <ul className="copy-list">
-              {preview.map(e => (
-                <li key={e.id} className="copy-item">
-                  <span className="copy-item-title">{e.title}</span>
-                  <span className="copy-item-meta">
-                    {new Date(e.startDate + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' })}
-                    {e.startTime && e.endTime && (
-                      <> · {e.startTime.slice(0, 5)}-{e.endTime.slice(0, 5)}</>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <div className="copy-range">
+                <div className="copy-arrow">
+                  <div className="copy-week">
+                    <div className="copy-week-label">Da</div>
+                    <div className="copy-week-range">{formatRange(sourceWeekStart)}</div>
+                  </div>
+                  <span className="copy-arrow-symbol">→</span>
+                  <div className="copy-week">
+                    <div className="copy-week-label">A</div>
+                    <div className="copy-week-range">{formatRange(targetWeekStart)}</div>
+                  </div>
+                </div>
+              </div>
+
+              {error && <div className="copy-error">{error}</div>}
+
+              <h3 className="copy-section-title">Turni che verranno copiati ({preview.length})</h3>
+              {loading ? (
+                <div className="copy-empty">Caricamento...</div>
+              ) : preview.length === 0 ? (
+                <div className="copy-empty">
+                  Nessun turno nella settimana scorsa da copiare.
+                </div>
+              ) : (
+                <ul className="copy-list">
+                  {preview.map(e => (
+                    <li key={e.id} className="copy-item">
+                      <span className="copy-item-title">{e.title}</span>
+                      <span className="copy-item-meta">
+                        {new Date(e.startDate + 'T00:00:00').toLocaleDateString('it-IT', { weekday: 'short', day: '2-digit', month: 'short' })}
+                        {e.startTime && e.endTime && (
+                          <> · {e.startTime.slice(0, 5)}-{e.endTime.slice(0, 5)}</>
+                        )}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
           )}
         </div>
         <div className="copy-footer">
-          <button className="btn-cancel" onClick={onClose}>Annulla</button>
-          <button
-            className="btn-primary"
-            onClick={handleConfirm}
-            disabled={submitting || preview.length === 0}
-          >
-            {submitting ? 'Copia in corso...' : `Copia ${preview.length} turni`}
-          </button>
+          {conflicts ? (
+            <button className="btn-primary" onClick={onCopied}>
+              Ho letto, chiudi
+            </button>
+          ) : (
+            <>
+              <button className="btn-cancel" onClick={onClose}>Annulla</button>
+              <button
+                className="btn-primary"
+                onClick={handleConfirm}
+                disabled={submitting || preview.length === 0}
+              >
+                {submitting ? 'Copia in corso...' : `Copia ${preview.length} turni`}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

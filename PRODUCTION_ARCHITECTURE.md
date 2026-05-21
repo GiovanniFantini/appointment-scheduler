@@ -129,6 +129,38 @@ Azure startup: "npm start" → node server.js
 
 ---
 
+## Vincoli di Deploy
+
+### Fuso orario del server (timbratura e turni)
+
+⚠️ **Il server di produzione deve essere configurato sul fuso orario del
+mercato servito** (per l'Italia: `Europe/Rome`).
+
+Orari di turni, timbrature, deviazioni, tolleranze di entrata/uscita e
+rilevazione delle anomalie sono trattati come **orario "da parete"
+(wall-clock) senza fuso orario**. È una scelta deliberata e coerente in tutto
+il codebase: `DateOnly`/`TimeOnly` rappresentano l'orario locale del merchant,
+e `TimeClockService` usa `DateTime.Now` (non `UtcNow`) per l'ora corrente.
+
+**Conseguenza operativa:** il calcolo è corretto solo se l'orologio del server
+coincide con l'orario locale del merchant. Un deploy in un fuso diverso — o un
+cambio di regione del servizio Azure — **sfasa silenziosamente** tolleranze e
+anomalie, senza errori evidenti nei log.
+
+Su Azure App Service (Linux) impostare l'app setting:
+
+```json
+{
+  "TZ": "Europe/Rome"
+}
+```
+
+> Nota: i timestamp di audit (`CreatedAt`, `UpdatedAt`, token di reset) restano
+> in UTC (`DateTime.UtcNow`) e non sono interessati da questo vincolo. Riguarda
+> solo gli orari "di lavoro" di turni e timbrature.
+
+---
+
 ## Flusso di Comunicazione
 
 ```

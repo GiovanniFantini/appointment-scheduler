@@ -176,11 +176,6 @@
   color: #f59e0b;
 }
 
-.richiesta-type.cambioturno {
-  background: rgba(14, 165, 233, 0.12);
-  color: #0ea5e9;
-}
-
 /* Action buttons */
 .richiesta-actions {
   display: flex;

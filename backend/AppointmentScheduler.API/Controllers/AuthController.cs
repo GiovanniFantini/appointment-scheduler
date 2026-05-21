@@ -35,10 +35,18 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<AuthResponse>> MerchantRegister([FromBody] RegisterMerchantRequest request)
     {
-        var response = await _authService.RegisterMerchantAsync(request);
-        if (response == null)
-            return BadRequest(new { message = "Email già registrata" });
-        return Ok(response);
+        try
+        {
+            var response = await _authService.RegisterMerchantAsync(request);
+            if (response == null)
+                return BadRequest(new { message = "Email già registrata" });
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            // Validazione di dominio (es. password troppo corta): 400 con il messaggio.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>Login per admin (AccountType=Admin).</summary>
@@ -68,10 +76,18 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult<AuthResponse>> EmployeeRegister([FromBody] EmployeeRegisterRequest request)
     {
-        var response = await _authService.RegisterEmployeeAsync(request);
-        if (response == null)
-            return BadRequest(new { message = "Email già registrata" });
-        return Ok(response);
+        try
+        {
+            var response = await _authService.RegisterEmployeeAsync(request);
+            if (response == null)
+                return BadRequest(new { message = "Email già registrata" });
+            return Ok(response);
+        }
+        catch (ArgumentException ex)
+        {
+            // Validazione di dominio (es. password troppo corta): 400 con il messaggio.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

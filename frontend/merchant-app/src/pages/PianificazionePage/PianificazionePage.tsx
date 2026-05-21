@@ -77,6 +77,8 @@ export default function PianificazionePage(_: Props) {
   const [cloneWeeks, setCloneWeeks] = useState(1)
   const [cloneLoading, setCloneLoading] = useState(false)
   const [cloneMessage, setCloneMessage] = useState('')
+  // Conflitti aggregati dei turni clonati (la clonazione non passa dal modale).
+  const [cloneConflicts, setCloneConflicts] = useState<{ employeeFullName: string; message: string }[]>([])
 
   const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart])
   const weekEnd = days[6]
@@ -178,6 +180,7 @@ export default function PianificazionePage(_: Props) {
     }
     setCloneLoading(true)
     setCloneMessage('')
+    setCloneConflicts([])
     try {
       const res = await apiClient.post('/events/clone-week', {
         sourceWeekStart: toISO(weekStart),
@@ -187,8 +190,16 @@ export default function PianificazionePage(_: Props) {
         sourceBranchId: activeBranchId ?? undefined,
         targetBranchId: activeBranchId ?? undefined,
       })
-      const count = Array.isArray(res.data) ? res.data.length : 0
-      setCloneMessage(`${count} turno/i clonato/i.`)
+      const cloned = Array.isArray(res.data)
+        ? (res.data as { warnings?: { employeeFullName: string; message: string }[] }[])
+        : []
+      const conflicts = cloned.flatMap(c => c.warnings ?? [])
+      setCloneConflicts(conflicts)
+      setCloneMessage(
+        conflicts.length > 0
+          ? `${cloned.length} turno/i clonato/i — ${conflicts.length} conflitto/i rilevato/i.`
+          : `${cloned.length} turno/i clonato/i.`
+      )
       await fetchData()
     } catch {
       setCloneMessage('Errore durante la clonazione')
@@ -257,6 +268,28 @@ export default function PianificazionePage(_: Props) {
           {cloneMessage && <span className="pianif-clone-msg">{cloneMessage}</span>}
         </div>
       </div>
+
+      {cloneConflicts.length > 0 && (
+        <div className="pianif-conflict-banner" role="alert">
+          <div className="pianif-conflict-head">
+            <span>⚠ Conflitti rilevati nei turni clonati:</span>
+            <button
+              className="pianif-conflict-close"
+              onClick={() => setCloneConflicts([])}
+              aria-label="Chiudi"
+            >
+              ✕
+            </button>
+          </div>
+          <ul className="pianif-conflict-list">
+            {cloneConflicts.map((c, idx) => (
+              <li key={idx}>
+                <strong>{c.employeeFullName}</strong> — {c.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {loading ? (
         <div className="pianif-loading">Caricamento...</div>

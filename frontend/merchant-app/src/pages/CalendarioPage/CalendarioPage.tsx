@@ -77,11 +77,17 @@ interface ApiEvent {
   coverageStatusName?: 'None' | 'Empty' | 'Partial' | 'Covered'
 }
 
+interface ShiftConflict {
+  employeeId: number
+  employeeFullName: string
+  message: string
+}
+
 interface ApiEmployeeRequest {
   id: number
   employeeId: number
   employeeFullName: string
-  typeName: string   // "Ferie" | "CambioTurno" | "Permessi" | "Malattia"
+  typeName: string   // "Ferie" | "Permessi" | "Malattia"
   statusName: string // "Pending" | "Approved" | "Rejected"
   startDate: string
   endDate?: string
@@ -97,7 +103,6 @@ const EVENT_COLORS: Record<string, string> = {
   Ferie: '#ec4899',
   Permessi: '#8b5cf6',
   Malattia: '#f59e0b',
-  CambioTurno: '#0ea5e9',
 }
 
 const LEGEND_ITEMS = [
@@ -285,6 +290,9 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
   const [skillFilter, setSkillFilter] = useState<Set<number>>(new Set())
   const [employeeFilter, setEmployeeFilter] = useState<number | ''>('')
   const [hoverInfo, setHoverInfo] = useState<{ apiEvent: ApiEvent; left: number; top: number } | null>(null)
+  // Banner conflitti per le scritture rapide (drag/resize/clonazione), che non
+  // passano dal modale: il backend restituisce i conflitti in response.data.warnings.
+  const [conflictBanner, setConflictBanner] = useState<{ heading: string; conflicts: ShiftConflict[] } | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -348,6 +356,15 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
     fetchEvents(from, to)
   }
 
+  // Estrae i conflitti dalla risposta di una scrittura turno e li mostra nel banner.
+  // No-op se la risposta non contiene warning.
+  const showConflictsFromResponse = (data: unknown, heading: string) => {
+    const warnings = (data as { warnings?: ShiftConflict[] } | undefined)?.warnings
+    if (Array.isArray(warnings) && warnings.length > 0) {
+      setConflictBanner({ heading, conflicts: warnings })
+    }
+  }
+
   const handleEventDrop = async (info: EventDropArg) => {
     setHoverInfo(null)
     const apiEvent = info.event.extendedProps.apiEvent as ApiEvent | undefined
@@ -368,13 +385,14 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
       newEndTime = `${pad(e.getHours())}:${pad(e.getMinutes())}:00`
     }
     try {
-      await apiClient.put(`/events/${apiEvent.id}`, {
+      const res = await apiClient.put(`/events/${apiEvent.id}`, {
         ...apiEventToUpdatePayload(apiEvent),
         startDate: newStartDate,
         endDate: newStartDate,
         startTime: newStartTime,
         endTime: newEndTime,
       })
+      showConflictsFromResponse(res.data, 'Turno spostato — conflitti rilevati:')
       refreshCurrentRange()
     } catch {
       info.revert()
@@ -392,11 +410,12 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
     const newStartTime = `${pad(s.getHours())}:${pad(s.getMinutes())}:00`
     const newEndTime = `${pad(e.getHours())}:${pad(e.getMinutes())}:00`
     try {
-      await apiClient.put(`/events/${apiEvent.id}`, {
+      const res = await apiClient.put(`/events/${apiEvent.id}`, {
         ...apiEventToUpdatePayload(apiEvent),
         startTime: newStartTime,
         endTime: newEndTime,
       })
+      showConflictsFromResponse(res.data, 'Turno ridimensionato — conflitti rilevati:')
       refreshCurrentRange()
     } catch {
       info.revert()
@@ -616,6 +635,28 @@ export default function CalendarioPage({ user: _user }: CalendarioPageProps) {
               </select>
             </div>
           )}
+        </div>
+      )}
+
+      {conflictBanner && (
+        <div className="conflict-banner" role="alert">
+          <div className="conflict-banner-head">
+            <span className="conflict-banner-title">⚠ {conflictBanner.heading}</span>
+            <button
+              className="conflict-banner-close"
+              onClick={() => setConflictBanner(null)}
+              aria-label="Chiudi"
+            >
+              ✕
+            </button>
+          </div>
+          <ul className="conflict-banner-list">
+            {conflictBanner.conflicts.map((c, idx) => (
+              <li key={idx}>
+                <strong>{c.employeeFullName}</strong> — {c.message}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

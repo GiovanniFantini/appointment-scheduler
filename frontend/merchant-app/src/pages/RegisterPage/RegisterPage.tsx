@@ -106,7 +106,8 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={e => handleChange('password', e.target.value)}
                 required
-                minLength={6}
+                minLength={8}
+                autoComplete="new-password"
               />
             </div>
 

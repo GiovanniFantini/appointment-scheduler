@@ -426,3 +426,46 @@
   border-radius: 50%;
   display: inline-block;
 }
+
+/* Banner conflitti per drag/resize: il backend restituisce i warning ma le
+   scritture rapide non passano dal modale turno. */
+.conflict-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+
+.conflict-banner-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.conflict-banner-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.conflict-banner-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #92400e;
+  line-height: 1;
+}
+
+.conflict-banner-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.conflict-banner-list li {
+  margin: 4px 0;
+}

@@ -98,7 +98,8 @@ public class PasswordResetService : IPasswordResetService
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
             return false;
 
-        if (newPassword.Length < 8)
+        // Stessa lunghezza minima dei flussi di registrazione (vedi AuthService).
+        if (newPassword.Length < AuthService.MinPasswordLength)
             return false;
 
         var resetToken = await _context.PasswordResetTokens

@@ -214,3 +214,42 @@
   text-align: center;
   color: #94a3b8;
 }
+
+/* Riepilogo conflitti dei turni clonati. */
+.pianif-conflict-banner {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+.pianif-conflict-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.pianif-conflict-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #92400e;
+  line-height: 1;
+}
+
+.pianif-conflict-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.pianif-conflict-list li {
+  margin: 4px 0;
+}

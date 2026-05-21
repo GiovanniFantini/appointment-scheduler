@@ -42,10 +42,19 @@ export default function FilialiPage() {
   const [deptActive, setDeptActive] = useState(true)
   const [deptError, setDeptError] = useState('')
 
-  // Apre il wizard automaticamente al primo accesso di un merchant mono-sede.
+  // Apre il wizard automaticamente per un merchant mono-sede che non lo ha
+  // ancora chiuso in questa sessione.
+  //
+  // Lo stato "wizard completato" non va persistito: una volta configurata una
+  // seconda filiale la condizione `branches.length <= 1` è già falsa, quindi il
+  // wizard non si riapre da solo. Il flag serve solo a non riproporlo dopo una
+  // chiusura *senza configurare* (l'azienda resta mono-sede di proposito).
+  // Si usa sessionStorage e non localStorage: lo stato è per-sessione, non
+  // per-dispositivo — così non lo si "eredita" cross-account sullo stesso
+  // browser, né lo si sopprime per sempre su un altro device.
   useEffect(() => {
     if (!loading && branches.length <= 1) {
-      const seen = localStorage.getItem('merchant.filialiWizardSeen')
+      const seen = sessionStorage.getItem('merchant.filialiWizardSeen')
       if (!seen) setShowWizard(true)
     }
   }, [loading, branches.length])
@@ -163,7 +172,7 @@ export default function FilialiPage() {
   }
 
   const closeWizard = () => {
-    localStorage.setItem('merchant.filialiWizardSeen', '1')
+    sessionStorage.setItem('merchant.filialiWizardSeen', '1')
     setShowWizard(false)
   }
 

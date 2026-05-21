@@ -13,11 +13,16 @@ public class EventService : IEventService
 {
     private readonly ApplicationDbContext _context;
     private readonly IShiftConflictValidator _conflictValidator;
+    private readonly INotificationService _notificationService;
 
-    public EventService(ApplicationDbContext context, IShiftConflictValidator conflictValidator)
+    public EventService(
+        ApplicationDbContext context,
+        IShiftConflictValidator conflictValidator,
+        INotificationService notificationService)
     {
         _context = context;
         _conflictValidator = conflictValidator;
+        _notificationService = notificationService;
     }
 
     /// <summary>
@@ -186,6 +191,9 @@ public class EventService : IEventService
 
         await ReloadEventNavigationAsync(evt);
 
+        if (evt.NotificationEnabled)
+            await NotifyParticipantsAsync(evt, NotificationType.EventCreated, "creato");
+
         var dto = MapToDto(evt);
         if (evt.EventType == EventType.Turno)
             dto.Warnings = await DetectConflictsForEventAsync(evt);
@@ -267,6 +275,9 @@ public class EventService : IEventService
 
         await ReloadEventNavigationAsync(evt);
 
+        if (evt.NotificationEnabled)
+            await NotifyParticipantsAsync(evt, NotificationType.EventUpdated, "aggiornato");
+
         var dto = MapToDto(evt);
         if (evt.EventType == EventType.Turno)
             dto.Warnings = await DetectConflictsForEventAsync(evt);
@@ -279,10 +290,18 @@ public class EventService : IEventService
     public async Task<bool> DeleteAsync(int id, int merchantId)
     {
         var evt = await _context.Events
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Employee)
             .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
 
         if (evt == null)
             return false;
+
+        // I partecipanti vanno avvisati prima di rimuovere l'evento: la notifica
+        // resta valida (RelatedEntityId punta a un evento ormai cancellato, ma il
+        // testo è autosufficiente).
+        if (evt.NotificationEnabled)
+            await NotifyParticipantsAsync(evt, NotificationType.EventDeleted, "eliminato");
 
         _context.Events.Remove(evt);
         await _context.SaveChangesAsync();
@@ -803,6 +822,42 @@ public class EventService : IEventService
 
         var anyCovered = evt.RequiredSkills.Any(rs => covered.GetValueOrDefault(rs.SkillId) > 0);
         return anyCovered ? CoverageStatus.Partial : CoverageStatus.Empty;
+    }
+
+    /// <summary>
+    /// Recapita una notifica a ogni partecipante dell'evento collegato a un account utente.
+    /// Invocata solo quando l'evento ha NotificationEnabled = true. I partecipanti
+    /// pre-caricati senza User associato (Employee.UserId == null) vengono saltati.
+    /// Richiede che le navigation Participants → Employee siano già caricate.
+    /// </summary>
+    private async Task NotifyParticipantsAsync(Event evt, NotificationType type, string actionLabel)
+    {
+        var dateLabel = evt.EndDate.HasValue && evt.EndDate.Value != evt.StartDate
+            ? $"{evt.StartDate:dd/MM/yyyy} - {evt.EndDate.Value:dd/MM/yyyy}"
+            : $"{evt.StartDate:dd/MM/yyyy}";
+
+        var timeLabel = !evt.IsAllDay && evt.StartTime.HasValue && evt.EndTime.HasValue
+            ? $" {evt.StartTime.Value:HH:mm}-{evt.EndTime.Value:HH:mm}"
+            : string.Empty;
+
+        // "Turno" per i turni, "Evento" per ferie/permessi/chiusure: la notifica
+        // resta corretta a prescindere dal tipo di evento.
+        var kindLabel = evt.EventType == EventType.Turno ? "Turno" : "Evento";
+        var titleText = string.IsNullOrWhiteSpace(evt.Title) ? evt.EventType.ToString() : evt.Title;
+        var notificationTitle = $"{kindLabel} {actionLabel}";
+        var message = $"{kindLabel} \"{titleText}\" del {dateLabel}{timeLabel} è stato {actionLabel}.";
+
+        // Un partecipante può comparire una sola volta, ma de-duplichiamo gli UserId
+        // per sicurezza (es. owner e co-owner accidentalmente uguali).
+        var userIds = evt.Participants
+            .Where(p => p.Employee?.UserId != null)
+            .Select(p => p.Employee!.UserId!.Value)
+            .Distinct();
+
+        foreach (var userId in userIds)
+        {
+            await _notificationService.CreateAsync(userId, notificationTitle, message, type, evt.Id);
+        }
     }
 
     /// <summary>

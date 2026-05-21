@@ -7,7 +7,7 @@ import './RichiestePage.css'
 // Matches EmployeeRequestDto from server
 interface ApiEmployeeRequest {
   id: number
-  typeName: string         // "Ferie" | "CambioTurno" | "Permessi" | "Malattia"
+  typeName: string         // "Ferie" | "Permessi" | "Malattia"
   statusName: string       // "Pending" | "Approved" | "Rejected"
   startDate: string        // "2024-01-15"
   endDate?: string
@@ -25,7 +25,6 @@ function formatTime(t?: string): string {
 function getRequestTypeLabel(type?: string): string {
   const map: Record<string, string> = {
     Ferie: 'Ferie',
-    CambioTurno: 'Cambio turno',
     Permessi: 'Permesso',
     Malattia: 'Malattia',
   }
@@ -35,7 +34,6 @@ function getRequestTypeLabel(type?: string): string {
 function getRequestTypeColor(type?: string): string {
   const map: Record<string, string> = {
     Ferie: '#ec4899',
-    CambioTurno: '#0ea5e9',
     Permessi: '#8b5cf6',
     Malattia: '#f59e0b',
   }

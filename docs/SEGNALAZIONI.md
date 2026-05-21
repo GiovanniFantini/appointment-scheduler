@@ -15,6 +15,10 @@ di intervento. Le gravità sono indicative:
 | 🟡 Media | Comportamento incoerente o fragile, impatto limitato o circoscritto. |
 | 🟢 Bassa | Refuso, codice morto, pulizia. |
 
+> **Stato (aggiornato 2026-05-21):** risolte le segnalazioni 1, 2, 4, 5, 6, 7,
+> 8, 9. La 3 (account Merchant sull'app Employee) è lasciata aperta in attesa
+> di conferma sull'intento. Vedi le note "✅ Risolto" sotto ogni voce.
+
 ---
 
 ## Bug probabili
@@ -38,6 +42,13 @@ così. L'opzione è di fatto inerte.
 **Direzione**: o si implementa la generazione delle notifiche di evento (al
 salvataggio di un turno con `notificationEnabled` e partecipanti collegati a un
 account), oppure si rimuove l'opzione dalla UI finché la feature non c'è.
+
+**✅ Risolto**: implementata la generazione delle notifiche. `EventService` ora
+inietta `INotificationService` e, quando `NotificationEnabled` è attivo,
+recapita `EventCreated`/`EventUpdated`/`EventDeleted` a ogni partecipante
+collegato a un account utente (`Employee.UserId != null`) in `CreateAsync`,
+`UpdateAsync` e `DeleteAsync`. La clonazione non genera notifiche di proposito
+(eviterebbe un flood su decine di turni).
 
 ---
 
@@ -65,6 +76,11 @@ riceve alcun avviso**. La regola "procedi e segnala" vale solo dal modale.
 **Direzione**: dopo le operazioni di drag/resize/clone, ispezionare i `warnings`
 della risposta e mostrarli (toast, banner o un riepilogo per la copia massiva).
 
+**✅ Risolto**: drag & drop e ridimensionamento su `CalendarioPage` ora leggono
+`response.data.warnings` e mostrano un banner conflitti sopra il calendario.
+`CopyWeekDialog` aggrega i warning di tutti i cloni e mostra un riepilogo
+post-copia; `PianificazionePage` mostra lo stesso riepilogo dopo `clone-week`.
+
 ---
 
 ### 3. 🟡 Un account di tipo Merchant può autenticarsi sull'app Employee
@@ -84,6 +100,11 @@ d'accesso incrociata fra le app: vale la pena decidere se è una feature voluta
 
 **Direzione**: confermare l'intento. Se voluto, documentarlo; se no, restringere
 `LoginEmployeeAsync` al solo `AccountType.Employee`.
+
+**⏸ Non risolto**: lasciato aperto in attesa di conferma sull'intento — alla
+registrazione di un'azienda viene effettivamente creato un profilo `Employee`
+per il titolare, quindi il login incrociato potrebbe essere voluto. Va deciso
+con il product owner prima di toccare `LoginEmployeeAsync`.
 
 ---
 
@@ -106,6 +127,14 @@ browser/dispositivo**, non all'account aziendale.
 server (es. un flag sul merchant), oppure derivarlo da una condizione reale
 (l'azienda ha più di una filiale / ha completato l'onboarding).
 
+**✅ Risolto** (con direzione rivista): non serve un flag server-side. Lo stato
+"wizard completato" è già derivato da una condizione reale — il wizard si apre
+solo se `branches.length <= 1`, e una volta configurata una seconda filiale non
+si riapre da solo. Il flag serviva solo a non riproporlo dopo una chiusura
+*senza configurare*: è stato spostato da `localStorage` a `sessionStorage`, così
+è per-sessione e non per-dispositivo (niente eredità cross-account sullo stesso
+browser, niente soppressione permanente su un altro device).
+
 ---
 
 ### 5. 🟡 `RunMissingPunchDetection` usa la mutazione di un set come condizione
@@ -123,6 +152,10 @@ sia evidente.
 
 **Direzione**: separare il controllo dall'inserimento — prima `Contains`, poi
 `Add` come passo distinto — per rendere l'intento esplicito.
+
+**✅ Risolto**: la guardia ora usa `!existingSet.Contains(key)` nell'`if`, con
+l'`existingSet.Add(key)` come istruzione separata nel corpo. Comportamento
+identico, intento esplicito.
 
 ---
 
@@ -151,6 +184,13 @@ tutto.
 soprattutto, **validare la password lato backend** nei flussi di registrazione,
 non solo nel reset.
 
+**✅ Risolto**: il form di registrazione Merchant usa ora `minLength=8` come gli
+altri. Lato backend `AuthService` espone la costante `MinPasswordLength = 8` e
+valida la password in `RegisterMerchantAsync` e `RegisterEmployeeAsync`
+(lancia `ArgumentException`, mappata a 400 dall'`AuthController`). Anche
+`PasswordResetService` usa la stessa costante al posto del `< 8` hardcoded. Una
+chiamata diretta all'API non può più aggirare il limite.
+
 ---
 
 ### 7. 🟢 Il tipo di richiesta "Cambio turno" non è creabile da nessuna interfaccia
@@ -168,6 +208,14 @@ dati creati dall'app. O è una feature dimenticata a metà, o è codice morto.
 **Direzione**: decidere se la feature va completata (aggiungere il tipo al
 modale, con i campi che gli servono) o rimossa (enum e gestione visuale).
 
+**✅ Risolto** (rimosso): un vero "cambio turno" richiederebbe campi dedicati
+(turno sorgente, destinazione, controparte) — è un progetto a sé, non un fix.
+Rimosso il codice morto: il membro `CambioTurno = 2` dall'enum
+`EmployeeRequestType` (i valori 3/4 restano espliciti per non spostarsi) e la
+gestione visuale (colori, label, classe CSS `.cambioturno`) dalle pagine
+Richieste e Calendario. Nessuna UI poteva creare quel tipo, quindi nessun dato
+reale ne dipende.
+
 ---
 
 ### 8. 🟢 Commento errato sull'enum `AccountType` nell'AppLayout Admin
@@ -184,6 +232,9 @@ usato per logica. È però un commento fuorviante che può indurre in errore chi
 legge il codice.
 
 **Direzione**: correggere il commento per allinearlo all'enum reale.
+
+**✅ Risolto**: il commento ora recita `AccountType enum: 1 = Admin,
+2 = Merchant, 3 = Employee`.
 
 ---
 
@@ -209,22 +260,29 @@ evidenti.
 deploy** (il fuso del server è un requisito), e idealmente reso esplicito (fuso
 del merchant memorizzato e applicato, anziché ereditato dall'ambiente).
 
+**✅ Risolto** (documentato): aggiunta la sezione "Vincoli di Deploy" in
+[PRODUCTION_ARCHITECTURE.md](../PRODUCTION_ARCHITECTURE.md), che indica il fuso
+orario del server come requisito (`TZ=Europe/Rome` su Azure App Service) e ne
+spiega la conseguenza operativa. Rendere il fuso del merchant esplicito nei dati
+resta un miglioramento futuro, fuori scope di questo intervento.
+
 ---
 
 ## Riepilogo
 
-| # | Gravità | Sintesi |
-|---|---------|---------|
-| 1 | 🔴 Alta | "Invia notifica" sul turno non genera notifiche. |
-| 2 | 🔴 Alta | Conflitti non mostrati su drag & drop e clonazione. |
-| 3 | 🟡 Media | Account Merchant può loggarsi sull'app Employee. |
-| 4 | 🟡 Media | Flag "wizard filiali visto" salvato per dispositivo, non per account. |
-| 5 | 🟡 Media | `RunMissingPunchDetection`: mutazione del set usata come guardia. |
-| 6 | 🟡 Media | Lunghezza minima password incoerente; nessuna validazione backend in registrazione. |
-| 7 | 🟢 Bassa | Tipo richiesta "Cambio turno" non creabile da alcuna UI. |
-| 8 | 🟢 Bassa | Commento errato sull'enum `AccountType` (Admin AppLayout). |
-| 9 | 🟡 Media | Orari wall-clock senza fuso: vincolo di deploy da documentare. |
+| # | Gravità | Sintesi | Stato |
+|---|---------|---------|-------|
+| 1 | 🔴 Alta | "Invia notifica" sul turno non genera notifiche. | ✅ Risolto |
+| 2 | 🔴 Alta | Conflitti non mostrati su drag & drop e clonazione. | ✅ Risolto |
+| 3 | 🟡 Media | Account Merchant può loggarsi sull'app Employee. | ⏸ Da confermare |
+| 4 | 🟡 Media | Flag "wizard filiali visto" salvato per dispositivo, non per account. | ✅ Risolto |
+| 5 | 🟡 Media | `RunMissingPunchDetection`: mutazione del set usata come guardia. | ✅ Risolto |
+| 6 | 🟡 Media | Lunghezza minima password incoerente; nessuna validazione backend in registrazione. | ✅ Risolto |
+| 7 | 🟢 Bassa | Tipo richiesta "Cambio turno" non creabile da alcuna UI. | ✅ Risolto (rimosso) |
+| 8 | 🟢 Bassa | Commento errato sull'enum `AccountType` (Admin AppLayout). | ✅ Risolto |
+| 9 | 🟡 Media | Orari wall-clock senza fuso: vincolo di deploy da documentare. | ✅ Risolto (documentato) |
 
-> Le segnalazioni 1, 2 e 6 sono le più concrete: incidono su funzionalità che
+> Le segnalazioni 1, 2 e 6 erano le più concrete: incidevano su funzionalità che
 > l'utente crede attive (notifiche, avvisi di conflitto) o sulla robustezza di
-> un controllo di sicurezza (password).
+> un controllo di sicurezza (password). La 3 resta aperta: è una decisione di
+> prodotto, non un fix tecnico.

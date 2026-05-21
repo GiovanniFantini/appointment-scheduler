@@ -13,6 +13,14 @@ namespace AppointmentScheduler.Core.Services;
 
 public class AuthService : IAuthService
 {
+    /// <summary>
+    /// Lunghezza minima della password, applicata in modo uniforme a tutti i
+    /// flussi (registrazione merchant/employee e reset). I form frontend usano
+    /// lo stesso valore come attributo minLength, ma la validazione autorevole
+    /// è qui: una chiamata diretta all'API non può aggirarla.
+    /// </summary>
+    public const int MinPasswordLength = 8;
+
     private readonly ApplicationDbContext _context;
     private readonly IConfiguration _configuration;
 
@@ -61,6 +69,8 @@ public class AuthService : IAuthService
     // ── Merchant Register ──────────────────────────────────────────────────
     public async Task<AuthResponse?> RegisterMerchantAsync(RegisterMerchantRequest request)
     {
+        ValidatePassword(request.Password);
+
         var email = request.Email.ToLower();
         if (await _context.Users.AnyAsync(u => u.Email == email))
             return null;
@@ -220,6 +230,8 @@ public class AuthService : IAuthService
     // ── Employee Register ──────────────────────────────────────────────────
     public async Task<AuthResponse?> RegisterEmployeeAsync(EmployeeRegisterRequest request)
     {
+        ValidatePassword(request.Password);
+
         var email = request.Email.ToLower();
 
         if (await _context.Users.AnyAsync(u => u.Email == email))
@@ -342,6 +354,17 @@ public class AuthService : IAuthService
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <summary>
+    /// Valida la password in fase di registrazione. Lancia ArgumentException
+    /// (mappata a 400 dal controller) se non rispetta la lunghezza minima.
+    /// </summary>
+    private static void ValidatePassword(string password)
+    {
+        if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
+            throw new ArgumentException(
+                $"La password deve contenere almeno {MinPasswordLength} caratteri.");
     }
 
     private static AuthResponse BuildAuthResponse(User user, string token) => new()

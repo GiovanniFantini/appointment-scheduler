@@ -188,3 +188,22 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Riepilogo conflitti post-copia. */
+.copy-conflicts-intro {
+  font-size: 13px;
+  font-weight: 600;
+  color: #b45309;
+  margin-bottom: 10px;
+}
+
+.copy-conflicts-list {
+  list-style: disc;
+  padding-left: 18px;
+  margin: 0;
+  font-size: 13px;
+}
+
+.copy-conflict-item {
+  margin: 4px 0;
+}

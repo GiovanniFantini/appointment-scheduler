@@ -668,8 +668,12 @@ public class TimeClockService : ITimeClockService
             var hasClockOut = pEntries.Any(e => e.Type == TimeEntryType.ClockOut);
 
             // Niente timbrature affatto: una sola anomalia MissingClockIn.
-            if (!hasClockIn && existingSet.Add(((int?)p.Id, TimeClockAnomalyType.MissingClockIn)))
+            var clockInKey = ((int?)p.Id, TimeClockAnomalyType.MissingClockIn);
+            var clockOutKey = ((int?)p.Id, TimeClockAnomalyType.MissingClockOut);
+
+            if (!hasClockIn && !existingSet.Contains(clockInKey))
             {
+                existingSet.Add(clockInKey);
                 _context.TimeClockAnomalies.Add(new TimeClockAnomaly
                 {
                     MerchantId = merchantId,
@@ -685,9 +689,9 @@ public class TimeClockService : ITimeClockService
                 created++;
             }
             // Entrata ma nessuna uscita.
-            else if (hasClockIn && !hasClockOut
-                     && existingSet.Add(((int?)p.Id, TimeClockAnomalyType.MissingClockOut)))
+            else if (hasClockIn && !hasClockOut && !existingSet.Contains(clockOutKey))
             {
+                existingSet.Add(clockOutKey);
                 _context.TimeClockAnomalies.Add(new TimeClockAnomaly
                 {
                     MerchantId = merchantId,

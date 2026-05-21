@@ -30,14 +30,12 @@ function formatTimeRange(startTime?: string, endTime?: string): string {
 
 const TYPE_CSS: Record<string, string> = {
   Ferie: 'ferie',
-  CambioTurno: 'cambioturno',
   Permessi: 'permessi',
   Malattia: 'malattia',
 }
 
 const TYPE_LABELS: Record<string, string> = {
   Ferie: 'Ferie',
-  CambioTurno: 'Cambio Turno',
   Permessi: 'Permessi',
   Malattia: 'Malattia',
 }
