@@ -3,6 +3,7 @@ using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -138,6 +139,10 @@ public class InventoryController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(new { message = "Il saldo è stato modificato da un'altra operazione. Riprova." });
         }
     }
 }

@@ -156,6 +156,9 @@ public class PurchaseOrderService : IPurchaseOrderService
         if (order.Status == PurchaseOrderStatus.Closed)
             throw new InvalidOperationException("L'ordine è già chiuso.");
 
+        if (order.Status == PurchaseOrderStatus.Draft)
+            throw new InvalidOperationException("Un ordine in bozza deve essere inviato prima di poter registrare una ricezione.");
+
         if (request.Lines == null || request.Lines.Count == 0)
             throw new InvalidOperationException("La ricezione deve contenere almeno una riga.");
 

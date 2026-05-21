@@ -19,20 +19,6 @@
   flex-wrap: wrap;
 }
 
-.magazzino-status {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(16, 185, 129, 0.12);
-  color: #34d399;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
 .magazzino-tabs {
   display: flex;
   flex-wrap: wrap;

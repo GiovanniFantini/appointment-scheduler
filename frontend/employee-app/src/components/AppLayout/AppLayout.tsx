@@ -55,6 +55,14 @@ function ClockIcon() {
     </svg>
   )
 }
+function InventoryIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M21 8a2 2 0 01-1 1.73l-7 4a2 2 0 01-2 0l-7-4A2 2 0 013 8V6a2 2 0 011-1.73l7-4a2 2 0 012 0l7 4A2 2 0 0121 6v2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M3.27 6.96L12 12l8.73-5.04M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 function HomeIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none">
@@ -103,7 +111,7 @@ export default function AppLayout({ user, onLogout, onUserUpdate }: Props) {
     { to: '/timbratura', label: 'Timbratura', feature: 'Timbratura', icon: <ClockIcon /> },
     { to: '/calendario', label: 'Calendario', feature: 'Calendario', icon: <CalendarIcon /> },
     { to: '/richieste', label: 'Richieste', feature: 'Richieste', icon: <RequestsIcon /> },
-    { to: '/magazzino', label: 'Magazzino', feature: 'Magazzino', icon: <RequestsIcon /> },
+    { to: '/magazzino', label: 'Magazzino', feature: 'Magazzino', icon: <InventoryIcon /> },
     { to: '/documenti', label: 'Documenti', feature: 'Documenti', icon: <DocumentsIcon /> },
     { to: '/notifiche', label: 'Notifiche', icon: <BellIcon /> },
   ]

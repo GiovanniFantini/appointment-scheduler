@@ -1008,12 +1008,11 @@ stateDiagram-v2
 ## 11. Magazzino
 
 `Magazzino` è una **funzione RBAC** disponibile sia nell'App Merchant sia
-nell'App Employee. In questa documentazione, **V1** indica la **prima release
-operativa** del modulo: non una demo, ma il perimetro minimo completo per
-gestire articoli, stock e acquisti senza introdurre un secondo sistema di
-permessi.
+nell'App Employee: un perimetro completo per gestire articoli, stock e acquisti
+senza introdurre un secondo sistema di permessi.
 
-Il perimetro V1 comprende:
+Il perimetro comprende:
+
 - articoli di magazzino
 - saldo stock per filiale
 - ledger movimenti stock
@@ -1023,11 +1022,12 @@ Il perimetro V1 comprende:
 - report operativi base
 
 Vincoli di prodotto e comportamento del sistema:
-- l'unità logistica è la **filiale**; in V1 non esiste un'entità separata di warehouse
+
+- l'unità logistica è la **filiale**; non esiste un'entità separata di warehouse
 - la valorizzazione usa solo il **costo medio ponderato**
 - ogni rettifica o ricezione scrive un **movimento** e aggiorna il **saldo**
 - lo stock negativo non è consentito
-- il barcode è un **dato ricercabile**; la scansione camera/device non rientra nel perimetro di questa versione
+- il barcode è un **dato ricercabile**; la scansione camera/device non rientra nel perimetro del modulo
 - il dipendente vede solo il perimetro **consultativo / operativo leggero**; non crea articoli, non modifica fornitori e non esegue rettifiche
 
 ### 11.1 Accesso e visibilità
@@ -1103,9 +1103,9 @@ La tab Articoli è il catalogo operativo degli SKU. Ogni scheda mostra:
 |----------|------|---------|-----------|
 | SKU | Campo testo | Codice univoco dell'articolo. | Obbligatorio; il sistema rifiuta duplicati nello stesso merchant. |
 | Nome | Campo testo | Nome dell'articolo. | Obbligatorio. |
-| Barcode | Campo testo | Salva il barcode come dato ricercabile. | Facoltativo; nessuna scansione device in V1. |
+| Barcode | Campo testo | Salva il barcode come dato ricercabile. | Facoltativo; nessuna scansione device. |
 | Unità di misura | Campo testo | Imposta l'unità operativa (`pz`, ecc.). | Se vuoto, il sistema usa `pz`. |
-| Reorder point | Campo numerico | Soglia di riordino. | Non può essere negativo. |
+| Soglia di riordino | Campo numerico | Soglia di riordino. | Non può essere negativo. |
 | Descrizione | Area testo | Note descrittive sull'articolo. | Facoltativa. |
 | Articolo attivo | Checkbox | Attiva/disattiva l'articolo (solo in modifica). | Non compare in creazione; un nuovo articolo nasce attivo. |
 | Annulla / Salva articolo | Bottoni | Chiudono o salvano il modale. | `Salva` disattivato durante il salvataggio. |
@@ -1116,7 +1116,7 @@ La tab Movimenti ha due funzioni:
 - registrare una **rettifica manuale**
 - consultare il **ledger cronologico**
 
-La rettifica manuale è l'unica variazione stock inseribile direttamente in V1.
+La rettifica manuale è l'unica variazione stock inseribile direttamente.
 Le ricezioni da ordine acquisto producono movimenti in automatico.
 
 **Comandi e campi — Form rettifica stock**
@@ -1220,7 +1220,7 @@ Quando una ricezione viene registrata, il sistema:
 
 La tab Report presenta due viste operative:
 - `Valorizzazione stock`
-- `Low stock`
+- `Sotto scorta`
 
 **Comandi e campi — Tab Report**
 
@@ -1270,7 +1270,7 @@ Il dipendente non può:
 | Ricezione con quantità superiore al residuo | Il sistema rifiuta il salvataggio. |
 | Ricezione finale dell'ultima riga residua | L'ordine passa automaticamente a `Chiuso`. |
 | Employee che seleziona una filiale non consentita | Il backend rifiuta la richiesta e la UI mostra un errore. |
-| Ricerca barcode | Funziona come ricerca testuale sul valore salvato; non apre la fotocamera e non esegue scansione hardware in V1. |
+| Ricerca barcode | Funziona come ricerca testuale sul valore salvato; non apre la fotocamera e non esegue scansione hardware. |
 
 ---
 
@@ -1330,7 +1330,7 @@ con le voci di menu e un'**intestazione** in alto.
 | Pianificazione | — | ✓ | — |
 | Richieste | — | ✓ (revisione) | ✓ (invio) |
 | Timbratura | — | ✓ (config, presenze, anomalie, report) | ✓ (timbra, giustifica) |
-| Magazzino | — | ✓ (articoli, stock, fornitori, ordini acquisto, ricezioni, report) | ✓ (consultazione/task operativi V1) |
+| Magazzino | — | ✓ (articoli, stock, fornitori, ordini acquisto, ricezioni, report) | ✓ (consultazione/task operativi) |
 | Notifiche | — | — | ✓ |
 
 > Funzionalità ancora **non disponibili** (segnaposto): App Admin → *Users*,

@@ -72,17 +72,16 @@ public class InventoryService : IInventoryService
         var movementsQuery = _context.InventoryMovements
             .AsNoTracking()
             .Include(m => m.Branch)
-            .Where(m => m.ItemId == itemId && m.MerchantId == merchantId)
-            .OrderByDescending(m => m.CreatedAt)
-            .Take(30);
+            .Where(m => m.ItemId == itemId && m.MerchantId == merchantId);
 
         if (branchId.HasValue)
-            movementsQuery = movementsQuery.Where(m => m.BranchId == branchId.Value)
-                .OrderByDescending(m => m.CreatedAt)
-                .Take(30);
+            movementsQuery = movementsQuery.Where(m => m.BranchId == branchId.Value);
 
         var balances = await balancesQuery.ToListAsync();
-        var movements = await movementsQuery.ToListAsync();
+        var movements = await movementsQuery
+            .OrderByDescending(m => m.CreatedAt)
+            .Take(30)
+            .ToListAsync();
 
         return MapItem(item, balances, movements);
     }
@@ -189,7 +188,7 @@ public class InventoryService : IInventoryService
         if (request.QuantityDelta == 0)
             throw new InvalidOperationException("La quantità di rettifica deve essere diversa da zero.");
 
-        var reason = NormalizeRequired(request.Reason, "La reason della rettifica è obbligatoria.");
+        var reason = NormalizeRequired(request.Reason, "Il motivo della rettifica è obbligatorio.");
 
         var item = await _context.InventoryItems
             .FirstOrDefaultAsync(i => i.Id == request.ItemId && i.MerchantId == merchantId);
@@ -217,14 +216,17 @@ public class InventoryService : IInventoryService
         {
             unitCost = EnsureNonNegative(request.UnitCost ?? balance.WeightedAverageCost, "Il costo unitario non può essere negativo.");
             var newQty = oldQty + delta;
-            newWeightedAverage = newQty == 0
-                ? 0
-                : ((oldQty * oldCost) + (delta * unitCost)) / newQty;
+            // newQty è sempre > 0 qui (oldQty >= 0 e delta > 0): nessun ramo a zero.
+            newWeightedAverage = ((oldQty * oldCost) + (delta * unitCost)) / newQty;
         }
         else
         {
+            // Una rettifica negativa non altera il costo medio: lo scarico avviene
+            // al costo medio corrente. Il costo storico va conservato anche quando
+            // la giacenza scende a zero, così un futuro carico senza costo esplicito
+            // riparte dall'ultimo valore noto invece che da zero.
             unitCost = balance.WeightedAverageCost > 0 ? balance.WeightedAverageCost : item.AverageUnitCost;
-            newWeightedAverage = oldQty + delta == 0 ? 0 : oldCost;
+            newWeightedAverage = oldCost;
         }
 
         balance.QuantityOnHand = oldQty + delta;

@@ -14,7 +14,8 @@
       "Bash(Select-Object FullName)",
       "Bash(grep -c '```mermaid' docs/FLUSSI-UTENTE.md)",
       "Bash(grep -c '```' docs/FLUSSI-UTENTE.md)",
-      "Bash(grep -n -B3 '```mermaid' docs/FLUSSI-UTENTE.md)"
+      "Bash(grep -n -B3 '```mermaid' docs/FLUSSI-UTENTE.md)",
+      "Bash(npx eslint *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

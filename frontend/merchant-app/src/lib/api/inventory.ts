@@ -212,9 +212,12 @@ export const inventoryApi = {
     return res.data
   },
 
-  async getItems(branchId?: number | null): Promise<InventoryItem[]> {
+  async getItems(branchId?: number | null, search?: string | null): Promise<InventoryItem[]> {
     const res = await apiClient.get<InventoryItem[]>('/merchant/inventory/items', {
-      params: { branchId: branchId ?? undefined },
+      params: {
+        branchId: branchId ?? undefined,
+        search: search?.trim() || undefined,
+      },
     })
     return res.data
   },

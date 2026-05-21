@@ -4,6 +4,7 @@ using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -145,6 +146,10 @@ public class PurchaseOrdersController : ControllerBase
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            return Conflict(new { message = "Lo stock è stato modificato da un'altra operazione. Riprova." });
         }
     }
 }

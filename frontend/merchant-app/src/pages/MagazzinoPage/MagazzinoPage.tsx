@@ -126,7 +126,7 @@ function formatDate(value?: string | null): string {
 
 function statusLabel(status: number): string {
   switch (status) {
-    case 1: return 'Draft'
+    case 1: return 'Bozza'
     case 2: return 'Inviato'
     case 3: return 'Parzialmente ricevuto'
     case 4: return 'Chiuso'
@@ -815,7 +815,7 @@ export default function MagazzinoPage() {
           </label>
 
           <label className="inventory-form-grid-full">
-            Reason obbligatoria
+            Motivo (obbligatorio)
             <textarea
               value={adjustmentForm.reason}
               onChange={event => setAdjustmentForm(prev => ({ ...prev, reason: event.target.value }))}
@@ -1047,7 +1047,7 @@ export default function MagazzinoPage() {
       <section className="inventory-panel">
         <div className="inventory-section-head">
           <div>
-            <h2>Low stock</h2>
+            <h2>Sotto scorta</h2>
             <p>Azioni di riordino suggerite sul filtro filiale attivo.</p>
           </div>
         </div>
@@ -1058,8 +1058,8 @@ export default function MagazzinoPage() {
               <tr>
                 <th>Articolo</th>
                 <th>Filiale</th>
-                <th>On hand</th>
-                <th>Reorder point</th>
+                <th>Giacenza</th>
+                <th>Soglia di riordino</th>
                 <th>Riordino suggerito</th>
               </tr>
             </thead>
@@ -1090,7 +1090,7 @@ export default function MagazzinoPage() {
         <div>
           <h1 className="page-title">Magazzino</h1>
           <p className="page-subtitle">
-            Catalogo articoli, stock per filiale, acquisti, ricezioni e reporting operativo V1.
+            Catalogo articoli, stock per filiale, acquisti, ricezioni e reporting operativo.
           </p>
         </div>
 
@@ -1104,7 +1104,6 @@ export default function MagazzinoPage() {
               ))}
             </select>
           </div>
-          <div className="magazzino-status">Sprint 3 operativo</div>
         </div>
       </div>
 
@@ -1177,7 +1176,7 @@ export default function MagazzinoPage() {
                 <input value={itemForm.unitOfMeasure} onChange={event => setItemForm(prev => ({ ...prev, unitOfMeasure: event.target.value }))} />
               </label>
               <label>
-                Reorder point
+                Soglia di riordino
                 <input type="number" step="0.001" value={itemForm.reorderPoint} onChange={event => setItemForm(prev => ({ ...prev, reorderPoint: event.target.value }))} />
               </label>
               {editingItem && (

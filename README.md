@@ -61,7 +61,7 @@ I ruoli sono custom per azienda. Feature disponibili:
 
 Il ruolo **"Responsabile App"** viene creato automaticamente con tutte le feature attive.
 
-Il modulo **Magazzino** copre V1 con articoli, saldi per filiale, movimenti, fornitori, ordini acquisto, ricezioni e report operativi base.
+Il modulo **Magazzino** copre articoli, saldi per filiale, movimenti, fornitori, ordini acquisto, ricezioni e report operativi base.
 
 ## Colori Calendario (Employee view)
 
