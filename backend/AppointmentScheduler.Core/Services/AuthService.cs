@@ -58,7 +58,7 @@ public class AuthService : IAuthService
             return null;
 
         var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
-        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id);
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id, features: allFeatures);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = user.Merchant?.Id;
         response.CompanyName = user.Merchant?.CompanyName;
@@ -168,11 +168,12 @@ public class AuthService : IAuthService
         });
         await _context.SaveChangesAsync();
 
-        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id);
+        var featureNames = allFeatures.Select(f => f.ToString()).ToList();
+        var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id, features: featureNames);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = merchant.Id;
         response.CompanyName = merchant.CompanyName;
-        response.ActiveFeatures = allFeatures.Select(f => f.ToString()).ToList();
+        response.ActiveFeatures = featureNames;
         return response;
     }
 
