@@ -22,10 +22,14 @@ namespace AppointmentScheduler.API.Controllers;
 public class EmployeeInventoryController : ControllerBase
 {
     private readonly IEmployeeInventoryService _employeeInventoryService;
+    private readonly ILogger<EmployeeInventoryController> _logger;
 
-    public EmployeeInventoryController(IEmployeeInventoryService employeeInventoryService)
+    public EmployeeInventoryController(
+        IEmployeeInventoryService employeeInventoryService,
+        ILogger<EmployeeInventoryController> logger)
     {
         _employeeInventoryService = employeeInventoryService;
+        _logger = logger;
     }
 
     private bool TryGetEmployeeId(out int employeeId)
@@ -226,6 +230,16 @@ public class EmployeeInventoryController : ControllerBase
         catch (DbUpdateConcurrencyException)
         {
             return Conflict(new { message = "Il saldo è stato modificato da un'altra operazione. Riprova." });
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogError(ex, "Errore di persistenza durante la rettifica stock per employeeId {EmployeeId}, merchantId {MerchantId}, branchId {BranchId}, itemId {ItemId}", employeeId, merchantId, request.BranchId, request.ItemId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore durante il salvataggio della rettifica stock." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Errore inatteso durante la rettifica stock per employeeId {EmployeeId}, merchantId {MerchantId}, branchId {BranchId}, itemId {ItemId}", employeeId, merchantId, request.BranchId, request.ItemId);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Errore inatteso durante la rettifica stock." });
         }
     }
 

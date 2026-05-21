@@ -195,9 +195,11 @@ public class InventoryService : IInventoryService
         if (item == null)
             throw new InvalidOperationException("Articolo non trovato.");
 
-        var branchExists = await _context.MerchantBranches
-            .AnyAsync(b => b.Id == request.BranchId && b.MerchantId == merchantId && b.IsActive);
-        if (!branchExists)
+        var branch = await _context.MerchantBranches
+            .Where(b => b.Id == request.BranchId && b.MerchantId == merchantId && b.IsActive)
+            .Select(b => new { b.Id, b.Name })
+            .FirstOrDefaultAsync();
+        if (branch == null)
             throw new InvalidOperationException("Filiale non trovata o non attiva.");
 
         await using var transaction = await _context.Database.BeginTransactionAsync();
@@ -255,8 +257,20 @@ public class InventoryService : IInventoryService
         await _context.SaveChangesAsync();
         await transaction.CommitAsync();
 
-        await _context.Entry(movement).Reference(m => m.Branch).LoadAsync();
-        return MapMovement(movement);
+        return new InventoryMovementDto
+        {
+            Id = movement.Id,
+            BranchId = movement.BranchId,
+            BranchName = branch.Name,
+            ItemId = movement.ItemId,
+            Type = movement.Type,
+            QuantityDelta = movement.QuantityDelta,
+            UnitCost = movement.UnitCost,
+            TotalValue = movement.TotalValue,
+            Reason = movement.Reason,
+            ReferenceNumber = movement.ReferenceNumber,
+            CreatedAt = movement.CreatedAt
+        };
     }
 
     private async Task<InventoryStockBalance> GetOrCreateBalanceAsync(int merchantId, int branchId, int itemId)
