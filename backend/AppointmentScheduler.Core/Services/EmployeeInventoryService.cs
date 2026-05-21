@@ -61,7 +61,10 @@ public class EmployeeInventoryService : IEmployeeInventoryService
             AccessibleBranches = scope.Branches,
             Dashboard = new InventoryDashboardDto
             {
-                TotalItems = await balances.Select(b => b.ItemId).Distinct().CountAsync(),
+                // Conta gli articoli attivi del merchant, coerente con la tab
+                // Articoli: include anche gli articoli senza saldi di filiale.
+                TotalItems = await _context.InventoryItems
+                    .CountAsync(i => i.MerchantId == merchantId && i.IsActive),
                 ActiveSuppliers = supplierIds.Count == 0
                     ? 0
                     : await _context.Suppliers.CountAsync(s => supplierIds.Contains(s.Id) && s.IsActive),
@@ -76,19 +79,12 @@ public class EmployeeInventoryService : IEmployeeInventoryService
     {
         var scope = await ResolveScopeAsync(employeeId, merchantId, branchId);
 
-        var balancesQuery = _context.InventoryStockBalances
-            .AsNoTracking()
-            .Include(b => b.Branch)
-            .Where(b => b.MerchantId == merchantId && scope.FilteredBranchIds.Contains(b.BranchId));
-
-        var itemIds = await balancesQuery
-            .Select(b => b.ItemId)
-            .Distinct()
-            .ToListAsync();
-
+        // La lista parte dagli articoli del merchant, NON dai saldi: un articolo
+        // appena creato non ha ancora alcun saldo di filiale e deve comunque
+        // comparire nel catalogo (con quantità a zero).
         var itemsQuery = _context.InventoryItems
             .AsNoTracking()
-            .Where(i => i.MerchantId == merchantId && i.IsActive && itemIds.Contains(i.Id));
+            .Where(i => i.MerchantId == merchantId && i.IsActive);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -103,8 +99,14 @@ public class EmployeeInventoryService : IEmployeeInventoryService
             .OrderBy(i => i.Name)
             .ToListAsync();
 
-        var balances = await balancesQuery
-            .Where(b => items.Select(i => i.Id).Contains(b.ItemId))
+        // I saldi mostrati restano limitati alle filiali accessibili al dipendente.
+        var itemIds = items.Select(i => i.Id).ToList();
+        var balances = await _context.InventoryStockBalances
+            .AsNoTracking()
+            .Include(b => b.Branch)
+            .Where(b => b.MerchantId == merchantId
+                && scope.FilteredBranchIds.Contains(b.BranchId)
+                && itemIds.Contains(b.ItemId))
             .ToListAsync();
 
         var balancesByItem = balances.GroupBy(b => b.ItemId).ToDictionary(g => g.Key, g => g.ToList());
