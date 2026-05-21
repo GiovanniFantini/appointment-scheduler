@@ -61,6 +61,18 @@
   margin-bottom: 1rem;
 }
 
+.select-company-empty {
+  background-color: rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
 .company-list {
   display: flex;
   flex-direction: column;

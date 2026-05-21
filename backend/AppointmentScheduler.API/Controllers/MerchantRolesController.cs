@@ -10,7 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/merchant-roles")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class MerchantRolesController : ControllerBase
 {
     private readonly IMerchantRoleService _merchantRoleService;

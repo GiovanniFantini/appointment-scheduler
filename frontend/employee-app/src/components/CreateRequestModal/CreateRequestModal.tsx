@@ -90,6 +90,10 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
     }
 
     const sendHourly = supportsHourly && !tuttoIlGiorno
+    if (sendHourly && (!orarioDa || !orarioA)) {
+      setError('Indica sia l\'ora di inizio sia quella di fine, oppure attiva "Tutto il giorno"')
+      return
+    }
     if (sendHourly && orarioA <= orarioDa) {
       setError('L\'orario di fine deve essere successivo a quello di inizio')
       return
@@ -198,6 +202,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
                   className="form-input"
                   value={orarioDa}
                   onChange={e => setOrarioDa(e.target.value)}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -207,6 +212,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
                   className="form-input"
                   value={orarioA}
                   onChange={e => setOrarioA(e.target.value)}
+                  required
                 />
               </div>
             </div>

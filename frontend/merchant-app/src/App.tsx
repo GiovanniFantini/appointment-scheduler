@@ -17,6 +17,7 @@ import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
 import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
 import FilialiPage from './pages/FilialiPage/FilialiPage'
 import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
+import PendingApprovalPage from './pages/PendingApprovalPage/PendingApprovalPage'
 import { BranchProvider } from './contexts/BranchContext'
 
 export interface MerchantUser {
@@ -27,6 +28,8 @@ export interface MerchantUser {
   accountType: number
   merchantId: number
   companyName?: string
+  /** True se l'azienda è stata approvata dall'admin. Se false l'app è bloccata. */
+  isApproved: boolean
   activeFeatures: string[]
 }
 
@@ -78,15 +81,28 @@ function App(_props: AppProps) {
         <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
         <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
         <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPasswordPage />} />
+        {/* Azienda non approvata: l'utente è loggato ma non può operare. */}
         <Route
+          path="/pending-approval"
           element={
             user
-              ? (
-                <BranchProvider>
-                  <AppLayout user={user} onLogout={handleLogout} />
-                </BranchProvider>
-              )
+              ? (user.isApproved
+                  ? <Navigate to="/" />
+                  : <PendingApprovalPage user={user} onLogout={handleLogout} />)
               : <Navigate to="/login" />
+          }
+        />
+        <Route
+          element={
+            !user
+              ? <Navigate to="/login" />
+              : !user.isApproved
+                ? <Navigate to="/pending-approval" />
+                : (
+                  <BranchProvider>
+                    <AppLayout user={user} onLogout={handleLogout} />
+                  </BranchProvider>
+                )
           }
         >
           <Route path="/" element={<DashboardPage user={user!} />} />
@@ -102,7 +118,12 @@ function App(_props: AppProps) {
           <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />
         </Route>
-        <Route path="*" element={<Navigate to={user ? '/' : '/login'} />} />
+        <Route
+          path="*"
+          element={
+            <Navigate to={!user ? '/login' : user.isApproved ? '/' : '/pending-approval'} />
+          }
+        />
       </Routes>
     </Router>
   )

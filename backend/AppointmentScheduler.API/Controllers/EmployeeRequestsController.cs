@@ -47,7 +47,7 @@ public class EmployeeRequestsController : ControllerBase
     /// Lista tutte le richieste del merchant (con filtro opzionale per status)
     /// </summary>
     [HttpGet]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<List<EmployeeRequestDto>>> GetAll(
         [FromQuery] RequestStatus? status = null)
     {
@@ -62,7 +62,7 @@ public class EmployeeRequestsController : ControllerBase
     /// Dettaglio di una richiesta
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> GetById(int id)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -103,7 +103,7 @@ public class EmployeeRequestsController : ControllerBase
     /// Approva una richiesta
     /// </summary>
     [HttpPost("{id}/approve")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> Approve(int id, [FromBody] ReviewEmployeeRequestRequest? body = null)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -112,18 +112,25 @@ public class EmployeeRequestsController : ControllerBase
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
 
-        var result = await _requestService.ApproveAsync(id, merchantId, userId, body);
-        if (result == null)
-            return NotFound(new { message = "Richiesta non trovata o non autorizzata" });
+        try
+        {
+            var result = await _requestService.ApproveAsync(id, merchantId, userId, body);
+            if (result == null)
+                return NotFound(new { message = "Richiesta non trovata o non autorizzata" });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
     /// Rifiuta una richiesta
     /// </summary>
     [HttpPost("{id}/reject")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> Reject(int id, [FromBody] ReviewEmployeeRequestRequest? body = null)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -132,11 +139,18 @@ public class EmployeeRequestsController : ControllerBase
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
 
-        var result = await _requestService.RejectAsync(id, merchantId, userId, body);
-        if (result == null)
-            return NotFound(new { message = "Richiesta non trovata o non autorizzata" });
+        try
+        {
+            var result = await _requestService.RejectAsync(id, merchantId, userId, body);
+            if (result == null)
+                return NotFound(new { message = "Richiesta non trovata o non autorizzata" });
 
-        return Ok(result);
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

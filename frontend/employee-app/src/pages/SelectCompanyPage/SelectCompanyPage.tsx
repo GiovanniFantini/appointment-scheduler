@@ -74,6 +74,14 @@ export default function SelectCompanyPage({ user, onCompanySelected, onLogout }:
 
         {error && <div className="select-company-error">{error}</div>}
 
+        {(user.companies ?? []).length === 0 ? (
+          // Nessuna azienda selezionabile: l'employee non è associato ad alcuna
+          // azienda, oppure le sue aziende non sono ancora approvate dall'admin.
+          <div className="select-company-empty">
+            Nessuna azienda associata al tuo account. Se la tua azienda si è
+            appena registrata, attendi che venga approvata dall'amministratore.
+          </div>
+        ) : (
         <div className="company-list">
           {(user.companies ?? []).map(company => (
             <button
@@ -103,6 +111,7 @@ export default function SelectCompanyPage({ user, onCompanySelected, onLogout }:
             </button>
           ))}
         </div>
+        )}
 
         <button className="logout-link" onClick={onLogout}>
           Esci dall'account

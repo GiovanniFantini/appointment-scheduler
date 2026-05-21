@@ -10,7 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/skills")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class SkillsController : ControllerBase
 {
     private readonly ISkillService _skillService;

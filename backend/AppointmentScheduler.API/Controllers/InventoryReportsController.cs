@@ -13,7 +13,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/merchant/inventory/reports")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class InventoryReportsController : ControllerBase
 {
     private readonly IInventoryReportingService _inventoryReportingService;

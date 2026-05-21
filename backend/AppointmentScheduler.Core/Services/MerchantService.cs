@@ -62,7 +62,7 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Approva un merchant
+    /// Approva un merchant in attesa, oppure riattiva un merchant disattivato.
     /// </summary>
     public async Task<bool> ApproveAsync(int id)
     {
@@ -72,7 +72,8 @@ public class MerchantService : IMerchantService
 
         merchant.IsApproved = true;
         merchant.IsActive = true;
-        merchant.ApprovedAt = DateTime.UtcNow;
+        // ApprovedAt segna la prima approvazione: una riattivazione non la sovrascrive.
+        merchant.ApprovedAt ??= DateTime.UtcNow;
         merchant.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -80,7 +81,10 @@ public class MerchantService : IMerchantService
     }
 
     /// <summary>
-    /// Rifiuta o disabilita un merchant
+    /// Rifiuta un merchant ancora in attesa, oppure disattiva un merchant già approvato.
+    /// In entrambi i casi il merchant diventa non operativo (IsActive=false). La
+    /// disattivazione di un merchant già approvato NON revoca l'approvazione: così
+    /// una riattivazione lo riporta allo stato "Attiva" e non "In attesa" (§3.2).
     /// </summary>
     public async Task<bool> RejectAsync(int id)
     {
@@ -88,9 +92,13 @@ public class MerchantService : IMerchantService
         if (merchant == null)
             return false;
 
-        merchant.IsApproved = false;
         merchant.IsActive = false;
-        merchant.ApprovedAt = null;
+
+        // Solo il rifiuto di un merchant mai approvato azzera l'approvazione.
+        // Un merchant già approvato resta "approvato" anche se disattivato.
+        if (!merchant.IsApproved)
+            merchant.ApprovedAt = null;
+
         merchant.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();

@@ -82,6 +82,10 @@ public class EmployeeRequestService : IEmployeeRequestService
         if (employeeRequest == null)
             return null;
 
+        // Una richiesta già decisa (approvata/rifiutata) non è più modificabile (§9.1).
+        if (employeeRequest.Status != RequestStatus.Pending)
+            throw new InvalidOperationException("Questa richiesta è già stata decisa e non è più modificabile.");
+
         employeeRequest.Status = RequestStatus.Approved;
         employeeRequest.ReviewedByUserId = reviewerUserId;
         employeeRequest.ReviewedAt = DateTime.UtcNow;
@@ -110,6 +114,10 @@ public class EmployeeRequestService : IEmployeeRequestService
 
         if (employeeRequest == null)
             return null;
+
+        // Una richiesta già decisa (approvata/rifiutata) non è più modificabile (§9.1).
+        if (employeeRequest.Status != RequestStatus.Pending)
+            throw new InvalidOperationException("Questa richiesta è già stata decisa e non è più modificabile.");
 
         employeeRequest.Status = RequestStatus.Rejected;
         employeeRequest.ReviewedByUserId = reviewerUserId;
@@ -196,20 +204,31 @@ public class EmployeeRequestService : IEmployeeRequestService
     }
 
     /// <summary>
-    /// Ritorna la coppia (StartTime, EndTime) se entrambi valorizzati e il tipo supporta permessi orari;
-    /// altrimenti (null, null).
+    /// Normalizza la fascia oraria di un permesso. Convenzione: entrambi null = tutto il giorno.
+    /// Distingue il caso legittimo "tutto il giorno" (entrambi vuoti) da un input incoerente
+    /// (un solo orario fornito, oppure fine ≤ inizio): in quest'ultimo caso lancia
+    /// InvalidOperationException invece di scartare gli orari in silenzio.
     /// </summary>
     private static (TimeOnly?, TimeOnly?) NormalizeHourlyRange(EmployeeRequestType type, TimeOnly? start, TimeOnly? end)
     {
-        // Only Permessi supports hourly ranges. Ferie/Malattia are always full-day.
+        // Solo i Permessi supportano fasce orarie. Ferie/Malattia sono sempre full-day:
+        // eventuali orari passati vengono ignorati (non è un errore dell'utente).
         if (type != EmployeeRequestType.Permessi)
             return (null, null);
 
-        if (!start.HasValue || !end.HasValue)
+        // Nessun orario fornito → permesso "tutto il giorno": caso legittimo.
+        if (!start.HasValue && !end.HasValue)
             return (null, null);
 
+        // Un solo orario fornito → input incoerente, l'utente ha sbagliato a compilare.
+        if (!start.HasValue || !end.HasValue)
+            throw new InvalidOperationException(
+                "Per un permesso orario indica sia l'ora di inizio sia quella di fine, oppure seleziona 'tutto il giorno'.");
+
+        // Entrambi forniti ma intervallo non valido.
         if (end.Value <= start.Value)
-            return (null, null);
+            throw new InvalidOperationException(
+                "L'ora di fine del permesso deve essere successiva all'ora di inizio.");
 
         return (start, end);
     }

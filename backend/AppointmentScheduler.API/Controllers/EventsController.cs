@@ -48,7 +48,7 @@ public class EventsController : ControllerBase
     /// I merchant leggono il MerchantId dal JWT; gli Admin possono specificarlo come query param.
     /// </summary>
     [HttpGet]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<List<EventDto>>> GetMerchantEvents(
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to,
@@ -97,7 +97,7 @@ public class EventsController : ControllerBase
     /// Recupera un evento per ID
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EventDto>> GetById(int id)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -115,7 +115,7 @@ public class EventsController : ControllerBase
     /// Crea un nuovo evento
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EventDto>> Create([FromBody] CreateEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -139,7 +139,7 @@ public class EventsController : ControllerBase
     /// Aggiorna un evento esistente
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<EventDto>> Update(int id, [FromBody] UpdateEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -165,7 +165,7 @@ public class EventsController : ControllerBase
     /// Elimina un evento
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<IActionResult> Delete(int id)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -206,7 +206,7 @@ public class EventsController : ControllerBase
     /// Calcola i turni effettivi di un dipendente specifico in un range di date (uso merchant).
     /// </summary>
     [HttpGet("employee/{employeeId}/effective-schedule")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<List<EffectiveShiftDto>>> GetEffectiveScheduleForEmployee(
         int employeeId,
         [FromQuery] DateOnly from,
@@ -226,7 +226,7 @@ public class EventsController : ControllerBase
     /// Clona un evento in un intervallo di date (un clone per ogni giorno)
     /// </summary>
     [HttpPost("{id}/clone")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<List<EventDto>>> Clone(int id, [FromBody] CloneEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -255,7 +255,7 @@ public class EventsController : ControllerBase
     /// opzionalmente filtrando per dipendenti.
     /// </summary>
     [HttpPost("clone-week")]
-    [Authorize(Policy = "MerchantOnly")]
+    [Authorize(Policy = "ApprovedMerchantOnly")]
     public async Task<ActionResult<List<EventDto>>> CloneWeek([FromBody] CloneWeekRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))

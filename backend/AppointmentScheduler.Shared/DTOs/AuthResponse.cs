@@ -15,6 +15,12 @@ public class AuthResponse
     public int? MerchantId { get; set; }
     public string? CompanyName { get; set; }
 
+    /// <summary>
+    /// True se l'azienda è stata approvata dall'admin. Finché è false il merchant
+    /// può autenticarsi ma non operare: il frontend mostra una schermata di attesa.
+    /// </summary>
+    public bool IsApproved { get; set; }
+
     // Employee: lista aziende disponibili (pre-switch)
     public int? EmployeeId { get; set; }
     public List<EmployeeCompanyDto> Companies { get; set; } = new();

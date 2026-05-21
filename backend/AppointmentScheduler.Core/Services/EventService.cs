@@ -335,6 +335,14 @@ public class EventService : IEventService
 
         while (current <= request.ToDate)
         {
+            // Salta il giorno in cui l'evento originale esiste già: clonarlo lì
+            // creerebbe un turno duplicato e sovrapposto all'originale.
+            if (current == original.StartDate)
+            {
+                current = current.AddDays(1);
+                continue;
+            }
+
             var clone = new Event
             {
                 MerchantId = original.MerchantId,

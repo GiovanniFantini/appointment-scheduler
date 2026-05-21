@@ -11,7 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/branches")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class BranchesController : ControllerBase
 {
     private readonly IBranchService _branchService;

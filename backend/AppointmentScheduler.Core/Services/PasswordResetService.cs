@@ -41,7 +41,10 @@ public class PasswordResetService : IPasswordResetService
             return true;
         }
 
-        // Rate limiting: max 1 richiesta ogni 60 secondi
+        // Rate limiting: max 1 richiesta ogni 60 secondi. Quando scatta restituiamo
+        // comunque true (come per l'email non trovata): una risposta diversa
+        // permetterebbe di enumerare gli account. Il countdown lato client è
+        // persistito per impedire all'utente legittimo di reinviare a vuoto.
         var recentToken = await _context.PasswordResetTokens
             .AnyAsync(t => t.UserId == user.Id && t.CreatedAt > DateTime.UtcNow.AddSeconds(-60));
 

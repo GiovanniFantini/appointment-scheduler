@@ -6,6 +6,8 @@ using System.Text;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Core.Interfaces;
+using AppointmentScheduler.API.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 try
 {
@@ -14,7 +16,15 @@ try
     var builder = WebApplication.CreateBuilder(args);
 
     // Controllers
-    builder.Services.AddControllers();
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            // Normalizza la stringa vuota a null per i campi TimeOnly? (es. orari
+            // di un permesso): senza questo l'invio di "" da un input time svuotato
+            // genererebbe un 400 con messaggio tecnico incomprensibile.
+            options.JsonSerializerOptions.Converters.Add(
+                new AppointmentScheduler.API.Converters.NullableTimeOnlyJsonConverter());
+        });
     builder.Services.AddEndpointsApiExplorer();
 
     // Health checks
@@ -121,7 +131,15 @@ try
         options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
         options.AddPolicy("MerchantOnly", policy => policy.RequireRole("Merchant", "Admin"));
         options.AddPolicy("EmployeeOnly", policy => policy.RequireRole("Employee", "Admin"));
+
+        // Come MerchantOnly, ma il merchant deve anche essere approvato dall'admin.
+        // Usata sulle rotte operative: un merchant non approvato riceve 403.
+        options.AddPolicy("ApprovedMerchantOnly", policy =>
+            policy.Requirements.Add(new ApprovedMerchantRequirement()));
     });
+
+    // Handler della policy ApprovedMerchantOnly.
+    builder.Services.AddSingleton<IAuthorizationHandler, ApprovedMerchantHandler>();
 
     // ── CORS ───────────────────────────────────────────────────────────────
     var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>()

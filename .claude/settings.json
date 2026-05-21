@@ -26,7 +26,11 @@
       "PowerShell(dotnet ef database update --project backend/AppointmentScheduler.Data --startup-project backend/AppointmentScheduler.API --no-build 2>&1)",
       "Bash(rm InventoryController.cs SuppliersController.cs PurchaseOrdersController.cs)",
       "Bash(ls Inventory*.cs Supplier*.cs Purchase*.cs)",
-      "Bash(Select-Object -Last 15)"
+      "Bash(Select-Object -Last 15)",
+      "Bash(grep -rhoE \"\\(get|post|put|patch|delete\\)\\\\\\(['\\\\`][^'\\\\`]*['\\\\`]\" lib/api/inventory.ts)",
+      "Read(//tmp/**)",
+      "Bash(sed -i 's/<ImplicitUsings>disable<\\\\/ImplicitUsings>/<ImplicitUsings>enable<\\\\/ImplicitUsings>/' tjtest.csproj)",
+      "Bash(dotnet run *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

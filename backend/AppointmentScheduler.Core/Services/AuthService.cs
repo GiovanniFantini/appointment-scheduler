@@ -57,13 +57,21 @@ public class AuthService : IAuthService
         if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return null;
 
+        // L'azienda è operativa solo se attiva E approvata dall'admin. Un merchant
+        // disattivato (o non ancora approvato) può autenticarsi ma non operare:
+        // niente claim di approvazione → il frontend mostra la schermata di attesa.
+        var merchantOperational = (user.Merchant?.IsActive ?? false)
+                                  && (user.Merchant?.IsApproved ?? false);
+
         var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
         var featureLevels = BuildMerchantFeatureLevels();
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id,
-            features: allFeatures, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList());
+            features: allFeatures, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList(),
+            merchantApproved: merchantOperational);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = user.Merchant?.Id;
         response.CompanyName = user.Merchant?.CompanyName;
+        response.IsApproved = merchantOperational;
         response.ActiveFeatures = allFeatures;
         response.FeatureLevels = featureLevels;
         return response;
@@ -177,11 +185,14 @@ public class AuthService : IAuthService
 
         var featureNames = allFeatures.Select(f => f.ToString()).ToList();
         var featureLevels = BuildMerchantFeatureLevels();
+        // Subito dopo la registrazione il merchant non è approvato: niente claim.
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id,
-            features: featureNames, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList());
+            features: featureNames, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList(),
+            merchantApproved: merchant.IsApproved);
         var response = BuildAuthResponse(user, token);
         response.MerchantId = merchant.Id;
         response.CompanyName = merchant.CompanyName;
+        response.IsApproved = merchant.IsApproved; // false subito dopo la registrazione
         response.ActiveFeatures = featureNames;
         response.FeatureLevels = featureLevels;
         return response;
@@ -213,9 +224,10 @@ public class AuthService : IAuthService
         var response = BuildAuthResponse(user, token);
         response.EmployeeId = employee.Id;
 
-        // Popola lista aziende disponibili
+        // Popola lista aziende disponibili. Un'azienda non ancora approvata
+        // dall'admin non è operativa: l'employee non deve poterla selezionare.
         response.Companies = employee.Memberships
-            .Where(m => m.IsActive && m.Merchant.IsActive)
+            .Where(m => m.IsActive && m.Merchant.IsActive && m.Merchant.IsApproved)
             .Select(m => new EmployeeCompanyDto
             {
                 MerchantId = m.MerchantId,
@@ -301,6 +313,8 @@ public class AuthService : IAuthService
 
         var employee = await _context.Employees
             .Include(e => e.Memberships)
+                .ThenInclude(m => m.Merchant)
+            .Include(e => e.Memberships)
                 .ThenInclude(m => m.Role)
                     .ThenInclude(r => r.Features)
             .FirstOrDefaultAsync(e => e.UserId == userId && e.IsActive);
@@ -311,6 +325,11 @@ public class AuthService : IAuthService
             .FirstOrDefault(m => m.MerchantId == merchantId && m.IsActive);
 
         if (membership == null) return null;
+
+        // L'azienda deve essere operativa: attiva e approvata dall'admin.
+        // Un employee non può lavorare per un merchant non ancora approvato.
+        if (!membership.Merchant.IsActive || !membership.Merchant.IsApproved)
+            return null;
 
         var enabledFeatures = membership.Role.Features
             .Where(f => f.IsEnabled)
@@ -355,7 +374,7 @@ public class AuthService : IAuthService
     // ── JWT Generation ─────────────────────────────────────────────────────
     public string GenerateJwtToken(int userId, string email, string role,
         int? merchantId = null, int? employeeId = null, List<string>? features = null,
-        List<string>? featureLevels = null)
+        List<string>? featureLevels = null, bool merchantApproved = false)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"]
@@ -377,6 +396,13 @@ public class AuthService : IAuthService
 
         if (employeeId.HasValue)
             claims.Add(new Claim("EmployeeId", employeeId.Value.ToString()));
+
+        // Presente solo se l'azienda è approvata dall'admin. La policy
+        // "ApprovedMerchantOnly" lo richiede per i merchant: un token emesso
+        // prima dell'approvazione non lo contiene e resta valido solo per le
+        // rotte non gated (login, profilo) finché l'utente non rifà login.
+        if (merchantApproved)
+            claims.Add(new Claim("MerchantApproved", "true"));
 
         if (features != null)
             foreach (var feature in features)

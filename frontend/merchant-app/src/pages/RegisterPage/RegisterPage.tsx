@@ -49,12 +49,14 @@ export default function RegisterPage() {
         {success ? (
           <div className="register-success">
             <div className="success-icon">✅</div>
-            <h2 className="success-title">Registrazione inviata</h2>
+            <h2 className="success-title">Registrazione completata</h2>
             <p className="success-message">
-              Registrazione inviata. L'account sarà attivato dall'amministratore.
+              Il tuo account è attivo: puoi accedere subito e iniziare a configurare
+              l'azienda. La verifica da parte dell'amministratore avverrà
+              successivamente e non blocca l'utilizzo.
             </p>
             <Link to="/login" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none', padding: '10px 24px', borderRadius: '8px' }}>
-              Torna al Login
+              Vai al Login
             </Link>
           </div>
         ) : (

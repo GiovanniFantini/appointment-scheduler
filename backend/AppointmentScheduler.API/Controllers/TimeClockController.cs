@@ -13,7 +13,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/merchant/time-clock")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class TimeClockController : ControllerBase
 {
     private readonly ITimeClockService _timeClockService;

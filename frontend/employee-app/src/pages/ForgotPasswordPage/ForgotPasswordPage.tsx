@@ -5,30 +5,46 @@ import '../LoginPage/LoginPage.css'
 import './ForgotPasswordPage.css'
 
 const COOLDOWN_SECONDS = 60
+// Chiave sessionStorage: persiste l'istante dell'ultima richiesta così il
+// cooldown sopravvive a un reload della pagina (il backend ha lo stesso
+// rate-limit di 60s: ricaricare la pagina non deve aggirarlo).
+const COOLDOWN_KEY = 'forgotPasswordLastRequestAt'
+
+/** Secondi di cooldown ancora attivi in base al timestamp persistito. */
+function remainingCooldown(): number {
+  const raw = sessionStorage.getItem(COOLDOWN_KEY)
+  if (!raw) return 0
+  const elapsed = (Date.now() - Number(raw)) / 1000
+  return Math.max(0, Math.ceil(COOLDOWN_SECONDS - elapsed))
+}
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
-  const [sent, setSent] = useState(false)
+  const [sent, setSent] = useState(() => remainingCooldown() > 0)
   const [error, setError] = useState('')
-  const [cooldown, setCooldown] = useState(0)
+  const [cooldown, setCooldown] = useState(() => remainingCooldown())
   const timerRef = useRef<ReturnType<typeof setInterval>>()
 
+  const tick = () => {
+    timerRef.current = setInterval(() => {
+      const left = remainingCooldown()
+      setCooldown(left)
+      if (left <= 0 && timerRef.current) clearInterval(timerRef.current)
+    }, 1000)
+  }
+
   useEffect(() => {
+    // Riprende il countdown se al mount c'è ancora cooldown attivo (post-reload).
+    if (remainingCooldown() > 0) tick()
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [])
 
   const startCooldown = () => {
+    sessionStorage.setItem(COOLDOWN_KEY, String(Date.now()))
     setCooldown(COOLDOWN_SECONDS)
-    timerRef.current = setInterval(() => {
-      setCooldown(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
+    if (timerRef.current) clearInterval(timerRef.current)
+    tick()
   }
 
   const handleSubmit = async (e: FormEvent) => {

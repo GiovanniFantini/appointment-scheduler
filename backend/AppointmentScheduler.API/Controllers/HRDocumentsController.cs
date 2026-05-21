@@ -11,7 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = "MerchantOnly")]
+[Authorize(Policy = "ApprovedMerchantOnly")]
 public class HRDocumentsController : ControllerBase
 {
     private readonly IHRDocumentService _hrDocumentService;
