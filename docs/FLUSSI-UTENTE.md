@@ -1127,7 +1127,7 @@ Le ricezioni da ordine acquisto producono movimenti in automatico.
 | Articolo | Select | Sceglie l'articolo da rettificare. | Obbligatorio. |
 | Delta quantità | Campo numerico | Inserisce la variazione positiva o negativa. | Obbligatorio; non può essere `0`. |
 | Costo unitario | Campo numerico | Imposta il costo della rettifica positiva oppure, se lasciato vuoto, usa il costo medio noto. | Facoltativo sulle rettifiche negative. |
-| Reason obbligatoria | Area testo | Motivo della rettifica. | Obbligatoria. |
+| Motivo (obbligatorio) | Area testo | Motivo della rettifica. | Obbligatorio. |
 | Registra rettifica | Bottone | Salva il movimento e aggiorna il saldo. | Disattivato durante il salvataggio; il sistema blocca rettifiche che porterebbero lo stock sotto zero. |
 
 **Comandi e campi — Ledger movimenti**
@@ -1227,7 +1227,7 @@ La tab Report presenta due viste operative:
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
 | Tabella valorizzazione | Lista | Mostra articolo, filiale, quantità, costo medio e valore. | Sola lettura; usa il filtro filiale in alto. |
-| Tabella low stock | Lista | Mostra gli articoli sotto soglia e il riordino suggerito. | Sola lettura; se non ci sono righe compare lo stato vuoto. |
+| Tabella sotto scorta | Lista | Mostra gli articoli sotto soglia e il riordino suggerito. | Sola lettura; se non ci sono righe compare lo stato vuoto. |
 
 ### 11.9 Magazzino del dipendente (Employee)
 
