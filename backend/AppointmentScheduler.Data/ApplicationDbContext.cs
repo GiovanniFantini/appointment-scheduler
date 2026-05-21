@@ -362,7 +362,12 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.QuantityOnHand).HasPrecision(18, 3);
             entity.Property(e => e.WeightedAverageCost).HasPrecision(18, 4);
             entity.Property(e => e.InventoryValue).HasPrecision(18, 2);
-            entity.Property(e => e.RowVersion).IsRowVersion();
+            // PostgreSQL system column for optimistic concurrency; auto-maintained by the DB.
+            entity.Property(e => e.Version)
+                .HasColumnName("xmin")
+                .HasColumnType("xid")
+                .ValueGeneratedOnAddOrUpdate()
+                .IsConcurrencyToken();
 
             entity.HasOne(e => e.Branch)
                 .WithMany()

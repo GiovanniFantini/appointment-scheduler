@@ -11,7 +11,12 @@ public class InventoryStockBalance
     public decimal InventoryValue { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-    public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+
+    /// <summary>
+    /// Optimistic concurrency token backed by PostgreSQL's system <c>xmin</c> column.
+    /// Postgres maintains this automatically; it is never written by the application.
+    /// </summary>
+    public uint Version { get; set; }
 
     public MerchantBranch Branch { get; set; } = null!;
     public InventoryItem Item { get; set; } = null!;
