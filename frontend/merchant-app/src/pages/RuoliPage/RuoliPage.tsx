@@ -9,14 +9,20 @@ interface Feature {
 }
 
 // Livelli di accesso operativo. Significativi solo per la feature Magazzino.
-type FeatureAccessLevel = 'ReadOnly' | 'Operator' | 'Manager'
+// Valori numerici allineati all'enum C# FeatureAccessLevel: l'API serializza
+// e deserializza gli enum come numeri.
+const enum FeatureAccessLevel {
+  ReadOnly = 1,
+  Operator = 2,
+  Manager = 3,
+}
 
 const MAGAZZINO_FEATURE_VALUE = 10
 
 const MAGAZZINO_LEVELS: Array<{ value: FeatureAccessLevel; label: string }> = [
-  { value: 'ReadOnly', label: 'Sola lettura' },
-  { value: 'Operator', label: 'Operatore (rettifiche, ricezioni)' },
-  { value: 'Manager', label: 'Manager (anche anagrafiche e ordini)' },
+  { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura' },
+  { value: FeatureAccessLevel.Operator, label: 'Operatore (rettifiche, ricezioni)' },
+  { value: FeatureAccessLevel.Manager, label: 'Manager (anche anagrafiche e ordini)' },
 ]
 
 interface RoleFeatureDto {
@@ -75,7 +81,7 @@ export default function RuoliPage() {
           fm[r.id] = r.features.filter(f => f.isEnabled).map(f => f.feature)
           const magazzino = r.features.find(f => f.feature === MAGAZZINO_FEATURE_VALUE)
           // Default sicuro: una feature Magazzino abilitata senza livello è ReadOnly.
-          lm[r.id] = magazzino?.accessLevel ?? 'ReadOnly'
+          lm[r.id] = magazzino?.accessLevel ?? FeatureAccessLevel.ReadOnly
         })
         setLocalFeatures(fm)
         setMagazzinoLevels(lm)
@@ -99,7 +105,7 @@ export default function RuoliPage() {
     })
     // Abilitando il Magazzino senza un livello già scelto, parte da ReadOnly.
     if (featureValue === MAGAZZINO_FEATURE_VALUE) {
-      setMagazzinoLevels(prev => ({ ...prev, [roleId]: prev[roleId] ?? 'ReadOnly' }))
+      setMagazzinoLevels(prev => ({ ...prev, [roleId]: prev[roleId] ?? FeatureAccessLevel.ReadOnly }))
     }
   }
 
@@ -113,7 +119,7 @@ export default function RuoliPage() {
       const isEnabled = enabledValues.includes(feat.value)
       const base = { feature: feat.value, isEnabled }
       if (feat.value === MAGAZZINO_FEATURE_VALUE && isEnabled) {
-        return { ...base, accessLevel: magazzinoLevels[roleId] ?? 'ReadOnly' }
+        return { ...base, accessLevel: magazzinoLevels[roleId] ?? FeatureAccessLevel.ReadOnly }
       }
       return base
     })
@@ -219,8 +225,8 @@ export default function RuoliPage() {
                           <span className="feature-level-label">Livello di accesso</span>
                           <select
                             className="feature-level-select"
-                            value={magazzinoLevels[role.id] ?? 'ReadOnly'}
-                            onChange={e => setMagazzinoLevel(role.id, e.target.value as FeatureAccessLevel)}
+                            value={magazzinoLevels[role.id] ?? FeatureAccessLevel.ReadOnly}
+                            onChange={e => setMagazzinoLevel(role.id, Number(e.target.value) as FeatureAccessLevel)}
                             disabled={isDefaultRole(role)}
                           >
                             {MAGAZZINO_LEVELS.map(level => (
