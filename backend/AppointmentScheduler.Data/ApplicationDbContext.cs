@@ -34,6 +34,16 @@ public class ApplicationDbContext : DbContext
     public DbSet<EmployeeSkill> EmployeeSkills { get; set; }
     public DbSet<EventRequiredSkill> EventRequiredSkills { get; set; }
 
+    // Inventory (magazzino)
+    public DbSet<InventoryItem> InventoryItems { get; set; }
+    public DbSet<InventoryStockBalance> InventoryStockBalances { get; set; }
+    public DbSet<InventoryMovement> InventoryMovements { get; set; }
+    public DbSet<Supplier> Suppliers { get; set; }
+    public DbSet<PurchaseOrder> PurchaseOrders { get; set; }
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines { get; set; }
+    public DbSet<GoodsReceipt> GoodsReceipts { get; set; }
+    public DbSet<GoodsReceiptLine> GoodsReceiptLines { get; set; }
+
     // Notifications
     public DbSet<Notification> Notifications { get; set; }
 
@@ -325,6 +335,201 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => new { e.EventId, e.SkillId }).IsUnique();
             entity.HasIndex(e => e.SkillId);
+        });
+
+        // ── InventoryItem ───────────────────────────────────────────────────
+        modelBuilder.Entity<InventoryItem>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Sku).IsRequired().HasMaxLength(80);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.Barcode).HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.UnitOfMeasure).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ReorderPoint).HasPrecision(18, 3);
+            entity.Property(e => e.AverageUnitCost).HasPrecision(18, 4);
+
+            entity.HasIndex(e => new { e.MerchantId, e.Sku }).IsUnique();
+            entity.HasIndex(e => e.MerchantId);
+            entity.HasIndex(e => new { e.MerchantId, e.Name });
+            entity.HasIndex(e => new { e.MerchantId, e.Barcode });
+        });
+
+        // ── InventoryStockBalance ───────────────────────────────────────────
+        modelBuilder.Entity<InventoryStockBalance>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuantityOnHand).HasPrecision(18, 3);
+            entity.Property(e => e.WeightedAverageCost).HasPrecision(18, 4);
+            entity.Property(e => e.InventoryValue).HasPrecision(18, 2);
+            entity.Property(e => e.RowVersion).IsRowVersion();
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.StockBalances)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasIndex(e => new { e.MerchantId, e.BranchId, e.ItemId }).IsUnique();
+            entity.HasIndex(e => new { e.BranchId, e.ItemId });
+            entity.HasIndex(e => e.ItemId);
+        });
+
+        // ── InventoryMovement ───────────────────────────────────────────────
+        modelBuilder.Entity<InventoryMovement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuantityDelta).HasPrecision(18, 3);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 4);
+            entity.Property(e => e.TotalValue).HasPrecision(18, 2);
+            entity.Property(e => e.Reason).HasMaxLength(500);
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(100);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.Movements)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(p => p.InventoryMovements)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.GoodsReceipt)
+                .WithMany(r => r.InventoryMovements)
+                .HasForeignKey(e => e.GoodsReceiptId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.MerchantId, e.BranchId, e.CreatedAt });
+            entity.HasIndex(e => new { e.ItemId, e.CreatedAt });
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.GoodsReceiptId);
+        });
+
+        // ── Supplier ────────────────────────────────────────────────────────
+        modelBuilder.Entity<Supplier>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.ContactName).HasMaxLength(200);
+            entity.Property(e => e.Email).HasMaxLength(256);
+            entity.Property(e => e.Phone).HasMaxLength(30);
+            entity.Property(e => e.VatNumber).HasMaxLength(30);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasIndex(e => new { e.MerchantId, e.Name }).IsUnique();
+            entity.HasIndex(e => e.MerchantId);
+        });
+
+        // ── PurchaseOrder ───────────────────────────────────────────────────
+        modelBuilder.Entity<PurchaseOrder>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.OrderNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Supplier)
+                .WithMany(s => s.PurchaseOrders)
+                .HasForeignKey(e => e.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.MerchantId, e.OrderNumber }).IsUnique();
+            entity.HasIndex(e => new { e.MerchantId, e.Status });
+            entity.HasIndex(e => e.BranchId);
+            entity.HasIndex(e => e.SupplierId);
+        });
+
+        // ── PurchaseOrderLine ───────────────────────────────────────────────
+        modelBuilder.Entity<PurchaseOrderLine>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuantityOrdered).HasPrecision(18, 3);
+            entity.Property(e => e.QuantityReceived).HasPrecision(18, 3);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 4);
+            entity.Property(e => e.LineTotal).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(p => p.Lines)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.PurchaseOrderLines)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.ItemId);
+        });
+
+        // ── GoodsReceipt ────────────────────────────────────────────────────
+        modelBuilder.Entity<GoodsReceipt>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ReceiptNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+
+            entity.HasOne(e => e.Branch)
+                .WithMany()
+                .HasForeignKey(e => e.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Supplier)
+                .WithMany(s => s.GoodsReceipts)
+                .HasForeignKey(e => e.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(p => p.Receipts)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => new { e.MerchantId, e.ReceiptNumber }).IsUnique();
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.SupplierId);
+            entity.HasIndex(e => e.BranchId);
+        });
+
+        // ── GoodsReceiptLine ────────────────────────────────────────────────
+        modelBuilder.Entity<GoodsReceiptLine>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.QuantityReceived).HasPrecision(18, 3);
+            entity.Property(e => e.UnitCost).HasPrecision(18, 4);
+            entity.Property(e => e.LineTotal).HasPrecision(18, 2);
+
+            entity.HasOne(e => e.GoodsReceipt)
+                .WithMany(r => r.Lines)
+                .HasForeignKey(e => e.GoodsReceiptId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Item)
+                .WithMany(i => i.GoodsReceiptLines)
+                .HasForeignKey(e => e.ItemId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.PurchaseOrderLine)
+                .WithMany(l => l.ReceiptLines)
+                .HasForeignKey(e => e.PurchaseOrderLineId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(e => e.GoodsReceiptId);
+            entity.HasIndex(e => e.ItemId);
+            entity.HasIndex(e => e.PurchaseOrderLineId);
         });
 
         // ── Notification ──────────────────────────────────────────────────────

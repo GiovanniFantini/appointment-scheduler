@@ -11,6 +11,7 @@ import RichiestePage from './pages/RichiestePage/RichiestePage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import NotifichePage from './pages/NotifichePage/NotifichePage'
 import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
+import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
 import AppLayout from './components/AppLayout/AppLayout'
 
 export interface EmployeeUser {
@@ -166,6 +167,14 @@ function App() {
             element={
               user?.activeFeatures?.includes('Documenti')
                 ? <DocumentiPage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="magazzino"
+            element={
+              user?.activeFeatures?.includes('Magazzino')
+                ? <MagazzinoPage />
                 : <Navigate to="/" replace />
             }
           />

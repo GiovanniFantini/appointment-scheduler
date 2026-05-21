@@ -103,6 +103,7 @@ export default function AppLayout({ user, onLogout, onUserUpdate }: Props) {
     { to: '/timbratura', label: 'Timbratura', feature: 'Timbratura', icon: <ClockIcon /> },
     { to: '/calendario', label: 'Calendario', feature: 'Calendario', icon: <CalendarIcon /> },
     { to: '/richieste', label: 'Richieste', feature: 'Richieste', icon: <RequestsIcon /> },
+    { to: '/magazzino', label: 'Magazzino', feature: 'Magazzino', icon: <RequestsIcon /> },
     { to: '/documenti', label: 'Documenti', feature: 'Documenti', icon: <DocumentsIcon /> },
     { to: '/notifiche', label: 'Notifiche', icon: <BellIcon /> },
   ]

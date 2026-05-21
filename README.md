@@ -57,9 +57,11 @@ appointment-scheduler/
 ## Sistema Ruoli Merchant
 
 I ruoli sono custom per azienda. Feature disponibili:
-**Calendario** · **Richieste** · **Risorse** · **Ruoli** · **Documenti** · **Report**
+**Calendario** · **Richieste** · **Risorse** · **Ruoli** · **Documenti** · **Report** · **Mansioni** · **Filiali** · **Timbratura** · **Magazzino**
 
 Il ruolo **"Responsabile App"** viene creato automaticamente con tutte le feature attive.
+
+Il modulo **Magazzino** copre V1 con articoli, saldi per filiale, movimenti, fornitori, ordini acquisto, ricezioni e report operativi base.
 
 ## Colori Calendario (Employee view)
 

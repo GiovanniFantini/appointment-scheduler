@@ -10,5 +10,6 @@ public enum MerchantFeature
     Report = 6,
     Mansioni = 7,
     Filiali = 8,
-    Timbratura = 9
+    Timbratura = 9,
+    Magazzino = 10
 }

@@ -77,6 +77,11 @@ try
     builder.Services.AddScoped<ISkillService, SkillService>();
     builder.Services.AddScoped<IBranchService, BranchService>();
     builder.Services.AddScoped<ITimeClockService, TimeClockService>();
+    builder.Services.AddScoped<IInventoryService, InventoryService>();
+    builder.Services.AddScoped<IEmployeeInventoryService, EmployeeInventoryService>();
+    builder.Services.AddScoped<ISupplierService, SupplierService>();
+    builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
+    builder.Services.AddScoped<IInventoryReportingService, InventoryReportingService>();
 
     // HR Documents (Azure Blob)
     builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();

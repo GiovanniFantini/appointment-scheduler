@@ -26,6 +26,7 @@ const QUICK_LINKS: QuickLink[] = [
   { path: '/calendario', icon: '📅', label: 'Calendario', desc: 'Gestisci eventi e turni', feature: 'Calendario' },
   { path: '/richieste', icon: '📋', label: 'Richieste', desc: 'Approva richieste dipendenti', feature: 'Richieste' },
   { path: '/risorse', icon: '👥', label: 'Risorse', desc: 'Gestisci i dipendenti', feature: 'Risorse' },
+  { path: '/magazzino', icon: '📦', label: 'Magazzino', desc: 'Controlla scorte e acquisti', feature: 'Magazzino' },
   { path: '/ruoli', icon: '🔑', label: 'Ruoli', desc: 'Configura ruoli e permessi', feature: 'Ruoli' },
   { path: '/documenti', icon: '📁', label: 'Documenti', desc: 'Documenti HR e payroll', feature: 'Documenti' },
   { path: '/report', icon: '📊', label: 'Report', desc: 'Statistiche aziendali', feature: 'Report' },

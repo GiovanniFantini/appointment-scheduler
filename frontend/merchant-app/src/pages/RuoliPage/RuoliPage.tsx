@@ -32,6 +32,7 @@ const ALL_FEATURES: Feature[] = [
   { name: 'Mansioni', icon: '🏷', value: 7 },
   { name: 'Filiali', icon: '🏢', value: 8 },
   { name: 'Timbratura', icon: '⏱', value: 9 },
+  { name: 'Magazzino', icon: '📦', value: 10 },
 ]
 
 const DEFAULT_ROLE_NAME = 'Responsabile App'

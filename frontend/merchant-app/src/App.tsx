@@ -13,6 +13,7 @@ import MansioniPage from './pages/MansioniPage/MansioniPage'
 import RuoliPage from './pages/RuoliPage/RuoliPage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
+import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
 import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
 import FilialiPage from './pages/FilialiPage/FilialiPage'
 import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
@@ -96,6 +97,7 @@ function App(_props: AppProps) {
           <Route path="/mansioni" element={<MansioniPage />} />
           <Route path="/filiali" element={<FilialiPage />} />
           <Route path="/timbratura" element={<TimbraturaPage />} />
+          <Route path="/magazzino" element={<MagazzinoPage />} />
           <Route path="/ruoli" element={<RuoliPage />} />
           <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />
