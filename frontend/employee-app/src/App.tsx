@@ -27,7 +27,7 @@ export interface EmployeeUser {
   companyName?: string
   activeFeatures: string[]
   // Livello di accesso per feature (post company-switch).
-  // Valorizzato solo per le feature che usano i livelli (Magazzino).
+  // Valorizzato solo per le feature che usano i livelli (es. Magazzino, Documenti).
   featureLevels?: Record<string, FeatureAccessLevel>
   companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
 }
@@ -171,7 +171,7 @@ function App() {
             path="documenti"
             element={
               user?.activeFeatures?.includes('Documenti')
-                ? <DocumentiPage />
+                ? <DocumentiPage accessLevel={user.featureLevels?.['Documenti'] ?? 'ReadOnly'} />
                 : <Navigate to="/" replace />
             }
           />

@@ -21,6 +21,20 @@ di intervento. Le gravità sono indicative:
 
 ---
 
+## Runbook rapido — Documenti HR
+
+Problemi operativi tipici introdotti dal modulo documentale e relative verifiche.
+
+| Sintomo | Verifica consigliata | Esito atteso |
+|---------|----------------------|--------------|
+| `403 Forbidden` su endpoint documenti | Controllare claim `Feature=Documenti` e `FeatureLevel=Documenti:*` nel JWT | ruolo con livello minimo richiesto (`ReadOnly`/`Operator`/`Manager`) |
+| Upload concluso ma finalize fallisce | Verificare esistenza blob e metadati (`ContentType`, estensione, size <= 50MB) | versione passa da `Uploading` a `Completed` |
+| Employee non vede documenti | Verificare che il documento sia `Published`, non `IsDeleted`, e assegnato al suo `EmployeeId` nel merchant corrente | documento visibile in `GET /api/employee/documents` |
+| Download non disponibile | Verificare stato versione (`UploadStatus=Completed`) e scadenza SAS | URL download generata e apribile |
+| Nessuna notifica dopo pubblicazione | Verificare che la risorsa abbia un account utente (`Employee.UserId`) | notifica `DocumentPublished` in elenco notifiche |
+
+---
+
 ## Bug probabili
 
 ### 1. 🔴 L'opzione "Invia notifica" sul turno non produce alcuna notifica

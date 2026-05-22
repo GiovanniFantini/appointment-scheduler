@@ -17,9 +17,24 @@ public interface IHRDocumentService
         HRDocumentStatus? status = null);
 
     /// <summary>
+    /// Lista documenti pubblicati del dipendente corrente
+    /// </summary>
+    Task<List<HRDocumentDto>> GetEmployeeDocumentsAsync(
+        int tenantId,
+        int employeeId,
+        HRDocumentType? documentType = null,
+        int? year = null,
+        int? month = null);
+
+    /// <summary>
     /// Dettaglio documento con versioni
     /// </summary>
     Task<HRDocumentDetailDto?> GetDocumentByIdAsync(int documentId, int tenantId);
+
+    /// <summary>
+    /// Dettaglio documento pubblicato per il dipendente corrente
+    /// </summary>
+    Task<HRDocumentDetailDto?> GetEmployeeDocumentByIdAsync(int documentId, int tenantId, int employeeId);
 
     /// <summary>
     /// Crea documento e prepara upload

@@ -11,11 +11,35 @@ public class HRDocumentService : IHRDocumentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IFileStorageService _fileStorage;
+    private readonly INotificationService _notificationService;
 
-    public HRDocumentService(ApplicationDbContext context, IFileStorageService fileStorage)
+    private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "pdf", "doc", "docx", "xls", "xlsx", "png", "jpg", "jpeg", "txt"
+    };
+
+    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "image/png",
+        "image/jpeg",
+        "text/plain"
+    };
+
+    private const long MaxUploadSizeBytes = 50L * 1024 * 1024;
+
+    public HRDocumentService(
+        ApplicationDbContext context,
+        IFileStorageService fileStorage,
+        INotificationService notificationService)
     {
         _context = context;
         _fileStorage = fileStorage;
+        _notificationService = notificationService;
     }
 
     public async Task<List<HRDocumentDto>> GetDocumentsAsync(
@@ -27,7 +51,7 @@ public class HRDocumentService : IHRDocumentService
         HRDocumentStatus? status = null)
     {
         var query = _context.HRDocuments
-            .Where(d => d.TenantId == tenantId)
+            .Where(d => d.TenantId == tenantId && !d.IsDeleted)
             .Include(d => d.Employee)
             .AsQueryable();
 
@@ -70,10 +94,59 @@ public class HRDocumentService : IHRDocumentService
         }).ToList();
     }
 
+    public async Task<List<HRDocumentDto>> GetEmployeeDocumentsAsync(
+        int tenantId,
+        int employeeId,
+        HRDocumentType? documentType = null,
+        int? year = null,
+        int? month = null)
+    {
+        var query = _context.HRDocuments
+            .Where(d =>
+                d.TenantId == tenantId &&
+                d.EmployeeId == employeeId &&
+                !d.IsDeleted &&
+                d.Status == HRDocumentStatus.Published)
+            .Include(d => d.Employee)
+            .AsQueryable();
+
+        if (documentType.HasValue)
+            query = query.Where(d => d.DocumentType == documentType.Value);
+
+        if (year.HasValue)
+            query = query.Where(d => d.Year == year.Value);
+
+        if (month.HasValue)
+            query = query.Where(d => d.Month == month.Value);
+
+        var documents = await query
+            .OrderByDescending(d => d.CreatedAt)
+            .ToListAsync();
+
+        return documents.Select(d => new HRDocumentDto
+        {
+            Id = d.Id,
+            TenantId = d.TenantId,
+            EmployeeId = d.EmployeeId,
+            EmployeeName = $"{d.Employee.FirstName} {d.Employee.LastName}",
+            DocumentType = d.DocumentType,
+            DocumentTypeText = d.DocumentType.ToString(),
+            Title = d.Title,
+            Description = d.Description,
+            Year = d.Year,
+            Month = d.Month,
+            CurrentVersion = d.CurrentVersion,
+            Status = d.Status,
+            StatusText = d.Status.ToString(),
+            CreatedAt = d.CreatedAt,
+            UpdatedAt = d.UpdatedAt
+        }).ToList();
+    }
+
     public async Task<HRDocumentDetailDto?> GetDocumentByIdAsync(int documentId, int tenantId)
     {
         var document = await _context.HRDocuments
-            .Where(d => d.Id == documentId && d.TenantId == tenantId)
+            .Where(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted)
             .Include(d => d.Employee)
             .Include(d => d.CreatedBy)
             .Include(d => d.UpdatedBy)
@@ -104,6 +177,62 @@ public class HRDocumentService : IHRDocumentService
             UpdatedAt = document.UpdatedAt,
             UpdatedByEmail = document.UpdatedBy?.Email,
             Versions = document.Versions
+                .OrderBy(v => v.VersionNumber)
+                .Select(v => new HRDocumentVersionDto
+                {
+                    Id = v.Id,
+                    VersionNumber = v.VersionNumber,
+                    FileName = v.FileName,
+                    ContentType = v.ContentType,
+                    FileSizeBytes = v.FileSizeBytes,
+                    ChangeNotes = v.ChangeNotes,
+                    UploadStatus = v.UploadStatus,
+                    UploadedAt = v.UploadedAt,
+                    UploadedByEmail = v.UploadedBy.Email
+                }).ToList()
+        };
+    }
+
+    public async Task<HRDocumentDetailDto?> GetEmployeeDocumentByIdAsync(int documentId, int tenantId, int employeeId)
+    {
+        var document = await _context.HRDocuments
+            .Where(d =>
+                d.Id == documentId &&
+                d.TenantId == tenantId &&
+                d.EmployeeId == employeeId &&
+                !d.IsDeleted &&
+                d.Status == HRDocumentStatus.Published)
+            .Include(d => d.Employee)
+            .Include(d => d.CreatedBy)
+            .Include(d => d.UpdatedBy)
+            .Include(d => d.Versions)
+                .ThenInclude(v => v.UploadedBy)
+            .FirstOrDefaultAsync();
+
+        if (document == null)
+            return null;
+
+        return new HRDocumentDetailDto
+        {
+            Id = document.Id,
+            TenantId = document.TenantId,
+            EmployeeId = document.EmployeeId,
+            EmployeeName = $"{document.Employee.FirstName} {document.Employee.LastName}",
+            DocumentType = document.DocumentType,
+            DocumentTypeText = document.DocumentType.ToString(),
+            Title = document.Title,
+            Description = document.Description,
+            Year = document.Year,
+            Month = document.Month,
+            CurrentVersion = document.CurrentVersion,
+            Status = document.Status,
+            StatusText = document.Status.ToString(),
+            CreatedAt = document.CreatedAt,
+            CreatedByEmail = document.CreatedBy.Email,
+            UpdatedAt = document.UpdatedAt,
+            UpdatedByEmail = document.UpdatedBy?.Email,
+            Versions = document.Versions
+                .Where(v => v.UploadStatus == UploadStatus.Completed)
                 .OrderBy(v => v.VersionNumber)
                 .Select(v => new HRDocumentVersionDto
                 {
@@ -198,9 +327,13 @@ public class HRDocumentService : IHRDocumentService
         int tenantId,
         HRDocumentFinalizeDto dto)
     {
+        if (!IsFinalizePayloadValid(dto))
+            return false;
+
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId);
+            .Include(d => d.Employee)
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
 
         if (document == null)
             return false;
@@ -233,6 +366,17 @@ public class HRDocumentService : IHRDocumentService
         document.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        if (document.Employee.UserId.HasValue)
+        {
+            await _notificationService.CreateAsync(
+                document.Employee.UserId.Value,
+                "Nuovo documento disponibile",
+                $"{document.Title} è ora disponibile nella sezione Documenti.",
+                NotificationType.DocumentPublished,
+                document.Id);
+        }
+
         return true;
     }
 
@@ -245,7 +389,7 @@ public class HRDocumentService : IHRDocumentService
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
             .Include(d => d.Employee)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId);
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
 
         if (document == null)
             throw new UnauthorizedAccessException("Document not found or access denied");
@@ -311,7 +455,7 @@ public class HRDocumentService : IHRDocumentService
         HRDocumentUpdateDto dto)
     {
         var document = await _context.HRDocuments
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId);
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
 
         if (document == null)
             return false;
@@ -334,7 +478,7 @@ public class HRDocumentService : IHRDocumentService
     public async Task<bool> DeleteDocumentAsync(int documentId, int tenantId)
     {
         var document = await _context.HRDocuments
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId);
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
 
         if (document == null)
             return false;
@@ -353,7 +497,7 @@ public class HRDocumentService : IHRDocumentService
     {
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.EmployeeId == employeeId);
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.EmployeeId == employeeId && !d.IsDeleted);
 
         if (document == null)
             throw new UnauthorizedAccessException("Document not found or access denied");
@@ -386,7 +530,7 @@ public class HRDocumentService : IHRDocumentService
     {
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId);
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
 
         if (document == null)
             throw new UnauthorizedAccessException("Document not found or access denied");
@@ -407,5 +551,20 @@ public class HRDocumentService : IHRDocumentService
             FileName = version.FileName,
             ExpiresAt = expiresAt
         };
+    }
+
+    private static bool IsFinalizePayloadValid(HRDocumentFinalizeDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.FileName) || dto.FileName.Length > 255)
+            return false;
+
+        if (string.IsNullOrWhiteSpace(dto.ContentType) || !AllowedContentTypes.Contains(dto.ContentType))
+            return false;
+
+        if (dto.FileSizeBytes <= 0 || dto.FileSizeBytes > MaxUploadSizeBytes)
+            return false;
+
+        var extension = Path.GetExtension(dto.FileName).TrimStart('.');
+        return !string.IsNullOrWhiteSpace(extension) && AllowedExtensions.Contains(extension);
     }
 }

@@ -10,7 +10,7 @@ namespace AppointmentScheduler.Core.Services;
 public class AzureBlobStorageService : IFileStorageService
 {
     private readonly BlobServiceClient _blobServiceClient;
-    private readonly string _containerName;
+    private readonly string _defaultContainerName;
     private readonly int _sasExpirationMinutes;
 
     public AzureBlobStorageService(IConfiguration configuration)
@@ -19,22 +19,23 @@ public class AzureBlobStorageService : IFileStorageService
             ?? throw new InvalidOperationException("Azure Blob Storage connection string not configured");
 
         _blobServiceClient = new BlobServiceClient(connectionString);
-        _containerName = configuration["AzureBlobStorage:ContainerName"] ?? "erp-documents";
+        _defaultContainerName = configuration["AzureBlobStorage:ContainerName"] ?? "erp-documents";
         _sasExpirationMinutes = int.Parse(configuration["AzureBlobStorage:SasTokenExpirationMinutes"] ?? "5");
     }
 
     public async Task<string> GenerateUploadSasUrlAsync(string blobPath, int expirationMinutes = 5)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobPath);
+        var (containerName, normalizedBlobPath) = ResolveContainerAndBlobPath(blobPath);
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(normalizedBlobPath);
 
         // Assicurati che il container esista
         await containerClient.CreateIfNotExistsAsync();
 
         var sasBuilder = new BlobSasBuilder
         {
-            BlobContainerName = _containerName,
-            BlobName = blobPath,
+            BlobContainerName = containerName,
+            BlobName = normalizedBlobPath,
             Resource = "b", // blob
             StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5), // clock skew tolerance
             ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expirationMinutes > 0 ? expirationMinutes : _sasExpirationMinutes)
@@ -49,8 +50,9 @@ public class AzureBlobStorageService : IFileStorageService
 
     public async Task<string> GenerateDownloadSasUrlAsync(string blobPath, int expirationMinutes = 5)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobPath);
+        var (containerName, normalizedBlobPath) = ResolveContainerAndBlobPath(blobPath);
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(normalizedBlobPath);
 
         // Verifica che il blob esista
         if (!await blobClient.ExistsAsync())
@@ -60,8 +62,8 @@ public class AzureBlobStorageService : IFileStorageService
 
         var sasBuilder = new BlobSasBuilder
         {
-            BlobContainerName = _containerName,
-            BlobName = blobPath,
+            BlobContainerName = containerName,
+            BlobName = normalizedBlobPath,
             Resource = "b",
             StartsOn = DateTimeOffset.UtcNow.AddMinutes(-5), // clock skew tolerance
             ExpiresOn = DateTimeOffset.UtcNow.AddMinutes(expirationMinutes > 0 ? expirationMinutes : _sasExpirationMinutes)
@@ -76,16 +78,18 @@ public class AzureBlobStorageService : IFileStorageService
 
     public async Task<bool> BlobExistsAsync(string blobPath)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobPath);
+        var (containerName, normalizedBlobPath) = ResolveContainerAndBlobPath(blobPath);
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(normalizedBlobPath);
 
         return await blobClient.ExistsAsync();
     }
 
     public async Task<BlobPropertiesDto> GetBlobPropertiesAsync(string blobPath)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobPath);
+        var (containerName, normalizedBlobPath) = ResolveContainerAndBlobPath(blobPath);
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(normalizedBlobPath);
 
         if (!await blobClient.ExistsAsync())
         {
@@ -105,8 +109,9 @@ public class AzureBlobStorageService : IFileStorageService
 
     public async Task DeleteBlobAsync(string blobPath)
     {
-        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-        var blobClient = containerClient.GetBlobClient(blobPath);
+        var (containerName, normalizedBlobPath) = ResolveContainerAndBlobPath(blobPath);
+        var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(normalizedBlobPath);
 
         await blobClient.DeleteIfExistsAsync();
     }
@@ -123,16 +128,21 @@ public class AzureBlobStorageService : IFileStorageService
     {
         var parts = new List<string>
         {
-            $"tenant-{tenantId}",
-            $"employee-{employeeId}",
-            documentType.ToString().ToLowerInvariant()
+            $"merchant-{tenantId}"
         };
 
         if (year.HasValue)
+        {
             parts.Add(year.Value.ToString());
+            parts.Add(month.HasValue ? month.Value.ToString("D2") : "senza-mese-di-riferimento");
+        }
+        else
+        {
+            parts.Add("senza-anno-di-riferimento");
+        }
 
-        if (month.HasValue)
-            parts.Add(month.Value.ToString("D2")); // Zero-padded (01, 02, etc.)
+        parts.Add($"employee-{employeeId}");
+        parts.Add(documentType.ToString().ToLowerInvariant());
 
         // Clean extension (remove dot if present)
         var cleanExtension = fileExtension.TrimStart('.');
@@ -140,5 +150,25 @@ public class AzureBlobStorageService : IFileStorageService
         parts.Add(fileName);
 
         return string.Join("/", parts);
+    }
+
+    private (string ContainerName, string BlobPath) ResolveContainerAndBlobPath(string blobPath)
+    {
+        if (string.IsNullOrWhiteSpace(blobPath))
+            throw new ArgumentException("blobPath cannot be empty", nameof(blobPath));
+
+        var separatorIndex = blobPath.IndexOf('/');
+        if (separatorIndex <= 0)
+            return (_defaultContainerName, blobPath);
+
+        var firstSegment = blobPath[..separatorIndex];
+        if (!firstSegment.StartsWith("merchant-", StringComparison.OrdinalIgnoreCase))
+            return (_defaultContainerName, blobPath);
+
+        var normalizedBlobPath = blobPath[(separatorIndex + 1)..];
+        if (string.IsNullOrWhiteSpace(normalizedBlobPath))
+            throw new ArgumentException("blobPath is missing blob name", nameof(blobPath));
+
+        return (firstSegment.ToLowerInvariant(), normalizedBlobPath);
     }
 }

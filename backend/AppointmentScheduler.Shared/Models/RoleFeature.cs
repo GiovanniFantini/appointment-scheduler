@@ -11,8 +11,8 @@ public class RoleFeature
 
     /// <summary>
     /// Livello di accesso operativo del ruolo alla feature.
-    /// Valorizzato solo per la feature Magazzino; null per tutte le altre.
-    /// Una feature Magazzino abilitata senza livello esplicito è trattata come ReadOnly.
+    /// Valorizzato per le feature che usano livelli; null per le altre.
+    /// Una feature a livelli abilitata senza livello esplicito è trattata come ReadOnly.
     /// </summary>
     public FeatureAccessLevel? AccessLevel { get; set; }
 

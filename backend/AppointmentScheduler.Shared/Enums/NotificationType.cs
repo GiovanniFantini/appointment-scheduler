@@ -8,5 +8,6 @@ public enum NotificationType
     EventDeleted = 3,
     RequestSubmitted = 4,
     RequestApproved = 5,
-    RequestRejected = 6
+    RequestRejected = 6,
+    DocumentPublished = 7
 }

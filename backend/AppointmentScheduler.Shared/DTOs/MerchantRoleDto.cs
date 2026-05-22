@@ -19,7 +19,8 @@ public class RoleFeatureDto
     public bool IsEnabled { get; set; }
 
     /// <summary>
-    /// Livello di accesso operativo. Valorizzato solo per la feature Magazzino.
+    /// Livello di accesso operativo. Valorizzato per le feature che usano livelli
+    /// (ad esempio Magazzino e Documenti).
     /// </summary>
     public FeatureAccessLevel? AccessLevel { get; set; }
 }
@@ -42,8 +43,9 @@ public class MerchantFeatureRequest
     public bool IsEnabled { get; set; }
 
     /// <summary>
-    /// Livello di accesso operativo. Significativo solo per la feature Magazzino.
-    /// Se la feature Magazzino è abilitata senza livello esplicito, il default è ReadOnly.
+    /// Livello di accesso operativo. Significativo solo per le feature che usano
+    /// livelli. Se una feature a livelli è abilitata senza livello esplicito,
+    /// il default è ReadOnly.
     /// </summary>
     public FeatureAccessLevel? AccessLevel { get; set; }
 }

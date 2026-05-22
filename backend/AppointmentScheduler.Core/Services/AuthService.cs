@@ -153,8 +153,9 @@ public class AuthService : IAuthService
                 RoleId = defaultRole.Id,
                 Feature = feature,
                 IsEnabled = true,
-                // Il ruolo predefinito ha pieni poteri: livello Manager sul Magazzino.
-                AccessLevel = feature == MerchantFeature.Magazzino
+                // Il ruolo predefinito ha pieni poteri: livello Manager sulle
+                // feature con access level.
+                AccessLevel = (feature == MerchantFeature.Magazzino || feature == MerchantFeature.Documenti)
                     ? FeatureAccessLevel.Manager
                     : null
             });
@@ -340,7 +341,8 @@ public class AuthService : IAuthService
             .ToList();
 
         // Livello di accesso per feature. Significativo solo dove valorizzato
-        // (Magazzino): una feature abilitata senza livello è trattata come ReadOnly.
+        // (es. Magazzino, Documenti): una feature abilitata senza livello è
+        // trattata come ReadOnly.
         var featureLevels = enabledFeatures
             .Where(f => f.AccessLevel.HasValue)
             .ToDictionary(
@@ -363,12 +365,13 @@ public class AuthService : IAuthService
     /// <summary>
     /// Livelli di accesso del Merchant: il merchant è configuratore con pieni
     /// poteri, quindi ha sempre il livello massimo (Manager) sulle feature che
-    /// usano i livelli (oggi solo Magazzino).
+    /// usano i livelli.
     /// </summary>
     private static Dictionary<string, string> BuildMerchantFeatureLevels()
         => new()
         {
             [MerchantFeature.Magazzino.ToString()] = FeatureAccessLevel.Manager.ToString(),
+            [MerchantFeature.Documenti.ToString()] = FeatureAccessLevel.Manager.ToString(),
         };
 
     // ── JWT Generation ─────────────────────────────────────────────────────

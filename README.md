@@ -69,8 +69,8 @@ I ruoli sono custom per azienda. Feature disponibili:
 Il ruolo **"Responsabile App"** viene creato automaticamente con tutte le feature attive.
 
 Per la maggior parte delle feature il permesso è binario (abilitata / non abilitata).
-La feature **Magazzino** usa invece un **livello di accesso** (`FeatureAccessLevel`),
-configurabile per ruolo dall'app Merchant:
+Le feature **Magazzino** e **Documenti** usano invece un **livello di accesso**
+(`FeatureAccessLevel`), configurabile per ruolo dall'app Merchant:
 
 | Livello | Cosa può fare il dipendente sul Magazzino |
 |---|---|
@@ -82,6 +82,55 @@ Il modulo **Magazzino** copre articoli, saldi per filiale, movimenti, fornitori,
 acquisto, ricezioni e report. L'**operatività** vive sull'app Employee
 (`api/employee/inventory`, modulata sul livello del ruolo); l'app Merchant mantiene solo
 i **report** (`api/merchant/inventory/reports`).
+
+Il modulo **Documenti** copre consultazione/configurazione lato Merchant e tutta
+l'operatività lato Employee. Il Merchant non esegue upload/versioning/delete;
+il livello ruolo applica questa matrice:
+
+| Livello | Cosa può fare su Documenti |
+|---|---|
+| **ReadOnly** | Consultazione e download documenti consentiti |
+| **Operator** | Anche creazione, upload/finalize e nuove versioni |
+| **Manager** | Anche modifica metadati e soft delete |
+
+Lo storage documentale usa Azure Blob con un **container per merchant**
+(`merchant-{id}`) e struttura path:
+
+- `yyyy/mm`
+- `yyyy/senza-mese-di-riferimento`
+- `senza-anno-di-riferimento`
+
+all'interno di ciascun ramo vengono salvati i file per risorsa (`employee-{id}`),
+tipo documento e versione.
+
+### Configurazione Azure Blob Storage
+
+L'upload e il download dei documenti avvengono **direttamente dal browser** verso
+il Blob Storage tramite SAS URL a tempo. Per funzionare servono due cose:
+
+**1. Connection string** — in `appsettings.json` la chiave
+`ConnectionStrings:AzureBlobStorage`. In sviluppo `appsettings.Development.json`
+punta già ad [Azurite](https://learn.microsoft.com/azure/storage/common/storage-use-azurite)
+(emulatore locale): basta avviarlo. In produzione il valore va impostato in
+`appsettings.Production.json` o, preferibilmente, via variabile d'ambiente / Azure
+Key Vault — **non** committare il segreto. Container e scadenza SAS si configurano
+in `AzureBlobStorage:ContainerName` / `SasTokenExpirationMinutes`.
+
+**2. Regola CORS sull'account Storage** — senza questa, il `PUT` dal browser al
+SAS URL viene bloccato dal browser. Va impostata **sull'account Azure Storage**
+(non è codice applicativo), ad esempio dal portale Azure → Storage account →
+*Resource sharing (CORS)* → *Blob service*:
+
+| Campo | Valore |
+|---|---|
+| Allowed origins | URL della employee-app (es. `https://appointment-employee-app.azurewebsites.net`) |
+| Allowed methods | `PUT, GET, OPTIONS, HEAD` |
+| Allowed headers | `x-ms-blob-type, Content-Type` |
+| Exposed headers | `*` |
+| Max age | `3600` |
+
+In sviluppo Azurite accetta CORS in modo permissivo: la regola serve solo in
+produzione.
 
 ## Colori Calendario (Employee view)
 
@@ -97,7 +146,7 @@ i **report** (`api/merchant/inventory/reports`).
 
 ## Multi-Company Employee
 
-Un dipendente può appartenere a più aziende. Al login, se ha più aziende, vede la schermata di selezione. Il JWT company-specific include `MerchantId`, `EmployeeId`, le `Feature[]` abilitate e i claim `FeatureLevel` (`"<Feature>:<Level>"`) per le feature che usano i livelli di accesso (Magazzino).
+Un dipendente può appartenere a più aziende. Al login, se ha più aziende, vede la schermata di selezione. Il JWT company-specific include `MerchantId`, `EmployeeId`, le `Feature[]` abilitate e i claim `FeatureLevel` (`"<Feature>:<Level>"`) per le feature che usano i livelli di accesso (Magazzino, Documenti).
 
 ## Setup Locale
 

@@ -282,12 +282,19 @@ eliminabile** e i suoi interruttori **non sono modificabili** (vedi
 | Richieste | Invio e storico richieste | Voce assente |
 | Risorse | Gestione dei dipendenti | Voce assente |
 | Ruoli | Gestione dei ruoli aziendali | Voce assente |
-| Documenti | Documenti HR | Voce assente |
+| Documenti | Documenti HR (lista, dettaglio versioni, download personale) | Voce assente |
 | Report | Reportistica | Voce assente |
 | Mansioni | Gestione delle mansioni | Voce assente |
 | Filiali | Gestione di filiali e reparti | Voce assente |
 | Timbratura | Timbratura e storico | Voce assente |
 | Magazzino | Articoli, stock, fornitori, ordini acquisto e ricezioni | Voce assente |
+
+Per le feature con livelli di accesso (oggi `Magazzino` e `Documenti`) una
+feature abilitata senza livello esplicito è trattata come `ReadOnly`.
+
+Per `Documenti`, l'**App Merchant** resta un configuratore e basta: non esegue
+operazioni documentali. Upload, nuova versione, finalizzazione e cancellazione
+vivono solo nell'**App Employee**.
 
 ---
 
@@ -1179,13 +1186,16 @@ rettifiche, fornitori e ordini si gestiscono esclusivamente dall'app Employee.
 | Segna tutte come lette | Bottone | Marca tutte le notifiche come lette. | Compare solo se ci sono notifiche non lette; disattivato durante l'operazione. |
 | Notifica (clic sull'elemento) | Azione | Marca la singola notifica come letta. | Solo per notifiche non ancora lette. |
 
-Le notifiche effettivamente recapitate oggi riguardano l'**esito delle
-richieste** (approvata/rifiutata). Il numero di notifiche non lette compare come
-badge sulla campanella e sulla voce di menu.
+Le notifiche recapitate includono:
 
-> ℹ️ Esistono tipi di notifica legati agli eventi/turni, ma allo stato attuale
-> non risultano generati automaticamente (vedi nota su "Invia notifica" in
-> [§8.2](#82-modale-turno--wizard-a-3-passi)).
+- **esito delle richieste** (approvata/rifiutata)
+- **nuovo documento pubblicato** nella sezione Documenti
+
+Il numero di notifiche non lette compare come badge sulla campanella e sulla
+voce di menu.
+
+> ℹ️ Esistono tipi di notifica legati agli eventi/turni: verificarne la
+> disponibilità effettiva in base al deployment e al backlog applicato.
 
 ---
 
@@ -1230,7 +1240,7 @@ con le voci di menu e un'**intestazione** in alto.
 | Notifiche | — | — | ✓ |
 
 > Funzionalità ancora **non disponibili** (segnaposto): App Admin → *Users*,
-> *Reports*; App Merchant → *Documenti*, *Report*; App Employee → *Documenti*.
+> *Reports*.
 
 ### B. Glossario
 

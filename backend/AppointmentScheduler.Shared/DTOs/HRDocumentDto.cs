@@ -133,6 +133,17 @@ public class HRDocumentDownloadDto
 }
 
 /// <summary>
+/// DTO minimale per selezione destinatario upload documenti.
+/// </summary>
+public class DocumentUploadTargetDto
+{
+    public int EmployeeId { get; set; }
+    public string FullName { get; set; } = string.Empty;
+    public EmployeeKind Kind { get; set; }
+    public bool HasUserAccount { get; set; }
+}
+
+/// <summary>
 /// DTO per proprietà blob
 /// </summary>
 public class BlobPropertiesDto
