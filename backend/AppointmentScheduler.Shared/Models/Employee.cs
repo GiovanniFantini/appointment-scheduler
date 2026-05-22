@@ -1,3 +1,5 @@
+using AppointmentScheduler.Shared.Enums;
+
 namespace AppointmentScheduler.Shared.Models;
 
 public class Employee
@@ -14,6 +16,28 @@ public class Employee
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
+
+    /// <summary>
+    /// Distingue un dipendente interno da una risorsa esterna (a chiamata,
+    /// somministrato, libero professionista). Default <see cref="EmployeeKind.Internal"/>:
+    /// tutti gli Employee preesistenti restano interni.
+    /// </summary>
+    public EmployeeKind Kind { get; set; } = EmployeeKind.Internal;
+
+    // ── Anagrafica risorsa esterna ────────────────────────────────────────
+    // Tutti opzionali, significativi solo quando Kind == External.
+
+    /// <summary>Tipo di rapporto della risorsa esterna.</summary>
+    public ExternalContractType? ContractType { get; set; }
+
+    /// <summary>Agenzia interinale / cooperativa che fornisce la risorsa.</summary>
+    public string? AgencyName { get; set; }
+
+    /// <summary>Tariffa oraria concordata, per il futuro foglio ore.</summary>
+    public decimal? HourlyRate { get; set; }
+
+    /// <summary>Note libere sulla risorsa esterna.</summary>
+    public string? ExternalNotes { get; set; }
 
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

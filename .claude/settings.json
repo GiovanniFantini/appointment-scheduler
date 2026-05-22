@@ -30,7 +30,12 @@
       "Bash(grep -rhoE \"\\(get|post|put|patch|delete\\)\\\\\\(['\\\\`][^'\\\\`]*['\\\\`]\" lib/api/inventory.ts)",
       "Read(//tmp/**)",
       "Bash(sed -i 's/<ImplicitUsings>disable<\\\\/ImplicitUsings>/<ImplicitUsings>enable<\\\\/ImplicitUsings>/' tjtest.csproj)",
-      "Bash(dotnet run *)"
+      "Bash(dotnet run *)",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d AppointmentScheduler -t -c \"SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name='Employees' AND column_name IN \\('Kind','ContractType','AgencyName','HourlyRate','ExternalNotes'\\) ORDER BY column_name;\")",
+      "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d AppointmentScheduler -t -c \"SELECT \\\\\"Kind\\\\\", COUNT\\(*\\) FROM \\\\\"Employees\\\\\" GROUP BY \\\\\"Kind\\\\\";\")",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Force)",
+      "Bash(Select-Object -First 20)",
+      "PowerShell(head -80)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

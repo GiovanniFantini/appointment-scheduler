@@ -10,6 +10,18 @@ interface RisorsePageProps {
   user: MerchantUser
 }
 
+// Valori dell'enum EmployeeKind del backend. Gli enum sono serializzati come numeri
+// (nessun JsonStringEnumConverter registrato), coerente con EVENT_TYPE_VALUES.
+const EMPLOYEE_KIND = { Internal: 0, External: 1 } as const
+
+// Label italiane per ExternalContractType (0..3).
+const CONTRACT_TYPE_LABELS: Record<number, string> = {
+  0: 'A chiamata',
+  1: 'Agenzia / Somministrato',
+  2: 'Libero professionista',
+  3: 'Altro',
+}
+
 interface EmployeeSkill {
   skillId: number
   skillName: string
@@ -33,6 +45,12 @@ interface Employee {
   homeDepartmentId?: number | null
   homeDepartmentName?: string | null
   allowedBranchIds?: number[]
+  kind: number
+  hasTechnicalEmail: boolean
+  contractType?: number | null
+  agencyName?: string | null
+  hourlyRate?: number | null
+  externalNotes?: string | null
 }
 
 interface Role {
@@ -50,11 +68,18 @@ interface NewEmployeeForm {
   homeBranchId: string
   homeDepartmentId: string
   allowedBranchIds: number[]
+  kind: number
+  contractType: string
+  agencyName: string
+  hourlyRate: string
+  externalNotes: string
 }
 
 const emptyForm: NewEmployeeForm = {
   firstName: '', lastName: '', email: '', phoneNumber: '', roleId: '',
   skillIds: [], homeBranchId: '', homeDepartmentId: '', allowedBranchIds: [],
+  kind: EMPLOYEE_KIND.Internal, contractType: '', agencyName: '', hourlyRate: '',
+  externalNotes: '',
 }
 
 export default function RisorsePage({ user: _user }: RisorsePageProps) {
@@ -71,6 +96,8 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
   const [shiftPanelEmployee, setShiftPanelEmployee] = useState<Employee | null>(null)
   const [filterSkillId, setFilterSkillId] = useState<number | null>(null)
   const [filterBranchId, setFilterBranchId] = useState<number | null>(null)
+  const [filterKind, setFilterKind] = useState<number | null>(null)
+  const [showExternalDetails, setShowExternalDetails] = useState(false)
 
   const fetchEmployees = async () => {
     setLoading(true)
@@ -116,6 +143,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
       roleId: roles[0]?.id?.toString() ?? '',
       homeBranchId: hq?.id?.toString() ?? '',
     })
+    setShowExternalDetails(false)
     setFormError('')
     setShowModal(true)
   }
@@ -125,6 +153,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
     setFormData({
       firstName: emp.firstName,
       lastName: emp.lastName,
+      // Email vuota per gli esterni con email tecnica: non va mostrata.
       email: emp.email,
       phoneNumber: emp.phoneNumber ?? '',
       roleId: emp.roleId?.toString() ?? '',
@@ -132,7 +161,17 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
       homeBranchId: emp.homeBranchId?.toString() ?? '',
       homeDepartmentId: emp.homeDepartmentId?.toString() ?? '',
       allowedBranchIds: emp.allowedBranchIds ?? [],
+      kind: emp.kind,
+      contractType: emp.contractType != null ? String(emp.contractType) : '',
+      agencyName: emp.agencyName ?? '',
+      hourlyRate: emp.hourlyRate != null ? String(emp.hourlyRate) : '',
+      externalNotes: emp.externalNotes ?? '',
     })
+    // Apri la sezione dettagli se l'esterno ha già qualche campo valorizzato.
+    setShowExternalDetails(
+      emp.contractType != null || !!emp.agencyName ||
+      emp.hourlyRate != null || !!emp.externalNotes
+    )
     setFormError('')
     setShowModal(true)
   }
@@ -146,8 +185,15 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    if (!formData.firstName || !formData.lastName || !formData.email) {
-      setFormError('Tutti i campi obbligatori devono essere compilati')
+    const isExternal = formData.kind === EMPLOYEE_KIND.External
+    if (!formData.firstName || !formData.lastName) {
+      setFormError('Nome e cognome sono obbligatori')
+      return
+    }
+    // L'email è obbligatoria solo per i dipendenti interni; per gli esterni il
+    // backend genera un indirizzo tecnico se manca.
+    if (!isExternal && !formData.email) {
+      setFormError("L'email è obbligatoria per i dipendenti interni")
       return
     }
     setSaving(true)
@@ -158,25 +204,39 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
         homeDepartmentId: formData.homeDepartmentId ? Number(formData.homeDepartmentId) : null,
         allowedBranchIds: formData.allowedBranchIds,
       }
+      // Campi anagrafici esterna: inviati valorizzati solo se Esterno, altrimenti
+      // null (il backend li azzera comunque per gli interni).
+      const externalFields = {
+        kind: formData.kind,
+        contractType: isExternal && formData.contractType !== ''
+          ? Number(formData.contractType) : null,
+        agencyName: isExternal ? (formData.agencyName || null) : null,
+        hourlyRate: isExternal && formData.hourlyRate !== ''
+          ? Number(formData.hourlyRate) : null,
+        externalNotes: isExternal ? (formData.externalNotes || null) : null,
+      }
       if (editEmployee) {
         await apiClient.put(`/employees/${editEmployee.id}`, {
           firstName: formData.firstName,
           lastName: formData.lastName,
+          email: formData.email || undefined,
           phoneNumber: formData.phoneNumber || undefined,
           roleId: formData.roleId ? Number(formData.roleId) : editEmployee.roleId ?? 0,
           isActive: editEmployee.isActive,
           skillIds: formData.skillIds,
           ...branchFields,
+          ...externalFields,
         })
       } else {
         await apiClient.post('/employees', {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          email: formData.email,
+          email: formData.email || undefined,
           phoneNumber: formData.phoneNumber || undefined,
           roleId: formData.roleId ? Number(formData.roleId) : 0,
           skillIds: formData.skillIds,
           ...branchFields,
+          ...externalFields,
         })
       }
       setShowModal(false)
@@ -203,6 +263,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
     `${emp.firstName?.[0] ?? ''}${emp.lastName?.[0] ?? ''}`.toUpperCase()
 
   const filteredEmployees = employees.filter(e => {
+    if (filterKind != null && e.kind !== filterKind) return false
     if (filterSkillId != null && !e.skills?.some(s => s.skillId === filterSkillId)) return false
     if (filterBranchId != null) {
       const inHome = e.homeBranchId === filterBranchId
@@ -213,8 +274,8 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
   })
 
   // Numero colonne tabella (per il colSpan delle righe stato vuoto/loading):
-  // Dipendente, Email, Ruolo, [Sede], [Mansioni], Stato, Azioni
-  const tableColumnCount = 5 + (isMultiBranch ? 1 : 0) + (skills.length > 0 ? 1 : 0)
+  // Dipendente, Email, Tipo, Ruolo, [Sede], [Mansioni], Stato, Azioni
+  const tableColumnCount = 6 + (isMultiBranch ? 1 : 0) + (skills.length > 0 ? 1 : 0)
 
   return (
     <div className="risorse-page">
@@ -226,6 +287,25 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
         <button className="btn-primary" onClick={openAddModal}>
           + Aggiungi Dipendente
         </button>
+      </div>
+
+      <div className="risorse-filter-bar">
+        <span className="filter-label">Filtra per tipo:</span>
+        <button
+          type="button"
+          className={`filter-chip ${filterKind == null ? 'active' : ''}`}
+          onClick={() => setFilterKind(null)}
+        >Tutti</button>
+        <button
+          type="button"
+          className={`filter-chip ${filterKind === EMPLOYEE_KIND.Internal ? 'active' : ''}`}
+          onClick={() => setFilterKind(EMPLOYEE_KIND.Internal)}
+        >Interni</button>
+        <button
+          type="button"
+          className={`filter-chip ${filterKind === EMPLOYEE_KIND.External ? 'active' : ''}`}
+          onClick={() => setFilterKind(EMPLOYEE_KIND.External)}
+        >Esterni</button>
       </div>
 
       {isMultiBranch && (
@@ -279,6 +359,7 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
               <tr>
                 <th>Dipendente</th>
                 <th>Email</th>
+                <th>Tipo</th>
                 <th>Ruolo</th>
                 {isMultiBranch && <th>Sede</th>}
                 {skills.length > 0 && <th>Mansioni</th>}
@@ -309,7 +390,12 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                         <span className="emp-full-name">{emp.firstName} {emp.lastName}</span>
                       </div>
                     </td>
-                    <td>{emp.email}</td>
+                    <td>{emp.email ? emp.email : <span className="dash">—</span>}</td>
+                    <td>
+                      <span className={`kind-badge ${emp.kind === EMPLOYEE_KIND.External ? 'external' : 'internal'}`}>
+                        {emp.kind === EMPLOYEE_KIND.External ? 'Esterno' : 'Interno'}
+                      </span>
+                    </td>
                     <td>{emp.roleName ?? '—'}</td>
                     {isMultiBranch && (
                       <td>
@@ -389,6 +475,27 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
             <form onSubmit={handleSubmit}>
               <div className="modal-body">
                 {formError && <div className="modal-error">{formError}</div>}
+                <div className="form-group">
+                  <label className="form-label">Tipo risorsa</label>
+                  <div className="kind-toggle">
+                    <button
+                      type="button"
+                      className={`filter-chip ${formData.kind === EMPLOYEE_KIND.Internal ? 'active' : ''}`}
+                      onClick={() => setFormData(p => ({ ...p, kind: EMPLOYEE_KIND.Internal }))}
+                    >Dipendente interno</button>
+                    <button
+                      type="button"
+                      className={`filter-chip ${formData.kind === EMPLOYEE_KIND.External ? 'active' : ''}`}
+                      onClick={() => setFormData(p => ({ ...p, kind: EMPLOYEE_KIND.External }))}
+                    >Risorsa esterna</button>
+                  </div>
+                  {formData.kind === EMPLOYEE_KIND.External && (
+                    <p className="form-hint">
+                      Le risorse esterne (a chiamata, agenzia, liberi professionisti) non
+                      accedono all'app: bastano nome e cognome.
+                    </p>
+                  )}
+                </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Nome *</label>
@@ -414,14 +521,16 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                   </div>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email *</label>
+                  <label className="form-label">
+                    Email {formData.kind === EMPLOYEE_KIND.Internal ? '*' : '(opzionale)'}
+                  </label>
                   <input
                     type="email"
                     className="form-input"
                     placeholder="mario.rossi@azienda.it"
                     value={formData.email}
                     onChange={e => setFormData(p => ({ ...p, email: e.target.value }))}
-                    required
+                    required={formData.kind === EMPLOYEE_KIND.Internal}
                   />
                 </div>
                 <div className="form-group">
@@ -537,6 +646,68 @@ export default function RisorsePage({ user: _user }: RisorsePageProps) {
                       })}
                     </div>
                     <p className="form-hint">Opzionale. Le mansioni servono a coprire i fabbisogni dei turni.</p>
+                  </div>
+                )}
+                {formData.kind === EMPLOYEE_KIND.External && (
+                  <div className="form-group">
+                    <button
+                      type="button"
+                      className="external-details-toggle"
+                      onClick={() => setShowExternalDetails(s => !s)}
+                    >
+                      {showExternalDetails ? '▾' : '▸'} Dettagli risorsa esterna (opzionale)
+                    </button>
+                    {showExternalDetails && (
+                      <div className="external-details-box">
+                        <div className="form-group">
+                          <label className="form-label">Tipo di rapporto</label>
+                          <select
+                            className="form-select"
+                            value={formData.contractType}
+                            onChange={e => setFormData(p => ({ ...p, contractType: e.target.value }))}
+                          >
+                            <option value="">— Non specificato —</option>
+                            {Object.entries(CONTRACT_TYPE_LABELS).map(([val, label]) => (
+                              <option key={val} value={val}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label className="form-label">Agenzia / Fornitore</label>
+                            <input
+                              type="text"
+                              className="form-input"
+                              placeholder="Es. Agenzia interinale XYZ"
+                              value={formData.agencyName}
+                              onChange={e => setFormData(p => ({ ...p, agencyName: e.target.value }))}
+                            />
+                          </div>
+                          <div className="form-group">
+                            <label className="form-label">Costo orario (€)</label>
+                            <input
+                              type="number"
+                              className="form-input"
+                              placeholder="0,00"
+                              step="0.01"
+                              min="0"
+                              value={formData.hourlyRate}
+                              onChange={e => setFormData(p => ({ ...p, hourlyRate: e.target.value }))}
+                            />
+                          </div>
+                        </div>
+                        <div className="form-group">
+                          <label className="form-label">Note</label>
+                          <textarea
+                            className="form-input"
+                            rows={3}
+                            placeholder="Note libere sulla risorsa esterna"
+                            value={formData.externalNotes}
+                            onChange={e => setFormData(p => ({ ...p, externalNotes: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

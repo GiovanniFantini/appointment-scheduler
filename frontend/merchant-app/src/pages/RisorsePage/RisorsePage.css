@@ -146,6 +146,55 @@ tr:hover td {
   background: currentColor;
 }
 
+/* Badge tipo risorsa: dipendente interno vs risorsa esterna */
+.kind-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.kind-badge.internal {
+  background: rgba(59, 130, 246, 0.12);
+  color: #3b82f6;
+}
+
+.kind-badge.external {
+  background: rgba(168, 85, 247, 0.14);
+  color: #a855f7;
+}
+
+/* Toggle Tipo risorsa nel form (riusa l'aspetto dei filter-chip) */
+.kind-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+/* Sezione "Dettagli risorsa esterna" a comparsa */
+.external-details-toggle {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.external-details-toggle:hover {
+  color: #93c5fd;
+}
+
+.external-details-box {
+  margin-top: 10px;
+  padding: 14px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: rgba(148, 163, 184, 0.05);
+}
+
 .action-buttons {
   display: flex;
   gap: 8px;

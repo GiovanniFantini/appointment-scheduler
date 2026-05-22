@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.Core.Services;
 
@@ -23,12 +24,12 @@ public class MerchantService : IMerchantService
     {
         var merchants = await _context.Merchants
             .Include(m => m.User)
-            .Include(m => m.EmployeeMemberships)
             .Include(m => m.Branches)
             .OrderByDescending(m => m.CreatedAt)
             .ToListAsync();
 
-        return merchants.Select(MapToDto).ToList();
+        var counts = await GetInternalEmployeeCountsAsync(merchants.Select(m => m.Id));
+        return merchants.Select(m => MapToDto(m, counts.GetValueOrDefault(m.Id))).ToList();
     }
 
     /// <summary>
@@ -38,13 +39,13 @@ public class MerchantService : IMerchantService
     {
         var merchants = await _context.Merchants
             .Include(m => m.User)
-            .Include(m => m.EmployeeMemberships)
             .Include(m => m.Branches)
             .Where(m => !m.IsApproved)
             .OrderBy(m => m.CreatedAt)
             .ToListAsync();
 
-        return merchants.Select(MapToDto).ToList();
+        var counts = await GetInternalEmployeeCountsAsync(merchants.Select(m => m.Id));
+        return merchants.Select(m => MapToDto(m, counts.GetValueOrDefault(m.Id))).ToList();
     }
 
     /// <summary>
@@ -54,11 +55,13 @@ public class MerchantService : IMerchantService
     {
         var merchant = await _context.Merchants
             .Include(m => m.User)
-            .Include(m => m.EmployeeMemberships)
             .Include(m => m.Branches)
             .FirstOrDefaultAsync(m => m.Id == id);
 
-        return merchant == null ? null : MapToDto(merchant);
+        if (merchant == null)
+            return null;
+
+        return MapToDto(merchant, await CountInternalEmployeesAsync(merchant.Id));
     }
 
     /// <summary>
@@ -112,7 +115,6 @@ public class MerchantService : IMerchantService
     {
         var merchant = await _context.Merchants
             .Include(m => m.User)
-            .Include(m => m.EmployeeMemberships)
             .Include(m => m.Branches)
             .FirstOrDefaultAsync(m => m.Id == id);
 
@@ -131,10 +133,40 @@ public class MerchantService : IMerchantService
 
         await _context.SaveChangesAsync();
 
-        return MapToDto(merchant);
+        return MapToDto(merchant, await CountInternalEmployeesAsync(merchant.Id));
     }
 
-    private static MerchantDto MapToDto(Shared.Models.Merchant m)
+    /// <summary>
+    /// Conta i dipendenti <b>interni</b> attivi di un merchant. Le risorse esterne
+    /// (Employee.Kind == External) sono escluse: non sono dipendenti dell'azienda.
+    /// Query proiettata: non richiede di caricare le navigation del Merchant.
+    /// </summary>
+    private Task<int> CountInternalEmployeesAsync(int merchantId)
+        => _context.EmployeeMemberships
+            .CountAsync(em => em.MerchantId == merchantId
+                              && em.IsActive
+                              && em.Employee.Kind == EmployeeKind.Internal);
+
+    /// <summary>
+    /// Variante batch di <see cref="CountInternalEmployeesAsync"/>: conta i dipendenti
+    /// interni attivi per più merchant in un'unica query (evita N+1 sulle liste).
+    /// </summary>
+    private async Task<Dictionary<int, int>> GetInternalEmployeeCountsAsync(IEnumerable<int> merchantIds)
+    {
+        var ids = merchantIds.ToList();
+        if (ids.Count == 0)
+            return new Dictionary<int, int>();
+
+        return await _context.EmployeeMemberships
+            .Where(em => ids.Contains(em.MerchantId)
+                         && em.IsActive
+                         && em.Employee.Kind == EmployeeKind.Internal)
+            .GroupBy(em => em.MerchantId)
+            .Select(g => new { MerchantId = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.MerchantId, x => x.Count);
+    }
+
+    private static MerchantDto MapToDto(Shared.Models.Merchant m, int employeeCount)
     {
         return new MerchantDto
         {
@@ -160,7 +192,7 @@ public class MerchantService : IMerchantService
                 LastName = m.User.LastName,
                 PhoneNumber = m.User.PhoneNumber
             } : null,
-            EmployeeCount = m.EmployeeMemberships.Count(em => em.IsActive),
+            EmployeeCount = employeeCount,
             BranchCount = m.Branches.Count
         };
     }

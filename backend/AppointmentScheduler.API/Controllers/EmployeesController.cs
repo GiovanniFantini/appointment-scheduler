@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -29,15 +30,19 @@ public class EmployeesController : ControllerBase
     }
 
     /// <summary>
-    /// Recupera tutti i dipendenti del merchant corrente
+    /// Recupera i dipendenti del merchant corrente.
     /// </summary>
+    /// <param name="kind">
+    /// Filtro opzionale: omesso = tutti, Internal = solo dipendenti interni,
+    /// External = solo risorse esterne.
+    /// </param>
     [HttpGet]
-    public async Task<ActionResult<List<EmployeeDto>>> GetAll()
+    public async Task<ActionResult<List<EmployeeDto>>> GetAll([FromQuery] EmployeeKind? kind = null)
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        var employees = await _employeeService.GetMerchantEmployeesAsync(merchantId);
+        var employees = await _employeeService.GetMerchantEmployeesAsync(merchantId, kind);
         return Ok(employees);
     }
 

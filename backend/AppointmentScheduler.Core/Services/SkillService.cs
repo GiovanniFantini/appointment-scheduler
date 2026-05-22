@@ -172,26 +172,40 @@ public class SkillService : ISkillService
             .ThenBy(m => m.Employee.FirstName)
             .ToListAsync();
 
-        return memberships.Select(m => new EmployeeDto
+        return memberships.Select(m =>
         {
-            Id = m.Employee.Id,
-            FirstName = m.Employee.FirstName,
-            LastName = m.Employee.LastName,
-            Email = m.Employee.Email,
-            PhoneNumber = m.Employee.PhoneNumber,
-            IsActive = m.Employee.IsActive,
-            HasUserAccount = m.Employee.UserId.HasValue,
-            CreatedAt = m.Employee.CreatedAt,
-            RoleId = m.RoleId,
-            RoleName = m.Role?.Name,
-            Skills = m.Employee.Skills
-                .Where(es => es.Skill != null && es.Skill.MerchantId == merchantId)
-                .Select(es => new EmployeeSkillDto
-                {
-                    SkillId = es.SkillId,
-                    SkillName = es.Skill!.Name,
-                    SkillColor = es.Skill!.Color
-                }).ToList()
+            // Allineato a EmployeeService.MapToDto: l'email tecnica di una risorsa
+            // esterna non va esposta come contatto reale.
+            var isTechnicalEmail = m.Employee.Email.EndsWith(
+                "@noemail.local", StringComparison.OrdinalIgnoreCase);
+
+            return new EmployeeDto
+            {
+                Id = m.Employee.Id,
+                FirstName = m.Employee.FirstName,
+                LastName = m.Employee.LastName,
+                Email = isTechnicalEmail ? string.Empty : m.Employee.Email,
+                HasTechnicalEmail = isTechnicalEmail,
+                PhoneNumber = m.Employee.PhoneNumber,
+                IsActive = m.Employee.IsActive,
+                HasUserAccount = m.Employee.UserId.HasValue,
+                CreatedAt = m.Employee.CreatedAt,
+                Kind = m.Employee.Kind,
+                ContractType = m.Employee.ContractType,
+                AgencyName = m.Employee.AgencyName,
+                HourlyRate = m.Employee.HourlyRate,
+                ExternalNotes = m.Employee.ExternalNotes,
+                RoleId = m.RoleId,
+                RoleName = m.Role?.Name,
+                Skills = m.Employee.Skills
+                    .Where(es => es.Skill != null && es.Skill.MerchantId == merchantId)
+                    .Select(es => new EmployeeSkillDto
+                    {
+                        SkillId = es.SkillId,
+                        SkillName = es.Skill!.Name,
+                        SkillColor = es.Skill!.Color
+                    }).ToList()
+            };
         }).ToList();
     }
 

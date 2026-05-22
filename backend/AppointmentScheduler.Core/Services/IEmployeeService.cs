@@ -1,4 +1,5 @@
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.Core.Services;
 
@@ -8,9 +9,13 @@ namespace AppointmentScheduler.Core.Services;
 public interface IEmployeeService
 {
     /// <summary>
-    /// Recupera tutti i dipendenti di un merchant tramite EmployeeMembership
+    /// Recupera i dipendenti di un merchant tramite EmployeeMembership.
     /// </summary>
-    Task<List<EmployeeDto>> GetMerchantEmployeesAsync(int merchantId);
+    /// <param name="kind">
+    /// Filtro opzionale per tipo di risorsa: null = tutti (default), Internal = solo
+    /// dipendenti interni, External = solo risorse esterne.
+    /// </param>
+    Task<List<EmployeeDto>> GetMerchantEmployeesAsync(int merchantId, EmployeeKind? kind = null);
 
     /// <summary>
     /// Recupera un dipendente per ID, verificando l'appartenenza al merchant

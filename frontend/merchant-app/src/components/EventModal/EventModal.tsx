@@ -62,8 +62,12 @@ interface Employee {
   id: number
   firstName: string
   lastName: string
+  kind: number
   skills?: { skillId: number; skillName: string; skillColor: string }[]
 }
+
+// Valore EmployeeKind.External del backend (enum serializzato come numero).
+const EMPLOYEE_KIND_EXTERNAL = 1
 
 interface ShiftConflictDto {
   employeeId: number
@@ -152,6 +156,13 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const [repeatUntil, setRepeatUntil] = useState('')
   const [suggestedBySkill, setSuggestedBySkill] = useState<Record<number, SuggestedEmployee[]>>({})
 
+  // Mini-dialog di creazione rapida di una risorsa esterna dal selettore partecipanti.
+  const [showNewExternal, setShowNewExternal] = useState(false)
+  const [newExtFirstName, setNewExtFirstName] = useState('')
+  const [newExtLastName, setNewExtLastName] = useState('')
+  const [newExtSaving, setNewExtSaving] = useState(false)
+  const [newExtError, setNewExtError] = useState('')
+
   const [employees, setEmployees] = useState<Employee[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(false)
@@ -164,12 +175,52 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const hasOverrides = participantOverrides.some(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
   const timeChanged = isEdit && (startTime !== initialStartTime || endTime !== initialEndTime)
 
+  const fetchEmployees = async (): Promise<Employee[]> => {
+    try {
+      const res = await apiClient.get('/employees')
+      if (Array.isArray(res.data)) {
+        const list = res.data as Employee[]
+        setEmployees(list)
+        return list
+      }
+    } catch { /* lista vuota in caso di errore */ }
+    return []
+  }
+
   useEffect(() => {
-    apiClient.get('/employees').then(res => {
-      if (Array.isArray(res.data)) setEmployees(res.data as Employee[])
-    }).catch(() => {})
+    fetchEmployees()
     skillsApi.list().then(list => setSkills(list.filter(s => s.isActive))).catch(() => {})
   }, [])
+
+  // Crea al volo una risorsa esterna (solo nome/cognome) e la seleziona nel turno.
+  const handleCreateExternal = async () => {
+    if (!newExtFirstName.trim() || !newExtLastName.trim()) {
+      setNewExtError('Nome e cognome sono obbligatori')
+      return
+    }
+    setNewExtSaving(true)
+    setNewExtError('')
+    try {
+      const res = await apiClient.post('/employees', {
+        firstName: newExtFirstName.trim(),
+        lastName: newExtLastName.trim(),
+        kind: EMPLOYEE_KIND_EXTERNAL,
+      })
+      const newId = res.data?.id as number | undefined
+      await fetchEmployees()
+      if (newId != null) {
+        setSelectedOwnerIds(prev => prev.includes(newId) ? prev : [...prev, newId])
+      }
+      setShowNewExternal(false)
+      setNewExtFirstName('')
+      setNewExtLastName('')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setNewExtError(e.response?.data?.message ?? 'Errore durante la creazione')
+    } finally {
+      setNewExtSaving(false)
+    }
+  }
 
   // In creazione, se il modale è aperto prima che il BranchContext finisca di
   // caricare le filiali, branchId resta null: appena defaultBranchId è disponibile
@@ -760,6 +811,15 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                   <p className="wizard-hint">Seleziona i partecipanti del turno.</p>
                 </>
               )}
+              {requiredSkills.length > 0 && (
+                <button
+                  type="button"
+                  className="new-external-btn"
+                  onClick={() => { setNewExtError(''); setShowNewExternal(true) }}
+                >
+                  + Nuovo esterno
+                </button>
+              )}
             </div>
           )}
 
@@ -780,9 +840,19 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                 {employees.map(emp => (
                   <option key={emp.id} value={emp.id}>
                     {emp.firstName} {emp.lastName}
+                    {emp.kind === EMPLOYEE_KIND_EXTERNAL ? ' — Esterno' : ''}
                   </option>
                 ))}
               </select>
+              {eventType === 'Turno' && (
+                <button
+                  type="button"
+                  className="new-external-btn"
+                  onClick={() => { setNewExtError(''); setShowNewExternal(true) }}
+                >
+                  + Nuovo esterno
+                </button>
+              )}
             </div>
           )}
 
@@ -990,6 +1060,64 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
           </div>
         </div>
       </div>
+
+      {showNewExternal && (
+        <div
+          className="modal-overlay"
+          onClick={e => { if (e.target === e.currentTarget) setShowNewExternal(false) }}
+        >
+          <div className="modal-box new-external-dialog">
+            <div className="modal-header">
+              <h2 className="modal-title">Nuova risorsa esterna</h2>
+              <button className="modal-close" onClick={() => setShowNewExternal(false)}>✕</button>
+            </div>
+            <div className="modal-body">
+              {newExtError && <div className="modal-error">{newExtError}</div>}
+              <p className="wizard-hint">
+                Bastano nome e cognome. Potrai completare i dettagli più tardi dalla
+                pagina Risorse.
+              </p>
+              <div className="modal-row">
+                <div className="modal-form-group">
+                  <label className="modal-label">Nome *</label>
+                  <input
+                    type="text"
+                    className="modal-input"
+                    placeholder="Mario"
+                    value={newExtFirstName}
+                    onChange={e => setNewExtFirstName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+                <div className="modal-form-group">
+                  <label className="modal-label">Cognome *</label>
+                  <input
+                    type="text"
+                    className="modal-input"
+                    placeholder="Bianchi"
+                    value={newExtLastName}
+                    onChange={e => setNewExtLastName(e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <div className="modal-footer-right">
+                <button
+                  className="btn-cancel"
+                  onClick={() => setShowNewExternal(false)}
+                  disabled={newExtSaving}
+                >Annulla</button>
+                <button
+                  className="btn-save"
+                  onClick={handleCreateExternal}
+                  disabled={newExtSaving}
+                >{newExtSaving ? 'Creazione...' : 'Crea e aggiungi'}</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

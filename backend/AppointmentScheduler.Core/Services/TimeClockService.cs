@@ -626,11 +626,15 @@ public class TimeClockService : ITimeClockService
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
         // Turni conclusi (data passata) di tipo Turno del merchant.
+        // Le risorse esterne (Employee.Kind == External) non timbrano: vanno escluse
+        // a monte, altrimenti genererebbero un'anomalia missing-punch per ogni turno.
         var query = _context.EventParticipants
             .Include(p => p.Event)
+            .Include(p => p.Employee)
             .Where(p => p.Event.MerchantId == merchantId
                         && p.Event.EventType == EventType.Turno
-                        && p.Event.StartDate < today);
+                        && p.Event.StartDate < today
+                        && p.Employee.Kind == EmployeeKind.Internal);
 
         if (branchId.HasValue)
             query = query.Where(p => p.Event.BranchId == branchId.Value);
