@@ -2,6 +2,7 @@ import apiClient from '../axios'
 import type {
   DocumentUploadTarget,
   HRDocument,
+  HRDocumentAccessRow,
   HRDocumentCreateRequest,
   HRDocumentDetail,
   HRDocumentDownload,
@@ -56,6 +57,17 @@ export const documentsApi = {
 
   async addVersion(id: number, payload: AddVersionRequest = {}): Promise<HRDocumentVersionUploadResponse> {
     const res = await apiClient.post<HRDocumentVersionUploadResponse>(`/employee/documents/${id}/versions`, payload)
+    return res.data
+  },
+
+  /** Conferma esplicita di presa visione di una versione del documento. */
+  async acknowledgeVersion(id: number, versionNumber: number): Promise<void> {
+    await apiClient.post(`/employee/documents/${id}/versions/${versionNumber}/acknowledge`)
+  },
+
+  /** Log accessi del documento (download e conferme) — richiede livello Operator. */
+  async getAccessLog(id: number): Promise<HRDocumentAccessRow[]> {
+    const res = await apiClient.get<HRDocumentAccessRow[]>(`/employee/documents/${id}/access-log`)
     return res.data
   },
 }

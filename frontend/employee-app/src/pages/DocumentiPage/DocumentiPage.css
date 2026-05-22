@@ -233,6 +233,77 @@
   gap: 0.75rem;
 }
 
+.documenti-version-info {
+  min-width: 0;
+}
+
+.documenti-version-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.documenti-version-ack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.4rem;
+}
+
+.documenti-ack-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+  align-self: flex-start;
+}
+
+.documenti-ack-badge--done {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.documenti-ack-badge--pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+}
+
+.documenti-ack-note {
+  font-size: 0.72rem;
+  color: #94a3b8;
+}
+
+.documenti-access-log {
+  margin-top: 1rem;
+  border-top: 1px solid #334155;
+  padding-top: 0.85rem;
+}
+
+.documenti-access-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.documenti-access-table th,
+.documenti-access-table td {
+  text-align: left;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #334155;
+}
+
+.documenti-access-table th {
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.documenti-access-table td {
+  color: #e2e8f0;
+}
+
 .documenti-modal-footer {
   display: flex;
   justify-content: flex-end;

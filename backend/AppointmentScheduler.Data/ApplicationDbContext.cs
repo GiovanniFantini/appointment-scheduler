@@ -50,6 +50,8 @@ public class ApplicationDbContext : DbContext
     // HR Documents (placeholder payroll)
     public DbSet<HRDocument> HRDocuments { get; set; }
     public DbSet<HRDocumentVersion> HRDocumentVersions { get; set; }
+    public DbSet<HRDocumentDownload> HRDocumentDownloads { get; set; }
+    public DbSet<HRDocumentAcknowledgement> HRDocumentAcknowledgements { get; set; }
 
     // Employee Requests
     public DbSet<EmployeeRequest> EmployeeRequests { get; set; }
@@ -611,6 +613,43 @@ public class ApplicationDbContext : DbContext
 
             entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber }).IsUnique();
             entity.HasIndex(e => e.UploadStatus);
+        });
+
+        // ── HRDocumentDownload ────────────────────────────────────────────────
+        modelBuilder.Entity<HRDocumentDownload>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.HRDocumentVersion)
+                .WithMany(v => v.Downloads)
+                .HasForeignKey(e => e.HRDocumentVersionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(e => new { e.HRDocumentVersionId, e.EmployeeId });
+        });
+
+        // ── HRDocumentAcknowledgement ─────────────────────────────────────────
+        modelBuilder.Entity<HRDocumentAcknowledgement>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.HRDocumentVersion)
+                .WithMany(v => v.Acknowledgements)
+                .HasForeignKey(e => e.HRDocumentVersionId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Employee)
+                .WithMany()
+                .HasForeignKey(e => e.EmployeeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Una sola conferma per (versione, dipendente).
+            entity.HasIndex(e => new { e.HRDocumentVersionId, e.EmployeeId }).IsUnique();
         });
 
         // ── EmployeeRequest ───────────────────────────────────────────────────

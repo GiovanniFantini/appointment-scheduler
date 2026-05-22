@@ -51,6 +51,22 @@ export interface HRDocumentVersion {
   uploadStatus: UploadStatus
   uploadedAt: string
   uploadedByEmail: string
+  /** Numero di download della versione da parte del dipendente corrente. */
+  downloadCount: number
+  /** Ultimo download del dipendente corrente, se presente. */
+  lastDownloadedAt?: string
+  /** Data di presa visione del dipendente corrente, assente se non confermata. */
+  acknowledgedAt?: string
+}
+
+/** Riga di stato presa visione per una risorsa (vista merchant/operatore). */
+export interface HRDocumentAccessRow {
+  employeeId: number
+  employeeName: string
+  versionNumber: number
+  downloadCount: number
+  lastDownloadedAt?: string
+  acknowledgedAt?: string
 }
 
 export interface HRDocumentDetail extends HRDocument {

@@ -90,4 +90,22 @@ public interface IHRDocumentService
         int documentId,
         int tenantId,
         int? versionNumber = null);
+
+    /// <summary>
+    /// Registra la conferma esplicita di presa visione di una versione da parte
+    /// del dipendente. Idempotente: ritorna false se già confermata.
+    /// </summary>
+    Task<bool> AcknowledgeVersionAsync(
+        int documentId,
+        int tenantId,
+        int employeeId,
+        int versionNumber);
+
+    /// <summary>
+    /// Log accessi (download e conferme) di un documento, per versione e per
+    /// dipendente. Vista merchant/operatore.
+    /// </summary>
+    Task<List<HRDocumentAccessRowDto>> GetDocumentAccessLogAsync(
+        int documentId,
+        int tenantId);
 }

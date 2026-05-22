@@ -4,6 +4,7 @@ import { HRDocumentType } from '../../types/documents'
 import type {
   DocumentUploadTarget,
   HRDocument,
+  HRDocumentAccessRow,
   HRDocumentDetail,
 } from '../../types/documents'
 import { formatBrowserDate } from '../../lib/dateUtils'
@@ -119,6 +120,9 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [versionFile, setVersionFile] = useState<File | null>(null)
   const [versionNotes, setVersionNotes] = useState('')
+  const [ackingVersion, setAckingVersion] = useState<number | null>(null)
+  const [accessLog, setAccessLog] = useState<HRDocumentAccessRow[]>([])
+  const [accessLogError, setAccessLogError] = useState('')
 
   const fetchDocuments = useCallback(async () => {
     setLoading(true)
@@ -182,11 +186,54 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
 
   const handleOpenDetail = async (id: number) => {
     setDetailError('')
+    setAccessLog([])
+    setAccessLogError('')
     try {
       const detail = await documentsApi.getMyDocumentById(id)
       setSelectedDetail(detail)
     } catch {
       setDetailError('Impossibile aprire il dettaglio documento')
+      return
+    }
+
+    // Gli operatori vedono anche chi ha scaricato/preso visione.
+    if (canUploadForOthers) {
+      try {
+        const log = await documentsApi.getAccessLog(id)
+        setAccessLog(Array.isArray(log) ? log : [])
+      } catch {
+        setAccessLogError('Impossibile caricare il log accessi')
+      }
+    }
+  }
+
+  const refreshDetail = async (id: number) => {
+    try {
+      const detail = await documentsApi.getMyDocumentById(id)
+      setSelectedDetail(detail)
+    } catch {
+      setDetailError('Impossibile aggiornare il dettaglio documento')
+    }
+  }
+
+  const handleAcknowledge = async (id: number, versionNumber: number) => {
+    // La presa visione è un atto formale e non revocabile: chiediamo conferma.
+    if (!window.confirm(
+      `Confermi di aver preso visione della versione ${versionNumber}? ` +
+      'L\'azione viene registrata e non può essere annullata.'
+    )) {
+      return
+    }
+
+    setDetailError('')
+    setAckingVersion(versionNumber)
+    try {
+      await documentsApi.acknowledgeVersion(id, versionNumber)
+      await refreshDetail(id)
+    } catch {
+      setDetailError('Impossibile registrare la presa visione')
+    } finally {
+      setAckingVersion(null)
     }
   }
 
@@ -553,24 +600,85 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             <div className="documenti-versions-list">
               {selectedDetail.versions.map(version => (
                 <div className="documenti-version-item" key={version.id}>
-                  <div>
+                  <div className="documenti-version-info">
                     <div className="documenti-item-title">Versione {version.versionNumber}</div>
                     <div className="documenti-item-meta">
                       <span>{version.fileName}</span>
                       <span>{Math.max(1, Math.round(version.fileSizeBytes / 1024))} KB</span>
                       <span>{formatBrowserDate(new Date(version.uploadedAt))}</span>
                     </div>
+                    <div className="documenti-version-ack">
+                      {version.acknowledgedAt ? (
+                        <span className="documenti-ack-badge documenti-ack-badge--done">
+                          ✓ Presa visione il {formatBrowserDate(new Date(version.acknowledgedAt))}
+                        </span>
+                      ) : (
+                        <span className="documenti-ack-badge documenti-ack-badge--pending">
+                          Presa visione non confermata
+                        </span>
+                      )}
+                      {version.lastDownloadedAt && (
+                        <span className="documenti-ack-note">
+                          Scaricato {version.downloadCount}× — ultimo {formatBrowserDate(new Date(version.lastDownloadedAt))}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <button
-                    className="btn-primary"
-                    type="button"
-                    onClick={() => handleDownload(selectedDetail.id, version.versionNumber)}
-                    disabled={loadingId === selectedDetail.id}
-                  >
-                    Scarica
-                  </button>
+                  <div className="documenti-version-actions">
+                    <button
+                      className="btn-primary"
+                      type="button"
+                      onClick={() => handleDownload(selectedDetail.id, version.versionNumber)}
+                      disabled={loadingId === selectedDetail.id}
+                    >
+                      Scarica
+                    </button>
+                    {!version.acknowledgedAt && (
+                      <button
+                        className="btn-link"
+                        type="button"
+                        onClick={() => handleAcknowledge(selectedDetail.id, version.versionNumber)}
+                        disabled={ackingVersion === version.versionNumber}
+                      >
+                        {ackingVersion === version.versionNumber ? 'Registro...' : 'Confermo presa visione'}
+                      </button>
+                    )}
+                  </div>
                 </div>
               ))}
+
+              {canUploadForOthers && (
+                <div className="documenti-access-log">
+                  <div className="documenti-upload-title">Stato presa visione</div>
+                  {accessLogError && <div className="documenti-error">{accessLogError}</div>}
+                  {accessLog.length === 0 ? (
+                    <p className="documenti-ack-note">Nessun accesso registrato finora.</p>
+                  ) : (
+                    <table className="documenti-access-table">
+                      <thead>
+                        <tr>
+                          <th>Risorsa</th>
+                          <th>Versione</th>
+                          <th>Download</th>
+                          <th>Ultimo download</th>
+                          <th>Presa visione</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {accessLog.map(row => (
+                          <tr key={`${row.versionNumber}-${row.employeeId}`}>
+                            <td>{row.employeeName}</td>
+                            <td>v{row.versionNumber}</td>
+                            <td>{row.downloadCount}</td>
+                            <td>{row.lastDownloadedAt ? formatBrowserDate(new Date(row.lastDownloadedAt)) : '—'}</td>
+                            <td>{row.acknowledgedAt ? formatBrowserDate(new Date(row.acknowledgedAt)) : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+              )}
               {accessLevel !== 'ReadOnly' && (
                 <div className="documenti-version-upload">
                   <div className="documenti-upload-title">Nuova versione</div>

@@ -35,4 +35,8 @@ public class HRDocumentVersion
     // Navigation properties
     public HRDocument HRDocument { get; set; } = null!;
     public User UploadedBy { get; set; } = null!;
+
+    // Tracciamento accessi: download (audit) e conferme di presa visione.
+    public ICollection<HRDocumentDownload> Downloads { get; set; } = new List<HRDocumentDownload>();
+    public ICollection<HRDocumentAcknowledgement> Acknowledgements { get; set; } = new List<HRDocumentAcknowledgement>();
 }

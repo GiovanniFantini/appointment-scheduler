@@ -176,6 +176,9 @@ public class HRDocumentService : IHRDocumentService
             CreatedByEmail = document.CreatedBy.Email,
             UpdatedAt = document.UpdatedAt,
             UpdatedByEmail = document.UpdatedBy?.Email,
+            // I campi di tracciamento per-dipendente (DownloadCount, AcknowledgedAt)
+            // restano vuoti nella vista merchant: qui non c'è un "dipendente
+            // corrente". Per il quadro completo il merchant usa GetDocumentAccessLogAsync.
             Versions = document.Versions
                 .OrderBy(v => v.VersionNumber)
                 .Select(v => new HRDocumentVersionDto
@@ -207,6 +210,13 @@ public class HRDocumentService : IHRDocumentService
             .Include(d => d.UpdatedBy)
             .Include(d => d.Versions)
                 .ThenInclude(v => v.UploadedBy)
+            .Include(d => d.Versions)
+                .ThenInclude(v => v.Downloads)
+            .Include(d => d.Versions)
+                .ThenInclude(v => v.Acknowledgements)
+            // Split query: evita l'esplosione cartesiana dei JOIN su più
+            // collection annidate (Versions × Downloads × Acknowledgements).
+            .AsSplitQuery()
             .FirstOrDefaultAsync();
 
         if (document == null)
@@ -244,7 +254,17 @@ public class HRDocumentService : IHRDocumentService
                     ChangeNotes = v.ChangeNotes,
                     UploadStatus = v.UploadStatus,
                     UploadedAt = v.UploadedAt,
-                    UploadedByEmail = v.UploadedBy.Email
+                    UploadedByEmail = v.UploadedBy.Email,
+                    // Tracciamento riferito al dipendente corrente.
+                    DownloadCount = v.Downloads.Count(dl => dl.EmployeeId == employeeId),
+                    LastDownloadedAt = v.Downloads
+                        .Where(dl => dl.EmployeeId == employeeId)
+                        .Select(dl => (DateTime?)dl.DownloadedAt)
+                        .Max(),
+                    AcknowledgedAt = v.Acknowledgements
+                        .Where(a => a.EmployeeId == employeeId)
+                        .Select(a => (DateTime?)a.AcknowledgedAt)
+                        .FirstOrDefault()
                 }).ToList()
         };
     }
@@ -556,12 +576,118 @@ public class HRDocumentService : IHRDocumentService
         var downloadUrl = await _fileStorage.GenerateDownloadSasUrlAsync(version.BlobPath);
         var expiresAt = DateTime.UtcNow.AddMinutes(5);
 
+        // Audit trail: registriamo che il dipendente ha richiesto il download di
+        // questa versione. È il dato "debole" — la presa visione formale richiede
+        // una conferma esplicita (AcknowledgeVersionAsync).
+        _context.HRDocumentDownloads.Add(new HRDocumentDownload
+        {
+            HRDocumentVersionId = version.Id,
+            EmployeeId = employeeId,
+            DownloadedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+
         return new HRDocumentDownloadDto
         {
             DownloadUrl = downloadUrl,
             FileName = version.FileName,
             ExpiresAt = expiresAt
         };
+    }
+
+    public async Task<bool> AcknowledgeVersionAsync(
+        int documentId,
+        int tenantId,
+        int employeeId,
+        int versionNumber)
+    {
+        // Il documento deve appartenere al dipendente, al suo merchant ed essere
+        // pubblicato: la presa visione è un'azione self-service sui propri documenti.
+        var document = await _context.HRDocuments
+            .Include(d => d.Versions)
+            .FirstOrDefaultAsync(d =>
+                d.Id == documentId &&
+                d.TenantId == tenantId &&
+                d.EmployeeId == employeeId &&
+                !d.IsDeleted);
+
+        if (document == null || document.Status != HRDocumentStatus.Published)
+            throw new UnauthorizedAccessException("Document not found or access denied");
+
+        var version = document.Versions
+            .FirstOrDefault(v => v.VersionNumber == versionNumber && v.UploadStatus == UploadStatus.Completed);
+        if (version == null)
+            throw new FileNotFoundException("Document version not found or not completed");
+
+        // Idempotente: se la conferma esiste già non ne creiamo una seconda
+        // (l'indice unico la rifiuterebbe comunque).
+        var alreadyAcknowledged = await _context.HRDocumentAcknowledgements
+            .AnyAsync(a => a.HRDocumentVersionId == version.Id && a.EmployeeId == employeeId);
+        if (alreadyAcknowledged)
+            return false;
+
+        _context.HRDocumentAcknowledgements.Add(new HRDocumentAcknowledgement
+        {
+            HRDocumentVersionId = version.Id,
+            EmployeeId = employeeId,
+            AcknowledgedAt = DateTime.UtcNow
+        });
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<HRDocumentAccessRowDto>> GetDocumentAccessLogAsync(
+        int documentId,
+        int tenantId)
+    {
+        var document = await _context.HRDocuments
+            .Include(d => d.Versions)
+                .ThenInclude(v => v.Downloads)
+                    .ThenInclude(dl => dl.Employee)
+            .Include(d => d.Versions)
+                .ThenInclude(v => v.Acknowledgements)
+                    .ThenInclude(a => a.Employee)
+            .AsSplitQuery()
+            .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
+
+        if (document == null)
+            return new List<HRDocumentAccessRowDto>();
+
+        var rows = new List<HRDocumentAccessRowDto>();
+        foreach (var version in document.Versions.Where(v => v.UploadStatus == UploadStatus.Completed))
+        {
+            // Una riga per dipendente che ha avuto un qualsiasi accesso (download
+            // o conferma) a questa versione.
+            var employeeIds = version.Downloads.Select(dl => dl.EmployeeId)
+                .Concat(version.Acknowledgements.Select(a => a.EmployeeId))
+                .Distinct();
+
+            foreach (var empId in employeeIds)
+            {
+                var downloads = version.Downloads.Where(dl => dl.EmployeeId == empId).ToList();
+                var ack = version.Acknowledgements.FirstOrDefault(a => a.EmployeeId == empId);
+                var employee = downloads.FirstOrDefault()?.Employee ?? ack?.Employee;
+
+                rows.Add(new HRDocumentAccessRowDto
+                {
+                    EmployeeId = empId,
+                    EmployeeName = employee != null
+                        ? $"{employee.FirstName} {employee.LastName}"
+                        : string.Empty,
+                    VersionNumber = version.VersionNumber,
+                    DownloadCount = downloads.Count,
+                    LastDownloadedAt = downloads.Count > 0
+                        ? downloads.Max(dl => dl.DownloadedAt)
+                        : null,
+                    AcknowledgedAt = ack?.AcknowledgedAt
+                });
+            }
+        }
+
+        return rows
+            .OrderByDescending(r => r.VersionNumber)
+            .ThenBy(r => r.EmployeeName)
+            .ToList();
     }
 
     public async Task<HRDocumentDownloadDto> GenerateDownloadUrlAsync(

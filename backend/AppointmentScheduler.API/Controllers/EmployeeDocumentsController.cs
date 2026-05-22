@@ -113,6 +113,43 @@ public class EmployeeDocumentsController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/versions/{versionNumber}/acknowledge")]
+    public async Task<ActionResult> AcknowledgeVersion(int id, int versionNumber)
+    {
+        if (RequireLevel(FeatureAccessLevel.ReadOnly) is { } forbidden)
+            return forbidden;
+
+        if (!TryGetMerchantId(out int merchantId) || !TryGetEmployeeId(out int employeeId))
+            return BadRequest(new { message = "Token non valido" });
+
+        try
+        {
+            var created = await _hrDocumentService.AcknowledgeVersionAsync(id, merchantId, employeeId, versionNumber);
+            return Ok(new { acknowledged = true, alreadyConfirmed = !created });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (FileNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}/access-log")]
+    public async Task<ActionResult<IEnumerable<HRDocumentAccessRowDto>>> GetAccessLog(int id)
+    {
+        if (RequireLevel(FeatureAccessLevel.Operator) is { } forbidden)
+            return forbidden;
+
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Token non valido" });
+
+        var rows = await _hrDocumentService.GetDocumentAccessLogAsync(id, merchantId);
+        return Ok(rows);
+    }
+
     [HttpPost]
     public async Task<ActionResult<HRDocumentUploadResponseDto>> CreateDocumentForEmployee([FromBody] HRDocumentCreateDto dto)
     {

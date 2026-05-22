@@ -111,6 +111,24 @@ public class HRDocumentsController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Log accessi del documento: chi ha scaricato e chi ha confermato la presa
+    /// visione, per versione.
+    /// </summary>
+    [HttpGet("{id}/access-log")]
+    public async Task<ActionResult<IEnumerable<HRDocumentAccessRowDto>>> GetAccessLog(int id)
+    {
+        if (RequireLevel(FeatureAccessLevel.ReadOnly) is { } forbidden)
+            return forbidden;
+
+        var tenantId = GetTenantId();
+        if (tenantId == null)
+            return BadRequest(new { message = "Tenant ID non trovato" });
+
+        var rows = await _hrDocumentService.GetDocumentAccessLogAsync(id, tenantId.Value);
+        return Ok(rows);
+    }
+
     private int? GetTenantId()
     {
         var claim = User.FindFirst("MerchantId")?.Value;

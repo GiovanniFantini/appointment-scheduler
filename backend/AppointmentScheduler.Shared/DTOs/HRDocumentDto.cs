@@ -63,6 +63,28 @@ public class HRDocumentVersionDto
     public UploadStatus UploadStatus { get; set; }
     public DateTime UploadedAt { get; set; }
     public string UploadedByEmail { get; set; } = string.Empty;
+
+    /// <summary>Numero di download registrati per questa versione.</summary>
+    public int DownloadCount { get; set; }
+
+    /// <summary>Ultimo download del dipendente corrente, se presente.</summary>
+    public DateTime? LastDownloadedAt { get; set; }
+
+    /// <summary>Data di presa visione del dipendente corrente, null se non confermata.</summary>
+    public DateTime? AcknowledgedAt { get; set; }
+}
+
+/// <summary>
+/// Riga di stato presa visione per una risorsa (vista merchant/operatore).
+/// </summary>
+public class HRDocumentAccessRowDto
+{
+    public int EmployeeId { get; set; }
+    public string EmployeeName { get; set; } = string.Empty;
+    public int VersionNumber { get; set; }
+    public int DownloadCount { get; set; }
+    public DateTime? LastDownloadedAt { get; set; }
+    public DateTime? AcknowledgedAt { get; set; }
 }
 
 /// <summary>
