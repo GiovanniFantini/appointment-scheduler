@@ -1,30 +1,37 @@
-using System.Security.Cryptography;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace AppointmentScheduler.Core.Services;
 
 public class PasswordResetService : IPasswordResetService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly FrontendUrlOptions _frontendUrlOptions;
+    private readonly IPasswordResetTokenGenerator _tokenGenerator;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUtcClock _clock;
     private readonly ILogger<PasswordResetService> _logger;
 
     public PasswordResetService(
-        ApplicationDbContext context,
+        IApplicationDbContext context,
         IEmailService emailService,
-        IConfiguration configuration,
+        FrontendUrlOptions frontendUrlOptions,
+        IPasswordResetTokenGenerator tokenGenerator,
+        IPasswordHasher passwordHasher,
+        IUtcClock clock,
         ILogger<PasswordResetService> logger)
     {
         _context = context;
         _emailService = emailService;
-        _configuration = configuration;
+        _frontendUrlOptions = frontendUrlOptions;
+        _tokenGenerator = tokenGenerator;
+        _passwordHasher = passwordHasher;
+        _clock = clock;
         _logger = logger;
     }
 
@@ -45,8 +52,9 @@ public class PasswordResetService : IPasswordResetService
         // comunque true (come per l'email non trovata): una risposta diversa
         // permetterebbe di enumerare gli account. Il countdown lato client è
         // persistito per impedire all'utente legittimo di reinviare a vuoto.
+        var now = _clock.UtcNow;
         var recentToken = await _context.PasswordResetTokens
-            .AnyAsync(t => t.UserId == user.Id && t.CreatedAt > DateTime.UtcNow.AddSeconds(-60));
+            .AnyAsync(t => t.UserId == user.Id && t.CreatedAt > now.AddSeconds(-60));
 
         if (recentToken)
         {
@@ -60,18 +68,16 @@ public class PasswordResetService : IPasswordResetService
             .ToListAsync();
 
         foreach (var pending in pendingTokens)
-            pending.UsedAt = DateTime.UtcNow;
+            pending.UsedAt = now;
 
-        var rawBytes = RandomNumberGenerator.GetBytes(32);
-        var tokenValue = Convert.ToBase64String(rawBytes)
-            .Replace('+', '-').Replace('/', '_').TrimEnd('=');
+        var tokenValue = _tokenGenerator.Generate();
 
         _context.PasswordResetTokens.Add(new PasswordResetToken
         {
             UserId = user.Id,
             Token = tokenValue,
-            CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddHours(1)
+            CreatedAt = now,
+            ExpiresAt = now.AddHours(1)
         });
 
         await _context.SaveChangesAsync();
@@ -105,19 +111,21 @@ public class PasswordResetService : IPasswordResetService
         if (newPassword.Length < AuthService.MinPasswordLength)
             return false;
 
+        var now = _clock.UtcNow;
+
         var resetToken = await _context.PasswordResetTokens
             .Include(t => t.User)
             .FirstOrDefaultAsync(t =>
                 t.Token == token &&
                 t.UsedAt == null &&
-                t.ExpiresAt > DateTime.UtcNow);
+                t.ExpiresAt > now);
 
         if (resetToken == null)
             return false;
 
-        resetToken.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
-        resetToken.User.UpdatedAt = DateTime.UtcNow;
-        resetToken.UsedAt = DateTime.UtcNow;
+        resetToken.User.PasswordHash = _passwordHasher.HashPassword(newPassword);
+        resetToken.User.UpdatedAt = now;
+        resetToken.UsedAt = now;
 
         await _context.SaveChangesAsync();
         return true;
@@ -125,14 +133,7 @@ public class PasswordResetService : IPasswordResetService
 
     private string GetFrontendBaseUrl(User user)
     {
-        var section = "AzureCommunicationServices:FrontendBaseUrls:";
-        return user.AccountType switch
-        {
-            AccountType.Admin => _configuration[section + "Admin"] ?? "http://localhost:5175",
-            AccountType.Merchant => _configuration[section + "Merchant"] ?? "http://localhost:5174",
-            AccountType.Employee => _configuration[section + "Employee"] ?? "http://localhost:5176",
-            _ => "http://localhost:5173"
-        };
+        return _frontendUrlOptions.GetBaseUrl(user.AccountType);
     }
 
     private static string BuildResetEmailHtml(string firstName, string resetUrl) => $$"""

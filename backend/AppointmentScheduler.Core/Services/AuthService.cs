@@ -1,8 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AppointmentScheduler.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
@@ -21,13 +21,21 @@ public class AuthService : IAuthService
     /// </summary>
     public const int MinPasswordLength = 8;
 
-    private readonly ApplicationDbContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly IApplicationDbContext _context;
+    private readonly IPasswordHasher _passwordHasher;
+    private readonly IUtcClock _clock;
+    private readonly JwtTokenOptions _jwtTokenOptions;
 
-    public AuthService(ApplicationDbContext context, IConfiguration configuration)
+    public AuthService(
+        IApplicationDbContext context,
+        IPasswordHasher passwordHasher,
+        IUtcClock clock,
+        JwtTokenOptions jwtTokenOptions)
     {
         _context = context;
-        _configuration = configuration;
+        _passwordHasher = passwordHasher;
+        _clock = clock;
+        _jwtTokenOptions = jwtTokenOptions;
     }
 
     // ── Admin Login ────────────────────────────────────────────────────────
@@ -38,7 +46,7 @@ public class AuthService : IAuthService
                                    && u.AccountType == AccountType.Admin
                                    && u.IsActive);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
         var token = GenerateJwtToken(user.Id, user.Email, "Admin");
@@ -54,7 +62,7 @@ public class AuthService : IAuthService
                                    && u.AccountType == AccountType.Merchant
                                    && u.IsActive);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
         // L'azienda è operativa solo se attiva E approvata dall'admin. Un merchant
@@ -89,7 +97,7 @@ public class AuthService : IAuthService
         var user = new User
         {
             Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            PasswordHash = _passwordHasher.HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
@@ -214,7 +222,7 @@ public class AuthService : IAuthService
                                    && (u.AccountType == AccountType.Employee || u.AccountType == AccountType.Merchant)
                                    && u.IsActive);
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
             return null;
 
         var employee = user.Employee;
@@ -264,7 +272,7 @@ public class AuthService : IAuthService
         var user = new User
         {
             Email = email,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+            PasswordHash = _passwordHasher.HashPassword(request.Password),
             FirstName = request.FirstName,
             LastName = request.LastName,
             PhoneNumber = request.PhoneNumber,
@@ -379,11 +387,10 @@ public class AuthService : IAuthService
         int? merchantId = null, int? employeeId = null, List<string>? features = null,
         List<string>? featureLevels = null, bool merchantApproved = false)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"]
-            ?? throw new InvalidOperationException("JWT SecretKey not configured");
+        if (string.IsNullOrWhiteSpace(_jwtTokenOptions.SecretKey))
+            throw new InvalidOperationException("JWT SecretKey not configured");
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtTokenOptions.SecretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new List<Claim>
@@ -418,10 +425,10 @@ public class AuthService : IAuthService
                 claims.Add(new Claim("FeatureLevel", featureLevel));
 
         var token = new JwtSecurityToken(
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: _jwtTokenOptions.Issuer,
+            audience: _jwtTokenOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(double.Parse(jwtSettings["ExpirationMinutes"] ?? "1440")),
+            expires: _clock.UtcNow.AddMinutes(_jwtTokenOptions.ExpirationMinutes),
             signingCredentials: credentials
         );
 

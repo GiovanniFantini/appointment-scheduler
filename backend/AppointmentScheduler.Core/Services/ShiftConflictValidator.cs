@@ -11,9 +11,9 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class ShiftConflictValidator : IShiftConflictValidator
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
 
-    public ShiftConflictValidator(ApplicationDbContext context)
+    public ShiftConflictValidator(IApplicationDbContext context)
     {
         _context = context;
     }

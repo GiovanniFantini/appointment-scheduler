@@ -8,13 +8,13 @@ namespace AppointmentScheduler.Core.Services;
 
 public class EmployeeInventoryService : IEmployeeInventoryService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IInventoryService _inventoryService;
     private readonly ISupplierService _supplierService;
     private readonly IPurchaseOrderService _purchaseOrderService;
 
     public EmployeeInventoryService(
-        ApplicationDbContext context,
+        IApplicationDbContext context,
         IInventoryService inventoryService,
         ISupplierService supplierService,
         IPurchaseOrderService purchaseOrderService)

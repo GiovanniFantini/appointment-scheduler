@@ -9,9 +9,10 @@ namespace AppointmentScheduler.Core.Services;
 
 public class HRDocumentService : IHRDocumentService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IFileStorageService _fileStorage;
     private readonly INotificationService _notificationService;
+    private readonly IUtcClock _clock;
 
     private static readonly HashSet<string> AllowedExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -33,13 +34,15 @@ public class HRDocumentService : IHRDocumentService
     private const long MaxUploadSizeBytes = 50L * 1024 * 1024;
 
     public HRDocumentService(
-        ApplicationDbContext context,
+        IApplicationDbContext context,
         IFileStorageService fileStorage,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IUtcClock clock)
     {
         _context = context;
         _fileStorage = fileStorage;
         _notificationService = notificationService;
+        _clock = clock;
     }
 
     public async Task<List<HRDocumentDto>> GetDocumentsAsync(
@@ -274,6 +277,7 @@ public class HRDocumentService : IHRDocumentService
         int userId,
         HRDocumentCreateDto dto)
     {
+        var now = _clock.UtcNow;
         // Verifica che l'employee appartenga al tenant
         var employee = await _context.Employees
             .Include(e => e.Memberships)
@@ -294,7 +298,7 @@ public class HRDocumentService : IHRDocumentService
             Month = dto.Month,
             CurrentVersion = 1,
             Status = HRDocumentStatus.Draft,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
             CreatedByUserId = userId
         };
 
@@ -322,7 +326,7 @@ public class HRDocumentService : IHRDocumentService
             ContentType = "application/octet-stream",
             FileSizeBytes = 0,
             UploadStatus = UploadStatus.Uploading,
-            UploadedAt = DateTime.UtcNow,
+            UploadedAt = now,
             UploadedByUserId = userId
         };
 
@@ -331,7 +335,7 @@ public class HRDocumentService : IHRDocumentService
 
         // Genera SAS URL per upload
         var uploadUrl = await _fileStorage.GenerateUploadSasUrlAsync(blobPath);
-        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+    var expiresAt = now.AddMinutes(5);
 
         return new HRDocumentUploadResponseDto
         {
@@ -347,6 +351,7 @@ public class HRDocumentService : IHRDocumentService
         int tenantId,
         HRDocumentFinalizeDto dto)
     {
+        var now = _clock.UtcNow;
         if (!IsFinalizePayloadValid(dto))
             return false;
 
@@ -402,7 +407,7 @@ public class HRDocumentService : IHRDocumentService
 
         // Pubblica documento
         document.Status = HRDocumentStatus.Published;
-        document.UpdatedAt = DateTime.UtcNow;
+        document.UpdatedAt = now;
 
         await _context.SaveChangesAsync();
 
@@ -425,6 +430,7 @@ public class HRDocumentService : IHRDocumentService
         int userId,
         string? changeNotes = null)
     {
+        var now = _clock.UtcNow;
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
             .Include(d => d.Employee)
@@ -475,7 +481,7 @@ public class HRDocumentService : IHRDocumentService
             FileSizeBytes = 0,
             ChangeNotes = changeNotes,
             UploadStatus = UploadStatus.Uploading,
-            UploadedAt = DateTime.UtcNow,
+            UploadedAt = now,
             UploadedByUserId = userId
         };
 
@@ -484,13 +490,13 @@ public class HRDocumentService : IHRDocumentService
         // CurrentVersion NON viene incrementata qui: l'upload potrebbe non essere
         // mai finalizzato. Viene allineata da FinalizeDocumentUploadAsync quando
         // la versione passa a Completed.
-        document.UpdatedAt = DateTime.UtcNow;
+        document.UpdatedAt = now;
         document.UpdatedByUserId = userId;
 
         await _context.SaveChangesAsync();
 
         var uploadUrl = await _fileStorage.GenerateUploadSasUrlAsync(blobPath);
-        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+    var expiresAt = now.AddMinutes(5);
 
         return new HRDocumentVersionUploadResponseDto
         {
@@ -522,7 +528,7 @@ public class HRDocumentService : IHRDocumentService
         if (dto.Status.HasValue)
             document.Status = dto.Status.Value;
 
-        document.UpdatedAt = DateTime.UtcNow;
+        document.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
@@ -537,7 +543,7 @@ public class HRDocumentService : IHRDocumentService
             return false;
 
         document.IsDeleted = true;
-        document.UpdatedAt = DateTime.UtcNow;
+        document.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
@@ -549,6 +555,7 @@ public class HRDocumentService : IHRDocumentService
         int employeeId,
         int? versionNumber = null)
     {
+        var now = _clock.UtcNow;
         // Scoping difensivo: oltre a EmployeeId filtriamo anche per TenantId, così
         // un documento di un altro merchant non è mai raggiungibile nemmeno se gli
         // id collidessero.
@@ -574,7 +581,7 @@ public class HRDocumentService : IHRDocumentService
             throw new FileNotFoundException("Document version not found or not completed");
 
         var downloadUrl = await _fileStorage.GenerateDownloadSasUrlAsync(version.BlobPath);
-        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+        var expiresAt = now.AddMinutes(5);
 
         // Audit trail: registriamo che il dipendente ha richiesto il download di
         // questa versione. È il dato "debole" — la presa visione formale richiede
@@ -583,7 +590,7 @@ public class HRDocumentService : IHRDocumentService
         {
             HRDocumentVersionId = version.Id,
             EmployeeId = employeeId,
-            DownloadedAt = DateTime.UtcNow
+            DownloadedAt = now
         });
         await _context.SaveChangesAsync();
 
@@ -601,6 +608,7 @@ public class HRDocumentService : IHRDocumentService
         int employeeId,
         int versionNumber)
     {
+        var now = _clock.UtcNow;
         // Il documento deve appartenere al dipendente, al suo merchant ed essere
         // pubblicato: la presa visione è un'azione self-service sui propri documenti.
         var document = await _context.HRDocuments
@@ -630,7 +638,7 @@ public class HRDocumentService : IHRDocumentService
         {
             HRDocumentVersionId = version.Id,
             EmployeeId = employeeId,
-            AcknowledgedAt = DateTime.UtcNow
+            AcknowledgedAt = now
         });
         await _context.SaveChangesAsync();
         return true;
@@ -695,6 +703,7 @@ public class HRDocumentService : IHRDocumentService
         int tenantId,
         int? versionNumber = null)
     {
+        var now = _clock.UtcNow;
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
             .FirstOrDefaultAsync(d => d.Id == documentId && d.TenantId == tenantId && !d.IsDeleted);
@@ -710,7 +719,7 @@ public class HRDocumentService : IHRDocumentService
             throw new FileNotFoundException("Document version not found or not completed");
 
         var downloadUrl = await _fileStorage.GenerateDownloadSasUrlAsync(version.BlobPath);
-        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+        var expiresAt = now.AddMinutes(5);
 
         return new HRDocumentDownloadDto
         {

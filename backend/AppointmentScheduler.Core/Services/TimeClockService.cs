@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -14,18 +15,22 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class TimeClockService : ITimeClockService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _utcClock;
+    private readonly IWallClock _wallClock;
 
-    public TimeClockService(ApplicationDbContext context)
+    public TimeClockService(IApplicationDbContext context, IUtcClock utcClock, IWallClock wallClock)
     {
         _context = context;
+        _utcClock = utcClock;
+        _wallClock = wallClock;
     }
 
     // ── Stato corrente ─────────────────────────────────────────────────────
 
     public async Task<CurrentClockStatusDto> GetCurrentStatusAsync(int employeeId, int merchantId)
     {
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = _utcClock.UtcNow;
         var today = DateOnly.FromDateTime(nowUtc);
 
         var shift = await ResolveCurrentShiftAsync(employeeId, merchantId, today);
@@ -118,7 +123,7 @@ public class TimeClockService : ITimeClockService
     private async Task<ClockActionResultDto> RegisterAsync(
         int employeeId, int merchantId, ClockActionRequest request, TimeEntryType type)
     {
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = _utcClock.UtcNow;
         var today = DateOnly.FromDateTime(nowUtc);
 
         var shift = request.EventParticipantId.HasValue
@@ -307,7 +312,7 @@ public class TimeClockService : ITimeClockService
             var clockIn = groupEntries.FirstOrDefault(e => e.Type == TimeEntryType.ClockIn);
             var clockOut = groupEntries.LastOrDefault(e => e.Type == TimeEntryType.ClockOut);
 
-            var worked = CalculateWorkedMinutes(groupEntries, DateTime.UtcNow);
+            var worked = CalculateWorkedMinutes(groupEntries, _utcClock.UtcNow);
             var breakMinutes = SumBreakMinutes(groupEntries);
 
             double? scheduled = null;
@@ -413,14 +418,14 @@ public class TimeClockService : ITimeClockService
         settings.MaxBreakMinutes = request.MaxBreakMinutes;
         settings.RoundingMinutes = request.RoundingMinutes;
         settings.RequirePhoto = request.RequirePhoto;
-        settings.UpdatedAt = DateTime.UtcNow;
+        settings.UpdatedAt = _utcClock.UtcNow;
 
         // Le coordinate del geofence vivono sulla filiale: aggiornale se fornite.
         if (request.BranchLatitude.HasValue && request.BranchLongitude.HasValue)
         {
             branch.Latitude = request.BranchLatitude;
             branch.Longitude = request.BranchLongitude;
-            branch.UpdatedAt = DateTime.UtcNow;
+            branch.UpdatedAt = _utcClock.UtcNow;
         }
 
         await _context.SaveChangesAsync();
@@ -438,7 +443,7 @@ public class TimeClockService : ITimeClockService
         if (participant.Event.EventType != EventType.Turno)
             throw new InvalidOperationException("La timbratura si applica solo ai turni.");
 
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = _utcClock.UtcNow;
         var entry = new TimeEntry
         {
             MerchantId = merchantId,
@@ -500,9 +505,9 @@ public class TimeClockService : ITimeClockService
 
         anomaly.EmployeeReason = request.Reason;
         anomaly.EmployeeNotes = request.Notes;
-        anomaly.JustifiedAt = DateTime.UtcNow;
+        anomaly.JustifiedAt = _utcClock.UtcNow;
         anomaly.Status = TimeClockAnomalyStatus.Justified;
-        anomaly.UpdatedAt = DateTime.UtcNow;
+        anomaly.UpdatedAt = _utcClock.UtcNow;
 
         await _context.SaveChangesAsync();
         return MapAnomaly(anomaly);
@@ -510,7 +515,7 @@ public class TimeClockService : ITimeClockService
 
     public async Task<WellbeingStatsDto> GetWellbeingStatsAsync(int employeeId, int merchantId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(_utcClock.UtcNow);
         // Inizio settimana = lunedì.
         int dow = ((int)today.DayOfWeek + 6) % 7;
         var weekStart = today.AddDays(-dow);
@@ -614,8 +619,8 @@ public class TimeClockService : ITimeClockService
         anomaly.Status = newStatus;
         anomaly.ReviewedByUserId = userId;
         anomaly.ReviewNotes = request.ReviewNotes;
-        anomaly.ReviewedAt = DateTime.UtcNow;
-        anomaly.UpdatedAt = DateTime.UtcNow;
+        anomaly.ReviewedAt = _utcClock.UtcNow;
+        anomaly.UpdatedAt = _utcClock.UtcNow;
 
         await _context.SaveChangesAsync();
         return MapAnomaly(anomaly);
@@ -623,7 +628,7 @@ public class TimeClockService : ITimeClockService
 
     public async Task<int> RunMissingPunchDetectionAsync(int merchantId, int? branchId)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = DateOnly.FromDateTime(_utcClock.UtcNow);
 
         // Turni conclusi (data passata) di tipo Turno del merchant.
         // Le risorse esterne (Employee.Kind == External) non timbrano: vanno escluse
@@ -664,7 +669,7 @@ public class TimeClockService : ITimeClockService
             .ToHashSet();
 
         int created = 0;
-        var nowUtc = DateTime.UtcNow;
+        var nowUtc = _utcClock.UtcNow;
 
         foreach (var p in participants)
         {
@@ -779,7 +784,7 @@ public class TimeClockService : ITimeClockService
             WorkDate = entry.WorkDate,
             DeviationMinutes = entry.DeviationMinutes,
             OvertimeMinutes = overtime,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _utcClock.UtcNow
         };
 
         _context.TimeClockAnomalies.Add(anomaly);
@@ -1037,7 +1042,7 @@ public class TimeClockService : ITimeClockService
     /// configurato sul fuso del servizio; coerente con come gli altri service
     /// del progetto trattano gli orari dei turni.
     /// </summary>
-    private static DateTime NowWallClock => DateTime.Now;
+    private DateTime NowWallClock => _wallClock.Now;
 
     // ── Mapping ────────────────────────────────────────────────────────────
 

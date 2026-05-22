@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -11,18 +12,21 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class EventService : IEventService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly IShiftConflictValidator _conflictValidator;
     private readonly INotificationService _notificationService;
+    private readonly IUtcClock _clock;
 
     public EventService(
-        ApplicationDbContext context,
+        IApplicationDbContext context,
         IShiftConflictValidator conflictValidator,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IUtcClock clock)
     {
         _context = context;
         _conflictValidator = conflictValidator;
         _notificationService = notificationService;
+        _clock = clock;
     }
 
     /// <summary>
@@ -132,6 +136,7 @@ public class EventService : IEventService
     /// </summary>
     public async Task<EventDto> CreateAsync(int merchantId, int createdByUserId, CreateEventRequest request)
     {
+        var now = _clock.UtcNow;
         var branchId = await ResolveBranchIdAsync(merchantId, request.BranchId);
         await ValidateDepartmentAsync(branchId, request.DepartmentId);
         await ValidateParticipantDepartmentsAsync(branchId, request.ParticipantOverrides);
@@ -154,7 +159,7 @@ public class EventService : IEventService
             NotificationEnabled = request.NotificationEnabled,
             Notes = request.Notes,
             CreatedByUserId = createdByUserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
@@ -205,6 +210,7 @@ public class EventService : IEventService
     /// </summary>
     public async Task<EventDto?> UpdateAsync(int id, int merchantId, UpdateEventRequest request)
     {
+        var now = _clock.UtcNow;
         var evt = await _context.Events
             .Include(e => e.Participants)
             .Include(e => e.RequiredSkills)
@@ -231,7 +237,7 @@ public class EventService : IEventService
         evt.Recurrence = request.Recurrence;
         evt.NotificationEnabled = request.NotificationEnabled;
         evt.Notes = request.Notes;
-        evt.UpdatedAt = DateTime.UtcNow;
+        evt.UpdatedAt = now;
 
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
         var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
@@ -363,7 +369,7 @@ public class EventService : IEventService
                 NotificationEnabled = original.NotificationEnabled,
                 Notes = original.Notes,
                 CreatedByUserId = original.CreatedByUserId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = _clock.UtcNow
             };
 
             foreach (var participant in original.Participants)
@@ -491,7 +497,7 @@ public class EventService : IEventService
                     NotificationEnabled = src.NotificationEnabled,
                     Notes = src.Notes,
                     CreatedByUserId = createdByUserId,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = _clock.UtcNow
                 };
 
                 foreach (var p in src.Participants)

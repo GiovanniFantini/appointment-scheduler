@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -11,11 +12,13 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class MerchantRoleService : IMerchantRoleService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public MerchantRoleService(ApplicationDbContext context)
+    public MerchantRoleService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     /// <summary>
@@ -57,7 +60,7 @@ public class MerchantRoleService : IMerchantRoleService
             MerchantId = merchantId,
             Name = request.Name,
             IsDefault = false,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         foreach (var featureRequest in request.Features)
@@ -164,7 +167,7 @@ public class MerchantRoleService : IMerchantRoleService
                 MerchantId = merchantId,
                 RoleId = request.RoleId,
                 IsActive = true,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = _clock.UtcNow
             };
             _context.EmployeeMemberships.Add(newMembership);
         }

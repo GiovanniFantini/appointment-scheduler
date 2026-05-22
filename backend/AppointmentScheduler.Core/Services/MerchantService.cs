@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -10,11 +11,13 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class MerchantService : IMerchantService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public MerchantService(ApplicationDbContext context)
+    public MerchantService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     /// <summary>
@@ -76,8 +79,8 @@ public class MerchantService : IMerchantService
         merchant.IsApproved = true;
         merchant.IsActive = true;
         // ApprovedAt segna la prima approvazione: una riattivazione non la sovrascrive.
-        merchant.ApprovedAt ??= DateTime.UtcNow;
-        merchant.UpdatedAt = DateTime.UtcNow;
+        merchant.ApprovedAt ??= _clock.UtcNow;
+        merchant.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
@@ -102,7 +105,7 @@ public class MerchantService : IMerchantService
         if (!merchant.IsApproved)
             merchant.ApprovedAt = null;
 
-        merchant.UpdatedAt = DateTime.UtcNow;
+        merchant.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return true;
@@ -129,7 +132,7 @@ public class MerchantService : IMerchantService
         merchant.Country = request.Country;
         merchant.Phone = request.Phone;
         merchant.BusinessEmail = request.BusinessEmail;
-        merchant.UpdatedAt = DateTime.UtcNow;
+        merchant.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
 

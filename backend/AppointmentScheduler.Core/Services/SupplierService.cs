@@ -1,4 +1,5 @@
 using AppointmentScheduler.Data;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
@@ -7,11 +8,13 @@ namespace AppointmentScheduler.Core.Services;
 
 public class SupplierService : ISupplierService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public SupplierService(ApplicationDbContext context)
+    public SupplierService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<List<SupplierDto>> GetSuppliersAsync(int merchantId, bool includeInactive = true)
@@ -55,7 +58,7 @@ public class SupplierService : ISupplierService
             VatNumber = NormalizeOptional(request.VatNumber),
             Notes = NormalizeOptional(request.Notes),
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.Suppliers.Add(supplier);
@@ -88,7 +91,7 @@ public class SupplierService : ISupplierService
         supplier.VatNumber = NormalizeOptional(request.VatNumber);
         supplier.Notes = NormalizeOptional(request.Notes);
         supplier.IsActive = request.IsActive;
-        supplier.UpdatedAt = DateTime.UtcNow;
+        supplier.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
 

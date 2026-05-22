@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -11,7 +12,8 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class EmployeeService : IEmployeeService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
     /// <summary>
     /// Dominio delle email tecniche generate per le risorse esterne prive di email
@@ -19,9 +21,10 @@ public class EmployeeService : IEmployeeService
     /// </summary>
     private const string TechnicalEmailDomain = "@noemail.local";
 
-    public EmployeeService(ApplicationDbContext context)
+    public EmployeeService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     /// <summary>
@@ -112,6 +115,8 @@ public class EmployeeService : IEmployeeService
                         && u.AccountType == AccountType.Employee
                         && u.IsActive);
 
+                var createdAt = _clock.UtcNow;
+
                 employee = new Employee
                 {
                     UserId = existingUser?.Id,
@@ -121,7 +126,7 @@ public class EmployeeService : IEmployeeService
                     PhoneNumber = request.PhoneNumber,
                     Kind = request.Kind,
                     IsActive = true,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = createdAt
                 };
                 ApplyExternalFields(employee, request.Kind, request.ContractType,
                     request.AgencyName, request.HourlyRate, request.ExternalNotes);
@@ -133,6 +138,7 @@ public class EmployeeService : IEmployeeService
         else
         {
             // Esterno senza email: nessuna deduplica, email tecnica univoca (GUID).
+            var createdAt = _clock.UtcNow;
             employee = new Employee
             {
                 UserId = null,
@@ -142,7 +148,7 @@ public class EmployeeService : IEmployeeService
                 PhoneNumber = request.PhoneNumber,
                 Kind = EmployeeKind.External,
                 IsActive = true,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = createdAt
             };
             ApplyExternalFields(employee, EmployeeKind.External, request.ContractType,
                 request.AgencyName, request.HourlyRate, request.ExternalNotes);
@@ -174,6 +180,7 @@ public class EmployeeService : IEmployeeService
         }
         else
         {
+            var joinedAt = _clock.UtcNow;
             membershipEntity = new EmployeeMembership
             {
                 EmployeeId = employee.Id,
@@ -182,7 +189,7 @@ public class EmployeeService : IEmployeeService
                 HomeBranchId = homeBranchId,
                 HomeDepartmentId = homeDepartmentId,
                 IsActive = true,
-                JoinedAt = DateTime.UtcNow
+                JoinedAt = joinedAt
             };
             _context.EmployeeMemberships.Add(membershipEntity);
         }
@@ -251,7 +258,7 @@ public class EmployeeService : IEmployeeService
         employee.Kind = request.Kind;
         ApplyExternalFields(employee, request.Kind, request.ContractType,
             request.AgencyName, request.HourlyRate, request.ExternalNotes);
-        employee.UpdatedAt = DateTime.UtcNow;
+        employee.UpdatedAt = _clock.UtcNow;
 
         membership.RoleId = await ResolveRoleIdAsync(merchantId, request.RoleId);
         membership.IsActive = request.IsActive;
@@ -324,7 +331,7 @@ public class EmployeeService : IEmployeeService
             {
                 EmployeeId = employeeId,
                 SkillId = sid,
-                AssignedAt = DateTime.UtcNow
+                AssignedAt = _clock.UtcNow
             });
         }
 

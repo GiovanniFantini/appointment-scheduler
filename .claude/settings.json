@@ -42,7 +42,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://appointment-merchant-app.azurewebsites.net/sw.js\")",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"https://appointment-merchant-app.azurewebsites.net/service-worker.js\")",
       "Bash(curl -s \"https://appointment-merchant-app.azurewebsites.net/sw.js\")",
-      "Bash(curl -s -o /dev/null -w \"ct=%{content_type}\\\\n\" \"https://appointment-merchant-app.azurewebsites.net/sw.js\")"
+      "Bash(curl -s -o /dev/null -w \"ct=%{content_type}\\\\n\" \"https://appointment-merchant-app.azurewebsites.net/sw.js\")",
+      "Bash(dotnet test *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

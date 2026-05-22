@@ -1,6 +1,5 @@
 using Azure.Storage.Blobs;
 using Azure.Storage.Sas;
-using Microsoft.Extensions.Configuration;
 using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -13,14 +12,14 @@ public class AzureBlobStorageService : IFileStorageService
     private readonly string _defaultContainerName;
     private readonly int _sasExpirationMinutes;
 
-    public AzureBlobStorageService(IConfiguration configuration)
+    public AzureBlobStorageService(AzureBlobStorageOptions options)
     {
-        var connectionString = configuration.GetConnectionString("AzureBlobStorage")
+        var connectionString = options.ConnectionString
             ?? throw new InvalidOperationException("Azure Blob Storage connection string not configured");
 
         _blobServiceClient = new BlobServiceClient(connectionString);
-        _defaultContainerName = configuration["AzureBlobStorage:ContainerName"] ?? "erp-documents";
-        _sasExpirationMinutes = int.Parse(configuration["AzureBlobStorage:SasTokenExpirationMinutes"] ?? "5");
+        _defaultContainerName = options.ContainerName;
+        _sasExpirationMinutes = options.SasTokenExpirationMinutes;
     }
 
     public async Task<string> GenerateUploadSasUrlAsync(string blobPath, int expirationMinutes = 5)

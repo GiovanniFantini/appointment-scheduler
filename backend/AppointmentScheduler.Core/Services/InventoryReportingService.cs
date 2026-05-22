@@ -6,9 +6,9 @@ namespace AppointmentScheduler.Core.Services;
 
 public class InventoryReportingService : IInventoryReportingService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
 
-    public InventoryReportingService(ApplicationDbContext context)
+    public InventoryReportingService(IApplicationDbContext context)
     {
         _context = context;
     }

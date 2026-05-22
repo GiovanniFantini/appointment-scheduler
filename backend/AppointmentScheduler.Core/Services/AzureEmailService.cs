@@ -1,6 +1,5 @@
 using Azure;
 using Azure.Communication.Email;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using AppointmentScheduler.Core.Interfaces;
 
@@ -16,18 +15,16 @@ public class AzureEmailService : IEmailService
     private readonly string? _endpointHost;
     private readonly EmailClient? _emailClient;
 
-    /// <summary>Inizializza il servizio leggendo la configurazione da IConfiguration.</summary>
-    /// <param name="configuration">Configurazione applicazione (sezione AzureCommunicationServices).</param>
+    /// <summary>Inizializza il servizio leggendo la configurazione da opzioni tipizzate.</summary>
+    /// <param name="options">Configurazione Azure Communication Services.</param>
     /// <param name="logger">Logger per diagnostica.</param>
-    public AzureEmailService(IConfiguration configuration, ILogger<AzureEmailService> logger)
+    public AzureEmailService(AzureEmailOptions options, ILogger<AzureEmailService> logger)
     {
         _logger = logger;
 
-        var connectionString = configuration["AzureCommunicationServices:ConnectionString"];
-        _senderAddress = configuration["AzureCommunicationServices:SenderAddress"]
-            ?? "DoNotReply@azurecomm.net";
-        _senderDisplayName = configuration["AzureCommunicationServices:SenderDisplayName"]
-            ?? "Appointment Scheduler";
+        var connectionString = options.ConnectionString;
+        _senderAddress = options.SenderAddress;
+        _senderDisplayName = options.SenderDisplayName;
 
         if (string.IsNullOrEmpty(connectionString) ||
             connectionString.Contains("CONFIGURE_IN_PRODUCTION_OR_USE_DEVELOPMENT_SETTINGS"))

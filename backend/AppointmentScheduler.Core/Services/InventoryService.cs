@@ -1,4 +1,5 @@
 using AppointmentScheduler.Data;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
@@ -8,11 +9,13 @@ namespace AppointmentScheduler.Core.Services;
 
 public class InventoryService : IInventoryService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public InventoryService(ApplicationDbContext context)
+    public InventoryService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<List<InventoryItemDto>> GetItemsAsync(int merchantId, int? branchId = null, string? search = null, bool includeInactive = true)
@@ -108,7 +111,7 @@ public class InventoryService : IInventoryService
             AverageUnitCost = 0,
             ValuationMethod = InventoryValuationMethod.WeightedAverage,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.InventoryItems.Add(item);
@@ -143,7 +146,7 @@ public class InventoryService : IInventoryService
         item.UnitOfMeasure = NormalizeUnitOfMeasure(request.UnitOfMeasure);
         item.ReorderPoint = EnsureNonNegative(request.ReorderPoint, "La soglia di riordino non può essere negativa.");
         item.IsActive = request.IsActive;
-        item.UpdatedAt = DateTime.UtcNow;
+        item.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
 
@@ -185,6 +188,7 @@ public class InventoryService : IInventoryService
 
     public async Task<InventoryMovementDto> CreateAdjustmentAsync(int merchantId, int userId, CreateInventoryAdjustmentRequest request)
     {
+        var now = _clock.UtcNow;
         if (request.QuantityDelta == 0)
             throw new InvalidOperationException("La quantità di rettifica deve essere diversa da zero.");
 
@@ -234,7 +238,7 @@ public class InventoryService : IInventoryService
         balance.QuantityOnHand = oldQty + delta;
         balance.WeightedAverageCost = newWeightedAverage;
         balance.InventoryValue = balance.QuantityOnHand * balance.WeightedAverageCost;
-        balance.UpdatedAt = DateTime.UtcNow;
+        balance.UpdatedAt = now;
 
         var movement = new InventoryMovement
         {
@@ -247,7 +251,7 @@ public class InventoryService : IInventoryService
             TotalValue = delta * unitCost,
             Reason = reason,
             PerformedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         _context.InventoryMovements.Add(movement);
@@ -289,8 +293,8 @@ public class InventoryService : IInventoryService
             QuantityOnHand = 0,
             WeightedAverageCost = 0,
             InventoryValue = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow,
+            UpdatedAt = _clock.UtcNow
         };
 
         _context.InventoryStockBalances.Add(balance);
@@ -311,7 +315,7 @@ public class InventoryService : IInventoryService
             .FirstOrDefaultAsync();
 
         item.AverageUnitCost = totals == null || totals.Quantity == 0 ? 0 : totals.Value / totals.Quantity;
-        item.UpdatedAt = DateTime.UtcNow;
+        item.UpdatedAt = _clock.UtcNow;
     }
 
     private static InventoryItemDto MapItem(InventoryItem item, List<InventoryStockBalance> balances, List<InventoryMovement> movements)

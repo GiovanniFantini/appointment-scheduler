@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -8,13 +9,15 @@ namespace AppointmentScheduler.Core.Services;
 
 public class EmployeeRequestService : IEmployeeRequestService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
     private readonly INotificationService _notificationService;
+    private readonly IUtcClock _clock;
 
-    public EmployeeRequestService(ApplicationDbContext context, INotificationService notificationService)
+    public EmployeeRequestService(IApplicationDbContext context, INotificationService notificationService, IUtcClock clock)
     {
         _context = context;
         _notificationService = notificationService;
+        _clock = clock;
     }
 
     public async Task<List<EmployeeRequestDto>> GetMerchantRequestsAsync(int merchantId, RequestStatus? status = null)
@@ -44,6 +47,7 @@ public class EmployeeRequestService : IEmployeeRequestService
 
     public async Task<EmployeeRequestDto> CreateAsync(int employeeId, int merchantId, CreateEmployeeRequestRequest request)
     {
+        var now = _clock.UtcNow;
         // Hourly leaves: keep StartTime/EndTime only if both provided and request type supports it.
         var (startTime, endTime) = NormalizeHourlyRange(request.Type, request.StartTime, request.EndTime);
 
@@ -62,7 +66,7 @@ public class EmployeeRequestService : IEmployeeRequestService
             EndTime = endTime,
             EventId = eventId,
             Notes = request.Notes,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
         };
 
         _context.EmployeeRequests.Add(employeeRequest);
@@ -75,6 +79,7 @@ public class EmployeeRequestService : IEmployeeRequestService
 
     public async Task<EmployeeRequestDto?> ApproveAsync(int id, int merchantId, int reviewerUserId, ReviewEmployeeRequestRequest? request = null)
     {
+        var now = _clock.UtcNow;
         var employeeRequest = await _context.EmployeeRequests
             .Include(r => r.Employee)
             .FirstOrDefaultAsync(r => r.Id == id && r.MerchantId == merchantId);
@@ -88,9 +93,9 @@ public class EmployeeRequestService : IEmployeeRequestService
 
         employeeRequest.Status = RequestStatus.Approved;
         employeeRequest.ReviewedByUserId = reviewerUserId;
-        employeeRequest.ReviewedAt = DateTime.UtcNow;
+    employeeRequest.ReviewedAt = now;
         employeeRequest.ReviewNotes = request?.ReviewNotes;
-        employeeRequest.UpdatedAt = DateTime.UtcNow;
+    employeeRequest.UpdatedAt = now;
 
         // Merchant può linkare/scollegare il turno in fase di review
         if (request != null)
@@ -108,6 +113,7 @@ public class EmployeeRequestService : IEmployeeRequestService
 
     public async Task<EmployeeRequestDto?> RejectAsync(int id, int merchantId, int reviewerUserId, ReviewEmployeeRequestRequest? request = null)
     {
+        var now = _clock.UtcNow;
         var employeeRequest = await _context.EmployeeRequests
             .Include(r => r.Employee)
             .FirstOrDefaultAsync(r => r.Id == id && r.MerchantId == merchantId);
@@ -121,9 +127,9 @@ public class EmployeeRequestService : IEmployeeRequestService
 
         employeeRequest.Status = RequestStatus.Rejected;
         employeeRequest.ReviewedByUserId = reviewerUserId;
-        employeeRequest.ReviewedAt = DateTime.UtcNow;
+    employeeRequest.ReviewedAt = now;
         employeeRequest.ReviewNotes = request?.ReviewNotes;
-        employeeRequest.UpdatedAt = DateTime.UtcNow;
+    employeeRequest.UpdatedAt = now;
 
         await _context.SaveChangesAsync();
 

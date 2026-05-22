@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -11,11 +12,13 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class NotificationService : INotificationService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public NotificationService(ApplicationDbContext context)
+    public NotificationService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     /// <summary>
@@ -95,7 +98,7 @@ public class NotificationService : INotificationService
             Type = type,
             IsRead = false,
             RelatedEntityId = relatedEntityId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.Notifications.Add(notification);

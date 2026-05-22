@@ -1,4 +1,5 @@
 using AppointmentScheduler.Data;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Helpers;
@@ -9,11 +10,13 @@ namespace AppointmentScheduler.Core.Services;
 
 public class PurchaseOrderService : IPurchaseOrderService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public PurchaseOrderService(ApplicationDbContext context)
+    public PurchaseOrderService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<List<PurchaseOrderDto>> GetOrdersAsync(int merchantId, int? branchId = null, PurchaseOrderStatus? status = null)
@@ -43,6 +46,7 @@ public class PurchaseOrderService : IPurchaseOrderService
 
     public async Task<PurchaseOrderDto> CreateOrderAsync(int merchantId, int userId, CreatePurchaseOrderRequest request)
     {
+        var now = _clock.UtcNow;
         if (request.Lines == null || request.Lines.Count == 0)
             throw new InvalidOperationException("L'ordine acquisto deve contenere almeno una riga.");
 
@@ -71,11 +75,11 @@ public class PurchaseOrderService : IPurchaseOrderService
             SupplierId = supplier.Id,
             OrderNumber = GenerateDocumentNumber("PO"),
             Status = PurchaseOrderStatus.Draft,
-            OrderedAt = DateTime.UtcNow,
+            OrderedAt = now,
             ExpectedDeliveryDate = DateTimeUtc.Coerce(request.ExpectedDeliveryDate),
             Notes = NormalizeOptional(request.Notes),
             CreatedByUserId = userId,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = now,
             Lines = request.Lines.Select(line =>
             {
                 if (line.QuantityOrdered <= 0)
@@ -112,8 +116,8 @@ public class PurchaseOrderService : IPurchaseOrderService
             throw new InvalidOperationException("Solo un ordine Draft può essere inviato.");
 
         order.Status = PurchaseOrderStatus.Sent;
-        order.SentAt = DateTime.UtcNow;
-        order.UpdatedAt = DateTime.UtcNow;
+        order.SentAt = _clock.UtcNow;
+        order.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return await GetOrderByIdAsync(orderId, merchantId);
@@ -135,8 +139,8 @@ public class PurchaseOrderService : IPurchaseOrderService
             throw new InvalidOperationException("Un ordine già ricevuto anche solo parzialmente non può essere annullato.");
 
         order.Status = PurchaseOrderStatus.Cancelled;
-        order.CancelledAt = DateTime.UtcNow;
-        order.UpdatedAt = DateTime.UtcNow;
+        order.CancelledAt = _clock.UtcNow;
+        order.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
         return await GetOrderByIdAsync(orderId, merchantId);
@@ -144,6 +148,7 @@ public class PurchaseOrderService : IPurchaseOrderService
 
     public async Task<PurchaseOrderDto?> ReceiveOrderAsync(int orderId, int merchantId, int userId, CreateGoodsReceiptRequest request)
     {
+        var now = _clock.UtcNow;
         var order = await _context.PurchaseOrders
             .Include(o => o.Lines)
             .FirstOrDefaultAsync(o => o.Id == orderId && o.MerchantId == merchantId);
@@ -177,10 +182,10 @@ public class PurchaseOrderService : IPurchaseOrderService
             SupplierId = order.SupplierId,
             PurchaseOrderId = order.Id,
             ReceiptNumber = GenerateDocumentNumber("GR"),
-            ReceivedAt = DateTime.UtcNow,
+            ReceivedAt = now,
             Notes = NormalizeOptional(request.Notes),
             ReceivedByUserId = userId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = now
         };
 
         _context.GoodsReceipts.Add(receipt);
@@ -225,7 +230,7 @@ public class PurchaseOrderService : IPurchaseOrderService
             balance.QuantityOnHand = newQty;
             balance.WeightedAverageCost = newWeighted;
             balance.InventoryValue = newQty * newWeighted;
-            balance.UpdatedAt = DateTime.UtcNow;
+            balance.UpdatedAt = now;
 
             _context.InventoryMovements.Add(new InventoryMovement
             {
@@ -241,7 +246,7 @@ public class PurchaseOrderService : IPurchaseOrderService
                 PurchaseOrder = order,
                 GoodsReceipt = receipt,
                 PerformedByUserId = userId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = now
             });
 
             touchedItemIds.Add(poLine.ItemId);
@@ -250,8 +255,8 @@ public class PurchaseOrderService : IPurchaseOrderService
         order.Status = order.Lines.All(l => l.QuantityReceived >= l.QuantityOrdered)
             ? PurchaseOrderStatus.Closed
             : PurchaseOrderStatus.PartiallyReceived;
-        order.ClosedAt = order.Status == PurchaseOrderStatus.Closed ? DateTime.UtcNow : null;
-        order.UpdatedAt = DateTime.UtcNow;
+        order.ClosedAt = order.Status == PurchaseOrderStatus.Closed ? now : null;
+        order.UpdatedAt = now;
 
         await _context.SaveChangesAsync();
 
@@ -294,8 +299,8 @@ public class PurchaseOrderService : IPurchaseOrderService
             QuantityOnHand = 0,
             WeightedAverageCost = 0,
             InventoryValue = 0,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow,
+            UpdatedAt = _clock.UtcNow
         };
 
         _context.InventoryStockBalances.Add(balance);
@@ -312,7 +317,7 @@ public class PurchaseOrderService : IPurchaseOrderService
             .FirstOrDefaultAsync();
 
         item.AverageUnitCost = totals == null || totals.Quantity == 0 ? 0 : totals.Value / totals.Quantity;
-        item.UpdatedAt = DateTime.UtcNow;
+        item.UpdatedAt = _clock.UtcNow;
     }
 
     private static PurchaseOrderDto MapOrder(PurchaseOrder order) => new()
@@ -374,8 +379,8 @@ public class PurchaseOrderService : IPurchaseOrderService
         }).ToList()
     };
 
-    private static string GenerateDocumentNumber(string prefix)
-        => $"{prefix}-{DateTime.UtcNow:yyyyMMddHHmmssfff}-{Random.Shared.Next(1000, 9999)}";
+    private string GenerateDocumentNumber(string prefix)
+        => $"{prefix}-{_clock.UtcNow:yyyyMMddHHmmssfff}-{Random.Shared.Next(1000, 9999)}";
 
     private static string? NormalizeOptional(string? value)
     {

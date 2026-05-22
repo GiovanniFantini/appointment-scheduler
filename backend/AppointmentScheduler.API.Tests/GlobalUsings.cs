@@ -1,0 +1,17 @@
+global using System.Reflection;
+global using System.Security.Claims;
+global using AppointmentScheduler.API.Controllers;
+global using AppointmentScheduler.Core.Interfaces;
+global using AppointmentScheduler.Core.Services;
+global using AppointmentScheduler.Shared.DTOs;
+global using AppointmentScheduler.Shared.Enums;
+global using Azure;
+global using FluentAssertions;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;
+global using Moq;
+global using Xunit;

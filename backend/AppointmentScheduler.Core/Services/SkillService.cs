@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -8,11 +9,13 @@ namespace AppointmentScheduler.Core.Services;
 
 public class SkillService : ISkillService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public SkillService(ApplicationDbContext context)
+    public SkillService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     public async Task<List<SkillDto>> GetAllByMerchantAsync(int merchantId)
@@ -68,7 +71,7 @@ public class SkillService : ISkillService
             Name = name,
             Color = string.IsNullOrWhiteSpace(request.Color) ? "#3b82f6" : request.Color,
             IsActive = request.IsActive,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.Skills.Add(skill);

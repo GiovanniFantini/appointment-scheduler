@@ -15,6 +15,15 @@ try
 
     var builder = WebApplication.CreateBuilder(args);
 
+    builder.Host.UseDefaultServiceProvider((context, options) =>
+    {
+        var validateContainer = context.HostingEnvironment.IsDevelopment() ||
+                                context.HostingEnvironment.IsEnvironment("Testing");
+
+        options.ValidateScopes = validateContainer;
+        options.ValidateOnBuild = validateContainer;
+    });
+
     // Controllers
     builder.Services.AddControllers()
         .AddJsonOptions(options =>
@@ -74,6 +83,34 @@ try
 
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
+    builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+
+    var jwtTokenOptions = builder.Configuration.GetSection("JwtSettings").Get<JwtTokenOptions>()
+        ?? new JwtTokenOptions();
+    if (string.IsNullOrWhiteSpace(jwtTokenOptions.SecretKey))
+        throw new InvalidOperationException("JWT SecretKey not configured");
+
+    var frontendUrlOptions = builder.Configuration
+        .GetSection("AzureCommunicationServices:FrontendBaseUrls")
+        .Get<FrontendUrlOptions>()
+        ?? new FrontendUrlOptions();
+
+    var azureBlobStorageOptions = builder.Configuration.GetSection("AzureBlobStorage").Get<AzureBlobStorageOptions>()
+        ?? new AzureBlobStorageOptions();
+    azureBlobStorageOptions.ConnectionString = builder.Configuration.GetConnectionString("AzureBlobStorage")
+        ?? azureBlobStorageOptions.ConnectionString;
+
+    var azureEmailOptions = builder.Configuration.GetSection("AzureCommunicationServices").Get<AzureEmailOptions>()
+        ?? new AzureEmailOptions();
+
+    builder.Services.AddSingleton(jwtTokenOptions);
+    builder.Services.AddSingleton(frontendUrlOptions);
+    builder.Services.AddSingleton(azureBlobStorageOptions);
+    builder.Services.AddSingleton(azureEmailOptions);
+    builder.Services.AddSingleton<IUtcClock, SystemUtcClock>();
+    builder.Services.AddSingleton<IWallClock, SystemWallClock>();
+    builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
+    builder.Services.AddSingleton<IPasswordResetTokenGenerator, PasswordResetTokenGenerator>();
 
     // ── Application Services ───────────────────────────────────────────────
     builder.Services.AddScoped<IAuthService, AuthService>();
@@ -102,10 +139,6 @@ try
     builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 
     // ── JWT Authentication ─────────────────────────────────────────────────
-    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-    var secretKey = jwtSettings["SecretKey"]
-        ?? throw new InvalidOperationException("JWT SecretKey not configured");
-
     builder.Services.AddAuthentication(options =>
     {
         options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -119,9 +152,9 @@ try
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
+            ValidIssuer = jwtTokenOptions.Issuer,
+            ValidAudience = jwtTokenOptions.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtTokenOptions.SecretKey))
         };
     });
 
@@ -222,4 +255,8 @@ catch (Exception ex)
     Console.WriteLine($"FATAL ERROR: {ex.GetType().Name}: {ex.Message}");
     Console.WriteLine(ex.StackTrace);
     Environment.Exit(-1);
+}
+
+public partial class Program
+{
 }

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Models;
@@ -12,11 +13,13 @@ namespace AppointmentScheduler.Core.Services;
 /// </summary>
 public class BranchService : IBranchService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IApplicationDbContext _context;
+    private readonly IUtcClock _clock;
 
-    public BranchService(ApplicationDbContext context)
+    public BranchService(IApplicationDbContext context, IUtcClock clock)
     {
         _context = context;
+        _clock = clock;
     }
 
     // ── Filiali ────────────────────────────────────────────────────────────
@@ -89,7 +92,7 @@ public class BranchService : IBranchService
             Longitude = request.Longitude,
             IsHeadquarters = isFirst,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.MerchantBranches.Add(branch);
@@ -141,7 +144,7 @@ public class BranchService : IBranchService
         branch.Latitude = request.Latitude;
         branch.Longitude = request.Longitude;
         branch.IsActive = request.IsActive;
-        branch.UpdatedAt = DateTime.UtcNow;
+        branch.UpdatedAt = _clock.UtcNow;
 
         await _context.SaveChangesAsync();
 
@@ -202,7 +205,7 @@ public class BranchService : IBranchService
             hq.IsHeadquarters = false;
 
         branch.IsHeadquarters = true;
-        branch.UpdatedAt = DateTime.UtcNow;
+        branch.UpdatedAt = _clock.UtcNow;
         await _context.SaveChangesAsync();
         return true;
     }
@@ -232,7 +235,7 @@ public class BranchService : IBranchService
             Name = name,
             Color = string.IsNullOrWhiteSpace(request.Color) ? "#3b82f6" : request.Color,
             IsActive = true,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = _clock.UtcNow
         };
 
         _context.Departments.Add(department);
