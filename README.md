@@ -96,12 +96,12 @@ il livello ruolo applica questa matrice:
 Lo storage documentale usa Azure Blob con un **container per merchant**
 (`merchant-{id}`) e struttura path:
 
-- `yyyy/mm`
-- `yyyy/senza-mese-di-riferimento`
-- `senza-anno-di-riferimento`
+- `employee-{id}/yyyy/mm/<TipoDocumento>/doc-{documentId}_v{version}.{ext}`
+- `employee-{id}/yyyy/senza-mese-di-riferimento/<TipoDocumento>/doc-{documentId}_v{version}.{ext}`
+- `employee-{id}/senza-anno-di-riferimento/<TipoDocumento>/doc-{documentId}_v{version}.{ext}`
 
-all'interno di ciascun ramo vengono salvati i file per risorsa (`employee-{id}`),
-tipo documento e versione.
+`<TipoDocumento>` e' una cartella business in italiano (esempi: `Fatture`,
+`Cedolini`, `Contratti`, `Comunicazioni`, `ScarichiPerCommercialista`, ecc.).
 
 ### Configurazione Azure Blob Storage
 

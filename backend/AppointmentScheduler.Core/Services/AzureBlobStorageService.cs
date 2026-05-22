@@ -8,6 +8,9 @@ namespace AppointmentScheduler.Core.Services;
 
 public class AzureBlobStorageService : IFileStorageService
 {
+    private const string SegmentoSenzaAnno = "senza-anno-di-riferimento";
+    private const string SegmentoSenzaMese = "senza-mese-di-riferimento";
+
     private readonly BlobServiceClient _blobServiceClient;
     private readonly string _defaultContainerName;
     private readonly int _sasExpirationMinutes;
@@ -15,7 +18,7 @@ public class AzureBlobStorageService : IFileStorageService
     public AzureBlobStorageService(AzureBlobStorageOptions options)
     {
         var connectionString = options.ConnectionString
-            ?? throw new InvalidOperationException("Azure Blob Storage connection string not configured");
+            ?? throw new InvalidOperationException("Connection string di Azure Blob Storage non configurata");
 
         _blobServiceClient = new BlobServiceClient(connectionString);
         _defaultContainerName = options.ContainerName;
@@ -56,7 +59,7 @@ public class AzureBlobStorageService : IFileStorageService
         // Verifica che il blob esista
         if (!await blobClient.ExistsAsync())
         {
-            throw new FileNotFoundException($"Blob not found: {blobPath}");
+            throw new FileNotFoundException($"Blob non trovato: {blobPath}");
         }
 
         var sasBuilder = new BlobSasBuilder
@@ -92,7 +95,7 @@ public class AzureBlobStorageService : IFileStorageService
 
         if (!await blobClient.ExistsAsync())
         {
-            throw new FileNotFoundException($"Blob not found: {blobPath}");
+            throw new FileNotFoundException($"Blob non trovato: {blobPath}");
         }
 
         var properties = await blobClient.GetPropertiesAsync();
@@ -125,36 +128,79 @@ public class AzureBlobStorageService : IFileStorageService
         int versionNumber,
         string fileExtension)
     {
+        if (tenantId <= 0) throw new ArgumentOutOfRangeException(nameof(tenantId), "tenantId deve essere maggiore di zero");
+        if (employeeId <= 0) throw new ArgumentOutOfRangeException(nameof(employeeId), "employeeId deve essere maggiore di zero");
+        if (documentId <= 0) throw new ArgumentOutOfRangeException(nameof(documentId), "documentId deve essere maggiore di zero");
+        if (versionNumber <= 0) throw new ArgumentOutOfRangeException(nameof(versionNumber), "versionNumber deve essere maggiore di zero");
+        if (month.HasValue && !year.HasValue)
+            throw new ArgumentException("month non puo' essere valorizzato quando year e' null", nameof(month));
+
+        if (month is < 1 or > 12)
+            throw new ArgumentOutOfRangeException(nameof(month), "month deve essere compreso tra 1 e 12");
+
+        if (!Enum.IsDefined(typeof(HRDocumentType), documentType))
+            throw new ArgumentOutOfRangeException(nameof(documentType), "Tipo documento non supportato");
+
+        var cleanExtension = SanitizeExtension(fileExtension);
+        var typeFolder = MapDocumentTypeFolder(documentType);
+
         var parts = new List<string>
         {
-            $"merchant-{tenantId}"
+            $"merchant-{tenantId}",
+            $"employee-{employeeId}"
         };
 
         if (year.HasValue)
         {
             parts.Add(year.Value.ToString());
-            parts.Add(month.HasValue ? month.Value.ToString("D2") : "senza-mese-di-riferimento");
+            parts.Add(month.HasValue ? month.Value.ToString("D2") : SegmentoSenzaMese);
         }
         else
         {
-            parts.Add("senza-anno-di-riferimento");
+            parts.Add(SegmentoSenzaAnno);
         }
 
-        parts.Add($"employee-{employeeId}");
-        parts.Add(documentType.ToString().ToLowerInvariant());
-
-        // Clean extension (remove dot if present)
-        var cleanExtension = fileExtension.TrimStart('.');
+        parts.Add(typeFolder);
         var fileName = $"doc-{documentId}_v{versionNumber}.{cleanExtension}";
         parts.Add(fileName);
 
         return string.Join("/", parts);
     }
 
+    private static string SanitizeExtension(string fileExtension)
+    {
+        if (string.IsNullOrWhiteSpace(fileExtension))
+            throw new ArgumentException("fileExtension non puo' essere vuota", nameof(fileExtension));
+
+        var cleanExtension = fileExtension.Trim().TrimStart('.').ToLowerInvariant();
+        if (cleanExtension.Length == 0)
+            throw new ArgumentException("fileExtension non puo' essere vuota", nameof(fileExtension));
+
+        if (cleanExtension.Contains('/') || cleanExtension.Contains('\\') || cleanExtension.Contains(".."))
+            throw new ArgumentException("fileExtension contiene caratteri non validi", nameof(fileExtension));
+
+        return cleanExtension;
+    }
+
+    private static string MapDocumentTypeFolder(HRDocumentType documentType) => documentType switch
+    {
+        HRDocumentType.Payslip => "BustePaga",
+        HRDocumentType.Contract => "Contratti",
+        HRDocumentType.Bonus => "Bonus",
+        HRDocumentType.Communication => "Comunicazioni",
+        HRDocumentType.LevelChange => "CambiLivello",
+        HRDocumentType.Certification => "Certificazioni",
+        HRDocumentType.DisciplinaryAction => "ProvvedimentiDisciplinari",
+        HRDocumentType.Invoice => "Fatture",
+        HRDocumentType.PayrollStatement => "Cedolini",
+        HRDocumentType.Other => "Altro",
+        _ => throw new ArgumentOutOfRangeException(nameof(documentType), documentType, "Tipo documento non supportato")
+    };
+
     private (string ContainerName, string BlobPath) ResolveContainerAndBlobPath(string blobPath)
     {
         if (string.IsNullOrWhiteSpace(blobPath))
-            throw new ArgumentException("blobPath cannot be empty", nameof(blobPath));
+            throw new ArgumentException("blobPath non puo' essere vuoto", nameof(blobPath));
 
         var separatorIndex = blobPath.IndexOf('/');
         if (separatorIndex <= 0)
@@ -166,7 +212,7 @@ public class AzureBlobStorageService : IFileStorageService
 
         var normalizedBlobPath = blobPath[(separatorIndex + 1)..];
         if (string.IsNullOrWhiteSpace(normalizedBlobPath))
-            throw new ArgumentException("blobPath is missing blob name", nameof(blobPath));
+            throw new ArgumentException("blobPath non contiene il nome del blob", nameof(blobPath));
 
         return (firstSegment.ToLowerInvariant(), normalizedBlobPath);
     }
