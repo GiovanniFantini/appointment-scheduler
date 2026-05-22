@@ -44,13 +44,19 @@ public static class FeatureClaims
     /// True se l'utente ha la feature e un livello di accesso almeno pari a
     /// <paramref name="minimumLevel"/>. Usare nei controller per gli endpoint
     /// operativi: se restituisce false il controller deve rispondere 403 Forbidden.
+    ///
+    /// Una feature a livelli abilitata ma senza livello esplicito nel token è
+    /// trattata come <see cref="FeatureAccessLevel.ReadOnly"/> — coerente con la
+    /// regola di dominio (vedi <c>RoleFeature.AccessLevel</c>): un token emesso
+    /// prima che il merchant impostasse il livello non deve causare un 403 sugli
+    /// endpoint di sola lettura.
     /// </summary>
     public static bool RequireFeatureLevel(this ClaimsPrincipal user, MerchantFeature feature, FeatureAccessLevel minimumLevel)
     {
         if (!user.HasFeature(feature))
             return false;
 
-        var level = user.GetFeatureLevel(feature);
-        return level.HasValue && level.Value >= minimumLevel;
+        var level = user.GetFeatureLevel(feature) ?? FeatureAccessLevel.ReadOnly;
+        return level >= minimumLevel;
     }
 }
