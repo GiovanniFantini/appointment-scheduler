@@ -354,12 +354,31 @@ public class HRDocumentService : IHRDocumentService
             return false;
         }
 
-        // Aggiorna versione
+        // Verifica server-side: i metadati nel DTO arrivano dal client e non sono
+        // affidabili. Confrontiamo la size dichiarata con quella reale del blob e
+        // rifiutiamo upload incoerenti o oltre il limite (es. file gonfiato che
+        // dichiara una size minore).
+        var blobProperties = await _fileStorage.GetBlobPropertiesAsync(version.BlobPath);
+        if (blobProperties.ContentLength <= 0 ||
+            blobProperties.ContentLength > MaxUploadSizeBytes ||
+            blobProperties.ContentLength != dto.FileSizeBytes)
+        {
+            version.UploadStatus = UploadStatus.Failed;
+            await _context.SaveChangesAsync();
+            return false;
+        }
+
+        // Aggiorna versione: la size è quella reale del blob, non quella del DTO.
         version.FileName = dto.FileName;
         version.ContentType = dto.ContentType;
-        version.FileSizeBytes = dto.FileSizeBytes;
+        version.FileSizeBytes = blobProperties.ContentLength;
         version.FileHash = dto.FileHash;
         version.UploadStatus = UploadStatus.Completed;
+
+        // CurrentVersion punta sempre all'ultima versione effettivamente caricata:
+        // viene allineata solo qui, a upload completato (vedi AddDocumentVersionAsync).
+        if (version.VersionNumber > document.CurrentVersion)
+            document.CurrentVersion = version.VersionNumber;
 
         // Pubblica documento
         document.Status = HRDocumentStatus.Published;
@@ -394,13 +413,26 @@ public class HRDocumentService : IHRDocumentService
         if (document == null)
             throw new UnauthorizedAccessException("Document not found or access denied");
 
-        var nextVersion = document.CurrentVersion + 1;
+        // Cleanup self-healing: una versione precedente rimasta in Uploading è un
+        // upload abbandonato (il client non ha mai finalizzato). La marchiamo
+        // Failed prima di crearne una nuova, così non resta orfana per sempre.
+        foreach (var orphan in document.Versions.Where(v => v.UploadStatus == UploadStatus.Uploading))
+            orphan.UploadStatus = UploadStatus.Failed;
 
-        // Determina estensione dall'ultima versione
-        var lastVersion = document.Versions.OrderByDescending(v => v.VersionNumber).FirstOrDefault();
-        var extension = lastVersion != null
-            ? Path.GetExtension(lastVersion.FileName).TrimStart('.')
-            : "pdf";
+        // Il numero della nuova versione è progressivo sul max esistente: non si
+        // basa su CurrentVersion, che ora viene allineata solo a upload completato.
+        var maxVersion = document.Versions.Count > 0
+            ? document.Versions.Max(v => v.VersionNumber)
+            : document.CurrentVersion;
+        var nextVersion = maxVersion + 1;
+
+        // Determina l'estensione dall'ultima versione completata e la valida:
+        // FileName arriva dal client, va sanificato prima di finire nel blob path.
+        var lastVersion = document.Versions
+            .OrderByDescending(v => v.VersionNumber)
+            .FirstOrDefault();
+        var extension = SanitizeExtension(
+            lastVersion != null ? Path.GetExtension(lastVersion.FileName) : null);
 
         var blobPath = _fileStorage.BuildBlobPath(
             tenantId,
@@ -429,8 +461,9 @@ public class HRDocumentService : IHRDocumentService
 
         _context.HRDocumentVersions.Add(version);
 
-        // Aggiorna versione corrente
-        document.CurrentVersion = nextVersion;
+        // CurrentVersion NON viene incrementata qui: l'upload potrebbe non essere
+        // mai finalizzato. Viene allineata da FinalizeDocumentUploadAsync quando
+        // la versione passa a Completed.
         document.UpdatedAt = DateTime.UtcNow;
         document.UpdatedByUserId = userId;
 
@@ -492,12 +525,20 @@ public class HRDocumentService : IHRDocumentService
 
     public async Task<HRDocumentDownloadDto> GenerateEmployeeDownloadUrlAsync(
         int documentId,
+        int tenantId,
         int employeeId,
         int? versionNumber = null)
     {
+        // Scoping difensivo: oltre a EmployeeId filtriamo anche per TenantId, così
+        // un documento di un altro merchant non è mai raggiungibile nemmeno se gli
+        // id collidessero.
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
-            .FirstOrDefaultAsync(d => d.Id == documentId && d.EmployeeId == employeeId && !d.IsDeleted);
+            .FirstOrDefaultAsync(d =>
+                d.Id == documentId &&
+                d.TenantId == tenantId &&
+                d.EmployeeId == employeeId &&
+                !d.IsDeleted);
 
         if (document == null)
             throw new UnauthorizedAccessException("Document not found or access denied");
@@ -551,6 +592,19 @@ public class HRDocumentService : IHRDocumentService
             FileName = version.FileName,
             ExpiresAt = expiresAt
         };
+    }
+
+    /// <summary>
+    /// Normalizza un'estensione (potenzialmente derivata da un FileName fornito
+    /// dal client) a un valore sicuro per il blob path: niente separatori, solo
+    /// estensioni note. Fallback a "pdf" se assente o non riconosciuta.
+    /// </summary>
+    private static string SanitizeExtension(string? rawExtension)
+    {
+        var extension = (rawExtension ?? string.Empty).TrimStart('.').Trim();
+        return AllowedExtensions.Contains(extension)
+            ? extension.ToLowerInvariant()
+            : "pdf";
     }
 
     private static bool IsFinalizePayloadValid(HRDocumentFinalizeDto dto)

@@ -1,7 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import apiClient from '../../lib/axios'
 import { formatBrowserDate } from '../../lib/dateUtils'
 import './NotifichePage.css'
+
+// Allineato all'enum C# NotificationType (serializzato come numero dall'API).
+const NOTIFICATION_TYPE_DOCUMENT_PUBLISHED = 7
 
 interface Notification {
   id: number
@@ -9,7 +13,18 @@ interface Notification {
   message: string
   isRead: boolean
   createdAt: string
-  type?: string
+  type?: number
+  relatedEntityId?: number
+}
+
+/** Emoji rappresentativa per tipo di notifica. */
+function getNotificationIcon(type?: number): string {
+  switch (type) {
+    case NOTIFICATION_TYPE_DOCUMENT_PUBLISHED:
+      return '📄'
+    default:
+      return '🔔'
+  }
 }
 
 function formatDate(dateStr: string): string {
@@ -28,6 +43,7 @@ function formatDate(dateStr: string): string {
 }
 
 export default function NotifichePage() {
+  const navigate = useNavigate()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -73,6 +89,24 @@ export default function NotifichePage() {
     }
   }
 
+  /** Rotta di destinazione per una notifica, se ne ha una. */
+  const getNotificationLink = (notif: Notification): string | null => {
+    if (notif.type === NOTIFICATION_TYPE_DOCUMENT_PUBLISHED) {
+      return '/documenti'
+    }
+    return null
+  }
+
+  const handleNotificationClick = (notif: Notification) => {
+    if (!notif.isRead) {
+      handleMarkRead(notif.id)
+    }
+    const link = getNotificationLink(notif)
+    if (link) {
+      navigate(link)
+    }
+  }
+
   const unreadCount = notifications.filter(n => !n.isRead).length
 
   return (
@@ -113,26 +147,35 @@ export default function NotifichePage() {
         </div>
       ) : (
         <div className="notifications-list">
-          {notifications.map(notif => (
-            <div
-              key={notif.id}
-              className={`notification-item ${!notif.isRead ? 'notification-item--unread' : ''}`}
-              onClick={() => !notif.isRead && handleMarkRead(notif.id)}
-            >
-              <div className="notification-dot-wrapper">
-                {!notif.isRead && <span className="notification-dot" />}
-              </div>
-              <div className="notification-body">
-                <div className="notification-top">
-                  <span className="notification-title">{notif.title}</span>
-                  <span className="notification-time">{formatDate(notif.createdAt)}</span>
+          {notifications.map(notif => {
+            const isLinked = getNotificationLink(notif) !== null
+            return (
+              <div
+                key={notif.id}
+                className={`notification-item ${!notif.isRead ? 'notification-item--unread' : ''} ${isLinked ? 'notification-item--linked' : ''}`}
+                onClick={() => handleNotificationClick(notif)}
+              >
+                <div className="notification-dot-wrapper">
+                  {!notif.isRead && <span className="notification-dot" />}
                 </div>
-                {notif.message && (
-                  <p className="notification-message">{notif.message}</p>
-                )}
+                <span className="notification-icon" aria-hidden="true">
+                  {getNotificationIcon(notif.type)}
+                </span>
+                <div className="notification-body">
+                  <div className="notification-top">
+                    <span className="notification-title">{notif.title}</span>
+                    <span className="notification-time">{formatDate(notif.createdAt)}</span>
+                  </div>
+                  {notif.message && (
+                    <p className="notification-message">{notif.message}</p>
+                  )}
+                  {isLinked && (
+                    <span className="notification-link-hint">Apri documento →</span>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

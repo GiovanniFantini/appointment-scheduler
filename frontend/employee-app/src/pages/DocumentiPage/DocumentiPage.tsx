@@ -39,6 +39,30 @@ function getRefLabel(year?: number, month?: number): string {
   return 'Senza anno di riferimento'
 }
 
+// Limite allineato a MaxUploadSizeBytes nel backend (HRDocumentService).
+// Validare lato client evita di caricare il blob per poi vederlo rifiutato a finalize.
+const MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024
+
+const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'txt']
+
+/**
+ * Valida un file prima dell'upload. Ritorna un messaggio d'errore oppure null
+ * se il file è accettabile.
+ */
+function validateUploadFile(file: File): string | null {
+  if (file.size <= 0) {
+    return 'Il file selezionato è vuoto'
+  }
+  if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+    return 'Il file supera il limite di 50 MB'
+  }
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  if (!extension || !ALLOWED_EXTENSIONS.includes(extension)) {
+    return 'Formato non supportato. Ammessi: PDF, Word, Excel, immagini, testo'
+  }
+  return null
+}
+
 function getDefaultContentType(file: File): string {
   if (file.type) {
     return file.type
@@ -189,6 +213,12 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
       return
     }
 
+    const versionFileError = validateUploadFile(versionFile)
+    if (versionFileError) {
+      setError(versionFileError)
+      return
+    }
+
     setUploading(true)
     try {
       const versionPayload = await documentsApi.addVersion(id, {
@@ -243,6 +273,12 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
 
     if (!uploadFile) {
       setError('Seleziona un file da caricare')
+      return
+    }
+
+    const uploadFileError = validateUploadFile(uploadFile)
+    if (uploadFileError) {
+      setError(uploadFileError)
       return
     }
 

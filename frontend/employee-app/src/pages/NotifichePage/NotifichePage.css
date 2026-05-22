@@ -148,6 +148,28 @@
   background-color: rgba(99, 102, 241, 0.08);
 }
 
+.notification-item--linked {
+  cursor: pointer;
+}
+
+.notification-item--linked:hover {
+  background-color: rgba(99, 102, 241, 0.08);
+}
+
+.notification-icon {
+  flex-shrink: 0;
+  font-size: 1.125rem;
+  line-height: 1.4;
+}
+
+.notification-link-hint {
+  display: inline-block;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a5b4fc;
+}
+
 .notification-dot-wrapper {
   width: 8px;
   padding-top: 6px;

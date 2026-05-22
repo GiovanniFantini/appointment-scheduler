@@ -79,6 +79,7 @@ public interface IHRDocumentService
     /// </summary>
     Task<HRDocumentDownloadDto> GenerateEmployeeDownloadUrlAsync(
         int documentId,
+        int tenantId,
         int employeeId,
         int? versionNumber = null);
 

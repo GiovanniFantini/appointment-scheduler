@@ -95,12 +95,12 @@ public class EmployeeDocumentsController : ControllerBase
         if (RequireLevel(FeatureAccessLevel.ReadOnly) is { } forbidden)
             return forbidden;
 
-        if (!TryGetEmployeeId(out int employeeId))
+        if (!TryGetMerchantId(out int merchantId) || !TryGetEmployeeId(out int employeeId))
             return BadRequest(new { message = "Token non valido" });
 
         try
         {
-            var result = await _hrDocumentService.GenerateEmployeeDownloadUrlAsync(id, employeeId, versionNumber);
+            var result = await _hrDocumentService.GenerateEmployeeDownloadUrlAsync(id, merchantId, employeeId, versionNumber);
             return Ok(result);
         }
         catch (UnauthorizedAccessException)

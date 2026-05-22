@@ -23,6 +23,7 @@ sia quelli verificati dal sistema dopo l'invio (controlli *del sistema*).
 > 9-bis. [Conflitti tra azioni di attori diversi](#9-bis-conflitti-tra-azioni-di-attori-diversi)
 > 10. [Timbratura](#10-timbratura)
 > 11. [Magazzino](#11-magazzino)
+> 11-bis. [Documentale HR](#11-bis-documentale-hr)
 > 12. [Notifiche (Employee)](#12-notifiche-employee)
 > 13. [Elementi comuni di navigazione](#13-elementi-comuni-di-navigazione)
 > 14. [Appendici](#14-appendici)
@@ -1177,6 +1178,83 @@ rettifiche, fornitori e ordini si gestiscono esclusivamente dall'app Employee.
 
 ---
 
+## 11-bis. Documentale HR
+
+Modulo di archiviazione documenti del personale (buste paga, cedolini, contratti,
+bonus, comunicazioni, attestati, provvedimenti, fatture). I documenti sono
+classificati per tipo, anno e mese di riferimento, e versionati.
+
+### Ripartizione delle responsabilità
+
+| Attore | Cosa può fare |
+|--------|---------------|
+| **App Merchant** | Solo **configuratore**: abilita la feature `Documenti` sui ruoli e ne imposta il livello (vedi §7). Consultazione di sola lettura via API. Non esegue operazioni documentali. |
+| **App Employee** | Tutte le operazioni: upload, nuova versione, finalizzazione, download, cancellazione. Il livello del ruolo determina cosa è permesso. |
+
+### Livelli di accesso (feature `Documenti`)
+
+| Livello | Cosa abilita |
+|---------|--------------|
+| `ReadOnly` | Vede e scarica **solo i propri** documenti pubblicati. |
+| `Operator` | Anche: carica documenti **per altre risorse** e aggiunge nuove versioni. |
+| `Manager` | Anche: **cancella** documenti. |
+
+Una feature `Documenti` abilitata su un ruolo senza livello esplicito è trattata
+come `ReadOnly`. Il ruolo di default "Responsabile App" ha livello `Manager`.
+
+### 11-bis.1 Flusso di upload (Employee con livello ≥ Operator)
+
+1. **Creazione** — l'operatore sceglie destinatario, tipo, titolo, anno/mese
+   opzionali e un file. Il sistema crea il documento in stato `Draft` con una
+   prima versione in stato `Uploading` e restituisce un **SAS URL** di upload
+   (valido 5 minuti).
+2. **Upload** — il browser carica il file **direttamente** sul Blob Storage con
+   una `PUT` al SAS URL (l'API non fa da proxy dei byte).
+3. **Finalizzazione** — il client chiama l'endpoint di finalize con nome, size e
+   content-type del file. Il sistema:
+   - verifica che il blob esista;
+   - confronta la **size reale del blob** con quella dichiarata: se discordano, o
+     se supera 50 MB, la versione passa a `Failed` e la finalize fallisce;
+   - in caso positivo marca la versione `Completed`, allinea `CurrentVersion` e
+     pubblica il documento (`Published`).
+4. **Notifica** — alla pubblicazione, se la risorsa destinataria ha un account
+   utente, riceve una notifica `DocumentPublished` (vedi §12).
+
+La size massima per file è **50 MB**; l'app Employee la valida anche prima
+dell'upload. Formati ammessi: PDF, Word, Excel, immagini (PNG/JPG), testo.
+
+### 11-bis.2 Nuova versione
+
+Un operatore può aggiungere una nuova versione a un documento esistente: si
+ripete il ciclo upload → finalize. `CurrentVersion` viene allineata solo a upload
+completato, quindi punta sempre a una versione con un file effettivo. Se una
+versione precedente era rimasta in `Uploading` (upload abbandonato), viene marcata
+`Failed` automaticamente all'avvio del nuovo upload.
+
+### 11-bis.3 Download
+
+Il dipendente scarica i propri documenti `Published` tramite un SAS URL di sola
+lettura (valido 5 minuti). L'accesso è ristretto al proprio `EmployeeId` **e** al
+merchant corrente: un documento di un altro merchant non è raggiungibile.
+
+### 11-bis.4 Cancellazione
+
+La cancellazione è un **soft-delete**: il record viene marcato `IsDeleted` e non
+compare più, ma i file restano nel Blob Storage per retention legale (i documenti
+del personale hanno obblighi di conservazione pluriennale).
+
+### Corner case — Documentale HR
+
+| Situazione | Comportamento |
+|------------|---------------|
+| Risorsa esterna senza account utente | Può avere documenti assegnati (archivio storico) ma **non riceve notifiche** e non accede all'app per scaricarli. |
+| SAS URL scaduto prima del completamento upload | L'upload fallisce; la versione resta `Uploading` finché un nuovo upload sullo stesso documento non la marca `Failed`. |
+| Size dichiarata diversa dalla size reale del blob | La finalize rifiuta e marca la versione `Failed`. |
+| Feature `Documenti` abilitata su un ruolo senza livello esplicito | Trattata come `ReadOnly`. |
+| File oltre 50 MB o formato non ammesso | L'app Employee blocca prima dell'upload; il backend rifiuta comunque alla finalize. |
+
+---
+
 ## 12. Notifiche (Employee)
 
 **Comandi e campi — Pagina Notifiche**
@@ -1184,12 +1262,13 @@ rettifiche, fornitori e ordini si gestiscono esclusivamente dall'app Employee.
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
 | Segna tutte come lette | Bottone | Marca tutte le notifiche come lette. | Compare solo se ci sono notifiche non lette; disattivato durante l'operazione. |
-| Notifica (clic sull'elemento) | Azione | Marca la singola notifica come letta. | Solo per notifiche non ancora lette. |
+| Notifica (clic sull'elemento) | Azione | Marca la singola notifica come letta e, se la notifica è collegata a una risorsa (es. un documento), naviga alla pagina relativa. | — |
 
 Le notifiche recapitate includono:
 
 - **esito delle richieste** (approvata/rifiutata)
-- **nuovo documento pubblicato** nella sezione Documenti
+- **nuovo documento pubblicato** nella sezione Documenti — mostra un'icona
+  dedicata e, al clic, apre la pagina Documenti
 
 Il numero di notifiche non lette compare come badge sulla campanella e sulla
 voce di menu.

@@ -28,10 +28,14 @@ Problemi operativi tipici introdotti dal modulo documentale e relative verifiche
 | Sintomo | Verifica consigliata | Esito atteso |
 |---------|----------------------|--------------|
 | `403 Forbidden` su endpoint documenti | Controllare claim `Feature=Documenti` e `FeatureLevel=Documenti:*` nel JWT | ruolo con livello minimo richiesto (`ReadOnly`/`Operator`/`Manager`) |
-| Upload concluso ma finalize fallisce | Verificare esistenza blob e metadati (`ContentType`, estensione, size <= 50MB) | versione passa da `Uploading` a `Completed` |
+| Upload concluso ma finalize fallisce | Verificare esistenza blob e che la size reale del blob coincida con `FileSizeBytes` dichiarata e sia ≤ 50 MB | versione passa da `Uploading` a `Completed` |
+| Finalize rifiutata con size diversa | La finalize confronta la size **reale** del blob con quella nel DTO: se discordano la versione passa a `Failed`. Ricaricare il file. | size DTO == size blob |
+| Versione precedente bloccata in `Uploading` | All'avvio di un nuovo upload sullo stesso documento, le versioni rimaste `Uploading` (upload abbandonati) vengono marcate `Failed` automaticamente | nessuna versione orfana; `CurrentVersion` punta sempre all'ultima `Completed` |
 | Employee non vede documenti | Verificare che il documento sia `Published`, non `IsDeleted`, e assegnato al suo `EmployeeId` nel merchant corrente | documento visibile in `GET /api/employee/documents` |
 | Download non disponibile | Verificare stato versione (`UploadStatus=Completed`) e scadenza SAS | URL download generata e apribile |
-| Nessuna notifica dopo pubblicazione | Verificare che la risorsa abbia un account utente (`Employee.UserId`) | notifica `DocumentPublished` in elenco notifiche |
+| Download 403/NotFound da altro merchant | Il download employee filtra per `TenantId` **e** `EmployeeId`: un documento di un altro merchant non è raggiungibile | accesso negato cross-tenant |
+| Nessuna notifica dopo pubblicazione | Verificare che la risorsa abbia un account utente (`Employee.UserId`). Le risorse esterne senza account non ricevono notifica per scelta. | notifica `DocumentPublished` in elenco notifiche |
+| Upload fallisce con errore CORS dal browser | Verificare la regola CORS sull'account Azure Storage (vedi README) | `PUT` al SAS URL accettato |
 
 ---
 

@@ -35,7 +35,8 @@
       "Bash(PGPASSWORD=postgres psql -h localhost -U postgres -d AppointmentScheduler -t -c \"SELECT \\\\\"Kind\\\\\", COUNT\\(*\\) FROM \\\\\"Employees\\\\\" GROUP BY \\\\\"Kind\\\\\";\")",
       "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\" -Force)",
       "Bash(Select-Object -First 20)",
-      "PowerShell(head -80)"
+      "PowerShell(head -80)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Repos\\\\appointment-scheduler\" -Directory -Name)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

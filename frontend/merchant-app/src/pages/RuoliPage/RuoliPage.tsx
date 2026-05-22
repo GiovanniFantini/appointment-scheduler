@@ -8,22 +8,35 @@ interface Feature {
   value: number
 }
 
-// Livelli di accesso operativo. Significativi solo per la feature Magazzino.
-// Valori numerici allineati all'enum C# FeatureAccessLevel: l'API serializza
-// e deserializza gli enum come numeri.
+// Livelli di accesso operativo. Significativi per le feature a livelli
+// (Magazzino e Documenti). Valori numerici allineati all'enum C#
+// FeatureAccessLevel: l'API serializza e deserializza gli enum come numeri.
 const enum FeatureAccessLevel {
   ReadOnly = 1,
   Operator = 2,
   Manager = 3,
 }
 
-const MAGAZZINO_FEATURE_VALUE = 10
+// Valori feature (allineati all'enum C# MerchantFeature).
+const FEATURE_DOCUMENTI = 5
+const FEATURE_MAGAZZINO = 10
 
-const MAGAZZINO_LEVELS: Array<{ value: FeatureAccessLevel; label: string }> = [
-  { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura' },
-  { value: FeatureAccessLevel.Operator, label: 'Operatore (rettifiche, ricezioni)' },
-  { value: FeatureAccessLevel.Manager, label: 'Manager (anche anagrafiche e ordini)' },
-]
+// Feature che usano i livelli di accesso, con le label dei rispettivi livelli.
+// Le altre feature restano un semplice toggle on/off.
+const LEVELED_FEATURES: Record<number, Array<{ value: FeatureAccessLevel; label: string }>> = {
+  [FEATURE_DOCUMENTI]: [
+    { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura (scarica i propri documenti)' },
+    { value: FeatureAccessLevel.Operator, label: 'Operatore (carica documenti per altre risorse)' },
+    { value: FeatureAccessLevel.Manager, label: 'Manager (anche cancellazione documenti)' },
+  ],
+  [FEATURE_MAGAZZINO]: [
+    { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura' },
+    { value: FeatureAccessLevel.Operator, label: 'Operatore (rettifiche, ricezioni)' },
+    { value: FeatureAccessLevel.Manager, label: 'Manager (anche anagrafiche e ordini)' },
+  ],
+}
+
+const isLeveledFeature = (featureValue: number) => featureValue in LEVELED_FEATURES
 
 interface RoleFeatureDto {
   feature: number
@@ -45,15 +58,18 @@ const ALL_FEATURES: Feature[] = [
   { name: 'Richieste', icon: '📋', value: 2 },
   { name: 'Risorse', icon: '👥', value: 3 },
   { name: 'Ruoli', icon: '🔑', value: 4 },
-  { name: 'Documenti', icon: '📁', value: 5 },
+  { name: 'Documenti', icon: '📁', value: FEATURE_DOCUMENTI },
   { name: 'Report', icon: '📊', value: 6 },
   { name: 'Mansioni', icon: '🏷', value: 7 },
   { name: 'Filiali', icon: '🏢', value: 8 },
   { name: 'Timbratura', icon: '⏱', value: 9 },
-  { name: 'Magazzino', icon: '📦', value: 10 },
+  { name: 'Magazzino', icon: '📦', value: FEATURE_MAGAZZINO },
 ]
 
 const DEFAULT_ROLE_NAME = 'Responsabile App'
+
+// Livelli di accesso indicizzati per ruolo e per feature.
+type RoleFeatureLevels = Record<number, Record<number, FeatureAccessLevel>>
 
 export default function RuoliPage() {
   const [roles, setRoles] = useState<MerchantRole[]>([])
@@ -65,8 +81,8 @@ export default function RuoliPage() {
   const [createError, setCreateError] = useState('')
   // localFeatures: roleId -> array of enabled feature enum values (numbers)
   const [localFeatures, setLocalFeatures] = useState<Record<number, number[]>>({})
-  // magazzinoLevels: roleId -> livello di accesso al Magazzino (se abilitato)
-  const [magazzinoLevels, setMagazzinoLevels] = useState<Record<number, FeatureAccessLevel>>({})
+  // featureLevels: roleId -> { featureValue -> livello } per le feature a livelli.
+  const [featureLevels, setFeatureLevels] = useState<RoleFeatureLevels>({})
 
   const fetchRoles = async () => {
     setLoading(true)
@@ -76,15 +92,20 @@ export default function RuoliPage() {
         const data = res.data as MerchantRole[]
         setRoles(data)
         const fm: Record<number, number[]> = {}
-        const lm: Record<number, FeatureAccessLevel> = {}
+        const lm: RoleFeatureLevels = {}
         data.forEach(r => {
           fm[r.id] = r.features.filter(f => f.isEnabled).map(f => f.feature)
-          const magazzino = r.features.find(f => f.feature === MAGAZZINO_FEATURE_VALUE)
-          // Default sicuro: una feature Magazzino abilitata senza livello è ReadOnly.
-          lm[r.id] = magazzino?.accessLevel ?? FeatureAccessLevel.ReadOnly
+          // Default sicuro: una feature a livelli abilitata senza livello è ReadOnly.
+          const levels: Record<number, FeatureAccessLevel> = {}
+          r.features.forEach(f => {
+            if (isLeveledFeature(f.feature)) {
+              levels[f.feature] = f.accessLevel ?? FeatureAccessLevel.ReadOnly
+            }
+          })
+          lm[r.id] = levels
         })
         setLocalFeatures(fm)
-        setMagazzinoLevels(lm)
+        setFeatureLevels(lm)
       }
     } catch {
       setRoles([])
@@ -103,23 +124,36 @@ export default function RuoliPage() {
         : [...current, featureValue]
       return { ...prev, [roleId]: updated }
     })
-    // Abilitando il Magazzino senza un livello già scelto, parte da ReadOnly.
-    if (featureValue === MAGAZZINO_FEATURE_VALUE) {
-      setMagazzinoLevels(prev => ({ ...prev, [roleId]: prev[roleId] ?? FeatureAccessLevel.ReadOnly }))
+    // Abilitando una feature a livelli senza un livello già scelto, parte da ReadOnly.
+    if (isLeveledFeature(featureValue)) {
+      setFeatureLevels(prev => {
+        const roleLevels = prev[roleId] ?? {}
+        return {
+          ...prev,
+          [roleId]: {
+            ...roleLevels,
+            [featureValue]: roleLevels[featureValue] ?? FeatureAccessLevel.ReadOnly,
+          },
+        }
+      })
     }
   }
 
-  const setMagazzinoLevel = (roleId: number, level: FeatureAccessLevel) => {
-    setMagazzinoLevels(prev => ({ ...prev, [roleId]: level }))
+  const setFeatureLevel = (roleId: number, featureValue: number, level: FeatureAccessLevel) => {
+    setFeatureLevels(prev => ({
+      ...prev,
+      [roleId]: { ...(prev[roleId] ?? {}), [featureValue]: level },
+    }))
   }
 
-  /** Costruisce il payload feature, includendo il livello per il Magazzino. */
+  /** Costruisce il payload feature, includendo il livello per le feature a livelli. */
   const buildFeaturesPayload = (roleId: number, enabledValues: number[]) =>
     ALL_FEATURES.map(feat => {
       const isEnabled = enabledValues.includes(feat.value)
       const base = { feature: feat.value, isEnabled }
-      if (feat.value === MAGAZZINO_FEATURE_VALUE && isEnabled) {
-        return { ...base, accessLevel: magazzinoLevels[roleId] ?? FeatureAccessLevel.ReadOnly }
+      if (isLeveledFeature(feat.value) && isEnabled) {
+        const level = featureLevels[roleId]?.[feat.value] ?? FeatureAccessLevel.ReadOnly
+        return { ...base, accessLevel: level }
       }
       return base
     })
@@ -202,7 +236,7 @@ export default function RuoliPage() {
                 <div className="features-label">Funzionalità</div>
                 {ALL_FEATURES.map(feat => {
                   const isEnabled = (localFeatures[role.id] ?? []).includes(feat.value)
-                  const showLevelSelector = feat.value === MAGAZZINO_FEATURE_VALUE && isEnabled
+                  const showLevelSelector = isLeveledFeature(feat.value) && isEnabled
                   return (
                     <div key={feat.name}>
                       <div className="feature-toggle-row">
@@ -225,11 +259,11 @@ export default function RuoliPage() {
                           <span className="feature-level-label">Livello di accesso</span>
                           <select
                             className="feature-level-select"
-                            value={magazzinoLevels[role.id] ?? FeatureAccessLevel.ReadOnly}
-                            onChange={e => setMagazzinoLevel(role.id, Number(e.target.value) as FeatureAccessLevel)}
+                            value={featureLevels[role.id]?.[feat.value] ?? FeatureAccessLevel.ReadOnly}
+                            onChange={e => setFeatureLevel(role.id, feat.value, Number(e.target.value) as FeatureAccessLevel)}
                             disabled={isDefaultRole(role)}
                           >
-                            {MAGAZZINO_LEVELS.map(level => (
+                            {LEVELED_FEATURES[feat.value].map(level => (
                               <option key={level.value} value={level.value}>{level.label}</option>
                             ))}
                           </select>
