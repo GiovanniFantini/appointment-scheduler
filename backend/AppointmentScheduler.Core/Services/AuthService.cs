@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.Shared.Helpers;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -143,14 +144,14 @@ public class AuthService : IAuthService
         _context.MerchantBranches.Add(headquarters);
         await _context.SaveChangesAsync();
 
-        // Crea il ruolo "Responsabile App" con tutte le feature attive
-        var defaultRole = new MerchantRole
+        // Crea il ruolo "Responsabile App" con tutte le feature attive.
+        var appManagerRole = new MerchantRole
         {
             MerchantId = merchant.Id,
-            Name = "Responsabile App",
+            Name = SystemRoleNames.AppManager,
             IsDefault = true
         };
-        _context.MerchantRoles.Add(defaultRole);
+        _context.MerchantRoles.Add(appManagerRole);
         await _context.SaveChangesAsync();
 
         var allFeatures = Enum.GetValues<MerchantFeature>();
@@ -158,14 +159,66 @@ public class AuthService : IAuthService
         {
             _context.RoleFeatures.Add(new RoleFeature
             {
-                RoleId = defaultRole.Id,
+                RoleId = appManagerRole.Id,
                 Feature = feature,
                 IsEnabled = true,
                 // Il ruolo predefinito ha pieni poteri: livello Manager sulle
                 // feature con access level.
-                AccessLevel = (feature == MerchantFeature.Magazzino || feature == MerchantFeature.Documenti)
+                AccessLevel = (feature == MerchantFeature.Calendario
+                               || feature == MerchantFeature.Magazzino
+                               || feature == MerchantFeature.Documenti
+                               || feature == MerchantFeature.Richieste
+                               || feature == MerchantFeature.Timbratura)
                     ? FeatureAccessLevel.Manager
                     : null
+            });
+        }
+
+        // Ruolo base interno: baseline minima per risorse interne.
+        var internalBaseRole = new MerchantRole
+        {
+            MerchantId = merchant.Id,
+            Name = SystemRoleNames.InternalBase,
+            IsDefault = false
+        };
+        _context.MerchantRoles.Add(internalBaseRole);
+        await _context.SaveChangesAsync();
+
+        foreach (var feature in allFeatures)
+        {
+            var isEnabled = feature == MerchantFeature.Calendario
+                            || feature == MerchantFeature.Richieste
+                            || feature == MerchantFeature.Timbratura;
+
+            _context.RoleFeatures.Add(new RoleFeature
+            {
+                RoleId = internalBaseRole.Id,
+                Feature = feature,
+                IsEnabled = isEnabled,
+                AccessLevel = isEnabled ? FeatureAccessLevel.ReadOnly : null
+            });
+        }
+
+        // Ruolo base esterno: baseline minima per risorse esterne.
+        var externalBaseRole = new MerchantRole
+        {
+            MerchantId = merchant.Id,
+            Name = SystemRoleNames.ExternalBase,
+            IsDefault = false
+        };
+        _context.MerchantRoles.Add(externalBaseRole);
+        await _context.SaveChangesAsync();
+
+        foreach (var feature in allFeatures)
+        {
+            var isEnabled = feature == MerchantFeature.Calendario;
+
+            _context.RoleFeatures.Add(new RoleFeature
+            {
+                RoleId = externalBaseRole.Id,
+                Feature = feature,
+                IsEnabled = isEnabled,
+                AccessLevel = isEnabled ? FeatureAccessLevel.ReadOnly : null
             });
         }
         await _context.SaveChangesAsync();
@@ -186,7 +239,7 @@ public class AuthService : IAuthService
         {
             EmployeeId = ownerEmployee.Id,
             MerchantId = merchant.Id,
-            RoleId = defaultRole.Id,
+            RoleId = appManagerRole.Id,
             HomeBranchId = headquarters.Id,
             IsActive = true
         });
@@ -378,8 +431,11 @@ public class AuthService : IAuthService
     private static Dictionary<string, string> BuildMerchantFeatureLevels()
         => new()
         {
+            [MerchantFeature.Calendario.ToString()] = FeatureAccessLevel.Manager.ToString(),
             [MerchantFeature.Magazzino.ToString()] = FeatureAccessLevel.Manager.ToString(),
             [MerchantFeature.Documenti.ToString()] = FeatureAccessLevel.Manager.ToString(),
+            [MerchantFeature.Richieste.ToString()] = FeatureAccessLevel.Manager.ToString(),
+            [MerchantFeature.Timbratura.ToString()] = FeatureAccessLevel.Manager.ToString(),
         };
 
     // ── JWT Generation ─────────────────────────────────────────────────────

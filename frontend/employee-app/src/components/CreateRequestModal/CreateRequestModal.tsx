@@ -1,5 +1,6 @@
 import { useState, useEffect, FormEvent } from 'react'
 import apiClient from '../../lib/axios'
+import { nativeDateInputProps } from '../../lib/dateUtils'
 import './CreateRequestModal.css'
 
 type RequestType = 'Ferie' | 'Permessi' | 'Malattia'
@@ -167,6 +168,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
                 className="form-input"
                 value={dataInizio}
                 onChange={e => setDataInizio(e.target.value)}
+                {...nativeDateInputProps}
                 required
               />
             </div>
@@ -178,6 +180,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
                 value={dataFine}
                 min={dataInizio}
                 onChange={e => setDataFine(e.target.value)}
+                {...nativeDateInputProps}
               />
             </div>
           </div>

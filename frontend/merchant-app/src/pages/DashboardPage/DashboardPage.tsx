@@ -23,12 +23,7 @@ interface QuickLink {
 }
 
 const QUICK_LINKS: QuickLink[] = [
-  { path: '/calendario', icon: '📅', label: 'Calendario', desc: 'Gestisci eventi e turni', feature: 'Calendario' },
-  { path: '/richieste', icon: '📋', label: 'Richieste', desc: 'Approva richieste dipendenti', feature: 'Richieste' },
-  { path: '/risorse', icon: '👥', label: 'Risorse', desc: 'Gestisci i dipendenti', feature: 'Risorse' },
-  { path: '/magazzino', icon: '📦', label: 'Magazzino', desc: 'Controlla scorte e acquisti', feature: 'Magazzino' },
   { path: '/ruoli', icon: '🔑', label: 'Ruoli', desc: 'Configura ruoli e permessi', feature: 'Ruoli' },
-  { path: '/documenti', icon: '📁', label: 'Documenti', desc: 'Documenti HR e payroll', feature: 'Documenti' },
   { path: '/report', icon: '📊', label: 'Report', desc: 'Statistiche aziendali', feature: 'Report' },
 ]
 
@@ -89,27 +84,27 @@ export default function DashboardPage({ user }: DashboardPageProps) {
       </div>
 
       <div className="stats-grid">
-        <Link to="/risorse" className="stat-card">
+        <div className="stat-card stat-card--static">
           <div className="stat-icon blue">👥</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.totalEmployees}</div>
             <div className="stat-label">Dipendenti totali</div>
           </div>
-        </Link>
-        <Link to="/calendario" className="stat-card">
+        </div>
+        <div className="stat-card stat-card--static">
           <div className="stat-icon indigo">📅</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.upcomingEvents}</div>
             <div className="stat-label">Eventi questa settimana</div>
           </div>
-        </Link>
-        <Link to="/richieste" className="stat-card">
+        </div>
+        <div className="stat-card stat-card--static">
           <div className="stat-icon amber">📋</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.pendingRequests}</div>
             <div className="stat-label">Richieste in attesa</div>
           </div>
-        </Link>
+        </div>
         <div className="stat-card stat-card--static">
           <div className="stat-icon green">✅</div>
           <div className="stat-info">

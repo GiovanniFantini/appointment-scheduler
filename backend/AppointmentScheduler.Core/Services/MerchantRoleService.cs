@@ -200,13 +200,17 @@ public class MerchantRoleService : IMerchantRoleService
 
     /// <summary>
     /// Determina il livello di accesso da persistere per una feature.
-    /// Il livello è significativo per Magazzino e Documenti: se la feature è
+    /// Il livello è significativo per Calendario, Richieste, Magazzino, Documenti e Timbratura: se la feature è
     /// abilitata senza livello esplicito, il default è ReadOnly. Per le altre
     /// feature il livello resta null.
     /// </summary>
     private static FeatureAccessLevel? ResolveAccessLevel(MerchantFeatureRequest request)
     {
-        if (request.Feature != MerchantFeature.Magazzino && request.Feature != MerchantFeature.Documenti)
+        if (request.Feature != MerchantFeature.Calendario
+            && request.Feature != MerchantFeature.Richieste
+            && request.Feature != MerchantFeature.Magazzino
+            && request.Feature != MerchantFeature.Documenti
+            && request.Feature != MerchantFeature.Timbratura)
             return null;
         if (!request.IsEnabled)
             return null;

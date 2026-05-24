@@ -15,8 +15,8 @@ public class CreateEmployeeRequest
     public string? PhoneNumber { get; set; }
 
     /// <summary>
-    /// Ruolo applicativo. Per gli esterni pu essere 0/non valido: il service
-    /// risolve il ruolo predefinito del merchant.
+    /// Ruolo applicativo. Se 0/non valido, il service risolve il ruolo base in
+    /// base al tipo risorsa (Interno Base / Esterno Base).
     /// </summary>
     public int RoleId { get; set; }
     public List<int> SkillIds { get; set; } = new();

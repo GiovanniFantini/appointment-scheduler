@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using AppointmentScheduler.API.Authorization;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -83,6 +84,9 @@ public class EventsController : ControllerBase
         [FromQuery] DateOnly? from,
         [FromQuery] DateOnly? to)
     {
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.ReadOnly))
+            return Forbid();
+
         if (!TryGetEmployeeId(out int employeeId))
             return BadRequest(new { message = "Employee ID non trovato nel token" });
 
@@ -94,12 +98,43 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
-    /// Recupera un evento per ID
+    /// Recupera i turni di team per la pianificazione lato employee app.
+    /// Richiede livello Calendario almeno Operator.
+    /// </summary>
+    [HttpGet("employee/planning")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<List<EventDto>>> GetEmployeePlanningEvents(
+        [FromQuery] DateOnly? from,
+        [FromQuery] DateOnly? to,
+        [FromQuery] int? branchId = null,
+        [FromQuery] int? departmentId = null)
+    {
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Operator))
+            return Forbid();
+
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        var events = await _eventService.GetMerchantEventsAsync(
+            merchantId,
+            from,
+            to,
+            EventType.Turno,
+            branchId,
+            departmentId);
+        return Ok(events);
+    }
+
+    /// <summary>
+    /// Recupera un evento per ID (lato employee app)
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EventDto>> GetById(int id)
     {
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.ReadOnly))
+            return Forbid();
+
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
@@ -115,7 +150,7 @@ public class EventsController : ControllerBase
     /// Crea un nuovo evento
     /// </summary>
     [HttpPost]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EventDto>> Create([FromBody] CreateEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -124,10 +159,21 @@ public class EventsController : ControllerBase
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
 
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
+            return Forbid();
+
         try
         {
             var evt = await _eventService.CreateAsync(merchantId, userId, request);
             return CreatedAtAction(nameof(GetById), new { id = evt.Id }, evt);
+        }
+        catch (EventConflictException ex)
+        {
+            return Conflict(new { message = ex.Message, conflicts = ex.Conflicts });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {
@@ -139,11 +185,14 @@ public class EventsController : ControllerBase
     /// Aggiorna un evento esistente
     /// </summary>
     [HttpPut("{id}")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EventDto>> Update(int id, [FromBody] UpdateEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
+            return Forbid();
 
         try
         {
@@ -154,6 +203,10 @@ public class EventsController : ControllerBase
 
             return Ok(evt);
         }
+        catch (EventConflictException ex)
+        {
+            return Conflict(new { message = ex.Message, conflicts = ex.Conflicts });
+        }
         catch (InvalidOperationException ex)
         {
             // Validazioni di dominio (filiale/reparto non validi): 400, non 500.
@@ -162,14 +215,50 @@ public class EventsController : ControllerBase
     }
 
     /// <summary>
+    /// Aggiorna solo le assegnazioni di un turno esistente.
+    /// Richiede livello Calendario almeno Operator.
+    /// </summary>
+    [HttpPut("{id}/assignments")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<EventDto>> UpdateAssignments(int id, [FromBody] UpdateEventAssignmentsRequest request)
+    {
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Operator))
+            return Forbid();
+
+        try
+        {
+            var evt = await _eventService.UpdateAssignmentsAsync(id, merchantId, request);
+
+            if (evt == null)
+                return NotFound(new { message = "Evento non trovato o non autorizzato" });
+
+            return Ok(evt);
+        }
+        catch (EventConflictException ex)
+        {
+            return Conflict(new { message = ex.Message, conflicts = ex.Conflicts });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Elimina un evento
     /// </summary>
     [HttpDelete("{id}")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<IActionResult> Delete(int id)
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
+            return Forbid();
 
         var result = await _eventService.DeleteAsync(id, merchantId);
 
@@ -189,6 +278,9 @@ public class EventsController : ControllerBase
         [FromQuery] DateOnly from,
         [FromQuery] DateOnly to)
     {
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.ReadOnly))
+            return Forbid();
+
         if (!TryGetEmployeeId(out int employeeId))
             return BadRequest(new { message = "Employee ID non trovato nel token" });
 
@@ -226,11 +318,14 @@ public class EventsController : ControllerBase
     /// Clona un evento in un intervallo di date (un clone per ogni giorno)
     /// </summary>
     [HttpPost("{id}/clone")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<List<EventDto>>> Clone(int id, [FromBody] CloneEventRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
+            return Forbid();
 
         if (request.FromDate > request.ToDate)
             return BadRequest(new { message = "La data di inizio deve essere precedente o uguale alla data di fine" });
@@ -255,7 +350,7 @@ public class EventsController : ControllerBase
     /// opzionalmente filtrando per dipendenti.
     /// </summary>
     [HttpPost("clone-week")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<List<EventDto>>> CloneWeek([FromBody] CloneWeekRequest request)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -263,6 +358,9 @@ public class EventsController : ControllerBase
 
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
+            return Forbid();
 
         if (request.NumberOfWeeks < 1)
             return BadRequest(new { message = "Il numero di settimane deve essere almeno 1" });

@@ -34,4 +34,9 @@ public interface IEmployeeRequestService
     /// Recupera le richieste di un dipendente nel merchant
     /// </summary>
     Task<List<EmployeeRequestDto>> GetEmployeeRequestsAsync(int employeeId, int merchantId, RequestStatus? status = null);
+
+    /// <summary>
+    /// Elimina una richiesta del dipendente nel merchant, indipendentemente dallo stato.
+    /// </summary>
+    Task<bool> DeleteAsync(int id, int employeeId, int merchantId);
 }

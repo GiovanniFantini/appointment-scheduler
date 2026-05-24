@@ -6,17 +6,8 @@ import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage'
 import DashboardPage from './pages/DashboardPage/DashboardPage'
-import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
-import RichiestePage from './pages/RichiestePage/RichiestePage'
-import RisorsePage from './pages/RisorsePage/RisorsePage'
-import MansioniPage from './pages/MansioniPage/MansioniPage'
 import RuoliPage from './pages/RuoliPage/RuoliPage'
-import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import ReportPage from './pages/ReportPage/ReportPage'
-import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
-import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
-import FilialiPage from './pages/FilialiPage/FilialiPage'
-import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
 import PendingApprovalPage from './pages/PendingApprovalPage/PendingApprovalPage'
 import { BranchProvider } from './contexts/BranchContext'
 
@@ -106,16 +97,7 @@ function App(_props: AppProps) {
           }
         >
           <Route path="/" element={<DashboardPage user={user!} />} />
-          <Route path="/calendario" element={<CalendarioPage user={user!} />} />
-          <Route path="/pianificazione" element={<PianificazionePage user={user!} />} />
-          <Route path="/richieste" element={<RichiestePage />} />
-          <Route path="/risorse" element={<RisorsePage user={user!} />} />
-          <Route path="/mansioni" element={<MansioniPage />} />
-          <Route path="/filiali" element={<FilialiPage />} />
-          <Route path="/timbratura" element={<TimbraturaPage />} />
-          <Route path="/magazzino" element={<MagazzinoPage />} />
           <Route path="/ruoli" element={<RuoliPage />} />
-          <Route path="/documenti" element={<DocumentiPage />} />
           <Route path="/report" element={<ReportPage />} />
         </Route>
         <Route

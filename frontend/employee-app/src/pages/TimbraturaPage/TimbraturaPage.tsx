@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import TimeClockWidget from '../../components/TimeClockWidget/TimeClockWidget'
 import JustifyAnomalyModal from '../../components/JustifyAnomalyModal/JustifyAnomalyModal'
 import { timeClockApi } from '../../lib/api/timeClock'
 import { TimeEntryType, TimeClockAnomalyStatus } from '../../types/timbratura'
 import type { TimeEntryDto, TimeClockAnomalyDto, WellbeingStatsDto } from '../../types/timbratura'
+import type { FeatureAccessLevel } from '../../App'
 import './TimbraturaPage.css'
+
+const LEVEL_RANK: Record<FeatureAccessLevel, number> = {
+  ReadOnly: 1,
+  Operator: 2,
+  Manager: 3,
+}
 
 function formatHours(minutes: number): string {
   const h = Math.floor(minutes / 60)
@@ -46,12 +54,17 @@ function formatTimestamp(iso: string): string {
   })
 }
 
-export default function TimbraturaPage() {
+interface Props {
+  accessLevel?: FeatureAccessLevel
+}
+
+export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
   const [entries, setEntries] = useState<TimeEntryDto[]>([])
   const [loadingHistory, setLoadingHistory] = useState(true)
   const [anomalies, setAnomalies] = useState<TimeClockAnomalyDto[]>([])
   const [justifying, setJustifying] = useState<TimeClockAnomalyDto | null>(null)
   const [wellbeing, setWellbeing] = useState<WellbeingStatsDto | null>(null)
+  const canManageTeamClock = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Manager
 
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true)
@@ -90,7 +103,14 @@ export default function TimbraturaPage() {
   return (
     <div className="timbratura-page">
       <div className="tp-header">
-        <h1 className="tp-title">Timbratura</h1>
+        <div className="tp-header-top">
+          <h1 className="tp-title">Timbratura</h1>
+          {canManageTeamClock && (
+            <Link to="/timbratura-gestione" className="tp-manage-btn">
+              Gestisci timbrature
+            </Link>
+          )}
+        </div>
         <p className="tp-subtitle">Registra entrata, uscita e pause del tuo turno</p>
       </div>
 

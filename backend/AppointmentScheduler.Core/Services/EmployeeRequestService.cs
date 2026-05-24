@@ -181,6 +181,19 @@ public class EmployeeRequestService : IEmployeeRequestService
         return requests.Select(MapToDto).ToList();
     }
 
+    public async Task<bool> DeleteAsync(int id, int employeeId, int merchantId)
+    {
+        var request = await _context.EmployeeRequests
+            .FirstOrDefaultAsync(r => r.Id == id && r.EmployeeId == employeeId && r.MerchantId == merchantId);
+
+        if (request == null)
+            return false;
+
+        _context.EmployeeRequests.Remove(request);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     private static EmployeeRequestDto MapToDto(EmployeeRequest r)
     {
         var fullName = $"{r.Employee.FirstName} {r.Employee.LastName}";

@@ -31,10 +31,29 @@ public class EmployeeRequestsControllerTests
     }
 
     [Fact]
+    public async Task GetPendingApprovals_ReturnsOk_WhenEmployeeHasApproverLevel()
+    {
+        var requests = new List<EmployeeRequestDto> { new() { Id = 9 } };
+        _requestService.Setup(service => service.GetMerchantRequestsAsync(7, RequestStatus.Pending)).ReturnsAsync(requests);
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
+
+        var result = await controller.GetPendingApprovals();
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeSameAs(requests);
+    }
+
+    [Fact]
     public async Task GetById_ReturnsNotFound_WhenRequestDoesNotExist()
     {
         _requestService.Setup(service => service.GetByIdAsync(3, 7)).ReturnsAsync((EmployeeRequestDto?)null);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.GetById(3);
 
@@ -47,7 +66,10 @@ public class EmployeeRequestsControllerTests
     {
         var request = new EmployeeRequestDto { Id = 3 };
         _requestService.Setup(service => service.GetByIdAsync(3, 7)).ReturnsAsync(request);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.GetById(3);
 
@@ -58,7 +80,9 @@ public class EmployeeRequestsControllerTests
     [Fact]
     public async Task Create_ReturnsBadRequest_WhenEmployeeClaimIsMissing()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
 
         var result = await controller.Create(new CreateEmployeeRequestRequest());
 
@@ -71,7 +95,10 @@ public class EmployeeRequestsControllerTests
     {
         var request = new CreateEmployeeRequestRequest();
         _requestService.Setup(service => service.CreateAsync(11, 7, request)).ThrowsAsync(new Exception("boom"));
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
 
         var result = await controller.Create(request);
 
@@ -85,7 +112,10 @@ public class EmployeeRequestsControllerTests
         var request = new CreateEmployeeRequestRequest();
         var created = new EmployeeRequestDto { Id = 8 };
         _requestService.Setup(service => service.CreateAsync(11, 7, request)).ReturnsAsync(created);
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
 
         var result = await controller.Create(request);
 
@@ -93,6 +123,16 @@ public class EmployeeRequestsControllerTests
         response.ActionName.Should().Be(nameof(EmployeeRequestsController.GetById));
         response.RouteValues!["id"].Should().Be(8);
         response.Value.Should().BeSameAs(created);
+    }
+
+    [Fact]
+    public async Task Approve_ReturnsForbid_WhenApproverFeatureLevelIsMissing()
+    {
+        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+
+        var result = await controller.Approve(5);
+
+        result.Result.Should().BeOfType<ForbidResult>();
     }
 
     [Fact]
@@ -110,7 +150,11 @@ public class EmployeeRequestsControllerTests
     public async Task Approve_ReturnsNotFound_WhenServiceReturnsNull()
     {
         _requestService.Setup(service => service.ApproveAsync(5, 7, 12, null)).ReturnsAsync((EmployeeRequestDto?)null);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Approve(5);
 
@@ -123,7 +167,11 @@ public class EmployeeRequestsControllerTests
     {
         var body = new ReviewEmployeeRequestRequest();
         _requestService.Setup(service => service.ApproveAsync(5, 7, 12, body)).ThrowsAsync(new InvalidOperationException("Stato non valido"));
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Approve(5, body);
 
@@ -137,7 +185,11 @@ public class EmployeeRequestsControllerTests
         var body = new ReviewEmployeeRequestRequest();
         var approved = new EmployeeRequestDto { Id = 5 };
         _requestService.Setup(service => service.ApproveAsync(5, 7, 12, body)).ReturnsAsync(approved);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Approve(5, body);
 
@@ -149,7 +201,11 @@ public class EmployeeRequestsControllerTests
     public async Task Reject_ReturnsNotFound_WhenServiceReturnsNull()
     {
         _requestService.Setup(service => service.RejectAsync(5, 7, 12, null)).ReturnsAsync((EmployeeRequestDto?)null);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Reject(5);
 
@@ -162,7 +218,11 @@ public class EmployeeRequestsControllerTests
     {
         var body = new ReviewEmployeeRequestRequest();
         _requestService.Setup(service => service.RejectAsync(5, 7, 12, body)).ThrowsAsync(new InvalidOperationException("Stato non valido"));
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Reject(5, body);
 
@@ -176,7 +236,11 @@ public class EmployeeRequestsControllerTests
         var body = new ReviewEmployeeRequestRequest();
         var rejected = new EmployeeRequestDto { Id = 5 };
         _requestService.Setup(service => service.RejectAsync(5, 7, 12, body)).ReturnsAsync(rejected);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Richieste}:Operator"));
 
         var result = await controller.Reject(5, body);
 
@@ -187,7 +251,9 @@ public class EmployeeRequestsControllerTests
     [Fact]
     public async Task GetMyRequests_ReturnsBadRequest_WhenEmployeeClaimIsMissing()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
 
         var result = await controller.GetMyRequests();
 
@@ -200,7 +266,10 @@ public class EmployeeRequestsControllerTests
     {
         var requests = new List<EmployeeRequestDto> { new() { Id = 8 } };
         _requestService.Setup(service => service.GetEmployeeRequestsAsync(11, 7, RequestStatus.Approved)).ReturnsAsync(requests);
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
 
         var result = await controller.GetMyRequests(RequestStatus.Approved);
 
@@ -211,5 +280,68 @@ public class EmployeeRequestsControllerTests
     private EmployeeRequestsController CreateController(params Claim[] claims)
     {
         return new EmployeeRequestsController(_requestService.Object).WithUser(claims);
+    }
+
+    [Fact]
+    public async Task Create_ReturnsForbid_WhenRichiesteFeatureIsMissing()
+    {
+        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+
+        var result = await controller.Create(new CreateEmployeeRequestRequest());
+
+        result.Result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetMyRequests_ReturnsForbid_WhenRichiesteFeatureIsMissing()
+    {
+        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+
+        var result = await controller.GetMyRequests();
+
+        result.Result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsBadRequest_WhenEmployeeClaimIsMissing()
+    {
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
+
+        var result = await controller.Delete(5);
+
+        var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("Employee ID non trovato nel token");
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsNotFound_WhenRequestIsMissing()
+    {
+        _requestService.Setup(service => service.DeleteAsync(5, 11, 7)).ReturnsAsync(false);
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
+
+        var result = await controller.Delete(5);
+
+        var notFound = result.Should().BeOfType<NotFoundObjectResult>().Subject;
+        notFound.GetAnonymousString("message").Should().Be("Richiesta non trovata o non autorizzata");
+    }
+
+    [Fact]
+    public async Task Delete_ReturnsOk_WhenRequestIsDeleted()
+    {
+        _requestService.Setup(service => service.DeleteAsync(5, 11, 7)).ReturnsAsync(true);
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Richieste.ToString()));
+
+        var result = await controller.Delete(5);
+
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.GetAnonymousString("message").Should().Be("Richiesta eliminata con successo");
     }
 }

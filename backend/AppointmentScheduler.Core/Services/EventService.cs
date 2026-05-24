@@ -138,15 +138,18 @@ public class EventService : IEventService
     {
         var now = _clock.UtcNow;
         var branchId = await ResolveBranchIdAsync(merchantId, request.BranchId);
-        await ValidateDepartmentAsync(branchId, request.DepartmentId);
+        var departmentId = IsEmployeeAbsenceEvent(request.EventType) ? null : request.DepartmentId;
+        var appliesToAllBranches = request.EventType == EventType.ChiusuraAziendale && request.AppliesToAllBranches;
+
+        await ValidateDepartmentAsync(branchId, departmentId);
         await ValidateParticipantDepartmentsAsync(branchId, request.ParticipantOverrides);
 
         var evt = new Event
         {
             MerchantId = merchantId,
             BranchId = branchId,
-            DepartmentId = request.DepartmentId,
-            AppliesToAllBranches = request.AppliesToAllBranches,
+            DepartmentId = departmentId,
+            AppliesToAllBranches = appliesToAllBranches,
             Title = request.Title,
             EventType = request.EventType,
             StartDate = request.StartDate,
@@ -191,6 +194,8 @@ public class EventService : IEventService
             });
         }
 
+        await ValidateBlockingConflictsAsync(evt);
+
         _context.Events.Add(evt);
         await _context.SaveChangesAsync();
 
@@ -220,12 +225,15 @@ public class EventService : IEventService
             return null;
 
         var branchId = await ResolveBranchIdAsync(merchantId, request.BranchId);
-        await ValidateDepartmentAsync(branchId, request.DepartmentId);
+        var departmentId = IsEmployeeAbsenceEvent(request.EventType) ? null : request.DepartmentId;
+        var appliesToAllBranches = request.EventType == EventType.ChiusuraAziendale && request.AppliesToAllBranches;
+
+        await ValidateDepartmentAsync(branchId, departmentId);
         await ValidateParticipantDepartmentsAsync(branchId, request.ParticipantOverrides);
 
         evt.BranchId = branchId;
-        evt.DepartmentId = request.DepartmentId;
-        evt.AppliesToAllBranches = request.AppliesToAllBranches;
+        evt.DepartmentId = departmentId;
+        evt.AppliesToAllBranches = appliesToAllBranches;
         evt.Title = request.Title;
         evt.EventType = request.EventType;
         evt.StartDate = request.StartDate;
@@ -277,6 +285,8 @@ public class EventService : IEventService
             });
         }
 
+        await ValidateBlockingConflictsAsync(evt, evt.Id);
+
         await _context.SaveChangesAsync();
 
         await ReloadEventNavigationAsync(evt);
@@ -287,6 +297,63 @@ public class EventService : IEventService
         var dto = MapToDto(evt);
         if (evt.EventType == EventType.Turno)
             dto.Warnings = await DetectConflictsForEventAsync(evt);
+        return dto;
+    }
+
+    /// <inheritdoc />
+    public async Task<EventDto?> UpdateAssignmentsAsync(int id, int merchantId, UpdateEventAssignmentsRequest request)
+    {
+        var now = _clock.UtcNow;
+        var evt = await _context.Events
+            .Include(e => e.Participants)
+            .Include(e => e.RequiredSkills)
+            .FirstOrDefaultAsync(e => e.Id == id && e.MerchantId == merchantId);
+
+        if (evt == null)
+            return null;
+
+        if (evt.EventType != EventType.Turno)
+            throw new InvalidOperationException("L'assegnazione è consentita solo per i turni.");
+
+        await ValidateParticipantDepartmentsAsync(evt.BranchId, request.ParticipantOverrides);
+
+        evt.UpdatedAt = now;
+
+        var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
+        var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
+
+        _context.EventParticipants.RemoveRange(evt.Participants);
+        evt.Participants.Clear();
+
+        foreach (var empId in request.OwnerEmployeeIds.Distinct())
+        {
+            var p = BuildParticipant(empId, true, overrideMap, skillMap);
+            p.EventId = evt.Id;
+            evt.Participants.Add(p);
+        }
+
+        var ownerIds = new HashSet<int>(request.OwnerEmployeeIds);
+        foreach (var empId in request.CoOwnerEmployeeIds.Distinct())
+        {
+            if (!ownerIds.Contains(empId))
+            {
+                var p = BuildParticipant(empId, false, overrideMap, skillMap);
+                p.EventId = evt.Id;
+                evt.Participants.Add(p);
+            }
+        }
+
+        await ValidateBlockingConflictsAsync(evt, evt.Id);
+
+        await _context.SaveChangesAsync();
+
+        await ReloadEventNavigationAsync(evt);
+
+        if (evt.NotificationEnabled)
+            await NotifyParticipantsAsync(evt, NotificationType.EventUpdated, "aggiornato");
+
+        var dto = MapToDto(evt);
+        dto.Warnings = await DetectConflictsForEventAsync(evt);
         return dto;
     }
 
@@ -877,10 +944,41 @@ public class EventService : IEventService
     /// <summary>
     /// Rileva i conflitti (non bloccanti) per tutti i partecipanti del turno appena creato/aggiornato/clonato.
     /// </summary>
-    private async Task<List<ShiftConflictDto>> DetectConflictsForEventAsync(Event evt)
+    private async Task ValidateBlockingConflictsAsync(Event evt, int? excludeEventId = null)
+    {
+        ValidateEventRange(evt);
+        ValidateScopedParticipantRules(evt);
+
+        var conflicts = new List<ShiftConflictDto>();
+        switch (evt.EventType)
+        {
+            case EventType.Turno:
+                conflicts.AddRange((await DetectConflictsForEventAsync(evt, excludeEventId))
+                    .Where(c => c.Kind == ShiftConflictKind.LeaveOverlap));
+                conflicts.AddRange(await DetectBlockingClosureOverlapsAsync(evt, excludeEventId));
+                break;
+
+            case EventType.ChiusuraAziendale:
+                conflicts.AddRange(await DetectBlockingShiftOverlapsForClosureAsync(evt, excludeEventId));
+                break;
+
+            case EventType.Ferie:
+            case EventType.Malattia:
+            case EventType.Permessi:
+                conflicts.AddRange(await DetectBlockingAbsenceOverlapsAsync(evt, excludeEventId));
+                break;
+        }
+
+        if (conflicts.Count > 0)
+            throw new EventConflictException(BuildBlockingConflictMessage(evt.EventType), conflicts);
+    }
+
+    private async Task<List<ShiftConflictDto>> DetectConflictsForEventAsync(Event evt, int? excludeEventId = null)
     {
         var all = new List<ShiftConflictDto>();
         if (evt.EventType != EventType.Turno) return all;
+
+        var effectiveExcludeEventId = excludeEventId ?? (evt.Id > 0 ? evt.Id : null);
 
         // Group participants by effective (override-aware) time window so the validator
         // checks the right window for each one.
@@ -889,18 +987,128 @@ public class EventService : IEventService
                 Start: p.StartTimeOverride ?? evt.StartTime,
                 End: p.EndTimeOverride ?? evt.EndTime));
 
-        foreach (var group in groups)
+        foreach (var date in EnumerateDates(evt.StartDate, evt.EndDate))
         {
-            var ids = group.Select(p => p.EmployeeId).ToList();
-            var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
-                evt.MerchantId, ids, evt.StartDate, group.Key.Start, group.Key.End,
-                excludeEventId: evt.Id, branchId: evt.BranchId);
-            all.AddRange(conflicts);
+            foreach (var group in groups)
+            {
+                var ids = group.Select(p => p.EmployeeId).ToList();
+                var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
+                    evt.MerchantId, ids, date, group.Key.Start, group.Key.End,
+                    excludeEventId: effectiveExcludeEventId, branchId: evt.BranchId);
+                all.AddRange(conflicts);
+            }
         }
 
         all.AddRange(await DetectSkillMismatchesAsync(evt));
 
         return all;
+    }
+
+    private async Task<List<ShiftConflictDto>> DetectBlockingAbsenceOverlapsAsync(Event evt, int? excludeEventId = null)
+    {
+        var result = new List<ShiftConflictDto>();
+        var employeeIds = evt.Participants.Select(p => p.EmployeeId).Distinct().ToList();
+        if (employeeIds.Count == 0)
+            return result;
+
+        var effectiveExcludeEventId = excludeEventId ?? (evt.Id > 0 ? evt.Id : null);
+        var start = evt.IsAllDay ? null : evt.StartTime;
+        var end = evt.IsAllDay ? null : evt.EndTime;
+
+        foreach (var date in EnumerateDates(evt.StartDate, evt.EndDate))
+        {
+            var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
+                evt.MerchantId,
+                employeeIds,
+                date,
+                start,
+                end,
+                excludeEventId: effectiveExcludeEventId);
+
+            result.AddRange(conflicts.Where(c =>
+                c.Kind == ShiftConflictKind.LeaveOverlap ||
+                c.Kind == ShiftConflictKind.ShiftOverlap));
+        }
+
+        return result;
+    }
+
+    private async Task<List<ShiftConflictDto>> DetectBlockingClosureOverlapsAsync(Event evt, int? excludeEventId = null)
+    {
+        var result = new List<ShiftConflictDto>();
+        if (evt.EventType != EventType.Turno)
+            return result;
+
+        var effectiveEndDate = evt.EndDate ?? evt.StartDate;
+        var closures = await _context.Events
+            .Include(e => e.Branch)
+            .Where(e => e.MerchantId == evt.MerchantId
+                        && e.EventType == EventType.ChiusuraAziendale
+                        && (excludeEventId == null || e.Id != excludeEventId.Value)
+                        && e.StartDate <= effectiveEndDate
+                        && (e.EndDate ?? e.StartDate) >= evt.StartDate
+                        && (e.AppliesToAllBranches || e.BranchId == evt.BranchId))
+            .ToListAsync();
+
+        foreach (var closure in closures)
+        {
+            if (!EventsOverlap(evt, closure))
+                continue;
+
+            result.Add(new ShiftConflictDto
+            {
+                Date = closure.StartDate,
+                Kind = ShiftConflictKind.EventOverlap,
+                ConflictingEventId = closure.Id,
+                ConflictingEventTitle = closure.Title,
+                ConflictStart = closure.StartTime,
+                ConflictEnd = closure.EndTime,
+                BranchId = closure.BranchId,
+                BranchName = closure.Branch?.Name,
+                Message = BuildEventOverlapMessage("chiusura aziendale", closure.Title, closure.StartTime, closure.EndTime, closure.Branch?.Name)
+            });
+        }
+
+        return result;
+    }
+
+    private async Task<List<ShiftConflictDto>> DetectBlockingShiftOverlapsForClosureAsync(Event evt, int? excludeEventId = null)
+    {
+        var result = new List<ShiftConflictDto>();
+        if (evt.EventType != EventType.ChiusuraAziendale)
+            return result;
+
+        var effectiveEndDate = evt.EndDate ?? evt.StartDate;
+        var shifts = await _context.Events
+            .Include(e => e.Branch)
+            .Where(e => e.MerchantId == evt.MerchantId
+                        && e.EventType == EventType.Turno
+                        && (excludeEventId == null || e.Id != excludeEventId.Value)
+                        && e.StartDate <= effectiveEndDate
+                        && (e.EndDate ?? e.StartDate) >= evt.StartDate
+                        && (evt.AppliesToAllBranches || e.BranchId == evt.BranchId))
+            .ToListAsync();
+
+        foreach (var shift in shifts)
+        {
+            if (!EventsOverlap(evt, shift))
+                continue;
+
+            result.Add(new ShiftConflictDto
+            {
+                Date = shift.StartDate,
+                Kind = ShiftConflictKind.EventOverlap,
+                ConflictingEventId = shift.Id,
+                ConflictingEventTitle = shift.Title,
+                ConflictStart = shift.StartTime,
+                ConflictEnd = shift.EndTime,
+                BranchId = shift.BranchId,
+                BranchName = shift.Branch?.Name,
+                Message = BuildEventOverlapMessage("turno", shift.Title, shift.StartTime, shift.EndTime, shift.Branch?.Name)
+            });
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -950,6 +1158,86 @@ public class EventService : IEventService
         }
 
         return result;
+    }
+
+    private static void ValidateEventRange(Event evt)
+    {
+        if (evt.EndDate.HasValue && evt.EndDate.Value < evt.StartDate)
+            throw new InvalidOperationException("La data di fine non può essere precedente alla data di inizio.");
+
+        if (!evt.IsAllDay && evt.StartTime.HasValue && evt.EndTime.HasValue && evt.EndTime.Value <= evt.StartTime.Value)
+            throw new InvalidOperationException("L'orario di fine deve essere successivo a quello di inizio.");
+    }
+
+    private static void ValidateScopedParticipantRules(Event evt)
+    {
+        if (IsEmployeeAbsenceEvent(evt.EventType) && evt.Participants.Count != 1)
+            throw new InvalidOperationException($"Per {GetEventTypeLabel(evt.EventType)} devi selezionare un solo dipendente.");
+    }
+
+    private static IEnumerable<DateOnly> EnumerateDates(DateOnly startDate, DateOnly? endDate)
+    {
+        var current = startDate;
+        var last = endDate ?? startDate;
+        while (current <= last)
+        {
+            yield return current;
+            current = current.AddDays(1);
+        }
+    }
+
+    private static bool EventsOverlap(Event left, Event right)
+    {
+        if (!DateRangesOverlap(left.StartDate, left.EndDate ?? left.StartDate, right.StartDate, right.EndDate ?? right.StartDate))
+            return false;
+
+        return TimeRangesOverlap(left.IsAllDay, left.StartTime, left.EndTime, right.IsAllDay, right.StartTime, right.EndTime);
+    }
+
+    private static bool DateRangesOverlap(DateOnly leftStart, DateOnly leftEnd, DateOnly rightStart, DateOnly rightEnd)
+        => leftStart <= rightEnd && rightStart <= leftEnd;
+
+    private static bool TimeRangesOverlap(bool leftAllDay, TimeOnly? leftStart, TimeOnly? leftEnd, bool rightAllDay, TimeOnly? rightStart, TimeOnly? rightEnd)
+    {
+        if (leftAllDay || rightAllDay)
+            return true;
+
+        if (!leftStart.HasValue || !leftEnd.HasValue || !rightStart.HasValue || !rightEnd.HasValue)
+            return true;
+
+        return leftStart.Value < rightEnd.Value && rightStart.Value < leftEnd.Value;
+    }
+
+    private static bool IsEmployeeAbsenceEvent(EventType eventType)
+        => eventType == EventType.Ferie || eventType == EventType.Malattia || eventType == EventType.Permessi;
+
+    private static string GetEventTypeLabel(EventType eventType) => eventType switch
+    {
+        EventType.Ferie => "ferie",
+        EventType.Malattia => "malattia",
+        EventType.Permessi => "permesso",
+        EventType.ChiusuraAziendale => "chiusura aziendale",
+        EventType.Turno => "turno",
+        _ => "evento"
+    };
+
+    private static string BuildBlockingConflictMessage(EventType eventType) => eventType switch
+    {
+        EventType.Turno => "Il turno si sovrappone a chiusure o assenze già registrate.",
+        EventType.ChiusuraAziendale => "La chiusura si sovrappone a turni già pianificati.",
+        EventType.Ferie or EventType.Malattia or EventType.Permessi => "L'evento si sovrappone a turni o assenze già registrati.",
+        _ => "Sono presenti sovrapposizioni bloccanti per questo evento."
+    };
+
+    private static string BuildEventOverlapMessage(string kindLabel, string? title, TimeOnly? start, TimeOnly? end, string? branchName)
+    {
+        var titleSuffix = string.IsNullOrWhiteSpace(title) ? string.Empty : $" \"{title}\"";
+        var branchSuffix = string.IsNullOrWhiteSpace(branchName) ? string.Empty : $" — {branchName}";
+        var timeSuffix = start.HasValue && end.HasValue
+            ? $" ({start:HH\\:mm}-{end:HH\\:mm})"
+            : string.Empty;
+
+        return $"Sovrapposizione con {kindLabel}{titleSuffix}{branchSuffix}{timeSuffix}";
     }
 
     private static EventDto MapToDto(Event evt)

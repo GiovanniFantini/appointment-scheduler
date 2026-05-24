@@ -55,6 +55,30 @@ function ClockIcon() {
     </svg>
   )
 }
+function TeamIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="8.5" cy="7" r="4" stroke="currentColor" strokeWidth="2" />
+      <path d="M20 8v6M23 11h-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+function BranchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M3 21h18M5 21V7l7-4 7 4v14M9 10h6M9 14h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+function SkillsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none">
+      <path d="M20.59 13.41L11 3.83V2h-1.83L3.41 7.76a2 2 0 000 2.83l9.59 9.59a2 2 0 002.83 0l4.76-4.76a2 2 0 000-2.83z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="7.5" cy="7.5" r="1.5" fill="currentColor" />
+    </svg>
+  )
+}
 function InventoryIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none">
@@ -110,15 +134,23 @@ export default function AppLayout({ user, onLogout, onUserUpdate }: Props) {
     { to: '/', label: 'Dashboard', icon: <HomeIcon /> },
     { to: '/timbratura', label: 'Timbratura', feature: 'Timbratura', icon: <ClockIcon /> },
     { to: '/calendario', label: 'Calendario', feature: 'Calendario', icon: <CalendarIcon /> },
+    { to: '/pianificazione', label: 'Pianificazione', feature: 'Calendario', icon: <CalendarIcon /> },
     { to: '/richieste', label: 'Richieste', feature: 'Richieste', icon: <RequestsIcon /> },
+    { to: '/risorse', label: 'Risorse', feature: 'Risorse', icon: <TeamIcon /> },
+    { to: '/mansioni', label: 'Mansioni', feature: 'Mansioni', icon: <SkillsIcon /> },
+    { to: '/filiali', label: 'Filiali', feature: 'Filiali', icon: <BranchIcon /> },
     { to: '/magazzino', label: 'Magazzino', feature: 'Magazzino', icon: <InventoryIcon /> },
     { to: '/documenti', label: 'Documenti', feature: 'Documenti', icon: <DocumentsIcon /> },
     { to: '/notifiche', label: 'Notifiche', icon: <BellIcon /> },
   ]
 
-  const visibleNavItems = navItems.filter(item =>
-    !item.feature || user.activeFeatures?.includes(item.feature)
-  )
+  const visibleNavItems = navItems.filter(item => {
+    if (item.to === '/pianificazione') {
+      const level = user.featureLevels?.['Calendario'] ?? 'ReadOnly'
+      if (level === 'ReadOnly') return false
+    }
+    return !item.feature || user.activeFeatures?.includes(item.feature)
+  })
 
   const handleSwitchCompany = () => {
     // Clear merchantId from user to force company selection

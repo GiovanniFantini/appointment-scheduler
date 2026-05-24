@@ -2,7 +2,8 @@ namespace AppointmentScheduler.Shared.Enums;
 
 /// <summary>
 /// Livello di accesso operativo di un ruolo a una feature.
-/// Usato dalle feature a livelli (Magazzino, Documenti): distingue chi consulta,
+/// Usato dalle feature a livelli (es. Calendario, Documenti, Timbratura,
+/// Magazzino): distingue chi consulta,
 /// chi opera e chi gestisce. Per le altre feature il valore resta null e non
 /// viene letto. Una feature a livelli abilitata senza livello vale ReadOnly.
 /// </summary>

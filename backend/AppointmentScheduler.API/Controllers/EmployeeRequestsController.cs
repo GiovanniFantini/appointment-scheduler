@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using AppointmentScheduler.API.Authorization;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
@@ -59,12 +60,32 @@ public class EmployeeRequestsController : ControllerBase
     }
 
     /// <summary>
-    /// Dettaglio di una richiesta
+    /// Lista le richieste in attesa di approvazione per il dipendente abilitato.
+    /// </summary>
+    [HttpGet("approvals")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<List<EmployeeRequestDto>>> GetPendingApprovals()
+    {
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Richieste, FeatureAccessLevel.Operator))
+            return Forbid();
+
+        var requests = await _requestService.GetMerchantRequestsAsync(merchantId, RequestStatus.Pending);
+        return Ok(requests);
+    }
+
+    /// <summary>
+    /// Dettaglio di una richiesta (lato employee approvatore)
     /// </summary>
     [HttpGet("{id}")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> GetById(int id)
     {
+        if (!User.RequireFeatureLevel(MerchantFeature.Richieste, FeatureAccessLevel.Operator))
+            return Forbid();
+
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
@@ -82,6 +103,9 @@ public class EmployeeRequestsController : ControllerBase
     [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> Create([FromBody] CreateEmployeeRequestRequest request)
     {
+        if (!User.HasFeature(MerchantFeature.Richieste))
+            return Forbid();
+
         if (!TryGetEmployeeId(out int employeeId))
             return BadRequest(new { message = "Employee ID non trovato nel token" });
 
@@ -103,7 +127,7 @@ public class EmployeeRequestsController : ControllerBase
     /// Approva una richiesta
     /// </summary>
     [HttpPost("{id}/approve")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> Approve(int id, [FromBody] ReviewEmployeeRequestRequest? body = null)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -111,6 +135,9 @@ public class EmployeeRequestsController : ControllerBase
 
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Richieste, FeatureAccessLevel.Operator))
+            return Forbid();
 
         try
         {
@@ -130,7 +157,7 @@ public class EmployeeRequestsController : ControllerBase
     /// Rifiuta una richiesta
     /// </summary>
     [HttpPost("{id}/reject")]
-    [Authorize(Policy = "ApprovedMerchantOnly")]
+    [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EmployeeRequestDto>> Reject(int id, [FromBody] ReviewEmployeeRequestRequest? body = null)
     {
         if (!TryGetMerchantId(out int merchantId))
@@ -138,6 +165,9 @@ public class EmployeeRequestsController : ControllerBase
 
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
+
+        if (!User.RequireFeatureLevel(MerchantFeature.Richieste, FeatureAccessLevel.Operator))
+            return Forbid();
 
         try
         {
@@ -161,6 +191,9 @@ public class EmployeeRequestsController : ControllerBase
     public async Task<ActionResult<List<EmployeeRequestDto>>> GetMyRequests(
         [FromQuery] RequestStatus? status = null)
     {
+        if (!User.HasFeature(MerchantFeature.Richieste))
+            return Forbid();
+
         if (!TryGetEmployeeId(out int employeeId))
             return BadRequest(new { message = "Employee ID non trovato nel token" });
 
@@ -169,5 +202,47 @@ public class EmployeeRequestsController : ControllerBase
 
         var requests = await _requestService.GetEmployeeRequestsAsync(employeeId, merchantId, status);
         return Ok(requests);
+    }
+
+    /// <summary>
+    /// Lista le richieste del merchant da mostrare nel calendario team.
+    /// Disponibile per ruoli operativi del Calendario (Operator/Manager).
+    /// </summary>
+    [HttpGet("calendar")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<ActionResult<List<EmployeeRequestDto>>> GetCalendarRequests(
+        [FromQuery] RequestStatus? status = null)
+    {
+        if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Operator))
+            return Forbid();
+
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        var requests = await _requestService.GetMerchantRequestsAsync(merchantId, status);
+        return Ok(requests);
+    }
+
+    /// <summary>
+    /// Elimina una richiesta del dipendente corrente, anche se già approvata.
+    /// </summary>
+    [HttpDelete("{id}")]
+    [Authorize(Policy = "EmployeeOnly")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        if (!User.HasFeature(MerchantFeature.Richieste))
+            return Forbid();
+
+        if (!TryGetEmployeeId(out int employeeId))
+            return BadRequest(new { message = "Employee ID non trovato nel token" });
+
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        var deleted = await _requestService.DeleteAsync(id, employeeId, merchantId);
+        if (!deleted)
+            return NotFound(new { message = "Richiesta non trovata o non autorizzata" });
+
+        return Ok(new { message = "Richiesta eliminata con successo" });
     }
 }

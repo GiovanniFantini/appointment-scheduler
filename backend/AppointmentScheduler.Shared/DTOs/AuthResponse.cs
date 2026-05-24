@@ -29,7 +29,8 @@ public class AuthResponse
     public List<string> ActiveFeatures { get; set; } = new();
 
     // Livello di accesso per feature (post company-switch).
-    // Valorizzato solo per le feature che usano i livelli (Magazzino).
+    // Valorizzato solo per le feature che usano i livelli (es. Calendario,
+    // Documenti, Timbratura, Magazzino).
     // Chiave = nome feature, valore = nome livello (ReadOnly/Operator/Manager).
     public Dictionary<string, string> FeatureLevels { get; set; } = new();
 }

@@ -16,6 +16,7 @@ import {
   type UpdateInventoryItemRequest,
   type UpdateSupplierRequest,
 } from '../../lib/api/inventory'
+import { nativeDateInputProps } from '../../lib/dateUtils'
 import type { FeatureAccessLevel } from '../../App'
 import './MagazzinoPage.css'
 
@@ -1290,7 +1291,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </label>
               <label className="inventory-form-field">
                 Consegna prevista
-                <input type="date" value={orderForm.expectedDeliveryDate} onChange={event => setOrderForm(prev => ({ ...prev, expectedDeliveryDate: event.target.value }))} />
+                <input type="date" value={orderForm.expectedDeliveryDate} onChange={event => setOrderForm(prev => ({ ...prev, expectedDeliveryDate: event.target.value }))} {...nativeDateInputProps} />
               </label>
               <label className="inventory-form-field inventory-form-grid-full">
                 Note

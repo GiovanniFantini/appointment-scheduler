@@ -7,6 +7,7 @@ import itLocale from '@fullcalendar/core/locales/it'
 import type { DatesSetArg, EventInput, EventClickArg } from '@fullcalendar/core'
 import type { DateClickArg } from '@fullcalendar/interaction'
 import apiClient from '../../lib/axios'
+import { nativeDateInputProps } from '../../lib/dateUtils'
 import EventModal from '../EventModal/EventModal'
 import type { CalEvent } from '../EventModal/EventModal'
 import './EmployeeShiftPanel.css'
@@ -290,6 +291,7 @@ export default function EmployeeShiftPanel({ employeeId, employeeFullName, onClo
                     className="form-input"
                     value={cloneSourceWeek}
                     onChange={e => setCloneSourceWeek(e.target.value)}
+                    {...nativeDateInputProps}
                   />
                   <label className="form-label">Settimana target (lunedì)</label>
                   <input
@@ -297,6 +299,7 @@ export default function EmployeeShiftPanel({ employeeId, employeeFullName, onClo
                     className="form-input"
                     value={cloneTargetWeek}
                     onChange={e => setCloneTargetWeek(e.target.value)}
+                    {...nativeDateInputProps}
                   />
                   <label className="form-label">N. settimane consecutive</label>
                   <input

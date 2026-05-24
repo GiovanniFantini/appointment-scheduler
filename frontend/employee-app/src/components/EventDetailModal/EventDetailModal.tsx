@@ -26,6 +26,9 @@ export interface EventDetail {
 interface Props {
   event: EventDetail
   onClose: () => void
+  onEdit?: () => void
+  onDelete?: () => void
+  onCloneWeek?: () => void
 }
 
 function getEventTypeLabel(type?: string): string {
@@ -58,7 +61,7 @@ function formatDateTime(dateStr: string, allDay?: boolean): string {
   return formatBrowserDateTime(d)
 }
 
-export default function EventDetailModal({ event, onClose }: Props) {
+export default function EventDetailModal({ event, onClose, onEdit, onDelete, onCloneWeek }: Props) {
   const color = getEventTypeColor(event.eventType)
   const isOnCall = event.isOnCall ?? (event.extendedProps?.isOnCall as boolean | undefined)
   const participants = event.participants ?? (event.extendedProps?.participants as EventDetail['participants'] | undefined)
@@ -158,6 +161,9 @@ export default function EventDetailModal({ event, onClose }: Props) {
         </div>
 
         <div className="event-detail-footer">
+          {onCloneWeek && <button className="btn-secondary" onClick={onCloneWeek}>Clona settimana</button>}
+          {onDelete && <button className="btn-danger" onClick={onDelete}>Elimina</button>}
+          {onEdit && <button className="btn-primary" onClick={onEdit}>Modifica</button>}
           <button className="btn-secondary" onClick={onClose}>Chiudi</button>
         </div>
       </div>

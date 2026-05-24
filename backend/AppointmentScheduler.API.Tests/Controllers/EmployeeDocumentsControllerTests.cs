@@ -235,6 +235,45 @@ public class EmployeeDocumentsControllerTests
     }
 
     [Fact]
+    public async Task CreateDocumentForEmployee_ReturnsBadRequest_WhenMonthIsProvidedWithoutYear()
+    {
+        var request = new HRDocumentCreateDto { Month = 5, Year = null };
+        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"), new Claim("Feature", "Documenti"), new Claim("FeatureLevel", "Documenti:Operator"));
+
+        var result = await controller.CreateDocumentForEmployee(request);
+
+        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("Anno obbligatorio quando il mese e' valorizzato");
+        _hrDocumentService.Verify(service => service.CreateDocumentAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<HRDocumentCreateDto>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateDocumentForEmployee_ReturnsBadRequest_WhenMonthIsOutOfRange()
+    {
+        var request = new HRDocumentCreateDto { Year = 2026, Month = 13 };
+        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"), new Claim("Feature", "Documenti"), new Claim("FeatureLevel", "Documenti:Operator"));
+
+        var result = await controller.CreateDocumentForEmployee(request);
+
+        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("Mese non valido: deve essere compreso tra 1 e 12");
+        _hrDocumentService.Verify(service => service.CreateDocumentAsync(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<HRDocumentCreateDto>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task CreateDocumentForEmployee_ReturnsBadRequest_WhenServiceThrowsArgumentException()
+    {
+        var request = new HRDocumentCreateDto();
+        _hrDocumentService.Setup(service => service.CreateDocumentAsync(7, 12, request)).ThrowsAsync(new ArgumentException("request non valida"));
+        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"), new Claim("Feature", "Documenti"), new Claim("FeatureLevel", "Documenti:Operator"));
+
+        var result = await controller.CreateDocumentForEmployee(request);
+
+        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("request non valida");
+    }
+
+    [Fact]
     public async Task AddVersion_ReturnsCreatedAtAction_WhenServiceSucceeds()
     {
         var response = new HRDocumentVersionUploadResponseDto { VersionId = 3, VersionNumber = 2 };

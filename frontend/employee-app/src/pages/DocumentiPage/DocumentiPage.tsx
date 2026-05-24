@@ -46,6 +46,20 @@ const MAX_UPLOAD_SIZE_BYTES = 50 * 1024 * 1024
 
 const ALLOWED_EXTENSIONS = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'txt']
 
+const EXTENSION_TO_CONTENT_TYPE: Record<string, string> = {
+  pdf: 'application/pdf',
+  doc: 'application/msword',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xls: 'application/vnd.ms-excel',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  png: 'image/png',
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  txt: 'text/plain',
+}
+
+const ALLOWED_CONTENT_TYPES = new Set(Object.values(EXTENSION_TO_CONTENT_TYPE))
+
 /**
  * Valida un file prima dell'upload. Ritorna un messaggio d'errore oppure null
  * se il file è accettabile.
@@ -65,32 +79,32 @@ function validateUploadFile(file: File): string | null {
 }
 
 function getDefaultContentType(file: File): string {
-  if (file.type) {
+  const extension = file.name.split('.').pop()?.toLowerCase()
+  const contentTypeFromExtension = extension ? EXTENSION_TO_CONTENT_TYPE[extension] : undefined
+
+  // Alcuni browser/OS restituiscono MIME non standard per file validi: usiamo
+  // il MIME del browser solo se già tra quelli ammessi dal backend.
+  if (file.type && ALLOWED_CONTENT_TYPES.has(file.type)) {
     return file.type
   }
 
-  const extension = file.name.split('.').pop()?.toLowerCase()
-  switch (extension) {
-    case 'pdf':
-      return 'application/pdf'
-    case 'doc':
-      return 'application/msword'
-    case 'docx':
-      return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    case 'xls':
-      return 'application/vnd.ms-excel'
-    case 'xlsx':
-      return 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    case 'png':
-      return 'image/png'
-    case 'jpg':
-    case 'jpeg':
-      return 'image/jpeg'
-    case 'txt':
-      return 'text/plain'
-    default:
-      return 'application/octet-stream'
+  return contentTypeFromExtension ?? 'application/octet-stream'
+}
+
+function getApiErrorMessage(error: unknown): string | null {
+  if (!error || typeof error !== 'object') {
+    return null
   }
+
+  const data = (error as { response?: { data?: { message?: unknown; error?: unknown } } }).response?.data
+  const message = typeof data?.message === 'string' ? data.message.trim() : ''
+  const detail = typeof data?.error === 'string' ? data.error.trim() : ''
+
+  if (message && detail) {
+    return `${message}: ${detail}`
+  }
+
+  return message || detail || null
 }
 
 export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPageProps) {
@@ -374,8 +388,8 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
       })
       setUploadFile(null)
       await fetchDocuments()
-    } catch {
-      setError('Errore durante l\'upload del documento delegato')
+    } catch (error) {
+      setError(getApiErrorMessage(error) ?? 'Errore durante l\'upload del documento delegato')
     } finally {
       setUploading(false)
     }

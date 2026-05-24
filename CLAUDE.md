@@ -34,6 +34,12 @@ Regole da seguire:
 Quando aggiungi un nuovo campo data: scegli `DateOnly`/`TimeOnly` se non serve il
 fuso; se è un istante e arriva dal client, ricordati `DateTimeUtc.Coerce`.
 
+## Frontend date input
+
+- Ogni `input type="date"` deve aprire il picker nativo anche su focus/click usando l'helper condiviso `nativeDateInputProps` del rispettivo `src/lib/dateUtils.ts`.
+- Nelle form evento, `EndDate` è opzionale salvo requisito esplicito di business: se manca, l'evento vale per il solo `StartDate`.
+- Per eventi `Ferie`, `Malattia` e `Permessi` non mostrare Filiale/Reparto e richiedere sempre la selezione di un solo dipendente.
+
 ## Struttura
 
 - `AppointmentScheduler.API` — controller

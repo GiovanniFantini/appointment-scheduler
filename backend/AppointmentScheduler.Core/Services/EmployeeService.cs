@@ -3,6 +3,7 @@ using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.Shared.Helpers;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Core.Services;
@@ -160,9 +161,8 @@ public class EmployeeService : IEmployeeService
         var homeBranchId = await ResolveHomeBranchIdAsync(merchantId, request.HomeBranchId);
         var homeDepartmentId = await ValidateDepartmentForBranchAsync(homeBranchId, request.HomeDepartmentId);
 
-        // Ruolo: per gli esterni (o quando il chiamante non lo fornisce, es. creazione
-        // rapida inline) si ripiega sul ruolo predefinito del merchant.
-        var roleId = await ResolveRoleIdAsync(merchantId, request.RoleId);
+        // Se RoleId manca/non è valido, usa il ruolo base coerente col tipo risorsa.
+        var roleId = await ResolveRoleIdAsync(merchantId, request.RoleId, request.Kind);
 
         // Check for existing membership (even inactive)
         var existingMembership = await _context.EmployeeMemberships
@@ -260,7 +260,7 @@ public class EmployeeService : IEmployeeService
             request.AgencyName, request.HourlyRate, request.ExternalNotes);
         employee.UpdatedAt = _clock.UtcNow;
 
-        membership.RoleId = await ResolveRoleIdAsync(merchantId, request.RoleId);
+        membership.RoleId = await ResolveRoleIdAsync(merchantId, request.RoleId, request.Kind);
         membership.IsActive = request.IsActive;
         membership.HomeBranchId = homeBranchId;
         membership.HomeDepartmentId = homeDepartmentId;
@@ -367,10 +367,10 @@ public class EmployeeService : IEmployeeService
 
     /// <summary>
     /// Risolve il ruolo da assegnare alla membership. Se il chiamante fornisce un
-    /// RoleId valido del merchant lo usa; altrimenti (es. creazione rapida di un
-    /// esterno, che non passa il ruolo) ripiega sul ruolo predefinito del merchant.
+    /// RoleId valido del merchant lo usa; altrimenti ripiega sul ruolo base per tipo
+    /// risorsa (Interno Base / Esterno Base).
     /// </summary>
-    private async Task<int> ResolveRoleIdAsync(int merchantId, int requestedRoleId)
+    private async Task<int> ResolveRoleIdAsync(int merchantId, int requestedRoleId, EmployeeKind kind)
     {
         if (requestedRoleId > 0)
         {
@@ -380,17 +380,23 @@ public class EmployeeService : IEmployeeService
                 return requestedRoleId;
         }
 
-        var defaultRoleId = await _context.MerchantRoles
-            .Where(r => r.MerchantId == merchantId)
-            .OrderByDescending(r => r.IsDefault)
-            .ThenBy(r => r.Id)
+        var baseRoleName = kind == EmployeeKind.External
+            ? SystemRoleNames.ExternalBase
+            : SystemRoleNames.InternalBase;
+
+        var baseRoleId = await _context.MerchantRoles
+            .Where(r => r.MerchantId == merchantId && r.Name == baseRoleName)
+            .OrderBy(r => r.Id)
             .Select(r => (int?)r.Id)
             .FirstOrDefaultAsync();
 
-        if (defaultRoleId == null)
-            throw new InvalidOperationException("Il merchant non ha ruoli configurati.");
+        if (baseRoleId == null)
+        {
+            throw new InvalidOperationException(
+                $"Il merchant non ha il ruolo base richiesto ({baseRoleName}).");
+        }
 
-        return defaultRoleId.Value;
+        return baseRoleId.Value;
     }
 
     /// <summary>

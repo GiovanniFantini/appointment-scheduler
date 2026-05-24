@@ -33,7 +33,10 @@ public class EventsControllerTests
     [Fact]
     public async Task GetEmployeeEvents_ReturnsBadRequest_WhenEmployeeClaimIsMissing()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetEmployeeEvents(null, null);
 
@@ -46,7 +49,11 @@ public class EventsControllerTests
     {
         var events = new List<EventDto> { new() { Id = 1 } };
         _eventService.Setup(service => service.GetEmployeeEventsAsync(11, 7, null, null)).ReturnsAsync(events);
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetEmployeeEvents(null, null);
 
@@ -58,7 +65,10 @@ public class EventsControllerTests
     public async Task GetById_ReturnsNotFound_WhenEventDoesNotExist()
     {
         _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync((EventDto?)null);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetById(5);
 
@@ -71,7 +81,10 @@ public class EventsControllerTests
     {
         var evt = new EventDto { Id = 5 };
         _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync(evt);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetById(5);
 
@@ -95,7 +108,11 @@ public class EventsControllerTests
     {
         var request = new CreateEventRequest();
         _eventService.Setup(service => service.CreateAsync(7, 12, request)).ThrowsAsync(new Exception("boom"));
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Create(request);
 
@@ -104,12 +121,39 @@ public class EventsControllerTests
     }
 
     [Fact]
+    public async Task Create_ReturnsConflict_WhenServiceThrowsEventConflictException()
+    {
+        var request = new CreateEventRequest();
+        var conflicts = new List<ShiftConflictDto>
+        {
+            new() { Kind = ShiftConflictKind.EventOverlap, Message = "Sovrapposizione con chiusura aziendale" }
+        };
+        _eventService.Setup(service => service.CreateAsync(7, 12, request))
+            .ThrowsAsync(new EventConflictException("Conflitto bloccante", conflicts));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
+
+        var result = await controller.Create(request);
+
+        var conflict = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        conflict.GetAnonymousString("message").Should().Be("Conflitto bloccante");
+        GetAnonymousConflicts(conflict).Should().BeEquivalentTo(conflicts);
+    }
+
+    [Fact]
     public async Task Create_ReturnsCreatedAtAction_WhenServiceSucceeds()
     {
         var request = new CreateEventRequest();
         var evt = new EventDto { Id = 9 };
         _eventService.Setup(service => service.CreateAsync(7, 12, request)).ReturnsAsync(evt);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Create(request);
 
@@ -124,7 +168,10 @@ public class EventsControllerTests
     {
         var request = new UpdateEventRequest();
         _eventService.Setup(service => service.UpdateAsync(5, 7, request)).ThrowsAsync(new InvalidOperationException("Filiale non valida"));
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Update(5, request);
 
@@ -133,11 +180,36 @@ public class EventsControllerTests
     }
 
     [Fact]
+    public async Task Update_ReturnsConflict_WhenServiceThrowsEventConflictException()
+    {
+        var request = new UpdateEventRequest();
+        var conflicts = new List<ShiftConflictDto>
+        {
+            new() { Kind = ShiftConflictKind.LeaveOverlap, Message = "Conflitto con ferie" }
+        };
+        _eventService.Setup(service => service.UpdateAsync(5, 7, request))
+            .ThrowsAsync(new EventConflictException("Conflitto bloccante", conflicts));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
+
+        var result = await controller.Update(5, request);
+
+        var conflict = result.Result.Should().BeOfType<ConflictObjectResult>().Subject;
+        conflict.GetAnonymousString("message").Should().Be("Conflitto bloccante");
+        GetAnonymousConflicts(conflict).Should().BeEquivalentTo(conflicts);
+    }
+
+    [Fact]
     public async Task Update_ReturnsNotFound_WhenEventDoesNotExist()
     {
         var request = new UpdateEventRequest();
         _eventService.Setup(service => service.UpdateAsync(5, 7, request)).ReturnsAsync((EventDto?)null);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Update(5, request);
 
@@ -151,9 +223,29 @@ public class EventsControllerTests
         var request = new UpdateEventRequest();
         var evt = new EventDto { Id = 5 };
         _eventService.Setup(service => service.UpdateAsync(5, 7, request)).ReturnsAsync(evt);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Update(5, request);
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeSameAs(evt);
+    }
+
+    [Fact]
+    public async Task UpdateAssignments_ReturnsOk_WhenEventIsUpdated()
+    {
+        var request = new UpdateEventAssignmentsRequest();
+        var evt = new EventDto { Id = 5 };
+        _eventService.Setup(service => service.UpdateAssignmentsAsync(5, 7, request)).ReturnsAsync(evt);
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Operator"));
+
+        var result = await controller.UpdateAssignments(5, request);
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeSameAs(evt);
@@ -163,7 +255,10 @@ public class EventsControllerTests
     public async Task Delete_ReturnsNotFound_WhenEventDoesNotExist()
     {
         _eventService.Setup(service => service.DeleteAsync(5, 7)).ReturnsAsync(false);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Delete(5);
 
@@ -175,7 +270,10 @@ public class EventsControllerTests
     public async Task Delete_ReturnsOk_WhenEventIsDeleted()
     {
         _eventService.Setup(service => service.DeleteAsync(5, 7)).ReturnsAsync(true);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Delete(5);
 
@@ -186,7 +284,11 @@ public class EventsControllerTests
     [Fact]
     public async Task GetEmployeeEffectiveSchedule_ReturnsBadRequest_WhenFromIsAfterTo()
     {
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetEmployeeEffectiveSchedule(new DateOnly(2026, 2, 2), new DateOnly(2026, 2, 1));
 
@@ -201,7 +303,11 @@ public class EventsControllerTests
         var to = new DateOnly(2026, 2, 2);
         var schedule = new List<EffectiveShiftDto> { new() { EmployeeId = 11 } };
         _eventService.Setup(service => service.GetEffectiveScheduleAsync(11, 7, from, to)).ReturnsAsync(schedule);
-        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("EmployeeId", "11"),
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:ReadOnly"));
 
         var result = await controller.GetEmployeeEffectiveSchedule(from, to);
 
@@ -238,7 +344,10 @@ public class EventsControllerTests
     [Fact]
     public async Task Clone_ReturnsBadRequest_WhenRangeIsInvalid()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Clone(5, new CloneEventRequest { FromDate = new DateOnly(2026, 2, 2), ToDate = new DateOnly(2026, 2, 1) });
 
@@ -251,7 +360,10 @@ public class EventsControllerTests
     {
         var request = new CloneEventRequest { FromDate = new DateOnly(2026, 2, 1), ToDate = new DateOnly(2026, 2, 2) };
         _eventService.Setup(service => service.CloneAsync(5, 7, request)).ReturnsAsync([]);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Clone(5, request);
 
@@ -264,7 +376,10 @@ public class EventsControllerTests
     {
         var request = new CloneEventRequest { FromDate = new DateOnly(2026, 2, 1), ToDate = new DateOnly(2026, 2, 2) };
         _eventService.Setup(service => service.CloneAsync(5, 7, request)).ThrowsAsync(new Exception("boom"));
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Clone(5, request);
 
@@ -278,7 +393,10 @@ public class EventsControllerTests
         var request = new CloneEventRequest { FromDate = new DateOnly(2026, 2, 1), ToDate = new DateOnly(2026, 2, 2) };
         var cloned = new List<EventDto> { new() { Id = 10 } };
         _eventService.Setup(service => service.CloneAsync(5, 7, request)).ReturnsAsync(cloned);
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.Clone(5, request);
 
@@ -289,7 +407,10 @@ public class EventsControllerTests
     [Fact]
     public async Task CloneWeek_ReturnsBadRequest_WhenUserClaimIsMissing()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.CloneWeek(new CloneWeekRequest { NumberOfWeeks = 1 });
 
@@ -300,7 +421,11 @@ public class EventsControllerTests
     [Fact]
     public async Task CloneWeek_ReturnsBadRequest_WhenNumberOfWeeksIsBelowMinimum()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.CloneWeek(new CloneWeekRequest { NumberOfWeeks = 0 });
 
@@ -311,7 +436,11 @@ public class EventsControllerTests
     [Fact]
     public async Task CloneWeek_ReturnsBadRequest_WhenNumberOfWeeksExceedsMaximum()
     {
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.CloneWeek(new CloneWeekRequest { NumberOfWeeks = 53 });
 
@@ -324,7 +453,11 @@ public class EventsControllerTests
     {
         var request = new CloneWeekRequest { NumberOfWeeks = 1 };
         _eventService.Setup(service => service.CloneWeekAsync(7, 12, request)).ThrowsAsync(new Exception("boom"));
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.CloneWeek(request);
 
@@ -338,7 +471,11 @@ public class EventsControllerTests
         var request = new CloneWeekRequest { NumberOfWeeks = 1 };
         var cloned = new List<EventDto> { new() { Id = 15 } };
         _eventService.Setup(service => service.CloneWeekAsync(7, 12, request)).ReturnsAsync(cloned);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim(ClaimTypes.NameIdentifier, "12"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
 
         var result = await controller.CloneWeek(request);
 
@@ -349,5 +486,16 @@ public class EventsControllerTests
     private EventsController CreateController(params Claim[] claims)
     {
         return new EventsController(_eventService.Object).WithUser(claims);
+    }
+
+    private static IReadOnlyList<ShiftConflictDto> GetAnonymousConflicts(IActionResult result)
+    {
+        var objectResult = result.Should().BeAssignableTo<ObjectResult>().Subject;
+        objectResult.Value.Should().NotBeNull();
+
+        var property = objectResult.Value!.GetType().GetProperty("conflicts", BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
+        property.Should().NotBeNull();
+
+        return property!.GetValue(objectResult.Value).Should().BeAssignableTo<IReadOnlyList<ShiftConflictDto>>().Subject;
     }
 }

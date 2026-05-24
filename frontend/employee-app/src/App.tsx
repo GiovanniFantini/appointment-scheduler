@@ -7,12 +7,18 @@ import ResetPasswordPage from './pages/ResetPasswordPage/ResetPasswordPage'
 import SelectCompanyPage from './pages/SelectCompanyPage/SelectCompanyPage'
 import DashboardPage from './pages/DashboardPage/DashboardPage'
 import CalendarioPage from './pages/CalendarioPage/CalendarioPage'
+import PianificazionePage from './pages/PianificazionePage/PianificazionePage'
 import RichiestePage from './pages/RichiestePage/RichiestePage'
 import DocumentiPage from './pages/DocumentiPage/DocumentiPage'
 import NotifichePage from './pages/NotifichePage/NotifichePage'
 import TimbraturaPage from './pages/TimbraturaPage/TimbraturaPage'
 import MagazzinoPage from './pages/MagazzinoPage/MagazzinoPage'
+import FilialiPage from './pages/FilialiPage/FilialiPage'
+import MansioniPage from './pages/MansioniPage/MansioniPage'
+import RisorsePage from './pages/RisorsePage/RisorsePage'
+import TimbraturaGestionePage from './pages/TimbraturaGestionePage/TimbraturaGestionePage'
 import AppLayout from './components/AppLayout/AppLayout'
+import { BranchProvider } from './contexts/BranchContext'
 
 export type FeatureAccessLevel = 'ReadOnly' | 'Operator' | 'Manager'
 
@@ -30,6 +36,12 @@ export interface EmployeeUser {
   // Valorizzato solo per le feature che usano i livelli (es. Magazzino, Documenti).
   featureLevels?: Record<string, FeatureAccessLevel>
   companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
+}
+
+const LEVEL_RANK: Record<FeatureAccessLevel, number> = {
+  ReadOnly: 1,
+  Operator: 2,
+  Manager: 3,
 }
 
 function App() {
@@ -139,7 +151,11 @@ function App() {
               ? <Navigate to="/login" replace />
               : needsCompanySelection
                 ? <Navigate to="/select-company" replace />
-                : <AppLayout user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+                : (
+                  <BranchProvider>
+                    <AppLayout user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
+                  </BranchProvider>
+                )
           }
         >
           <Route index element={<DashboardPage user={user!} />} />
@@ -147,15 +163,31 @@ function App() {
             path="timbratura"
             element={
               user?.activeFeatures?.includes('Timbratura')
-                ? <TimbraturaPage />
+                ? <TimbraturaPage accessLevel={user.featureLevels?.['Timbratura'] ?? 'ReadOnly'} />
                 : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="timbratura-gestione"
+            element={
+              user?.activeFeatures?.includes('Timbratura') && LEVEL_RANK[user.featureLevels?.['Timbratura'] ?? 'ReadOnly'] >= LEVEL_RANK.Manager
+                ? <TimbraturaGestionePage />
+                : <Navigate to="/timbratura" replace />
             }
           />
           <Route
             path="calendario"
             element={
               user?.activeFeatures?.includes('Calendario')
-                ? <CalendarioPage />
+                ? <CalendarioPage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="pianificazione"
+            element={
+              user?.activeFeatures?.includes('Calendario') && LEVEL_RANK[user.featureLevels?.['Calendario'] ?? 'ReadOnly'] >= LEVEL_RANK.Operator
+                ? <PianificazionePage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
                 : <Navigate to="/" replace />
             }
           />
@@ -164,6 +196,30 @@ function App() {
             element={
               user?.activeFeatures?.includes('Richieste')
                 ? <RichiestePage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="risorse"
+            element={
+              user?.activeFeatures?.includes('Risorse')
+                ? <RisorsePage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="mansioni"
+            element={
+              user?.activeFeatures?.includes('Mansioni')
+                ? <MansioniPage />
+                : <Navigate to="/" replace />
+            }
+          />
+          <Route
+            path="filiali"
+            element={
+              user?.activeFeatures?.includes('Filiali')
+                ? <FilialiPage />
                 : <Navigate to="/" replace />
             }
           />

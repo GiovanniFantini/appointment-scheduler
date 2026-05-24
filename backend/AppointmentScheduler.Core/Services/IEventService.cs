@@ -37,6 +37,11 @@ public interface IEventService
     Task<EventDto?> UpdateAsync(int id, int merchantId, UpdateEventRequest request);
 
     /// <summary>
+    /// Aggiorna solo le assegnazioni di un turno esistente.
+    /// </summary>
+    Task<EventDto?> UpdateAssignmentsAsync(int id, int merchantId, UpdateEventAssignmentsRequest request);
+
+    /// <summary>
     /// Elimina un evento
     /// </summary>
     Task<bool> DeleteAsync(int id, int merchantId);

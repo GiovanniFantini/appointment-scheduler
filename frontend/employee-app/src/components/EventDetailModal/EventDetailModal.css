@@ -148,6 +148,7 @@
   border-top: 1px solid #334155;
   display: flex;
   justify-content: flex-end;
+  gap: 0.5rem;
 }
 
 .btn-secondary {
@@ -163,6 +164,36 @@
 
 .btn-secondary:hover {
   background-color: #475569;
+}
+
+.btn-primary {
+  background-color: #4f46e5;
+  color: #f8fafc;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 0.15s;
+}
+
+.btn-primary:hover {
+  background-color: #4338ca;
+}
+
+.btn-danger {
+  background-color: #7f1d1d;
+  color: #fee2e2;
+  border: 1px solid #991b1b;
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: background-color 0.15s;
+}
+
+.btn-danger:hover {
+  background-color: #991b1b;
 }
 
 @keyframes fadeIn {

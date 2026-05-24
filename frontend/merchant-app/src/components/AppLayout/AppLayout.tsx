@@ -17,16 +17,7 @@ interface NavItem {
 
 const ALL_NAV_ITEMS: NavItem[] = [
   { path: '/', label: 'Dashboard', icon: '⊞' },
-  { path: '/calendario', label: 'Calendario', icon: '📅', feature: 'Calendario' },
-  { path: '/pianificazione', label: 'Pianificazione', icon: '🗓', feature: 'Calendario' },
-  { path: '/richieste', label: 'Richieste', icon: '📋', feature: 'Richieste' },
-  { path: '/risorse', label: 'Risorse', icon: '👥', feature: 'Risorse' },
-  { path: '/mansioni', label: 'Mansioni', icon: '🏷', feature: 'Mansioni' },
-  { path: '/filiali', label: 'Filiali', icon: '🏢', feature: 'Filiali' },
-  { path: '/timbratura', label: 'Timbratura', icon: '⏱', feature: 'Timbratura' },
-  { path: '/magazzino', label: 'Magazzino', icon: '📦', feature: 'Magazzino' },
   { path: '/ruoli', label: 'Ruoli', icon: '🔑', feature: 'Ruoli' },
-  { path: '/documenti', label: 'Documenti', icon: '📁', feature: 'Documenti' },
   { path: '/report', label: 'Report', icon: '📊', feature: 'Report' },
 ]
 

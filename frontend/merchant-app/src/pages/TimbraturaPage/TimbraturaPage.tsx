@@ -7,6 +7,7 @@ import {
   type TimeClockAnomaly,
   type TimeClockReportRow,
 } from '../../lib/api/timeClock'
+import { nativeDateInputProps } from '../../lib/dateUtils'
 import './TimbraturaPage.css'
 
 /** Converte minuti in "Nh MMm". */
@@ -377,12 +378,12 @@ function PresenzeTab({ branchId }: { branchId: number }) {
         <div className="tcm-field">
           <label className="tcm-field-label">Da</label>
           <input type="date" className="tcm-field-input" value={from}
-            onChange={e => setFrom(e.target.value)} />
+            onChange={e => setFrom(e.target.value)} {...nativeDateInputProps} />
         </div>
         <div className="tcm-field">
           <label className="tcm-field-label">A</label>
           <input type="date" className="tcm-field-input" value={to}
-            onChange={e => setTo(e.target.value)} />
+            onChange={e => setTo(e.target.value)} {...nativeDateInputProps} />
         </div>
       </div>
 
@@ -612,12 +613,12 @@ function ReportTab({ branchId }: { branchId: number }) {
         <div className="tcm-field">
           <label className="tcm-field-label">Da</label>
           <input type="date" className="tcm-field-input" value={from}
-            onChange={e => setFrom(e.target.value)} />
+            onChange={e => setFrom(e.target.value)} {...nativeDateInputProps} />
         </div>
         <div className="tcm-field">
           <label className="tcm-field-label">A</label>
           <input type="date" className="tcm-field-input" value={to}
-            onChange={e => setTo(e.target.value)} />
+            onChange={e => setTo(e.target.value)} {...nativeDateInputProps} />
         </div>
       </div>
 

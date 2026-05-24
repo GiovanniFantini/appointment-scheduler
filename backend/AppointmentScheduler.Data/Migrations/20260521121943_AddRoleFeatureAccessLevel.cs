@@ -26,7 +26,7 @@ namespace AppointmentScheduler.Data.Migrations
                 SET ""AccessLevel"" = CASE WHEN r.""IsDefault"" THEN 3 ELSE 1 END
                 FROM ""MerchantRoles"" r
                 WHERE rf.""RoleId"" = r.""Id""
-                  AND rf.""Feature"" = 10
+                AND rf.""Feature"" = 10
                   AND rf.""IsEnabled"" = TRUE;
             ");
         }

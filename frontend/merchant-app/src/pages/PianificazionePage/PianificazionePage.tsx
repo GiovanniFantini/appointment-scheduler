@@ -3,7 +3,7 @@ import apiClient from '../../lib/axios'
 import EventModal from '../../components/EventModal/EventModal'
 import type { CalEvent } from '../../components/EventModal/EventModal'
 import { MerchantUser } from '../../App'
-import { formatBrowserDate } from '../../lib/dateUtils'
+import { formatBrowserDate, nativeDateInputProps } from '../../lib/dateUtils'
 import { useBranch } from '../../contexts/BranchContext'
 import BranchSelector from '../../components/shared/BranchSelector'
 import './PianificazionePage.css'
@@ -62,6 +62,12 @@ function addDays(d: Date, n: number): Date {
   return r
 }
 
+function addDaysIso(isoDate: string, n: number): string {
+  const d = new Date(`${isoDate}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().split('T')[0]
+}
+
 const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
 
 export default function PianificazionePage(_: Props) {
@@ -109,11 +115,16 @@ export default function PianificazionePage(_: Props) {
   const eventsByCell = useMemo(() => {
     const map = new Map<string, ApiEvent[]>()
     for (const ev of events) {
+      const endDate = ev.endDate ?? ev.startDate
       for (const p of ev.participants) {
-        const key = `${p.employeeId}-${ev.startDate}`
-        const list = map.get(key) ?? []
-        list.push(ev)
-        map.set(key, list)
+        let cursor = ev.startDate
+        while (cursor <= endDate) {
+          const key = `${p.employeeId}-${cursor}`
+          const list = map.get(key) ?? []
+          list.push(ev)
+          map.set(key, list)
+          cursor = addDaysIso(cursor, 1)
+        }
       }
     }
     return map
@@ -252,6 +263,7 @@ export default function PianificazionePage(_: Props) {
             className="form-input"
             value={cloneTargetWeek}
             onChange={e => setCloneTargetWeek(e.target.value)}
+            {...nativeDateInputProps}
           />
           <input
             type="number"

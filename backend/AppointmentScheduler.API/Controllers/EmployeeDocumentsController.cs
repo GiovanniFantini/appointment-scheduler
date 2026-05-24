@@ -159,6 +159,12 @@ public class EmployeeDocumentsController : ControllerBase
         if (!TryGetMerchantId(out int merchantId) || !TryGetUserId(out int userId))
             return BadRequest(new { message = "Token non valido" });
 
+        if (dto.Month.HasValue && !dto.Year.HasValue)
+            return BadRequest(new { message = "Anno obbligatorio quando il mese e' valorizzato" });
+
+        if (dto.Month is < 1 or > 12)
+            return BadRequest(new { message = "Mese non valido: deve essere compreso tra 1 e 12" });
+
         try
         {
             var result = await _hrDocumentService.CreateDocumentAsync(merchantId, userId, dto);
@@ -167,6 +173,10 @@ public class EmployeeDocumentsController : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
         }
         catch (Exception ex)
         {

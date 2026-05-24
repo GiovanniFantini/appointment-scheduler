@@ -52,4 +52,20 @@ public class EmployeeProfileController : ControllerBase
 
         return Ok(employee.Skills);
     }
+
+    /// <summary>
+    /// Ritorna la lista dei colleghi dell'employee corrente (per selezione in calendar modals).
+    /// </summary>
+    [HttpGet("colleagues")]
+    public async Task<ActionResult<List<EmployeeDto>>> GetColleagues()
+    {
+        if (!TryGetEmployeeId(out int employeeId))
+            return BadRequest(new { message = "Employee ID non trovato nel token" });
+        if (!TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        // Carica tutti i dipendenti del merchant per consentire la selezione (Manager può creare turni per altri)
+        var employees = await _employeeService.GetMerchantEmployeesAsync(merchantId);
+        return Ok(employees ?? new List<EmployeeDto>());
+    }
 }

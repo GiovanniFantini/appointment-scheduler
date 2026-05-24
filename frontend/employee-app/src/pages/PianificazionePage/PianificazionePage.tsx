@@ -1,0 +1,385 @@
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import apiClient from '../../lib/axios'
+import EventModal from '../../components/EventModal/EventModal'
+import type { CalEvent } from '../../components/EventModal/EventModal'
+import type { FeatureAccessLevel } from '../../App'
+import { nativeDateInputProps } from '../../lib/dateUtils'
+import { useBranch } from '../../contexts/BranchContext'
+import BranchSelector from '../../components/shared/BranchSelector'
+import './PianificazionePage.css'
+
+interface Props {
+  accessLevel: FeatureAccessLevel
+}
+
+interface Employee {
+  id: number
+  firstName: string
+  lastName: string
+  isActive: boolean
+}
+
+interface ApiEvent {
+  id: number
+  title: string
+  eventTypeName: string
+  branchId: number
+  departmentId?: number | null
+  appliesToAllBranches?: boolean
+  startDate: string
+  endDate?: string
+  isAllDay: boolean
+  startTime?: string
+  endTime?: string
+  isOnCall: boolean
+  participants: Array<{
+    employeeId: number
+    fullName: string
+    isOwner: boolean
+    startTimeOverride?: string
+    endTimeOverride?: string
+    participantNotes?: string
+    departmentId?: number | null
+  }>
+}
+
+/** Returns the Monday of the week containing the given date (ISO: Mon=1..Sun=7). */
+function mondayOf(date: Date): Date {
+  const d = new Date(date)
+  const day = d.getDay() === 0 ? 7 : d.getDay()
+  d.setDate(d.getDate() - (day - 1))
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
+function toISO(d: Date): string {
+  return d.toISOString().split('T')[0]
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d)
+  r.setDate(r.getDate() + n)
+  return r
+}
+
+function addDaysIso(isoDate: string, n: number): string {
+  const d = new Date(`${isoDate}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().split('T')[0]
+}
+
+const DAY_NAMES = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom']
+
+const LEVEL_RANK: Record<FeatureAccessLevel, number> = {
+  ReadOnly: 1,
+  Operator: 2,
+  Manager: 3,
+}
+
+export default function PianificazionePage({ accessLevel }: Props) {
+  const canOperate = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Operator
+  const canManage = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Manager
+  const canCreate = canManage
+  const canAssign = canOperate
+  const { activeBranchId, activeDepartmentId, isMultiBranch } = useBranch()
+  const [weekStart, setWeekStart] = useState<Date>(mondayOf(new Date()))
+  const [employees, setEmployees] = useState<Employee[]>([])
+  const [events, setEvents] = useState<ApiEvent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<Partial<CalEvent> | null>(null)
+  const [defaultDate, setDefaultDate] = useState('')
+  const [cloneTargetWeek, setCloneTargetWeek] = useState('')
+  const [cloneWeeks, setCloneWeeks] = useState(1)
+  const [cloneLoading, setCloneLoading] = useState(false)
+  const [cloneMessage, setCloneMessage] = useState('')
+  // Conflitti aggregati dei turni clonati (la clonazione non passa dal modale).
+  const [cloneConflicts, setCloneConflicts] = useState<{ employeeFullName: string; message: string }[]>([])
+
+  const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart])
+  const weekEnd = days[6]
+
+  const fetchData = useCallback(async () => {
+    setLoading(true)
+    try {
+      const from = toISO(weekStart)
+      const to = toISO(weekEnd)
+      const eventParams: Record<string, string | number> = { from, to }
+      if (activeBranchId != null) eventParams.branchId = activeBranchId
+      if (activeDepartmentId != null) eventParams.departmentId = activeDepartmentId
+      const [empRes, evRes] = await Promise.all([
+        apiClient.get<Employee[]>('/employee-profile/colleagues'),
+        apiClient.get<ApiEvent[]>('/events/employee/planning', { params: eventParams }),
+      ])
+      setEmployees(Array.isArray(empRes.data) ? empRes.data : [])
+      setEvents(Array.isArray(evRes.data) ? evRes.data.filter(e => e.eventTypeName === 'Turno') : [])
+    } finally {
+      setLoading(false)
+    }
+  }, [weekStart, weekEnd, activeBranchId, activeDepartmentId])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+
+  const eventsByCell = useMemo(() => {
+    const map = new Map<string, ApiEvent[]>()
+    for (const ev of events) {
+      const endDate = ev.endDate ?? ev.startDate
+      for (const p of ev.participants) {
+        let cursor = ev.startDate
+        while (cursor <= endDate) {
+          const key = `${p.employeeId}-${cursor}`
+          const list = map.get(key) ?? []
+          list.push(ev)
+          map.set(key, list)
+          cursor = addDaysIso(cursor, 1)
+        }
+      }
+    }
+    return map
+  }, [events])
+
+  const openNewShift = (employeeId: number, date: string) => {
+    if (!canCreate) return
+    setSelectedEvent({
+      title: 'Turno',
+      eventType: 'Turno',
+      isAllDay: false,
+      startDate: date,
+      startTime: '09:00',
+      endTime: '17:00',
+      ownerEmployeeIds: [employeeId],
+      coOwnerEmployeeIds: [],
+      recurrence: 'Nessuna',
+      notificationEnabled: false,
+    })
+    setDefaultDate(date)
+    setModalOpen(true)
+  }
+
+  const openEditShift = async (eventId: number) => {
+    if (!canAssign) return
+    try {
+      const res = await apiClient.get<ApiEvent>(`/events/${eventId}`)
+      const e = res.data
+      setSelectedEvent({
+        id: e.id,
+        title: e.title,
+        eventType: 'Turno',
+        branchId: e.branchId,
+        departmentId: e.departmentId ?? null,
+        appliesToAllBranches: e.appliesToAllBranches ?? false,
+        isAllDay: e.isAllDay,
+        startDate: e.startDate,
+        endDate: e.endDate,
+        startTime: e.startTime?.slice(0, 5),
+        endTime: e.endTime?.slice(0, 5),
+        isOnCall: e.isOnCall,
+        ownerEmployeeIds: e.participants.filter(p => p.isOwner).map(p => p.employeeId),
+        coOwnerEmployeeIds: e.participants.filter(p => !p.isOwner).map(p => p.employeeId),
+        participantOverrides: e.participants
+          .filter(p => p.startTimeOverride || p.endTimeOverride || p.participantNotes || p.departmentId != null)
+          .map(p => ({
+            employeeId: p.employeeId,
+            startTimeOverride: p.startTimeOverride?.slice(0, 5),
+            endTimeOverride: p.endTimeOverride?.slice(0, 5),
+            participantNotes: p.participantNotes,
+            departmentId: p.departmentId ?? null,
+          })),
+        recurrence: 'Nessuna',
+        notificationEnabled: false,
+      })
+      setModalOpen(true)
+    } catch {
+      // ignore
+    }
+  }
+
+  const handleCloneWeek = async () => {
+    if (!canManage) return
+    if (!cloneTargetWeek) {
+      setCloneMessage('Seleziona la settimana target')
+      return
+    }
+    setCloneLoading(true)
+    setCloneMessage('')
+    setCloneConflicts([])
+    try {
+      const res = await apiClient.post('/events/clone-week', {
+        sourceWeekStart: toISO(weekStart),
+        targetWeekStart: cloneTargetWeek,
+        numberOfWeeks: cloneWeeks,
+        // Se è selezionata una filiale, clona solo i suoi turni nella stessa filiale.
+        sourceBranchId: activeBranchId ?? undefined,
+        targetBranchId: activeBranchId ?? undefined,
+      })
+      const cloned = Array.isArray(res.data)
+        ? (res.data as { warnings?: { employeeFullName: string; message: string }[] }[])
+        : []
+      const conflicts = cloned.flatMap(c => c.warnings ?? [])
+      setCloneConflicts(conflicts)
+      setCloneMessage(
+        conflicts.length > 0
+          ? `${cloned.length} turno/i clonato/i — ${conflicts.length} conflitto/i rilevato/i.`
+          : `${cloned.length} turno/i clonato/i.`
+      )
+      await fetchData()
+    } catch {
+      setCloneMessage('Errore durante la clonazione')
+    } finally {
+      setCloneLoading(false)
+    }
+  }
+
+  const handleSaved = () => {
+    setModalOpen(false)
+    setSelectedEvent(null)
+    fetchData()
+  }
+
+  const shiftLabel = (ev: ApiEvent, employeeId: number): string => {
+    const p = ev.participants.find(x => x.employeeId === employeeId)
+    const start = p?.startTimeOverride ?? ev.startTime
+    const end = p?.endTimeOverride ?? ev.endTime
+    if (ev.isAllDay || !start || !end) return ev.title
+    return `${start.slice(0, 5)}-${end.slice(0, 5)}`
+  }
+
+  const formatWeekLabel = (): string => {
+    const opts: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit' }
+    return `${weekStart.toLocaleDateString('it-IT', opts)} - ${weekEnd.toLocaleDateString('it-IT', opts)}`
+  }
+
+  return (
+    <div className="pianificazione-page">
+      <div className="page-header-row">
+        <div>
+          <h1 className="page-title">Pianificazione</h1>
+          <p className="page-subtitle">Vista settimanale turni per risorsa</p>
+        </div>
+        {isMultiBranch && <BranchSelector />}
+      </div>
+
+      <div className="pianif-toolbar">
+        <div className="pianif-week-nav">
+          <button className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹ Settimana precedente</button>
+          <button className="btn-secondary" onClick={() => setWeekStart(mondayOf(new Date()))}>Oggi</button>
+          <button className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Settimana successiva ›</button>
+          <span className="pianif-week-label">{formatWeekLabel()}</span>
+        </div>
+
+        {canManage && (
+          <div className="pianif-clone">
+            <label className="form-label">Clona a settimana (lun.)</label>
+            <input
+              type="date"
+              className="form-input"
+              value={cloneTargetWeek}
+              onChange={e => setCloneTargetWeek(e.target.value)}
+              {...nativeDateInputProps}
+            />
+            <input
+              type="number"
+              className="form-input pianif-clone-weeks"
+              min={1}
+              max={52}
+              value={cloneWeeks}
+              onChange={e => setCloneWeeks(Math.max(1, Math.min(52, Number(e.target.value) || 1)))}
+              title="Numero di settimane consecutive"
+            />
+            <button className="btn-primary" disabled={cloneLoading} onClick={handleCloneWeek}>
+              {cloneLoading ? 'Clonazione...' : 'Clona'}
+            </button>
+            {cloneMessage && <span className="pianif-clone-msg">{cloneMessage}</span>}
+          </div>
+        )}
+      </div>
+
+      {cloneConflicts.length > 0 && (
+        <div className="pianif-conflict-banner" role="alert">
+          <div className="pianif-conflict-head">
+            <span>⚠ Conflitti rilevati nei turni clonati:</span>
+            <button
+              className="pianif-conflict-close"
+              onClick={() => setCloneConflicts([])}
+              aria-label="Chiudi"
+            >
+              ✕
+            </button>
+          </div>
+          <ul className="pianif-conflict-list">
+            {cloneConflicts.map((c, idx) => (
+              <li key={idx}>
+                <strong>{c.employeeFullName}</strong> — {c.message}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="pianif-loading">Caricamento...</div>
+      ) : employees.length === 0 ? (
+        <div className="pianif-empty">Nessun dipendente attivo.</div>
+      ) : (
+        <div className="pianif-table-wrap">
+          <table className="pianif-table">
+            <thead>
+              <tr>
+                <th className="pianif-th-name">Risorsa</th>
+                {days.map((d, i) => (
+                  <th key={i} className="pianif-th-day">
+                    <div className="pianif-day-name">{DAY_NAMES[i]}</div>
+                    <div className="pianif-day-date">{d.getDate()}/{d.getMonth() + 1}</div>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {employees.map(emp => (
+                <tr key={emp.id}>
+                  <td className="pianif-td-name">
+                    <div className="pianif-emp-name">{emp.firstName} {emp.lastName}</div>
+                  </td>
+                  {days.map(d => {
+                    const iso = toISO(d)
+                    const key = `${emp.id}-${iso}`
+                    const shifts = eventsByCell.get(key) ?? []
+                    return (
+                      <td key={iso} className="pianif-cell" onClick={() => { if (canCreate && shifts.length === 0) openNewShift(emp.id, iso) }}>
+                        {shifts.length === 0 ? (
+                          <div className="pianif-empty-cell">{canCreate ? '+' : ''}</div>
+                        ) : (
+                          shifts.map(s => (
+                            <div
+                              key={s.id}
+                              className="pianif-pill"
+                              onClick={e => { e.stopPropagation(); openEditShift(s.id) }}
+                            >
+                              {shiftLabel(s, emp.id)}
+                            </div>
+                          ))
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {modalOpen && (
+        <EventModal
+          event={selectedEvent}
+          defaultDate={defaultDate}
+          mode={canManage ? 'full' : 'assign'}
+          onClose={() => { setModalOpen(false); setSelectedEvent(null) }}
+          onSaved={handleSaved}
+        />
+      )}
+    </div>
+  )
+}

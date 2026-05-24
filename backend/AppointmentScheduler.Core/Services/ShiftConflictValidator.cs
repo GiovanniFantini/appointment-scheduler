@@ -71,6 +71,46 @@ public class ShiftConflictValidator : IShiftConflictValidator
             });
         }
 
+        var leaveEventTypes = new[] { EventType.Ferie, EventType.Malattia, EventType.Permessi };
+        var leaveEvents = await _context.Events
+            .Include(e => e.Participants)
+                .ThenInclude(p => p.Employee)
+            .Where(e => e.MerchantId == merchantId
+                        && leaveEventTypes.Contains(e.EventType)
+                        && (excludeEventId == null || e.Id != excludeEventId.Value)
+                        && e.StartDate <= date
+                        && (e.EndDate == null || e.EndDate >= date)
+                        && e.Participants.Any(p => ids.Contains(p.EmployeeId)))
+            .ToListAsync();
+
+        foreach (var leaveEvent in leaveEvents)
+        {
+            foreach (var participant in leaveEvent.Participants.Where(p => ids.Contains(p.EmployeeId)))
+            {
+                var leaveStart = participant.StartTimeOverride ?? leaveEvent.StartTime;
+                var leaveEnd = participant.EndTimeOverride ?? leaveEvent.EndTime;
+
+                if (leaveStart.HasValue && leaveEnd.HasValue && start.HasValue && end.HasValue)
+                {
+                    if (!IntervalsOverlap(start.Value, end.Value, leaveStart.Value, leaveEnd.Value))
+                        continue;
+                }
+
+                result.Add(new ShiftConflictDto
+                {
+                    EmployeeId = participant.EmployeeId,
+                    EmployeeFullName = FullName(participant.Employee),
+                    Date = date,
+                    Kind = ShiftConflictKind.LeaveOverlap,
+                    ConflictingEventId = leaveEvent.Id,
+                    ConflictingEventTitle = leaveEvent.Title,
+                    ConflictStart = leaveStart,
+                    ConflictEnd = leaveEnd,
+                    Message = BuildLeaveEventMessage(leaveEvent.EventType, leaveEvent.Title, leaveStart, leaveEnd)
+                });
+            }
+        }
+
         // Shift overlap: other events (Turno) with the same date where the employee is participant.
         // Volutamente NON filtrato per BranchId: un doppio turno in due filiali diverse lo stesso
         // giorno è proprio il conflitto che vogliamo rilevare.
@@ -190,5 +230,21 @@ public class ShiftConflictValidator : IShiftConflictValidator
         if (start.HasValue && end.HasValue)
             return $"Conflitto con {type} approvato ({start:HH\\:mm}-{end:HH\\:mm})";
         return $"Conflitto con {type} approvato (tutto il giorno)";
+    }
+
+    private static string BuildLeaveEventMessage(EventType type, string? title, TimeOnly? start, TimeOnly? end)
+    {
+        var label = type switch
+        {
+            EventType.Ferie => "ferie",
+            EventType.Malattia => "malattia",
+            EventType.Permessi => "permesso",
+            _ => "assenza"
+        };
+
+        var suffix = string.IsNullOrWhiteSpace(title) ? string.Empty : $" \"{title}\"";
+        if (start.HasValue && end.HasValue)
+            return $"Conflitto con {label}{suffix} ({start:HH\\:mm}-{end:HH\\:mm})";
+        return $"Conflitto con {label}{suffix} (tutto il giorno)";
     }
 }

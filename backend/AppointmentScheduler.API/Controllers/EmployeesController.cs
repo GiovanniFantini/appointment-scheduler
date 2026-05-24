@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
@@ -63,65 +62,4 @@ public class EmployeesController : ControllerBase
         return Ok(employee);
     }
 
-    /// <summary>
-    /// Aggiunge un nuovo dipendente al merchant corrente
-    /// </summary>
-    [HttpPost]
-    public async Task<ActionResult<EmployeeDto>> Create([FromBody] CreateEmployeeRequest request)
-    {
-        if (!TryGetMerchantId(out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato nel token" });
-
-        try
-        {
-            var employee = await _employeeService.CreateAsync(merchantId, request);
-            return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = $"Errore nella creazione del dipendente: {ex.Message}" });
-        }
-    }
-
-    /// <summary>
-    /// Aggiorna i dati di un dipendente del merchant corrente
-    /// </summary>
-    [HttpPut("{id}")]
-    public async Task<ActionResult<EmployeeDto>> Update(int id, [FromBody] UpdateEmployeeRequest request)
-    {
-        if (!TryGetMerchantId(out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato nel token" });
-
-        try
-        {
-            var employee = await _employeeService.UpdateAsync(id, merchantId, request);
-
-            if (employee == null)
-                return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
-
-            return Ok(employee);
-        }
-        catch (InvalidOperationException ex)
-        {
-            // Validazioni di dominio (filiale/reparto non validi): 400, non 500.
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    /// <summary>
-    /// Rimuove un dipendente dal merchant (disattiva la membership)
-    /// </summary>
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> Remove(int id)
-    {
-        if (!TryGetMerchantId(out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato nel token" });
-
-        var result = await _employeeService.RemoveFromMerchantAsync(id, merchantId);
-
-        if (!result)
-            return NotFound(new { message = "Dipendente non trovato o non autorizzato" });
-
-        return Ok(new { message = "Dipendente rimosso dal merchant con successo" });
-    }
 }

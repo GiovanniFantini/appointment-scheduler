@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import apiClient from '../../lib/axios'
 import { skillsApi, Skill, SuggestedEmployee } from '../../lib/api/skills'
+import { nativeDateInputProps } from '../../lib/dateUtils'
 import { useBranch } from '../../contexts/BranchContext'
 import './EventModal.css'
 
@@ -92,6 +93,7 @@ interface ApiErrorResponse {
   message?: string
   errors?: Record<string, string[]>
   title?: string
+  conflicts?: ShiftConflictDto[]
 }
 
 interface EventModalProps {
@@ -163,12 +165,36 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const [newExtSaving, setNewExtSaving] = useState(false)
   const [newExtError, setNewExtError] = useState('')
 
+  // Step 2: refresh e creazione inline mansioni senza uscire dal wizard.
+  const [skillsLoading, setSkillsLoading] = useState(false)
+  const [inlineSkillOpen, setInlineSkillOpen] = useState(false)
+  const [inlineSkillName, setInlineSkillName] = useState('')
+  const [inlineSkillColor, setInlineSkillColor] = useState('#3b82f6')
+  const [inlineSkillSaving, setInlineSkillSaving] = useState(false)
+  const [inlineSkillError, setInlineSkillError] = useState('')
+
   const [employees, setEmployees] = useState<Employee[]>([])
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [warnings, setWarnings] = useState<ShiftConflictDto[]>([])
+  const [blockingConflicts, setBlockingConflicts] = useState<ShiftConflictDto[]>([])
   const [warningsAcknowledged, setWarningsAcknowledged] = useState(false)
+
+  const isEmployeeAbsenceEvent = eventType === 'Ferie' || eventType === 'Permessi' || eventType === 'Malattia'
+
+  const refreshSkills = async () => {
+    setSkillsLoading(true)
+    setInlineSkillError('')
+    try {
+      const list = await skillsApi.list()
+      setSkills(list.filter(s => s.isActive))
+    } catch {
+      setInlineSkillError('Impossibile aggiornare le mansioni')
+    } finally {
+      setSkillsLoading(false)
+    }
+  }
 
   const initialStartTime = event?.startTime ?? ''
   const initialEndTime = event?.endTime ?? ''
@@ -189,8 +215,37 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
   useEffect(() => {
     fetchEmployees()
-    skillsApi.list().then(list => setSkills(list.filter(s => s.isActive))).catch(() => {})
+    refreshSkills()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const handleCreateInlineSkill = async () => {
+    if (!inlineSkillName.trim()) {
+      setInlineSkillError('Il nome mansione è obbligatorio')
+      return
+    }
+
+    setInlineSkillSaving(true)
+    setInlineSkillError('')
+    try {
+      const created = await skillsApi.create({
+        name: inlineSkillName.trim(),
+        color: inlineSkillColor,
+        isActive: true,
+      })
+
+      await refreshSkills()
+      addRequiredSkill(created.id)
+      setInlineSkillOpen(false)
+      setInlineSkillName('')
+      setInlineSkillColor('#3b82f6')
+    } catch (err: unknown) {
+      const e = err as { response?: { data?: { message?: string } } }
+      setInlineSkillError(e.response?.data?.message ?? 'Errore durante la creazione mansione')
+    } finally {
+      setInlineSkillSaving(false)
+    }
+  }
 
   // Crea al volo una risorsa esterna (solo nome/cognome) e la seleziona nel turno.
   const handleCreateExternal = async () => {
@@ -247,6 +302,15 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   useEffect(() => {
     setParticipantOverrides(prev => prev.filter(o => selectedOwnerIds.includes(o.employeeId)))
   }, [selectedOwnerIds])
+
+  useEffect(() => {
+    if (!isEmployeeAbsenceEvent) return
+
+    setDepartmentId(null)
+    setAppliesToAllBranches(false)
+    setIsOnCall(false)
+    setSelectedOwnerIds(prev => prev.slice(0, 1))
+  }, [isEmployeeAbsenceEvent])
 
   const upsertOverride = (employeeId: number, patch: Partial<ParticipantOverrideInput>) => {
     setParticipantOverrides(prev => {
@@ -335,15 +399,15 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     title,
     eventType: EVENT_TYPE_VALUES[eventType],
     branchId: branchId ?? 0,
-    departmentId: departmentId,
+    departmentId: isEmployeeAbsenceEvent ? null : departmentId,
     appliesToAllBranches: eventType === 'ChiusuraAziendale' ? appliesToAllBranches : false,
     isAllDay,
     startDate,
-    endDate: endDate || startDate,
+    endDate: endDate || undefined,
     startTime: isAllDay ? undefined : toApiTime(startTime),
     endTime: isAllDay ? undefined : toApiTime(endTime),
     isOnCall: eventType === 'Turno' ? isOnCall : false,
-    ownerEmployeeIds: selectedOwnerIds,
+    ownerEmployeeIds: isEmployeeAbsenceEvent ? selectedOwnerIds.slice(0, 1) : selectedOwnerIds,
     coOwnerEmployeeIds: [],
     participantOverrides: participantOverrides
       .filter(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes || o.departmentId != null)
@@ -371,8 +435,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     if (!title.trim()) { setError('Il titolo è obbligatorio'); return }
     if (isMultiBranch && !branchId) { setError('Seleziona la filiale dell\'evento'); return }
     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
-    if (!endDate) { setError('La data di fine è obbligatoria'); return }
-    if (endDate < startDate) { setError('La data di fine non può essere precedente alla data di inizio'); return }
+    if (endDate && endDate < startDate) { setError('La data di fine non può essere precedente alla data di inizio'); return }
+    if (isEmployeeAbsenceEvent && selectedOwnerIds.length !== 1) { setError('Seleziona un dipendente'); return }
 
     // Warn before persisting time changes when participant overrides exist
     if (timeChanged && hasOverrides) {
@@ -384,6 +448,8 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     }
 
     setError('')
+    setBlockingConflicts([])
+    setWarnings([])
     setLoading(true)
     try {
       const response = isEdit
@@ -401,7 +467,12 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
       }
     } catch (err: unknown) {
       const e = err as { response?: { data?: ApiErrorResponse } }
-      setError(getApiErrorMessage(e.response?.data) ?? 'Errore durante il salvataggio')
+      const apiError = e.response?.data
+      const conflicts = Array.isArray(apiError?.conflicts) ? apiError.conflicts : []
+      if (conflicts.length > 0) {
+        setBlockingConflicts(conflicts)
+      }
+      setError(getApiErrorMessage(apiError) ?? 'Errore durante il salvataggio')
     } finally {
       setLoading(false)
     }
@@ -468,6 +539,14 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     setSelectedOwnerIds(selected)
   }
 
+  const handleSingleEmployeeSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedOwnerIds(e.target.value ? [Number(e.target.value)] : [])
+  }
+
+  const selectedEmployeeConflictCount = isEmployeeAbsenceEvent && selectedOwnerIds[0] != null
+    ? blockingConflicts.filter(conflict => conflict.employeeId === selectedOwnerIds[0]).length
+    : 0
+
   return (
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal-container">
@@ -494,6 +573,21 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
         <div className="modal-body">
           {error && <div className="modal-error">{error}</div>}
+
+          {blockingConflicts.length > 0 && (
+            <div className="modal-conflict" role="alert">
+              <div className="modal-conflict-title">
+                Salvataggio bloccato ({blockingConflicts.length}):
+              </div>
+              <ul className="modal-conflict-list">
+                {blockingConflicts.map((conflict, idx) => (
+                  <li key={idx}>
+                    {conflict.employeeFullName ? <strong>{conflict.employeeFullName}</strong> : <strong>Evento</strong>} — {conflict.message}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {warnings.length > 0 && (
             <div className="modal-warning">
@@ -548,7 +642,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                 </select>
               </div>
 
-              {isMultiBranch && (
+              {isMultiBranch && !isEmployeeAbsenceEvent && (
                 <div className="modal-row">
                   {/* Dropdown filiale solo con più di una sede: con una sola filiale
                       (es. fabbrica con soli reparti) sarebbe un menu inutile. */}
@@ -627,11 +721,11 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
               <div className="modal-row">
                 <div className="modal-form-group">
                   <label className="modal-label">Data inizio *</label>
-                  <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                  <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} {...nativeDateInputProps} />
                 </div>
                 <div className="modal-form-group">
-                  <label className="modal-label">Data fine *</label>
-                  <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} />
+                  <label className="modal-label">Data fine</label>
+                  <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} {...nativeDateInputProps} />
                 </div>
               </div>
 
@@ -680,6 +774,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                           min={startDate || undefined}
                           value={repeatUntil}
                           onChange={e => setRepeatUntil(e.target.value)}
+                          {...nativeDateInputProps}
                         />
                       </div>
                     )}
@@ -691,6 +786,65 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
 
           {eventType === 'Turno' && step === 2 && (
             <div className="wizard-step-content">
+              <div className="step2-actions">
+                <button
+                  type="button"
+                  className="btn-cancel"
+                  onClick={refreshSkills}
+                  disabled={skillsLoading || inlineSkillSaving}
+                >
+                  {skillsLoading ? 'Aggiornamento...' : 'Aggiorna mansioni'}
+                </button>
+                <button
+                  type="button"
+                  className="btn-save"
+                  onClick={() => {
+                    setInlineSkillOpen(v => !v)
+                    setInlineSkillError('')
+                  }}
+                  disabled={inlineSkillSaving}
+                >
+                  {inlineSkillOpen ? 'Chiudi creazione inline' : '+ Nuova mansione inline'}
+                </button>
+              </div>
+
+              {inlineSkillOpen && (
+                <div className="inline-skill-card">
+                  <div className="modal-row">
+                    <div className="modal-form-group">
+                      <label className="modal-label">Nome mansione</label>
+                      <input
+                        type="text"
+                        className="modal-input"
+                        placeholder="Es. Cassiere"
+                        value={inlineSkillName}
+                        onChange={e => setInlineSkillName(e.target.value)}
+                      />
+                    </div>
+                    <div className="modal-form-group">
+                      <label className="modal-label">Colore</label>
+                      <input
+                        type="color"
+                        className="modal-input inline-color-input"
+                        value={inlineSkillColor}
+                        onChange={e => setInlineSkillColor(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  {inlineSkillError && <div className="modal-error">{inlineSkillError}</div>}
+                  <div className="inline-skill-actions">
+                    <button
+                      type="button"
+                      className="btn-save"
+                      onClick={handleCreateInlineSkill}
+                      disabled={inlineSkillSaving}
+                    >
+                      {inlineSkillSaving ? 'Creazione...' : 'Crea mansione'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {skills.length === 0 ? (
                 <div className="step-empty">
                   <div className="step-empty-icon">🏷</div>
@@ -699,7 +853,13 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                     Le mansioni servono a dichiarare di cosa ha bisogno il turno (es. 1 Cassiere + 1 Repartista).
                     Sono opzionali: se non ne hai bisogno, salta questo passaggio.
                   </p>
-                  <a className="link-button" href="/mansioni" target="_blank" rel="noreferrer">+ Crea una mansione</a>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => setInlineSkillOpen(true)}
+                  >
+                    + Crea una mansione qui
+                  </button>
                 </div>
               ) : (
                 <>
@@ -829,21 +989,46 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
           ) && (
             <div className="modal-form-group">
               <label className="modal-label">
-                {eventType === 'Turno' ? 'Partecipanti' : 'Persone coinvolte'} (Ctrl+click per selezione multipla)
+                {isEmployeeAbsenceEvent
+                  ? 'Dipendente *'
+                  : eventType === 'Turno'
+                    ? 'Partecipanti (Ctrl+click per selezione multipla)'
+                    : 'Persone coinvolte (Ctrl+click per selezione multipla)'}
               </label>
-              <select
-                multiple
-                className="multi-select"
-                value={selectedOwnerIds.map(String)}
-                onChange={handleEmployeeSelect}
-              >
-                {employees.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.firstName} {emp.lastName}
-                    {emp.kind === EMPLOYEE_KIND_EXTERNAL ? ' — Esterno' : ''}
-                  </option>
-                ))}
-              </select>
+              {isEmployeeAbsenceEvent ? (
+                <select
+                  className="modal-select"
+                  value={selectedOwnerIds[0] ?? ''}
+                  onChange={handleSingleEmployeeSelect}
+                >
+                  <option value="">Seleziona dipendente…</option>
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.firstName} {emp.lastName}
+                      {emp.kind === EMPLOYEE_KIND_EXTERNAL ? ' — Esterno' : ''}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  multiple
+                  className="multi-select"
+                  value={selectedOwnerIds.map(String)}
+                  onChange={handleEmployeeSelect}
+                >
+                  {employees.map(emp => (
+                    <option key={emp.id} value={emp.id}>
+                      {emp.firstName} {emp.lastName}
+                      {emp.kind === EMPLOYEE_KIND_EXTERNAL ? ' — Esterno' : ''}
+                    </option>
+                  ))}
+                </select>
+              )}
+              {selectedEmployeeConflictCount > 0 && (
+                <div className="modal-field-hint modal-field-hint--error">
+                  Il dipendente selezionato ha {selectedEmployeeConflictCount} sovrapposizion{selectedEmployeeConflictCount === 1 ? 'e' : 'i'} bloccante{selectedEmployeeConflictCount === 1 ? '' : 'i'}.
+                </div>
+              )}
               {eventType === 'Turno' && (
                 <button
                   type="button"
@@ -984,11 +1169,11 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                       <div className="modal-row">
                         <div className="modal-form-group">
                           <label className="modal-label">Da data</label>
-                          <input type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} />
+                          <input type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} {...nativeDateInputProps} />
                         </div>
                         <div className="modal-form-group">
                           <label className="modal-label">A data</label>
-                          <input type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} />
+                          <input type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} {...nativeDateInputProps} />
                         </div>
                       </div>
                     </>
@@ -1002,6 +1187,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                           className="modal-input"
                           value={cloneTargetWeek}
                           onChange={e => setCloneTargetWeek(e.target.value)}
+                          {...nativeDateInputProps}
                         />
                       </div>
                       <div className="modal-form-group">

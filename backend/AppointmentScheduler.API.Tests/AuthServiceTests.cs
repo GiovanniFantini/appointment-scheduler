@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using AppointmentScheduler.API.Tests.Helpers;
 using AppointmentScheduler.Data;
+using AppointmentScheduler.Shared.Helpers;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.API.Tests;
@@ -93,8 +94,11 @@ public class AuthServiceTests
         result.CompanyName.Should().Be("Contoso");
         result.IsApproved.Should().BeTrue();
         result.ActiveFeatures.Should().Contain(nameof(MerchantFeature.Magazzino));
+        result.FeatureLevels.Should().ContainKey(nameof(MerchantFeature.Calendario)).WhoseValue.Should().Be(nameof(FeatureAccessLevel.Manager));
         result.FeatureLevels.Should().ContainKey(nameof(MerchantFeature.Magazzino)).WhoseValue.Should().Be(nameof(FeatureAccessLevel.Manager));
         result.FeatureLevels.Should().ContainKey(nameof(MerchantFeature.Documenti)).WhoseValue.Should().Be(nameof(FeatureAccessLevel.Manager));
+        result.FeatureLevels.Should().ContainKey(nameof(MerchantFeature.Richieste)).WhoseValue.Should().Be(nameof(FeatureAccessLevel.Manager));
+        result.FeatureLevels.Should().ContainKey(nameof(MerchantFeature.Timbratura)).WhoseValue.Should().Be(nameof(FeatureAccessLevel.Manager));
     }
 
     [Fact]
@@ -151,6 +155,45 @@ public class AuthServiceTests
         result.FeatureLevels.Should().Contain(new KeyValuePair<string, string>("Magazzino", "Manager"));
         result.FeatureLevels.Should().Contain(new KeyValuePair<string, string>("Documenti", "Operator"));
         result.FeatureLevels.Should().NotContainKey("Filiali");
+    }
+
+    [Fact]
+    public async Task RegisterMerchantAsync_CreatesSystemRoles_ForAppManagerInternalAndExternalBase()
+    {
+        var users = new List<User>();
+        var merchants = new List<Merchant>();
+        var branches = new List<MerchantBranch>();
+        var roles = new List<MerchantRole>();
+        var roleFeatures = new List<RoleFeature>();
+        var employees = new List<Employee>();
+        var memberships = new List<EmployeeMembership>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Users, users, user => [user.Id])
+            .WithSet(x => x.Merchants, merchants, merchant => [merchant.Id])
+            .WithSet(x => x.MerchantBranches, branches, branch => [branch.Id])
+            .WithSet(x => x.MerchantRoles, roles, role => [role.Id])
+            .WithSet(x => x.RoleFeatures, roleFeatures, feature => [feature.Id])
+            .WithSet(x => x.Employees, employees, employee => [employee.Id])
+            .WithSet(x => x.EmployeeMemberships, memberships, membership => [membership.Id])
+            .Build();
+
+        _passwordHasher.Setup(x => x.HashPassword("secret123")).Returns("hash");
+        var service = CreateService(context.Object);
+
+        var result = await service.RegisterMerchantAsync(new RegisterMerchantRequest
+        {
+            Email = "merchant@example.com",
+            Password = "secret123",
+            FirstName = "Mario",
+            LastName = "Rossi",
+            CompanyName = "Contoso"
+        });
+
+        result.Should().NotBeNull();
+        roles.Select(r => r.Name).Should().Contain(SystemRoleNames.AppManager);
+        roles.Select(r => r.Name).Should().Contain(SystemRoleNames.InternalBase);
+        roles.Select(r => r.Name).Should().Contain(SystemRoleNames.ExternalBase);
     }
 
     private AuthService CreateService(IApplicationDbContext context)

@@ -7,6 +7,7 @@ using AppointmentScheduler.Data;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.API.Authorization;
+using AppointmentScheduler.API.Middleware;
 using Microsoft.AspNetCore.Authorization;
 
 try
@@ -233,6 +234,9 @@ try
 
     if (!app.Environment.IsDevelopment())
         app.UseHttpsRedirection();
+
+    // Log every API error status (4xx/5xx) and unhandled exceptions in one place.
+    app.UseMiddleware<ApiErrorLoggingMiddleware>();
 
     app.UseCors("AllowFrontend");
     app.UseAuthentication();

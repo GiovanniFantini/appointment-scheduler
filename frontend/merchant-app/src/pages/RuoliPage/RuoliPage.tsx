@@ -9,7 +9,7 @@ interface Feature {
 }
 
 // Livelli di accesso operativo. Significativi per le feature a livelli
-// (Magazzino e Documenti). Valori numerici allineati all'enum C#
+// (Calendario, Documenti, Timbratura e Magazzino). Valori numerici allineati all'enum C#
 // FeatureAccessLevel: l'API serializza e deserializza gli enum come numeri.
 const enum FeatureAccessLevel {
   ReadOnly = 1,
@@ -19,15 +19,32 @@ const enum FeatureAccessLevel {
 
 // Valori feature (allineati all'enum C# MerchantFeature).
 const FEATURE_DOCUMENTI = 5
+const FEATURE_TIMBRATURA = 9
 const FEATURE_MAGAZZINO = 10
+const FEATURE_RICHIESTE = 2
 
 // Feature che usano i livelli di accesso, con le label dei rispettivi livelli.
 // Le altre feature restano un semplice toggle on/off.
 const LEVELED_FEATURES: Record<number, Array<{ value: FeatureAccessLevel; label: string }>> = {
+  [1]: [
+    { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura (riepilogo turni)' },
+    { value: FeatureAccessLevel.Operator, label: 'Operatore (assegna personale ai turni esistenti)' },
+    { value: FeatureAccessLevel.Manager, label: 'Manager (modifica e cancellazione turni)' },
+  ],
+  [FEATURE_RICHIESTE]: [
+    { value: FeatureAccessLevel.ReadOnly, label: 'Base (richiede e vede solo le proprie richieste)' },
+    { value: FeatureAccessLevel.Operator, label: 'Operatore (gestisce anche le richieste degli altri)' },
+    { value: FeatureAccessLevel.Manager, label: 'Manager (stessi permessi operativi dell\'operatore)' },
+  ],
   [FEATURE_DOCUMENTI]: [
     { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura (scarica i propri documenti)' },
     { value: FeatureAccessLevel.Operator, label: 'Operatore (carica documenti per altre risorse)' },
     { value: FeatureAccessLevel.Manager, label: 'Manager (anche cancellazione documenti)' },
+  ],
+  [FEATURE_TIMBRATURA]: [
+    { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura (monitoraggio presenze)' },
+    { value: FeatureAccessLevel.Operator, label: 'Operatore (inserimento correzioni manuali)' },
+    { value: FeatureAccessLevel.Manager, label: 'Manager (configurazione e approvazione anomalie)' },
   ],
   [FEATURE_MAGAZZINO]: [
     { value: FeatureAccessLevel.ReadOnly, label: 'Sola lettura' },
@@ -62,7 +79,7 @@ const ALL_FEATURES: Feature[] = [
   { name: 'Report', icon: '📊', value: 6 },
   { name: 'Mansioni', icon: '🏷', value: 7 },
   { name: 'Filiali', icon: '🏢', value: 8 },
-  { name: 'Timbratura', icon: '⏱', value: 9 },
+  { name: 'Timbratura', icon: '⏱', value: FEATURE_TIMBRATURA },
   { name: 'Magazzino', icon: '📦', value: FEATURE_MAGAZZINO },
 ]
 

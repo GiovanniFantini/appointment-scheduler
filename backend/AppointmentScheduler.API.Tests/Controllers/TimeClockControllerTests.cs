@@ -43,33 +43,6 @@ public class TimeClockControllerTests
     }
 
     [Fact]
-    public async Task UpdateSettings_ReturnsBadRequest_WhenServiceThrowsInvalidOperationException()
-    {
-        var request = new UpdateTimeClockSettingsRequest();
-        _timeClockService.Setup(service => service.UpdateSettingsAsync(3, 7, request)).ThrowsAsync(new InvalidOperationException("Filiale non valida"));
-        var controller = CreateController(new Claim("MerchantId", "7"));
-
-        var result = await controller.UpdateSettings(3, request);
-
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Filiale non valida");
-    }
-
-    [Fact]
-    public async Task UpdateSettings_ReturnsOk_WhenServiceSucceeds()
-    {
-        var request = new UpdateTimeClockSettingsRequest();
-        var settings = new BranchTimeClockSettingsDto { BranchId = 3 };
-        _timeClockService.Setup(service => service.UpdateSettingsAsync(3, 7, request)).ReturnsAsync(settings);
-        var controller = CreateController(new Claim("MerchantId", "7"));
-
-        var result = await controller.UpdateSettings(3, request);
-
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeSameAs(settings);
-    }
-
-    [Fact]
     public async Task GetEntries_ReturnsOk_WhenIdentityIsValid()
     {
         var from = new DateOnly(2026, 1, 1);
@@ -85,44 +58,6 @@ public class TimeClockControllerTests
     }
 
     [Fact]
-    public async Task CreateManualEntry_ReturnsBadRequest_WhenUserClaimIsMissing()
-    {
-        var controller = CreateController(new Claim("MerchantId", "7"));
-
-        var result = await controller.CreateManualEntry(new CreateManualEntryRequest());
-
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Token non valido");
-    }
-
-    [Fact]
-    public async Task CreateManualEntry_ReturnsBadRequest_WhenServiceThrowsInvalidOperationException()
-    {
-        var request = new CreateManualEntryRequest();
-        _timeClockService.Setup(service => service.CreateManualEntryAsync(7, 12, request)).ThrowsAsync(new InvalidOperationException("Dato non valido"));
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
-
-        var result = await controller.CreateManualEntry(request);
-
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Dato non valido");
-    }
-
-    [Fact]
-    public async Task CreateManualEntry_ReturnsOk_WhenServiceSucceeds()
-    {
-        var request = new CreateManualEntryRequest();
-        var entry = new TimeEntryDto { Id = 9 };
-        _timeClockService.Setup(service => service.CreateManualEntryAsync(7, 12, request)).ReturnsAsync(entry);
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
-
-        var result = await controller.CreateManualEntry(request);
-
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeSameAs(entry);
-    }
-
-    [Fact]
     public async Task GetAnomalies_ReturnsOk_WhenIdentityIsValid()
     {
         var anomalies = new List<TimeClockAnomalyDto> { new() { Id = 6 } };
@@ -133,57 +68,6 @@ public class TimeClockControllerTests
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeSameAs(anomalies);
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task ReviewAnomaly_ReturnsBadRequest_WhenServiceThrowsInvalidOperationException(bool approve)
-    {
-        var request = new ReviewAnomalyRequest();
-        if (approve)
-        {
-            _timeClockService.Setup(service => service.ApproveAnomalyAsync(5, 7, 12, request)).ThrowsAsync(new InvalidOperationException("Stato non valido"));
-        }
-        else
-        {
-            _timeClockService.Setup(service => service.RejectAnomalyAsync(5, 7, 12, request)).ThrowsAsync(new InvalidOperationException("Stato non valido"));
-        }
-
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
-
-        var result = approve
-            ? await controller.ApproveAnomaly(5, request)
-            : await controller.RejectAnomaly(5, request);
-
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Stato non valido");
-    }
-
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public async Task ReviewAnomaly_ReturnsOk_WhenServiceSucceeds(bool approve)
-    {
-        var request = new ReviewAnomalyRequest();
-        var anomaly = new TimeClockAnomalyDto { Id = 5 };
-        if (approve)
-        {
-            _timeClockService.Setup(service => service.ApproveAnomalyAsync(5, 7, 12, request)).ReturnsAsync(anomaly);
-        }
-        else
-        {
-            _timeClockService.Setup(service => service.RejectAnomalyAsync(5, 7, 12, request)).ReturnsAsync(anomaly);
-        }
-
-        var controller = CreateController(new Claim("MerchantId", "7"), new Claim(ClaimTypes.NameIdentifier, "12"));
-
-        var result = approve
-            ? await controller.ApproveAnomaly(5, request)
-            : await controller.RejectAnomaly(5, request);
-
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.Value.Should().BeSameAs(anomaly);
     }
 
     [Fact]
@@ -199,29 +83,6 @@ public class TimeClockControllerTests
 
         var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
         ok.Value.Should().BeSameAs(rows);
-    }
-
-    [Fact]
-    public async Task RunDetection_ReturnsBadRequest_WhenMerchantClaimIsMissing()
-    {
-        var controller = CreateController();
-
-        var result = await controller.RunDetection(3);
-
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Token non valido");
-    }
-
-    [Fact]
-    public async Task RunDetection_ReturnsOk_WithCreatedCount()
-    {
-        _timeClockService.Setup(service => service.RunMissingPunchDetectionAsync(7, 3)).ReturnsAsync(4);
-        var controller = CreateController(new Claim("MerchantId", "7"));
-
-        var result = await controller.RunDetection(3);
-
-        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
-        ok.GetAnonymousInt("created").Should().Be(4);
     }
 
     private TimeClockController CreateController(params Claim[] claims)

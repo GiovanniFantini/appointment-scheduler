@@ -150,6 +150,19 @@ public class UpdateEventRequest
     public List<ParticipantSkillAssignment> ParticipantSkills { get; set; } = new();
 }
 
+/// <summary>
+/// Aggiornamento limitato alle assegnazioni di un turno esistente.
+/// Usato dal livello Calendario Operator: non permette di modificare
+/// data/orari/titolo, ma solo i partecipanti e i relativi override.
+/// </summary>
+public class UpdateEventAssignmentsRequest
+{
+    public List<int> OwnerEmployeeIds { get; set; } = new();
+    public List<int> CoOwnerEmployeeIds { get; set; } = new();
+    public List<ParticipantOverride> ParticipantOverrides { get; set; } = new();
+    public List<ParticipantSkillAssignment> ParticipantSkills { get; set; } = new();
+}
+
 public class CloneEventRequest
 {
     public DateOnly FromDate { get; set; }
@@ -186,14 +199,16 @@ public enum ShiftConflictKind
     LeaveOverlap = 1,
     ShiftOverlap = 2,
     SkillMismatch = 3,
-    BranchMismatch = 4
+    BranchMismatch = 4,
+    EventOverlap = 5
 }
 
 /// <summary>
 /// Avviso non bloccante: segnala che l'assegnazione di un dipendente a un turno
 /// si sovrappone con ferie approvate, con un altro turno, che la mansione con cui
 /// partecipa non è tra quelle dichiarate sull'employee, oppure che il dipendente
-/// è assegnato a una filiale per cui non è abilitato (BranchMismatch).
+/// è assegnato a una filiale per cui non è abilitato (BranchMismatch), oppure che
+/// l'evento si sovrappone a un'altra chiusura/evento bloccante (EventOverlap).
 /// </summary>
 public class ShiftConflictDto
 {
