@@ -119,20 +119,4 @@ public class MerchantRolesController : ControllerBase
         }
     }
 
-    /// <summary>
-    /// Assegna un ruolo a un dipendente del merchant corrente
-    /// </summary>
-    [HttpPost("assign")]
-    public async Task<IActionResult> AssignRole([FromBody] AssignRoleRequest request)
-    {
-        if (!TryGetMerchantId(out int merchantId))
-            return BadRequest(new { message = "Merchant ID non trovato nel token" });
-
-        var result = await _merchantRoleService.AssignRoleAsync(merchantId, request);
-
-        if (!result)
-            return BadRequest(new { message = "Impossibile assegnare il ruolo. Verificare che il ruolo appartenga al merchant." });
-
-        return Ok(new { message = "Ruolo assegnato con successo" });
-    }
 }

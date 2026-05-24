@@ -32,8 +32,4 @@ public interface IMerchantRoleService
     /// </summary>
     Task<bool> DeleteAsync(int id, int merchantId);
 
-    /// <summary>
-    /// Assegna un ruolo a un dipendente del merchant
-    /// </summary>
-    Task<bool> AssignRoleAsync(int merchantId, AssignRoleRequest request);
 }

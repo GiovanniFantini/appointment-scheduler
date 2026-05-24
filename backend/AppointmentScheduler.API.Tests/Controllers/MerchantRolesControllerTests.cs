@@ -151,43 +151,6 @@ public class MerchantRolesControllerTests
         result.GetAnonymousString("message").Should().Be("Ruolo eliminato con successo");
     }
 
-    [Fact]
-    public async Task AssignRole_ReturnsBadRequest_WhenMerchantIdClaimIsMissing()
-    {
-        var controller = CreateController();
-
-        var result = await controller.AssignRole(new AssignRoleRequest());
-
-        result.Should().BeOfType<BadRequestObjectResult>();
-        _merchantRoleService.Verify(service => service.AssignRoleAsync(It.IsAny<int>(), It.IsAny<AssignRoleRequest>()), Times.Never);
-    }
-
-    [Fact]
-    public async Task AssignRole_ReturnsBadRequest_WhenServiceRejectsAssignment()
-    {
-        var request = new AssignRoleRequest { EmployeeId = 8, RoleId = 3 };
-        _merchantRoleService.Setup(service => service.AssignRoleAsync(12, request)).ReturnsAsync(false);
-        var controller = CreateController(merchantId: 12);
-
-        var result = await controller.AssignRole(request);
-
-        result.Should().BeOfType<BadRequestObjectResult>();
-        result.GetAnonymousString("message").Should().Contain("Impossibile assegnare il ruolo");
-    }
-
-    [Fact]
-    public async Task AssignRole_ReturnsOk_WhenServiceAcceptsAssignment()
-    {
-        var request = new AssignRoleRequest { EmployeeId = 8, RoleId = 3 };
-        _merchantRoleService.Setup(service => service.AssignRoleAsync(12, request)).ReturnsAsync(true);
-        var controller = CreateController(merchantId: 12);
-
-        var result = await controller.AssignRole(request);
-
-        result.Should().BeOfType<OkObjectResult>();
-        result.GetAnonymousString("message").Should().Be("Ruolo assegnato con successo");
-    }
-
     private MerchantRolesController CreateController(int? merchantId = null, string? rawMerchantId = null)
     {
         var controller = new MerchantRolesController(_merchantRoleService.Object);

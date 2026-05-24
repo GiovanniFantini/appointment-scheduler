@@ -141,45 +141,6 @@ public class MerchantRoleService : IMerchantRoleService
         return true;
     }
 
-    /// <summary>
-    /// Assegna un ruolo a un dipendente del merchant.
-    /// Aggiorna la membership esistente se presente, altrimenti ne crea una nuova.
-    /// </summary>
-    public async Task<bool> AssignRoleAsync(int merchantId, AssignRoleRequest request)
-    {
-        // Verify the role belongs to this merchant
-        var roleExists = await _context.MerchantRoles
-            .AnyAsync(r => r.Id == request.RoleId && r.MerchantId == merchantId);
-
-        if (!roleExists)
-            return false;
-
-        // Verify the employee is a member of this merchant
-        var membership = await _context.EmployeeMemberships
-            .FirstOrDefaultAsync(m => m.EmployeeId == request.EmployeeId && m.MerchantId == merchantId);
-
-        if (membership == null)
-        {
-            // Create a new membership
-            var newMembership = new EmployeeMembership
-            {
-                EmployeeId = request.EmployeeId,
-                MerchantId = merchantId,
-                RoleId = request.RoleId,
-                IsActive = true,
-                JoinedAt = _clock.UtcNow
-            };
-            _context.EmployeeMemberships.Add(newMembership);
-        }
-        else
-        {
-            membership.RoleId = request.RoleId;
-        }
-
-        await _context.SaveChangesAsync();
-        return true;
-    }
-
     private static MerchantRoleDto MapToDto(MerchantRole role)
     {
         return new MerchantRoleDto

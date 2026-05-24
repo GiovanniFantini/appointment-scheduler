@@ -50,8 +50,3 @@ public class MerchantFeatureRequest
     public FeatureAccessLevel? AccessLevel { get; set; }
 }
 
-public class AssignRoleRequest
-{
-    public int EmployeeId { get; set; }
-    public int RoleId { get; set; }
-}
