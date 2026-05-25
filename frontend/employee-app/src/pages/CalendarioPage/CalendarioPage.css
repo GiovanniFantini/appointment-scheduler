@@ -510,7 +510,7 @@
   margin: 4px 0;
 }
 
-@media (max-width: 639px) {
+@media (max-width: 768px) {
   .calendario-page {
     gap: 10px;
   }
@@ -538,34 +538,68 @@
     padding: 8px;
     min-height: 420px;
   }
-  /* FullCalendar toolbar compatta */
+  /* FullCalendar toolbar compatta — i tre chunk vanno impilati su mobile.
+     Usiamo !important perché FullCalendar applica inline/own styles con la
+     stessa specificità e l'ordine di caricamento del foglio non è garantito. */
+  .calendar-wrapper .fc-header-toolbar.fc-toolbar,
   .calendar-wrapper .fc-toolbar {
-    flex-direction: column;
-    gap: 6px;
-    align-items: stretch;
+    flex-direction: column !important;
+    gap: 8px;
+    align-items: stretch !important;
   }
   .calendar-wrapper .fc-toolbar-chunk {
-    display: flex;
+    display: flex !important;
     justify-content: center;
-    gap: 4px;
+    gap: 6px;
     flex-wrap: wrap;
+    width: 100%;
   }
+  /* Il chunk centrale (titolo "maggio 2026") sta su una propria riga,
+     centrato, senza sovrapporsi alle frecce. */
   .calendar-wrapper .fc-toolbar-title {
-    font-size: 15px;
+    font-size: 16px;
     text-align: center;
+    width: 100%;
+    margin: 0 !important;
+    line-height: 1.2;
   }
   .calendar-wrapper .fc-button {
-    font-size: 11px !important;
-    padding: 5px 8px !important;
+    font-size: 12px !important;
+    padding: 6px 10px !important;
   }
   .calendar-wrapper .fc-button-group {
     gap: 2px;
+    display: inline-flex;
   }
   .calendar-wrapper .fc-daygrid-day-number {
     font-size: 11px;
   }
   .calendar-wrapper .fc-col-header-cell {
     font-size: 10px;
+  }
+  /* Vista settimanale su mobile: 7 colonne in <400px diventano illeggibili
+     (intestazioni "LUN 25/05" che si sovrappongono). Diamo una larghezza
+     minima alla tabella e lasciamo scrollare orizzontalmente la griglia,
+     così ogni giorno mantiene ~70-80px utili. */
+  .calendar-wrapper .fc-timeGridWeek-view .fc-scrollgrid,
+  .calendar-wrapper .fc-timeGridWeek-view table {
+    min-width: 640px;
+  }
+  .calendar-wrapper .fc-timeGridWeek-view .fc-scroller-harness,
+  .calendar-wrapper .fc-timeGridWeek-view .fc-scroller {
+    overflow-x: auto !important;
+  }
+  /* Colonna asse orario più stretta su mobile per liberare spazio ai giorni. */
+  .calendar-wrapper .fc-timegrid-axis,
+  .calendar-wrapper .fc-timegrid-slot-label {
+    font-size: 10px;
+  }
+  /* Header colonne (lun 25/5): riduci letter-spacing e padding per non
+     sovrapporre il testo quando lo spazio è davvero stretto. */
+  .calendar-wrapper .fc-col-header-cell-cushion {
+    padding: 4px 2px;
+    letter-spacing: 0;
+    white-space: nowrap;
   }
   .calendar-wrapper .fc-rich-event-title {
     font-size: 11px;

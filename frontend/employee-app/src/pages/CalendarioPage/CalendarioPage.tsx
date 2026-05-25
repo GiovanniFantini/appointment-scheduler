@@ -742,6 +742,14 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
             week: 'Settimana',
             month: 'Mese'
           }}
+          views={{
+            timeGridWeek: {
+              // Etichetta colonna giorno: su mobile lo spazio è poco, quindi
+              // usiamo "lun 25/5" invece di "lunedì 25/05" — ulteriore
+              // compressione visiva è gestita via CSS (scroll orizzontale).
+              dayHeaderFormat: { weekday: 'short', day: 'numeric', month: 'numeric', omitCommas: true },
+            },
+          }}
           events={filteredEvents}
           eventContent={renderEventContent}
           eventClick={handleEventClick}
