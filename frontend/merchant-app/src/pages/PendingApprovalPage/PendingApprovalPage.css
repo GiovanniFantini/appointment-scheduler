@@ -1,6 +1,6 @@
 .pending-page {
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--su-surface-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,8 +9,8 @@
 }
 
 .pending-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 16px;
   padding: 48px 40px;
   width: 100%;
@@ -26,24 +26,24 @@
 .pending-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0 0 16px;
 }
 
 .pending-message {
   font-size: 15px;
-  color: #cbd5e1;
+  color: var(--su-text-secondary);
   line-height: 1.6;
   margin: 0 0 12px;
 }
 
 .pending-message strong {
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .pending-hint {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   line-height: 1.6;
   margin: 0 0 28px;
 }

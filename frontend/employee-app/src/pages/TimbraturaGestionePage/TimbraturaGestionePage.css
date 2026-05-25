@@ -1,6 +1,6 @@
 .timbratura-page {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .page-header-row { margin-bottom: 20px; }
@@ -13,7 +13,7 @@
 
 .page-subtitle {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   margin: 0;
   max-width: 720px;
   line-height: 1.5;
@@ -37,14 +37,14 @@
 .tcm-tabs {
   display: flex;
   gap: 4px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
   margin-bottom: 20px;
 }
 
 .tcm-tab {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 14px;
   font-weight: 500;
   padding: 10px 16px;
@@ -53,7 +53,7 @@
 }
 
 .tcm-tab--active {
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   border-bottom-color: #6366f1;
 }
 
@@ -67,16 +67,16 @@
 
 .tcm-branch-label {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-weight: 500;
 }
 
 .tcm-branch-select,
 .tcm-field-input {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   padding: 8px 12px;
   font-size: 14px;
 }
@@ -91,8 +91,8 @@
 }
 
 .tcm-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 18px;
 }
@@ -100,7 +100,7 @@
 .tcm-card-title {
   font-size: 14px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin-bottom: 12px;
 }
 
@@ -123,12 +123,12 @@
 .tcm-toggle-label {
   font-size: 14px;
   font-weight: 500;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .tcm-toggle-hint {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   line-height: 1.4;
   max-width: 560px;
 }
@@ -148,22 +148,22 @@
 
 .tcm-field-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .tcm-field-input:disabled { opacity: 0.5; }
 
 .tcm-geo-btn {
   margin-top: 12px;
-  background: #334155;
-  color: #e2e8f0;
+  background: var(--su-border-strong);
+  color: var(--su-border);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
   font-size: 13px;
   cursor: pointer;
 }
-.tcm-geo-btn:hover { background: #475569; }
+.tcm-geo-btn:hover { background: var(--su-text-muted); }
 
 .tcm-save-row {
   display: flex;
@@ -200,7 +200,7 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background: #334155;
+  background: var(--su-border-strong);
   border-radius: 20px;
   transition: background 0.2s;
 }
@@ -212,7 +212,7 @@
   height: 14px;
   left: 3px;
   top: 3px;
-  background: #94a3b8;
+  background: var(--su-text-secondary);
   border-radius: 50%;
   transition: transform 0.2s, background 0.2s;
 }
@@ -243,8 +243,8 @@
 .tcm-table {
   width: 100%;
   border-collapse: collapse;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   overflow: hidden;
   font-size: 13px;
@@ -253,16 +253,16 @@
 .tcm-table th {
   text-align: left;
   padding: 10px 14px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-weight: 600;
-  background: #0f172a;
-  border-bottom: 1px solid #334155;
+  background: var(--su-surface-bg);
+  border-bottom: 1px solid var(--su-border-strong);
 }
 
 .tcm-table td {
   padding: 10px 14px;
-  border-bottom: 1px solid #1e293b;
-  color: #e2e8f0;
+  border-bottom: 1px solid var(--su-surface-elevated);
+  color: var(--su-border);
 }
 
 .tcm-table tr:last-child td { border-bottom: none; }
@@ -297,7 +297,7 @@
 .tcm-type-badge[data-anomaly-status='3'] { background: #22c55e22; color: #4ade80; }
 .tcm-type-badge[data-anomaly-status='4'] { background: #ef444422; color: #fca5a5; }
 
-.tcm-muted { color: #64748b; }
+.tcm-muted { color: var(--su-text-muted); }
 
 .tcm-action-buttons {
   display: flex;
@@ -326,8 +326,8 @@
 }
 
 .tcm-summary-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 10px;
   padding: 12px 18px;
   display: flex;
@@ -337,13 +337,13 @@
 
 .tcm-summary-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .tcm-summary-value {
   font-size: 20px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 /* ── Stati ────────────────────────────────────────────────────── */
@@ -356,7 +356,7 @@
 .tcm-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #334155;
+  border: 3px solid var(--su-border-strong);
   border-top-color: #6366f1;
   border-radius: 50%;
   animation: tcm-spin 0.8s linear infinite;
@@ -365,7 +365,7 @@
 @keyframes tcm-spin { to { transform: rotate(360deg); } }
 
 .tcm-empty {
-  color: #64748b;
+  color: var(--su-text-muted);
   text-align: center;
   padding: 30px;
   font-size: 14px;

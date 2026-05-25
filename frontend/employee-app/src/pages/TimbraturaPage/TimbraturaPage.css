@@ -18,12 +18,12 @@
 .tp-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0;
 }
 
 .tp-subtitle {
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 14px;
   margin: 4px 0 0;
 }
@@ -44,8 +44,8 @@
 }
 
 .tp-history {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 14px;
   padding: 20px;
 }
@@ -53,7 +53,7 @@
 .tp-history-title {
   font-size: 16px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0 0 16px;
 }
 
@@ -66,7 +66,7 @@
 .tp-spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid #334155;
+  border: 3px solid var(--su-border-strong);
   border-top-color: #6366f1;
   border-radius: 50%;
   animation: tp-spin 0.8s linear infinite;
@@ -75,7 +75,7 @@
 @keyframes tp-spin { to { transform: rotate(360deg); } }
 
 .tp-empty {
-  color: #64748b;
+  color: var(--su-text-muted);
   text-align: center;
   padding: 24px;
   font-size: 14px;
@@ -90,7 +90,7 @@
 .tp-day-label {
   font-size: 13px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   text-transform: capitalize;
   margin-bottom: 8px;
 }
@@ -102,7 +102,7 @@
 }
 
 .tp-entry {
-  background: #0f172a;
+  background: var(--su-surface-bg);
   border-left: 3px solid #6366f1;
   border-radius: 8px;
   padding: 10px 14px;
@@ -120,7 +120,7 @@
 }
 
 .tp-entry-time {
-  color: #cbd5e1;
+  color: var(--su-text-secondary);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
@@ -130,7 +130,7 @@
   align-items: center;
   gap: 8px;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--su-text-muted);
   font-size: 12px;
 }
 
@@ -165,8 +165,8 @@
 
 .tp-stat {
   flex: 1;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 14px;
   display: flex;
@@ -178,19 +178,19 @@
 .tp-stat-value {
   font-size: 18px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .tp-stat-label {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   text-align: center;
 }
 
 /* ── Anomalie ──────────────────────────────────────────────────── */
 .tp-anomalies {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 14px;
   padding: 20px;
 }
@@ -202,7 +202,7 @@
 }
 
 .tp-anomaly {
-  background: #0f172a;
+  background: var(--su-surface-bg);
   border-left: 3px solid #f59e0b;
   border-radius: 8px;
   padding: 12px 14px;
@@ -220,7 +220,7 @@
 .tp-anomaly-type {
   font-weight: 600;
   font-size: 14px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .tp-anomaly-status {
@@ -238,7 +238,7 @@
   display: flex;
   gap: 10px;
   margin-top: 4px;
-  color: #64748b;
+  color: var(--su-text-muted);
   font-size: 12px;
 }
 
@@ -246,11 +246,11 @@
 .tp-anomaly-review {
   margin-top: 6px;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-style: italic;
 }
 
-.tp-anomaly-review { font-style: normal; color: #cbd5e1; }
+.tp-anomaly-review { font-style: normal; color: var(--su-text-secondary); }
 
 .tp-justify-btn {
   margin-top: 10px;

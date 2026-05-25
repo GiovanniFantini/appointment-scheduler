@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import MerchantShell from './components/MerchantShell'
+import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
@@ -108,6 +109,8 @@ function App() {
               <Route path="/" element={<DashboardPageWrapper />} />
               <Route path="/ruoli" element={<RuoliPage />} />
               <Route path="/report" element={<ReportPage />} />
+              <Route path="/profile" element={<ProfileWrapper />} />
+              <Route path="/preferences" element={<PreferencesPage />} />
             </Route>
 
             <Route path="*" element={<UnknownRoute />} />
@@ -122,6 +125,10 @@ function DashboardPageWrapper() {
   const { user } = useAuth<MerchantUser>()
   if (!user) return null
   return <DashboardPage user={user} />
+}
+
+function ProfileWrapper() {
+  return <ProfilePage apiClient={apiClient} readOnlyProfile />
 }
 
 function UnknownRoute() {

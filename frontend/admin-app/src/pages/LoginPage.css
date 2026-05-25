@@ -3,13 +3,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0f172a;
+  background-color: var(--su-surface-bg);
   padding: 24px 16px;
 }
 
 .login-card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 16px;
   padding: 40px 36px;
   width: 100%;
@@ -41,13 +41,13 @@
 .login-brand-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   letter-spacing: -0.3px;
 }
 
 .login-brand-subtitle {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   margin-top: -8px;
 }
 
@@ -66,15 +66,15 @@
 .form-label {
   font-size: 13px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .form-input {
   padding: 10px 14px;
-  background-color: #0f172a;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s;
@@ -85,7 +85,7 @@
 }
 
 .form-input::placeholder {
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .btn-login {
@@ -126,7 +126,7 @@
   margin-top: 20px;
   text-align: center;
   font-size: 12px;
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 /* ── System Status ── */
@@ -142,9 +142,9 @@
   gap: 6px;
   width: 100%;
   background: none;
-  border: 1px solid #334155;
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
-  color: #64748b;
+  color: var(--su-text-muted);
   font-size: 12px;
   padding: 7px 12px;
   cursor: pointer;
@@ -152,8 +152,8 @@
 }
 
 .login-status-toggle:hover {
-  color: #94a3b8;
-  border-color: #475569;
+  color: var(--su-text-secondary);
+  border-color: var(--su-text-muted);
 }
 
 .login-status-toggle svg:last-child {
@@ -162,8 +162,8 @@
 
 .login-status-panel {
   margin-top: 6px;
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex;
@@ -179,13 +179,13 @@
 }
 
 .login-status-label {
-  color: #64748b;
+  color: var(--su-text-muted);
   min-width: 90px;
   flex-shrink: 0;
 }
 
 .login-status-value {
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 11px;
   overflow: hidden;
@@ -203,16 +203,16 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 12px;
 }
 
 .login-status-ping {
   margin-left: auto;
   background: #1e3a5f;
-  border: 1px solid #334155;
+  border: 1px solid var(--su-border-strong);
   border-radius: 4px;
-  color: #64748b;
+  color: var(--su-text-muted);
   font-size: 11px;
   padding: 2px 8px;
   cursor: pointer;
@@ -220,8 +220,8 @@
 }
 
 .login-status-ping:hover {
-  color: #94a3b8;
-  border-color: #475569;
+  color: var(--su-text-secondary);
+  border-color: var(--su-text-muted);
 }
 
 @keyframes pulse {

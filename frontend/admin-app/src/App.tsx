@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import AdminShell from './components/AdminShell'
+import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -61,6 +62,18 @@ function Protected() {
   return <AdminShell />
 }
 
+function ProfileWrapper() {
+  const { user, updateUser } = useAuth<AdminUser>()
+  return (
+    <ProfilePage
+      apiClient={apiClient}
+      onProfileUpdated={(p) => {
+        if (user) updateUser({ ...user, firstName: p.firstName, lastName: p.lastName, email: p.email })
+      }}
+    />
+  )
+}
+
 function App() {
   return (
     <AuthProvider<AdminUser>
@@ -96,6 +109,8 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="debug" element={<DebugPage />} />
               <Route path="tools/email" element={<EmailTestPage />} />
+              <Route path="profile" element={<ProfileWrapper />} />
+              <Route path="preferences" element={<PreferencesPage />} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

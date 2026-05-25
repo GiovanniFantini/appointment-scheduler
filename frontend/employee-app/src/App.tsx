@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
+import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
@@ -223,6 +224,8 @@ function App() {
                 }
               />
               <Route path="notifiche" element={<NotifichePage />} />
+              <Route path="profile" element={<ProfileWrapper />} />
+              <Route path="preferences" element={<PreferencesPage />} />
             </Route>
 
             <Route path="*" element={<UnknownRoute />} />
@@ -236,6 +239,9 @@ function App() {
 function DashboardWrapper() {
   const { user } = useAuth<EmployeeUser>()
   return user ? <DashboardPage user={user} /> : null
+}
+function ProfileWrapper() {
+  return <ProfilePage apiClient={apiClient} readOnlyProfile />
 }
 function TimbraturaWrapper() {
   const { user } = useAuth<EmployeeUser>()

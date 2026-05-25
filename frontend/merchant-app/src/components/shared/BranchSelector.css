@@ -9,8 +9,8 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 4px 10px;
 }
@@ -22,7 +22,7 @@
 
 .branch-selector-select {
   background: transparent;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   border: none;
   font-size: 14px;
   font-weight: 600;
@@ -33,6 +33,6 @@
 }
 
 .branch-selector-select option {
-  background: #1e293b;
-  color: #f1f5f9;
+  background: var(--su-surface-elevated);
+  color: var(--su-text-primary);
 }

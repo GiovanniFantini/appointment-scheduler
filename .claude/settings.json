@@ -46,7 +46,10 @@
       "Bash(dotnet test *)",
       "Bash(dir c:\\\\Repos\\\\appointment-scheduler /B)",
       "Bash(Sort-Object)",
-      "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm -r frontend/consumer-app)"
+      "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm -r frontend/consumer-app)",
+      "Bash(grep -rhioE \"#[0-9a-f]{3,6}\\\\b\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\employee-app\\\\src\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\merchant-app\\\\src\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\admin-app\\\\src\" --include=\"*.css\")",
+      "Bash(python scripts/refactor_theme_colors.py --dry)",
+      "Bash(python scripts/refactor_theme_colors.py)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

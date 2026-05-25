@@ -53,3 +53,24 @@
   --su-z-modal: 1510;
   --su-z-toast: 2000;
 }
+
+/* Light theme: override quando l'utente sceglie "Chiaro" in Preferenze.
+   Volutamente conservativo — solo le superfici e il testo cambiano;
+   accenti (primary/danger/success/warning/info) restano leggibili anche su bg chiaro. */
+:root[data-theme='light'] {
+  --su-surface-bg: #f5f6fa;
+  --su-surface: #ffffff;
+  --su-surface-elevated: #ffffff;
+  --su-surface-overlay: rgba(255, 255, 255, 0.85);
+  --su-border: #e2e8f0;
+  --su-border-strong: #cbd5e1;
+
+  --su-text-primary: #0f172a;
+  --su-text-secondary: #475569;
+  --su-text-muted: #94a3b8;
+  --su-text-inverse: #ffffff;
+
+  --su-shadow-card: 0 4px 16px rgba(15, 23, 42, 0.08);
+  --su-shadow-elevated: 0 12px 32px rgba(15, 23, 42, 0.12);
+  --su-shadow-overlay: 0 24px 64px rgba(15, 23, 42, 0.18);
+}

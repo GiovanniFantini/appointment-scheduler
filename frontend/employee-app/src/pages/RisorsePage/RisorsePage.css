@@ -1,6 +1,6 @@
 .risorse-page {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .page-header-row {
@@ -13,13 +13,13 @@
 .page-title {
   font-size: 20px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0 0 4px;
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   margin: 0;
 }
 
@@ -48,8 +48,8 @@
 }
 
 .risorse-table-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -64,7 +64,7 @@ table {
 }
 
 thead {
-  background: #0f172a;
+  background: var(--su-surface-bg);
 }
 
 th {
@@ -72,18 +72,18 @@ th {
   text-align: left;
   font-size: 11px;
   font-weight: 600;
-  color: #475569;
+  color: var(--su-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
   white-space: nowrap;
 }
 
 td {
   padding: 14px 16px;
   font-size: 14px;
-  color: #f1f5f9;
-  border-bottom: 1px solid #1e293b;
+  color: var(--su-text-primary);
+  border-bottom: 1px solid var(--su-surface-elevated);
   vertical-align: middle;
 }
 
@@ -136,7 +136,7 @@ tr:hover td {
 
 .status-badge.inactive {
   background: rgba(148, 163, 184, 0.1);
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .status-dot {
@@ -190,7 +190,7 @@ tr:hover td {
 .external-details-box {
   margin-top: 10px;
   padding: 14px;
-  border: 1px solid #334155;
+  border: 1px solid var(--su-border-strong);
   border-radius: 10px;
   background: rgba(148, 163, 184, 0.05);
 }
@@ -235,7 +235,7 @@ tr:hover td {
 .empty-state {
   padding: 48px;
   text-align: center;
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .empty-icon {
@@ -249,7 +249,7 @@ tr:hover td {
 
 .loading-row td {
   text-align: center;
-  color: #475569;
+  color: var(--su-text-muted);
   padding: 32px;
 }
 
@@ -266,8 +266,8 @@ tr:hover td {
 }
 
 .modal-box {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 14px;
   width: 100%;
   max-width: 440px;
@@ -278,20 +278,20 @@ tr:hover td {
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
 }
 
 .modal-title {
   font-size: 15px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0;
 }
 
 .modal-close {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 18px;
   cursor: pointer;
   padding: 4px 8px;
@@ -299,8 +299,8 @@ tr:hover td {
 }
 
 .modal-close:hover {
-  background: #334155;
-  color: #f1f5f9;
+  background: var(--su-border-strong);
+  color: var(--su-text-primary);
 }
 
 .modal-body {
@@ -319,19 +319,19 @@ tr:hover td {
 .form-label {
   font-size: 12px;
   font-weight: 600;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .form-input,
 .form-select {
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 9px 12px;
   font-size: 14px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
@@ -344,11 +344,11 @@ tr:hover td {
 }
 
 .form-input::placeholder {
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .form-select option {
-  background: #1e293b;
+  background: var(--su-surface-elevated);
 }
 
 .form-row {
@@ -359,7 +359,7 @@ tr:hover td {
 
 .modal-footer {
   padding: 14px 20px;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--su-border-strong);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -367,8 +367,8 @@ tr:hover td {
 
 .btn-cancel {
   background: none;
-  color: #94a3b8;
-  border: 1px solid #334155;
+  color: var(--su-text-secondary);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 8px 16px;
   font-size: 14px;
@@ -377,8 +377,8 @@ tr:hover td {
 }
 
 .btn-cancel:hover {
-  background: #334155;
-  color: #f1f5f9;
+  background: var(--su-border-strong);
+  color: var(--su-text-primary);
 }
 
 .modal-error {
@@ -401,7 +401,7 @@ tr:hover td {
 
 .filter-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   margin-right: 4px;
 }
 
@@ -410,8 +410,8 @@ tr:hover td {
   align-items: center;
   gap: 6px;
   background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5e1;
+  border: 1px solid var(--su-border-strong);
+  color: var(--su-text-secondary);
   border-radius: 999px;
   padding: 4px 10px;
   font-size: 12px;
@@ -457,7 +457,7 @@ tr:hover td {
 }
 
 .dash {
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .branch-cell {
@@ -468,12 +468,12 @@ tr:hover td {
 
 .branch-cell-name {
   font-size: 13px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .branch-cell-dept {
   font-size: 11px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .branch-cell-extra {
@@ -505,6 +505,6 @@ tr:hover td {
 
 .form-hint {
   font-size: 11px;
-  color: #64748b;
+  color: var(--su-text-muted);
   margin: 6px 0 0;
 }

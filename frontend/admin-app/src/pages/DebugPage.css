@@ -20,15 +20,15 @@
 .dbg-section-title {
   font-size: 14px;
   font-weight: 600;
-  color: #cbd5e1;
+  color: var(--su-text-secondary);
   letter-spacing: -0.2px;
 }
 
 .dbg-badge {
   font-size: 11px;
-  color: #475569;
-  background: #1e293b;
-  border: 1px solid #334155;
+  color: var(--su-text-muted);
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 4px;
   padding: 2px 8px;
   font-family: 'SF Mono', 'Fira Code', monospace;
@@ -36,10 +36,10 @@
 
 .dbg-run-btn {
   margin-left: auto;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 6px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 12px;
   padding: 5px 14px;
   cursor: pointer;
@@ -57,8 +57,8 @@
 }
 
 .dbg-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -74,15 +74,15 @@
   padding: 10px 16px;
   font-size: 11px;
   font-weight: 500;
-  color: #475569;
+  color: var(--su-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
   background: #0f172a50;
 }
 
 .dbg-table tbody tr {
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid var(--su-surface-elevated);
 }
 
 .dbg-table tbody tr:last-child {
@@ -107,7 +107,7 @@
 }
 
 .dbg-table-val {
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 12px;
   word-break: break-all;
 }
@@ -128,7 +128,7 @@
   background: none;
   border: 1px solid transparent;
   border-radius: 4px;
-  color: #475569;
+  color: var(--su-text-muted);
   font-size: 13px;
   padding: 2px 5px;
   cursor: pointer;
@@ -136,8 +136,8 @@
 }
 
 .dbg-copy-btn:hover {
-  color: #94a3b8;
-  border-color: #334155;
+  color: var(--su-text-secondary);
+  border-color: var(--su-border-strong);
 }
 
 .dbg-checks-table .dbg-table-key {
@@ -166,7 +166,7 @@
 .dbg-code {
   font-family: 'SF Mono', 'Fira Code', monospace;
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 @keyframes dbg-pulse {

@@ -1,6 +1,6 @@
 .login-page {
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--su-surface-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -9,8 +9,8 @@
 }
 
 .login-card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 16px;
   padding: 40px;
   width: 100%;
@@ -37,13 +37,13 @@
 .login-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin: 0 0 4px;
 }
 
 .login-subtitle {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   margin: 0;
 }
 
@@ -62,16 +62,16 @@
 .form-label {
   font-size: 13px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .form-input {
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 14px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   outline: none;
   transition: border-color 0.15s;
   width: 100%;
@@ -83,7 +83,7 @@
 }
 
 .form-input::placeholder {
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .btn-primary {
@@ -121,7 +121,7 @@
   text-align: center;
   margin-top: 20px;
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .login-footer a {

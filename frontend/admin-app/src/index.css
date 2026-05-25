@@ -10,8 +10,8 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #0f172a;
-  color: #f1f5f9;
+  background-color: var(--su-surface-bg);
+  color: var(--su-text-primary);
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -44,7 +44,7 @@ input, select, textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--su-border-strong);
   border-radius: 3px;
 }
 

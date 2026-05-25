@@ -11,8 +11,8 @@
 }
 
 .create-request-modal {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 14px;
   width: 100%;
   max-width: 520px;
@@ -26,19 +26,19 @@
   align-items: center;
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
 }
 
 .create-request-title {
   font-size: 1.125rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .modal-close-btn {
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   width: 28px;
   height: 28px;
   display: flex;
@@ -49,7 +49,7 @@
 }
 
 .modal-close-btn:hover {
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   background-color: rgba(255, 255, 255, 0.07);
 }
 
@@ -85,14 +85,14 @@
 .form-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .form-input {
-  background-color: #0f172a;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   padding: 0.625rem 0.875rem;
   font-size: 0.9375rem;
   transition: border-color 0.2s;
@@ -106,7 +106,7 @@
 }
 
 .form-input::placeholder {
-  color: #475569;
+  color: var(--su-text-muted);
 }
 
 .form-textarea {
@@ -128,10 +128,10 @@
 }
 
 .tipo-btn {
-  background-color: #0f172a;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
   border-radius: 8px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   padding: 0.5rem;
@@ -140,7 +140,7 @@
 
 .tipo-btn:hover {
   border-color: #6366f1;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .tipo-btn--active {
@@ -160,7 +160,7 @@
 .toggle {
   width: 44px;
   height: 24px;
-  background-color: #334155;
+  background-color: var(--su-border-strong);
   border-radius: 9999px;
   position: relative;
   transition: background-color 0.2s;
@@ -196,8 +196,8 @@
 }
 
 .btn-secondary {
-  background-color: #334155;
-  color: #f1f5f9;
+  background-color: var(--su-border-strong);
+  color: var(--su-text-primary);
   border: none;
   border-radius: 8px;
   padding: 0.5rem 1.25rem;
@@ -207,7 +207,7 @@
 }
 
 .btn-secondary:hover {
-  background-color: #475569;
+  background-color: var(--su-text-muted);
 }
 
 .btn-primary {

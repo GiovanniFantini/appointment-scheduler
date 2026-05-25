@@ -5,8 +5,8 @@
 }
 
 .reports-placeholder {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 60px 40px;
   display: flex;
@@ -30,12 +30,12 @@
 .reports-placeholder-title {
   font-size: 18px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .reports-placeholder-text {
   font-size: 14px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   max-width: 380px;
   line-height: 1.6;
 }
@@ -57,8 +57,8 @@
 }
 
 .mock-stat-card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -71,13 +71,13 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: var(--su-text-muted);
 }
 
 .mock-stat-value {
   font-size: 30px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   line-height: 1;
 }
 

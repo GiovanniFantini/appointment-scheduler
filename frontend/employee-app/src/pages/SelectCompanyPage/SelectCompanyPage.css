@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #0f172a;
+  background-color: var(--su-surface-bg);
   padding: 1.5rem;
 }
 
@@ -37,18 +37,18 @@
 .select-company-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   margin-bottom: 0.5rem;
 }
 
 .select-company-subtitle {
   font-size: 0.9375rem;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   line-height: 1.5;
 }
 
 .select-company-subtitle strong {
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .select-company-error {
@@ -64,7 +64,7 @@
 .select-company-empty {
   background-color: rgba(148, 163, 184, 0.12);
   border: 1px solid rgba(148, 163, 184, 0.3);
-  color: #cbd5e1;
+  color: var(--su-text-secondary);
   border-radius: 8px;
   padding: 1rem 1.25rem;
   font-size: 0.875rem;
@@ -84,19 +84,19 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 1.25rem;
   text-align: left;
   transition: border-color 0.2s, background-color 0.2s, transform 0.1s;
   width: 100%;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .company-card:hover:not(:disabled) {
   border-color: #6366f1;
-  background-color: #1e293b;
+  background-color: var(--su-surface-elevated);
   transform: translateY(-1px);
 }
 
@@ -129,12 +129,12 @@
 .company-card-name {
   font-size: 1rem;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .company-card-city {
   font-size: 0.8125rem;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .company-card-role {
@@ -145,7 +145,7 @@
 }
 
 .company-card-arrow {
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   width: 24px;
   height: 24px;
   flex-shrink: 0;
@@ -162,7 +162,7 @@
 .btn-spinner-dark {
   width: 20px;
   height: 20px;
-  border: 2px solid #334155;
+  border: 2px solid var(--su-border-strong);
   border-top-color: #6366f1;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -175,14 +175,14 @@
   text-align: center;
   background: none;
   border: none;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 0.875rem;
   padding: 0.5rem;
   transition: color 0.2s;
 }
 
 .logout-link:hover {
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 @keyframes spin {

@@ -7,12 +7,13 @@ interface FormFieldProps {
   required?: boolean
   helper?: ReactNode
   error?: ReactNode
+  className?: string
   children: ReactNode
 }
 
-export function FormField({ label, htmlFor, required, helper, error, children }: FormFieldProps) {
+export function FormField({ label, htmlFor, required, helper, error, className = '', children }: FormFieldProps) {
   return (
-    <div className="su-field">
+    <div className={`su-field ${className}`}>
       {label && (
         <label className="su-field__label" htmlFor={htmlFor}>
           {label}

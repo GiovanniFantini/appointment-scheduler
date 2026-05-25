@@ -40,6 +40,10 @@ export { DatePicker } from './form/DatePicker'
 export { useFormValidation } from './form/useFormValidation'
 export type { ValidationRule, FieldErrors } from './form/useFormValidation'
 
+// Self-service pages (Profilo / Preferenze)
+export { ProfilePage } from './pages/ProfilePage'
+export { PreferencesPage, getStoredTheme, applyTheme, initTheme } from './pages/PreferencesPage'
+
 // Wizard
 export { Wizard } from './wizard/Wizard'
 export type { WizardProps, WizardStepConfig } from './wizard/Wizard'

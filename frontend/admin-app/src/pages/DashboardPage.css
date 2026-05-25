@@ -13,13 +13,13 @@
 .page-title {
   font-size: 22px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   letter-spacing: -0.3px;
 }
 
 .page-subtitle {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 /* Stats grid */
@@ -30,8 +30,8 @@
 }
 
 .stat-card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 20px;
   display: flex;
@@ -48,7 +48,7 @@
 .stat-card-label {
   font-size: 12px;
   font-weight: 500;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
@@ -85,19 +85,19 @@
 .stat-card-value {
   font-size: 28px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   line-height: 1;
 }
 
 .stat-card-desc {
   font-size: 12px;
-  color: #64748b;
+  color: var(--su-text-muted);
 }
 
 /* Pending approvals section */
 .section-card {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   overflow: hidden;
 }
@@ -107,13 +107,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 20px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
 }
 
 .section-card-title {
   font-size: 14px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .badge {
@@ -138,7 +138,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 20px;
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid var(--su-border-strong);
   gap: 12px;
 }
 
@@ -157,7 +157,7 @@
 .pending-company {
   font-size: 14px;
   font-weight: 600;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -165,7 +165,7 @@
 
 .pending-meta {
   font-size: 12px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
 }
 
 .pending-actions {
@@ -217,14 +217,14 @@
 .empty-state {
   padding: 36px 20px;
   text-align: center;
-  color: #475569;
+  color: var(--su-text-muted);
   font-size: 13px;
 }
 
 .loading-state {
   padding: 36px 20px;
   text-align: center;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   font-size: 13px;
 }
 
@@ -235,7 +235,7 @@
   font-size: 13px;
   font-weight: 500;
   color: #6366f1;
-  border-top: 1px solid #334155;
+  border-top: 1px solid var(--su-border-strong);
   transition: background-color 0.15s;
 }
 

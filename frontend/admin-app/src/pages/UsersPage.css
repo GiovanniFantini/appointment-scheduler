@@ -5,8 +5,8 @@
 }
 
 .users-placeholder {
-  background-color: #1e293b;
-  border: 1px solid #334155;
+  background-color: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
   border-radius: 12px;
   padding: 48px 40px;
   display: flex;
@@ -30,12 +30,12 @@
 .users-placeholder-title {
   font-size: 16px;
   font-weight: 700;
-  color: #f1f5f9;
+  color: var(--su-text-primary);
 }
 
 .users-placeholder-text {
   font-size: 13px;
-  color: #94a3b8;
+  color: var(--su-text-secondary);
   max-width: 340px;
   line-height: 1.6;
 }
