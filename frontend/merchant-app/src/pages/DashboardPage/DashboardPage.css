@@ -137,3 +137,40 @@ a.stat-card:hover {
   color: var(--su-text-secondary);
   text-align: center;
 }
+
+@media (max-width: 639px) {
+  .dashboard-welcome h1 {
+    font-size: 20px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .stat-value {
+    font-size: 20px;
+  }
+  .quick-links-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  .quick-link-card {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .stats-grid,
+  .quick-links-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

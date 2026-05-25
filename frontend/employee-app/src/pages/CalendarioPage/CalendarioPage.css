@@ -509,3 +509,92 @@
 .conflict-banner-list li {
   margin: 4px 0;
 }
+
+@media (max-width: 639px) {
+  .calendario-page {
+    gap: 10px;
+  }
+  .calendario-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .calendario-title {
+    font-size: 18px;
+  }
+  .calendario-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .calendario-actions > * {
+    flex: 1 1 auto;
+  }
+  .btn-new-event,
+  .btn-secondary {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .calendar-wrapper {
+    padding: 8px;
+    min-height: 420px;
+  }
+  /* FullCalendar toolbar compatta */
+  .calendar-wrapper .fc-toolbar {
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .calendar-wrapper .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .calendar-wrapper .fc-toolbar-title {
+    font-size: 15px;
+    text-align: center;
+  }
+  .calendar-wrapper .fc-button {
+    font-size: 11px !important;
+    padding: 5px 8px !important;
+  }
+  .calendar-wrapper .fc-button-group {
+    gap: 2px;
+  }
+  .calendar-wrapper .fc-daygrid-day-number {
+    font-size: 11px;
+  }
+  .calendar-wrapper .fc-col-header-cell {
+    font-size: 10px;
+  }
+  .calendar-wrapper .fc-rich-event-title {
+    font-size: 11px;
+  }
+  .calendar-wrapper .fc-rich-event-time,
+  .calendar-wrapper .fc-rich-event-resources,
+  .calendar-wrapper .fc-rich-event-skills {
+    font-size: 9px;
+  }
+  .calendar-filters {
+    padding: 8px 10px;
+    gap: 8px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .calendar-filters-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .calendar-filter-select {
+    width: 100%;
+    min-width: 0;
+  }
+  .legend {
+    gap: 8px;
+    font-size: 11px;
+  }
+  .legend-item {
+    font-size: 11px;
+  }
+}

@@ -373,3 +373,50 @@
   border-color: var(--su-text-primary);
   box-shadow: 0 0 0 2px #0f172a, 0 0 0 4px currentColor;
 }
+
+@media (max-width: 768px) {
+  .page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+  .page-header-row .btn-primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 639px) {
+  .branch-card-head {
+    padding: 12px;
+  }
+  .branch-actions {
+    width: 100%;
+  }
+  .branch-actions > * {
+    flex: 1;
+  }
+  .branch-departments {
+    padding: 10px 12px 12px;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  .modal-box {
+    max-width: 100%;
+  }
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+  .modal-body {
+    padding: 14px;
+  }
+  .modal-footer {
+    flex-direction: column-reverse;
+    padding: 12px 14px;
+  }
+  .modal-footer > * {
+    width: 100%;
+  }
+}

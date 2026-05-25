@@ -370,3 +370,71 @@
   padding: 30px;
   font-size: 14px;
 }
+
+@media (max-width: 639px) {
+  .tcm-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    margin: 0 -12px 16px;
+    padding: 0 12px;
+  }
+  .tcm-tab {
+    padding: 10px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .tcm-branch-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  .tcm-branch-select {
+    width: 100%;
+  }
+  .tcm-card {
+    padding: 14px;
+  }
+  .tcm-toggle-row {
+    gap: 10px;
+  }
+  .tcm-grid {
+    grid-template-columns: 1fr;
+  }
+  .tcm-filter-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  /* Tabella presenze: scroll orizzontale per non perdere colonne */
+  .tcm-table-wrap {
+    overflow-x: auto;
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+  .tcm-table {
+    min-width: 640px;
+    font-size: 12px;
+  }
+  .tcm-table th,
+  .tcm-table td {
+    padding: 8px 10px;
+  }
+  .tcm-report-summary {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tcm-summary-card {
+    flex: 1 1 calc(50% - 4px);
+    padding: 10px 12px;
+  }
+  .tcm-summary-value {
+    font-size: 16px;
+  }
+  .tcm-save-row {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .tcm-action-buttons {
+    flex-wrap: wrap;
+  }
+}

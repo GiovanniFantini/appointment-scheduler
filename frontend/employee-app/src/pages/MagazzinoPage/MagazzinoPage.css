@@ -556,3 +556,63 @@
     padding: 18px;
   }
 }
+
+@media (max-width: 639px) {
+  .magazzino-page {
+    gap: 16px;
+  }
+  .magazzino-tabs {
+    gap: 6px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin: 0 -12px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .magazzino-tab {
+    padding: 8px 12px;
+    font-size: 13px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .inventory-panel {
+    padding: 14px;
+  }
+  .inventory-context-box {
+    min-width: 0;
+    padding: 12px;
+  }
+  .inventory-table {
+    min-width: 540px;
+  }
+  .inventory-table th,
+  .inventory-table td {
+    padding: 8px 6px;
+    font-size: 13px;
+  }
+  .inventory-modal {
+    width: 95vw;
+    padding: 14px;
+    border-radius: 14px;
+  }
+  .inventory-modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+  .inventory-primary-btn,
+  .inventory-secondary-btn,
+  .inventory-danger-btn {
+    padding: 10px 12px;
+    width: 100%;
+  }
+  .inventory-form-actions {
+    gap: 8px;
+  }
+  .inventory-stat-card strong,
+  .inventory-item-metrics strong,
+  .inventory-order-total,
+  .inventory-mini-metric {
+    font-size: 18px;
+  }
+}

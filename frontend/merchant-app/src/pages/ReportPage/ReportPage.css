@@ -102,3 +102,28 @@
   color: var(--su-text-muted);
   margin: 0;
 }
+
+@media (max-width: 639px) {
+  .page-title {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .report-notice {
+    padding: 10px 14px;
+    font-size: 12px;
+  }
+  .stat-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .report-stat-card {
+    padding: 16px;
+  }
+  .report-stat-value {
+    font-size: 26px;
+  }
+  .report-placeholder-card {
+    padding: 28px 16px;
+  }
+}

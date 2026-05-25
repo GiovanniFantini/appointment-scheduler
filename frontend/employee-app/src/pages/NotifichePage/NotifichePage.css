@@ -220,3 +220,29 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 639px) {
+  .notifiche-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .notifiche-header-left {
+    justify-content: space-between;
+  }
+  .notifiche-title {
+    font-size: 1.25rem;
+  }
+  .btn-mark-all {
+    width: 100%;
+    padding: 0.5rem;
+  }
+  .notification-item {
+    padding: 0.75rem 0.875rem;
+    gap: 0.5rem;
+  }
+  .notification-top {
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+}

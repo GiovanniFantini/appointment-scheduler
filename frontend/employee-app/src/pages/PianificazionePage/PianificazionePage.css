@@ -253,3 +253,52 @@
 .pianif-conflict-list li {
   margin: 4px 0;
 }
+
+@media (max-width: 768px) {
+  .pianificazione-page {
+    padding: 12px;
+  }
+  .page-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .pianif-toolbar {
+    padding: 10px 12px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 639px) {
+  .pianif-table {
+    min-width: 760px;
+  }
+  .pianif-th-name {
+    width: 130px;
+  }
+  .pianif-table th,
+  .pianif-td-name {
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .pianif-emp-name {
+    font-size: 12px;
+  }
+  .pianif-day-date {
+    font-size: 13px;
+  }
+  .pianif-cell {
+    padding: 4px;
+    min-height: 48px;
+    height: 48px;
+  }
+  .pianif-pill {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  .pianif-week-nav,
+  .pianif-clone {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

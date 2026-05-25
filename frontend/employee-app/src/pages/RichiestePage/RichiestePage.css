@@ -200,3 +200,30 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 639px) {
+  .richieste-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  .richieste-title {
+    font-size: 1.25rem;
+  }
+  .btn-new-request {
+    width: 100%;
+    justify-content: center;
+    padding: 0.625rem 1rem;
+  }
+  .request-card {
+    padding: 0.875rem;
+  }
+  .request-card-top {
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+  .request-card-dates {
+    gap: 1.25rem;
+    flex-wrap: wrap;
+  }
+}

@@ -39,6 +39,30 @@
 .su-modal--size-lg { max-width: 760px; }
 .su-modal--size-xl { max-width: 960px; }
 
+@media (max-width: 639px) {
+  .su-modal__backdrop {
+    padding: 8px;
+    align-items: flex-end;
+  }
+  .su-modal {
+    max-height: 95vh;
+  }
+  .su-modal__header {
+    padding: 14px 16px;
+  }
+  .su-modal__body {
+    padding: 16px;
+  }
+  .su-modal__footer {
+    padding: 12px 16px;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .su-modal__footer > * {
+    width: 100%;
+  }
+}
+
 .su-modal__header {
   display: flex;
   align-items: center;

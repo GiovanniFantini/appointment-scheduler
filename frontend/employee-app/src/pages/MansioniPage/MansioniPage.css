@@ -420,3 +420,43 @@
   font-size: 12px;
   color: var(--su-text-secondary);
 }
+
+@media (max-width: 768px) {
+  .page-header-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+  .page-header-row .btn-primary {
+    width: 100%;
+  }
+}
+
+@media (max-width: 639px) {
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .skill-card-top {
+    padding: 12px;
+  }
+  .modal-box {
+    max-width: 100%;
+  }
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-end;
+  }
+  .modal-body {
+    padding: 14px;
+  }
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  .modal-footer > * {
+    width: 100%;
+  }
+  .drawer {
+    max-width: 100%;
+  }
+}

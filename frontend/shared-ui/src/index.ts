@@ -51,6 +51,10 @@ export type { WizardProps, WizardStepConfig } from './wizard/Wizard'
 export { StepIndicator } from './wizard/StepIndicator'
 export { useWizard } from './wizard/useWizard'
 
+// Hooks
+export { useMediaQuery } from './hooks/useMediaQuery'
+export { useIsMobile } from './hooks/useIsMobile'
+
 // Icons re-export di comodo (singolo punto di import)
 
 // Icons (set minimo riusabile da tutte le app)
