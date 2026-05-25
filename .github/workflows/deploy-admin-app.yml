@@ -6,6 +6,9 @@ on:
       - main
     paths:
       - 'frontend/admin-app/**'
+      - 'frontend/shared-ui/**'
+      - 'frontend/package.json'
+      - 'frontend/package-lock.json'
       - '.github/workflows/deploy-admin-app.yml'
   workflow_dispatch:
 
@@ -27,13 +30,15 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: frontend/admin-app/package-lock.json
+          cache-dependency-path: frontend/package-lock.json
 
-      - name: Install dependencies
+      - name: Install dependencies (npm workspaces)
+        # Si parte dalla root del workspace: npm ci installa tutte le app +
+        # shared-ui in un colpo solo, rispettando il package-lock e includendo
+        # gli optional native binaries (es. @rollup/rollup-linux-x64-gnu).
         run: |
-          cd frontend/admin-app
-          npm cache clean --force
-          npm install
+          cd frontend
+          npm ci
 
       - name: Extract version info
         id: version
@@ -57,9 +62,12 @@ jobs:
           echo "BUILD_TIME=$BUILD_TIME" >> $GITHUB_OUTPUT
 
       - name: Build application
+        # Eseguito dalla root frontend via workspace script: assicura che il
+        # binding fra admin-app e @scheduler/ui passi per il symlink workspace
+        # e non per una install isolata della subfolder.
         run: |
-          cd frontend/admin-app
-          npm run build
+          cd frontend
+          npm run build:admin
         env:
           VITE_API_URL: https://appointment-scheduler-api.azurewebsites.net
           VERSION: ${{ steps.version.outputs.VERSION }}

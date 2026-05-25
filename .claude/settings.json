@@ -49,7 +49,8 @@
       "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm -r frontend/consumer-app)",
       "Bash(grep -rhioE \"#[0-9a-f]{3,6}\\\\b\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\employee-app\\\\src\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\merchant-app\\\\src\" \"c:\\\\Repos\\\\appointment-scheduler\\\\frontend\\\\admin-app\\\\src\" --include=\"*.css\")",
       "Bash(python scripts/refactor_theme_colors.py --dry)",
-      "Bash(python scripts/refactor_theme_colors.py)"
+      "Bash(python scripts/refactor_theme_colors.py)",
+      "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm frontend/admin-app/package-lock.json frontend/merchant-app/package-lock.json frontend/employee-app/package-lock.json)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"
