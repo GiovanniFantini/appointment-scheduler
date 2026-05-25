@@ -1,0 +1,82 @@
+.su-toaster {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: var(--su-z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+  max-width: calc(100vw - 32px);
+  width: 360px;
+}
+
+.su-toast {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  border-left: 3px solid var(--su-accent-primary);
+  border-radius: var(--su-radius-md);
+  padding: 12px 14px;
+  box-shadow: var(--su-shadow-elevated);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  pointer-events: auto;
+  animation: su-toast-in 0.2s ease-out;
+}
+
+.su-toast--success { border-left-color: var(--su-accent-success); }
+.su-toast--error { border-left-color: var(--su-accent-danger); }
+.su-toast--warning { border-left-color: var(--su-accent-warning); }
+.su-toast--info { border-left-color: var(--su-accent-info); }
+
+.su-toast--leaving {
+  animation: su-toast-out 0.18s ease-in forwards;
+}
+
+@keyframes su-toast-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes su-toast-out {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(20px); }
+}
+
+.su-toast__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.su-toast__icon--success { color: var(--su-accent-success); }
+.su-toast__icon--error { color: var(--su-accent-danger); }
+.su-toast__icon--warning { color: var(--su-accent-warning); }
+.su-toast__icon--info { color: var(--su-accent-info); }
+
+.su-toast__body {
+  flex: 1;
+  min-width: 0;
+}
+.su-toast__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--su-text-primary);
+  margin-bottom: 2px;
+}
+.su-toast__msg {
+  font-size: 12.5px;
+  color: var(--su-text-secondary);
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.su-toast__close {
+  background: transparent;
+  border: none;
+  color: var(--su-text-muted);
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1px;
+}
+.su-toast__close:hover { color: var(--su-text-primary); }

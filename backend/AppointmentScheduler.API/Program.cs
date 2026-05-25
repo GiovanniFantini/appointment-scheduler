@@ -115,6 +115,7 @@ try
 
     // ── Application Services ───────────────────────────────────────────────
     builder.Services.AddScoped<IAuthService, AuthService>();
+    builder.Services.AddScoped<IAccountService, AccountService>();
     builder.Services.AddScoped<IShiftConflictValidator, ShiftConflictValidator>();
     builder.Services.AddScoped<IEventService, EventService>();
     builder.Services.AddScoped<IMerchantRoleService, MerchantRoleService>();
@@ -186,7 +187,9 @@ try
             "https://appointment-consumer-app.azurewebsites.net",
             "https://appointment-merchant-app.azurewebsites.net",
             "https://appointment-employee-app.azurewebsites.net",
-            "https://appointment-admin-app.azurewebsites.net"
+            "https://appointment-admin-app.azurewebsites.net",
+            "https://gestione.turnis.it",
+            "https://mio.turnis.it"
         };
     }
 

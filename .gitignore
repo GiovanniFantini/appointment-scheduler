@@ -102,13 +102,10 @@ dist-ssr/
 .env.production
 
 # Frontend build
-frontend/consumer-app/dist/
-frontend/merchant-app/dist/
-frontend/consumer-app/node_modules/
-frontend/merchant-app/node_modules/
 frontend/*/dist/
 frontend/*/node_modules/
 frontend/*/.vite/
+frontend/node_modules/
 
 # Package manager locks (opzionale - decommenta se necessario)
 # package-lock.json

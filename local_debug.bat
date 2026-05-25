@@ -16,7 +16,7 @@ if exist "%SCRIPT_DIR%backend\AppointmentScheduler.API" (
 timeout /t 5 /nobreak >nul
 
 REM Lista delle cartelle frontend
-set "FRONTEND_FOLDERS=admin-app merchant-app employee-app consumer-app"
+set "FRONTEND_FOLDERS=admin-app merchant-app employee-app"
 
 REM Ciclo per frontend
 for %%F in (%FRONTEND_FOLDERS%) do (

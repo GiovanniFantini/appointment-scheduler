@@ -1,0 +1,100 @@
+.su-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.su-page__section {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.su-page__section-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--su-text-secondary);
+  margin: 0 0 4px;
+}
+
+.su-page__section-desc {
+  font-size: 13px;
+  color: var(--su-text-muted);
+  margin: 0 0 18px;
+}
+
+.su-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px 16px;
+}
+.su-form-grid > .su-form-grid__full {
+  grid-column: 1 / -1;
+}
+@media (max-width: 540px) {
+  .su-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.su-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.su-theme-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.su-theme-toggle__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--su-surface);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-md);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.su-theme-toggle__row:hover {
+  border-color: var(--su-border-strong);
+}
+.su-theme-toggle__row--active {
+  border-color: var(--su-accent-primary);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(178, 75, 243, 0.04));
+}
+.su-theme-toggle__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--su-text-primary);
+}
+.su-theme-toggle__desc {
+  font-size: 12.5px;
+  color: var(--su-text-secondary);
+  margin-top: 2px;
+}
+.su-theme-toggle__radio {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid var(--su-border-strong);
+  flex-shrink: 0;
+  position: relative;
+}
+.su-theme-toggle__row--active .su-theme-toggle__radio {
+  border-color: var(--su-accent-primary);
+}
+.su-theme-toggle__row--active .su-theme-toggle__radio::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: var(--su-accent-primary);
+}

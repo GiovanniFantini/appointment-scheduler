@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, Toaster, useAuth } from '@scheduler/ui'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
@@ -17,7 +17,7 @@ import FilialiPage from './pages/FilialiPage/FilialiPage'
 import MansioniPage from './pages/MansioniPage/MansioniPage'
 import RisorsePage from './pages/RisorsePage/RisorsePage'
 import TimbraturaGestionePage from './pages/TimbraturaGestionePage/TimbraturaGestionePage'
-import AppLayout from './components/AppLayout/AppLayout'
+import EmployeeShell from './components/EmployeeShell'
 import { BranchProvider } from './contexts/BranchContext'
 
 export type FeatureAccessLevel = 'ReadOnly' | 'Operator' | 'Manager'
@@ -32,8 +32,6 @@ export interface EmployeeUser {
   merchantId?: number
   companyName?: string
   activeFeatures: string[]
-  // Livello di accesso per feature (post company-switch).
-  // Valorizzato solo per le feature che usano i livelli (es. Magazzino, Documenti).
   featureLevels?: Record<string, FeatureAccessLevel>
   companies: Array<{ merchantId: number; companyName: string; city?: string; roleId: number; roleName: string }>
 }
@@ -41,211 +39,233 @@ export interface EmployeeUser {
 const LEVEL_RANK: Record<FeatureAccessLevel, number> = {
   ReadOnly: 1,
   Operator: 2,
-  Manager: 3,
+  Manager: 3
+}
+
+export function hasFeatureLevel(user: EmployeeUser, feature: string, min: FeatureAccessLevel): boolean {
+  const lvl = user.featureLevels?.[feature] ?? 'ReadOnly'
+  return LEVEL_RANK[lvl] >= LEVEL_RANK[min]
+}
+
+const LoadingScreen = (
+  <div className="loading-screen">
+    <div className="loading-spinner" />
+  </div>
+)
+
+function PublicLogin() {
+  const { user, login } = useAuth<EmployeeUser>()
+  if (user?.merchantId) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/select-company" replace />
+  return <LoginPage onLogin={login} />
+}
+
+function PublicOnly({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth<EmployeeUser>()
+  if (user?.merchantId) return <Navigate to="/" replace />
+  if (user) return <Navigate to="/select-company" replace />
+  return <>{children}</>
+}
+
+function SelectCompanyRoute() {
+  const { user, updateUser, logout } = useAuth<EmployeeUser>()
+  if (!user) return <Navigate to="/login" replace />
+  if (user.merchantId) return <Navigate to="/" replace />
+  return <SelectCompanyPage user={user} onCompanySelected={updateUser} onLogout={logout} />
+}
+
+function Protected() {
+  const { user } = useAuth<EmployeeUser>()
+  const location = useLocation()
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />
+  if (!user.merchantId) return <Navigate to="/select-company" replace />
+  return (
+    <BranchProvider>
+      <EmployeeShell />
+    </BranchProvider>
+  )
+}
+
+function FeatureRoute({
+  feature,
+  minLevel,
+  redirectTo = '/',
+  children
+}: {
+  feature: string
+  minLevel?: FeatureAccessLevel
+  redirectTo?: string
+  children: React.ReactNode
+}) {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return <Navigate to="/login" replace />
+  if (!user.activeFeatures?.includes(feature)) return <Navigate to={redirectTo} replace />
+  if (minLevel && !hasFeatureLevel(user, feature, minLevel)) return <Navigate to={redirectTo} replace />
+  return <>{children}</>
 }
 
 function App() {
-  const [user, setUser] = useState<EmployeeUser | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-    if (token && userData) {
-      try {
-        const parsed = JSON.parse(userData) as EmployeeUser
-        setUser(parsed)
-      } catch {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-      }
-    }
-    setLoading(false)
-  }, [])
-
-  const handleLogin = (userData: EmployeeUser, token: string) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
-  }
-
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setUser(null)
-  }
-
-  const handleUserUpdate = (updatedUser: EmployeeUser, token: string) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(updatedUser))
-    setUser(updatedUser)
-  }
-
-  if (loading) {
-    return (
-      <div className="loading-screen">
-        <div className="loading-spinner" />
-      </div>
-    )
-  }
-
-  const isAuthenticated = !!(user && user.merchantId)
-  const needsCompanySelection = !!(user && !user.merchantId)
-
   return (
-    <Router>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/login"
-          element={
-            isAuthenticated
-              ? <Navigate to="/" replace />
-              : needsCompanySelection
-                ? <Navigate to="/select-company" replace />
-                : <LoginPage onLogin={handleLogin} />
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            isAuthenticated
-              ? <Navigate to="/" replace />
-              : needsCompanySelection
-                ? <Navigate to="/select-company" replace />
-                : <RegisterPage />
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            isAuthenticated
-              ? <Navigate to="/" replace />
-              : <ForgotPasswordPage />
-          }
-        />
-        <Route
-          path="/reset-password"
-          element={
-            isAuthenticated
-              ? <Navigate to="/" replace />
-              : <ResetPasswordPage />
-          }
-        />
-        <Route
-          path="/select-company"
-          element={
-            !user
-              ? <Navigate to="/login" replace />
-              : isAuthenticated
-                ? <Navigate to="/" replace />
-                : <SelectCompanyPage user={user} onCompanySelected={handleUserUpdate} onLogout={handleLogout} />
-          }
-        />
+    <AuthProvider<EmployeeUser>
+      isAuthenticatedPredicate={(u) => !!u.merchantId}
+      loadingFallback={LoadingScreen}
+    >
+      <Toaster>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<PublicLogin />} />
+            <Route
+              path="/register"
+              element={
+                <PublicOnly>
+                  <RegisterPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicOnly>
+                  <ForgotPasswordPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicOnly>
+                  <ResetPasswordPage />
+                </PublicOnly>
+              }
+            />
+            <Route path="/select-company" element={<SelectCompanyRoute />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/"
-          element={
-            !user
-              ? <Navigate to="/login" replace />
-              : needsCompanySelection
-                ? <Navigate to="/select-company" replace />
-                : (
-                  <BranchProvider>
-                    <AppLayout user={user} onLogout={handleLogout} onUserUpdate={handleUserUpdate} />
-                  </BranchProvider>
-                )
-          }
-        >
-          <Route index element={<DashboardPage user={user!} />} />
-          <Route
-            path="timbratura"
-            element={
-              user?.activeFeatures?.includes('Timbratura')
-                ? <TimbraturaPage accessLevel={user.featureLevels?.['Timbratura'] ?? 'ReadOnly'} />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="timbratura-gestione"
-            element={
-              user?.activeFeatures?.includes('Timbratura') && LEVEL_RANK[user.featureLevels?.['Timbratura'] ?? 'ReadOnly'] >= LEVEL_RANK.Manager
-                ? <TimbraturaGestionePage />
-                : <Navigate to="/timbratura" replace />
-            }
-          />
-          <Route
-            path="calendario"
-            element={
-              user?.activeFeatures?.includes('Calendario')
-                ? <CalendarioPage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="pianificazione"
-            element={
-              user?.activeFeatures?.includes('Calendario') && LEVEL_RANK[user.featureLevels?.['Calendario'] ?? 'ReadOnly'] >= LEVEL_RANK.Operator
-                ? <PianificazionePage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="richieste"
-            element={
-              user?.activeFeatures?.includes('Richieste')
-                ? <RichiestePage />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="risorse"
-            element={
-              user?.activeFeatures?.includes('Risorse')
-                ? <RisorsePage />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="mansioni"
-            element={
-              user?.activeFeatures?.includes('Mansioni')
-                ? <MansioniPage />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="filiali"
-            element={
-              user?.activeFeatures?.includes('Filiali')
-                ? <FilialiPage />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="documenti"
-            element={
-              user?.activeFeatures?.includes('Documenti')
-                ? <DocumentiPage accessLevel={user.featureLevels?.['Documenti'] ?? 'ReadOnly'} />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route
-            path="magazzino"
-            element={
-              user?.activeFeatures?.includes('Magazzino')
-                ? <MagazzinoPage accessLevel={user.featureLevels?.['Magazzino'] ?? 'ReadOnly'} />
-                : <Navigate to="/" replace />
-            }
-          />
-          <Route path="notifiche" element={<NotifichePage />} />
-        </Route>
+            <Route element={<Protected />}>
+              <Route index element={<DashboardWrapper />} />
+              <Route
+                path="timbratura"
+                element={
+                  <FeatureRoute feature="Timbratura">
+                    <TimbraturaWrapper />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="timbratura-gestione"
+                element={
+                  <FeatureRoute feature="Timbratura" minLevel="Manager" redirectTo="/timbratura">
+                    <TimbraturaGestionePage />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="calendario"
+                element={
+                  <FeatureRoute feature="Calendario">
+                    <CalendarioWrapper />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="pianificazione"
+                element={
+                  <FeatureRoute feature="Calendario" minLevel="Operator">
+                    <PianificazioneWrapper />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="richieste"
+                element={
+                  <FeatureRoute feature="Richieste">
+                    <RichiestePage />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="risorse"
+                element={
+                  <FeatureRoute feature="Risorse">
+                    <RisorsePage />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="mansioni"
+                element={
+                  <FeatureRoute feature="Mansioni">
+                    <MansioniPage />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="filiali"
+                element={
+                  <FeatureRoute feature="Filiali">
+                    <FilialiPage />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="documenti"
+                element={
+                  <FeatureRoute feature="Documenti">
+                    <DocumentiWrapper />
+                  </FeatureRoute>
+                }
+              />
+              <Route
+                path="magazzino"
+                element={
+                  <FeatureRoute feature="Magazzino">
+                    <MagazzinoWrapper />
+                  </FeatureRoute>
+                }
+              />
+              <Route path="notifiche" element={<NotifichePage />} />
+            </Route>
 
-        <Route path="*" element={<Navigate to={isAuthenticated ? '/' : '/login'} replace />} />
-      </Routes>
-    </Router>
+            <Route path="*" element={<UnknownRoute />} />
+          </Routes>
+        </Router>
+      </Toaster>
+    </AuthProvider>
   )
+}
+
+function DashboardWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  return user ? <DashboardPage user={user} /> : null
+}
+function TimbraturaWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return null
+  return <TimbraturaPage accessLevel={user.featureLevels?.['Timbratura'] ?? 'ReadOnly'} />
+}
+function CalendarioWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return null
+  return <CalendarioPage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
+}
+function PianificazioneWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return null
+  return <PianificazionePage accessLevel={user.featureLevels?.['Calendario'] ?? 'ReadOnly'} />
+}
+function DocumentiWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return null
+  return <DocumentiPage accessLevel={user.featureLevels?.['Documenti'] ?? 'ReadOnly'} />
+}
+function MagazzinoWrapper() {
+  const { user } = useAuth<EmployeeUser>()
+  if (!user) return null
+  return <MagazzinoPage accessLevel={user.featureLevels?.['Magazzino'] ?? 'ReadOnly'} />
+}
+
+function UnknownRoute() {
+  const { isAuthenticated } = useAuth<EmployeeUser>()
+  return <Navigate to={isAuthenticated ? '/' : '/login'} replace />
 }
 
 export default App

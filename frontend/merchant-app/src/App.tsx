@@ -1,6 +1,6 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import AppLayout from './components/AppLayout/AppLayout'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, Toaster, useAuth } from '@scheduler/ui'
+import MerchantShell from './components/MerchantShell'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage/ForgotPasswordPage'
@@ -24,91 +24,109 @@ export interface MerchantUser {
   activeFeatures: string[]
 }
 
-interface AppProps {}
+const LoadingScreen = (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      height: '100vh',
+      background: '#0a0a0f',
+      color: '#f1f5f9'
+    }}
+  >
+    Caricamento...
+  </div>
+)
 
-function App(_props: AppProps) {
-  const [user, setUser] = useState<MerchantUser | null>(null)
-  const [loading, setLoading] = useState(true)
+function PublicLogin() {
+  const { isAuthenticated, user, login } = useAuth<MerchantUser>()
+  if (isAuthenticated) return <Navigate to="/" replace />
+  if (user && !user.isApproved) return <Navigate to="/pending-approval" replace />
+  return <LoginPage onLogin={login} />
+}
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    const userData = localStorage.getItem('user')
-    if (token && userData) {
-      try {
-        const parsed = JSON.parse(userData) as MerchantUser
-        setUser(parsed)
-      } catch {
-        localStorage.removeItem('token')
-        localStorage.removeItem('user')
-      }
-    }
-    setLoading(false)
-  }, [])
+function PublicOnly({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth<MerchantUser>()
+  if (user) return <Navigate to={user.isApproved ? '/' : '/pending-approval'} replace />
+  return <>{children}</>
+}
 
-  const handleLogin = (userData: MerchantUser, token: string) => {
-    localStorage.setItem('token', token)
-    localStorage.setItem('user', JSON.stringify(userData))
-    setUser(userData)
-  }
+function PendingApprovalRoute() {
+  const { user, logout } = useAuth<MerchantUser>()
+  if (!user) return <Navigate to="/login" replace />
+  if (user.isApproved) return <Navigate to="/" replace />
+  return <PendingApprovalPage user={user} onLogout={logout} />
+}
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
-    localStorage.removeItem('user')
-    setUser(null)
-  }
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0f172a', color: '#f1f5f9' }}>
-        Caricamento...
-      </div>
-    )
-  }
-
+function Protected() {
+  const { user } = useAuth<MerchantUser>()
+  const location = useLocation()
+  if (!user) return <Navigate to="/login" replace state={{ from: location }} />
+  if (!user.isApproved) return <Navigate to="/pending-approval" replace />
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={user ? <Navigate to="/" /> : <LoginPage onLogin={handleLogin} />} />
-        <Route path="/register" element={user ? <Navigate to="/" /> : <RegisterPage />} />
-        <Route path="/forgot-password" element={user ? <Navigate to="/" /> : <ForgotPasswordPage />} />
-        <Route path="/reset-password" element={user ? <Navigate to="/" /> : <ResetPasswordPage />} />
-        {/* Azienda non approvata: l'utente è loggato ma non può operare. */}
-        <Route
-          path="/pending-approval"
-          element={
-            user
-              ? (user.isApproved
-                  ? <Navigate to="/" />
-                  : <PendingApprovalPage user={user} onLogout={handleLogout} />)
-              : <Navigate to="/login" />
-          }
-        />
-        <Route
-          element={
-            !user
-              ? <Navigate to="/login" />
-              : !user.isApproved
-                ? <Navigate to="/pending-approval" />
-                : (
-                  <BranchProvider>
-                    <AppLayout user={user} onLogout={handleLogout} />
-                  </BranchProvider>
-                )
-          }
-        >
-          <Route path="/" element={<DashboardPage user={user!} />} />
-          <Route path="/ruoli" element={<RuoliPage />} />
-          <Route path="/report" element={<ReportPage />} />
-        </Route>
-        <Route
-          path="*"
-          element={
-            <Navigate to={!user ? '/login' : user.isApproved ? '/' : '/pending-approval'} />
-          }
-        />
-      </Routes>
-    </Router>
+    <BranchProvider>
+      <MerchantShell />
+    </BranchProvider>
   )
+}
+
+function App() {
+  return (
+    <AuthProvider<MerchantUser> loadingFallback={LoadingScreen}>
+      <Toaster>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<PublicLogin />} />
+            <Route
+              path="/register"
+              element={
+                <PublicOnly>
+                  <RegisterPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/forgot-password"
+              element={
+                <PublicOnly>
+                  <ForgotPasswordPage />
+                </PublicOnly>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicOnly>
+                  <ResetPasswordPage />
+                </PublicOnly>
+              }
+            />
+            <Route path="/pending-approval" element={<PendingApprovalRoute />} />
+
+            <Route element={<Protected />}>
+              <Route path="/" element={<DashboardPageWrapper />} />
+              <Route path="/ruoli" element={<RuoliPage />} />
+              <Route path="/report" element={<ReportPage />} />
+            </Route>
+
+            <Route path="*" element={<UnknownRoute />} />
+          </Routes>
+        </Router>
+      </Toaster>
+    </AuthProvider>
+  )
+}
+
+function DashboardPageWrapper() {
+  const { user } = useAuth<MerchantUser>()
+  if (!user) return null
+  return <DashboardPage user={user} />
+}
+
+function UnknownRoute() {
+  const { user } = useAuth<MerchantUser>()
+  return <Navigate to={!user ? '/login' : user.isApproved ? '/' : '/pending-approval'} replace />
 }
 
 export default App

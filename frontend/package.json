@@ -1,0 +1,20 @@
+{
+  "name": "@scheduler/frontend-root",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "shared-ui",
+    "admin-app",
+    "merchant-app",
+    "employee-app"
+  ],
+  "scripts": {
+    "dev:admin": "npm run dev -w appointment-scheduler-admin",
+    "dev:merchant": "npm run dev -w appointment-scheduler-merchant",
+    "dev:employee": "npm run dev -w appointment-scheduler-employee",
+    "build:admin": "npm run build -w appointment-scheduler-admin",
+    "build:merchant": "npm run build -w appointment-scheduler-merchant",
+    "build:employee": "npm run build -w appointment-scheduler-employee",
+    "build": "npm run build --workspaces --if-present"
+  }
+}

@@ -15,7 +15,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+    "baseUrl": ".",
+    "paths": {
+      "@scheduler/ui": ["../shared-ui/src/index.ts"],
+      "@scheduler/ui/*": ["../shared-ui/src/*"]
+    }
   },
-  "include": ["src"]
+  "include": ["src", "../shared-ui/src"]
 }

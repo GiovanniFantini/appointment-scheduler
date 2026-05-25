@@ -12,10 +12,10 @@ appointment-scheduler/
 │   ├── AppointmentScheduler.Data/      # EF Core DbContext, Migrations
 │   └── AppointmentScheduler.Shared/   # Models, DTOs, Enums
 └── frontend/
-    ├── admin-app/      # Admin panel (port 5175)
-    ├── merchant-app/   # Merchant dashboard (port 5174)
-    ├── employee-app/   # Employee portal (port 5176)
-    └── consumer-app/   # [Work in Progress] (port 5173)
+    ├── shared-ui/      # @scheduler/ui — pacchetto UI condiviso
+    ├── admin-app/      # Admin panel (port 5174)
+    ├── merchant-app/   # Merchant dashboard (port 5175)
+    └── employee-app/   # Employee portal (port 5176)
 ```
 
 ## Stack

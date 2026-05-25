@@ -1,0 +1,104 @@
+.su-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.su-stepper {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.su-stepper__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.su-stepper__dot {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--su-radius-pill);
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  color: var(--su-text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.su-stepper__item--active .su-stepper__dot {
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-secondary));
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+.su-stepper__item--done .su-stepper__dot {
+  background: var(--su-accent-success);
+  border-color: transparent;
+  color: white;
+}
+
+.su-stepper__label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--su-text-secondary);
+  white-space: nowrap;
+}
+.su-stepper__item--active .su-stepper__label {
+  color: var(--su-text-primary);
+  font-weight: 600;
+}
+.su-stepper__item--done .su-stepper__label {
+  color: var(--su-text-secondary);
+}
+
+.su-stepper__connector {
+  width: 32px;
+  height: 1px;
+  background: var(--su-border);
+  margin: 0 6px;
+  flex-shrink: 0;
+}
+.su-stepper__item--done + .su-stepper__connector {
+  background: var(--su-accent-success);
+}
+
+.su-wizard__step-body {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
+  padding: 24px;
+  min-height: 280px;
+}
+
+.su-wizard__step-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 6px;
+  color: var(--su-text-primary);
+}
+.su-wizard__step-desc {
+  font-size: 13px;
+  color: var(--su-text-secondary);
+  margin: 0 0 18px;
+}
+
+.su-wizard__actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.su-wizard__actions-right {
+  display: flex;
+  gap: 8px;
+}

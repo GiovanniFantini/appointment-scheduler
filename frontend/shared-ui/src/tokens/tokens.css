@@ -1,0 +1,55 @@
+/**
+ * Design tokens (CSS variables) condivisi tra le 3 app.
+ * Importati da ogni index.css via:
+ *   @import '@scheduler/ui/tokens.css';
+ */
+:root {
+  /* surfaces */
+  --su-surface-bg: #0a0a0f;
+  --su-surface: #13131a;
+  --su-surface-elevated: #1a1a24;
+  --su-surface-overlay: rgba(10, 10, 15, 0.85);
+  --su-border: #2a2a3a;
+  --su-border-strong: #3a3a4a;
+
+  /* text */
+  --su-text-primary: #f1f5f9;
+  --su-text-secondary: #94a3b8;
+  --su-text-muted: #64748b;
+  --su-text-inverse: #0f172a;
+
+  /* accents */
+  --su-accent-primary: #6366f1;
+  --su-accent-primary-hover: #4f46e5;
+  --su-accent-secondary: #b24bf3;
+  --su-accent-success: #10b981;
+  --su-accent-danger: #ef4444;
+  --su-accent-warning: #f59e0b;
+  --su-accent-info: #00d4ff;
+
+  /* radii */
+  --su-radius-sm: 4px;
+  --su-radius-md: 8px;
+  --su-radius-lg: 12px;
+  --su-radius-xl: 16px;
+  --su-radius-pill: 999px;
+
+  /* shadows */
+  --su-shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --su-shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --su-shadow-overlay: 0 24px 64px rgba(0, 0, 0, 0.6);
+
+  /* spacing scale (per usi puntuali fuori da Tailwind) */
+  --su-space-1: 4px;
+  --su-space-2: 8px;
+  --su-space-3: 12px;
+  --su-space-4: 16px;
+  --su-space-6: 24px;
+  --su-space-8: 32px;
+
+  /* z-index */
+  --su-z-dropdown: 1000;
+  --su-z-modal-backdrop: 1500;
+  --su-z-modal: 1510;
+  --su-z-toast: 2000;
+}

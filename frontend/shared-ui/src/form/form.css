@@ -1,0 +1,108 @@
+.su-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.su-field__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--su-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.su-field__label-required {
+  color: var(--su-accent-danger);
+  margin-left: 2px;
+}
+
+.su-field__helper {
+  font-size: 11.5px;
+  color: var(--su-text-muted);
+  line-height: 1.4;
+}
+
+.su-field__error {
+  font-size: 11.5px;
+  color: var(--su-accent-danger);
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.su-input,
+.su-select,
+.su-textarea {
+  width: 100%;
+  background: var(--su-surface);
+  border: 1px solid var(--su-border);
+  color: var(--su-text-primary);
+  border-radius: var(--su-radius-md);
+  padding: 10px 12px;
+  font-size: 13.5px;
+  font-family: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.su-input:focus,
+.su-select:focus,
+.su-textarea:focus {
+  outline: none;
+  border-color: var(--su-accent-primary);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+.su-input:disabled,
+.su-select:disabled,
+.su-textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.su-input--error,
+.su-select--error,
+.su-textarea--error {
+  border-color: var(--su-accent-danger);
+}
+.su-input--error:focus,
+.su-select--error:focus,
+.su-textarea--error:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+.su-input::placeholder,
+.su-textarea::placeholder {
+  color: var(--su-text-muted);
+}
+
+.su-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.su-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.su-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--su-text-primary);
+}
+.su-checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--su-accent-primary);
+  cursor: pointer;
+}
+.su-checkbox--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
