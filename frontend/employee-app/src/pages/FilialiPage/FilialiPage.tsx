@@ -1,4 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import { branchesApi, type Branch, type Department } from '../../lib/api/branches'
 import { useBranch } from '../../contexts/BranchContext'
 import BranchWizard from './BranchWizard'
@@ -25,6 +26,8 @@ const emptyBranchForm: BranchFormState = {
 }
 
 export default function FilialiPage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const { branches, loading, refresh } = useBranch()
   const [showWizard, setShowWizard] = useState(false)
   const [branchModal, setBranchModal] = useState(false)
@@ -99,23 +102,31 @@ export default function FilialiPage() {
   }
 
   const handleDeleteBranch = async (b: Branch) => {
-    if (!confirm(`Eliminare la filiale "${b.name}"?`)) return
+    const ok = await confirm({
+      title: 'Eliminare filiale',
+      message: `Eliminare la filiale "${b.name}"?`,
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
     try {
       await branchesApi.remove(b.id)
+      toast.success('Filiale eliminata')
       await refresh()
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      alert(e.response?.data?.message ?? 'Errore durante l\'eliminazione')
+      toast.error(e.response?.data?.message ?? 'Errore durante l\'eliminazione')
     }
   }
 
   const handleSetHq = async (b: Branch) => {
     try {
       await branchesApi.setHeadquarters(b.id)
+      toast.success(`"${b.name}" impostata come sede`)
       await refresh()
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      alert(e.response?.data?.message ?? 'Errore')
+      toast.error(e.response?.data?.message ?? 'Errore')
     }
   }
 
@@ -162,12 +173,19 @@ export default function FilialiPage() {
   }
 
   const handleDeleteDept = async (d: Department) => {
-    if (!confirm(`Eliminare il reparto "${d.name}"? I turni e i dipendenti collegati resteranno, senza reparto.`)) return
+    const ok = await confirm({
+      title: 'Eliminare reparto',
+      message: `Eliminare il reparto "${d.name}"? I turni e i dipendenti collegati resteranno, senza reparto.`,
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
     try {
       await branchesApi.removeDepartment(d.id)
+      toast.success('Reparto eliminato')
       await refresh()
     } catch {
-      alert('Errore durante l\'eliminazione del reparto')
+      toast.error('Errore durante l\'eliminazione del reparto')
     }
   }
 

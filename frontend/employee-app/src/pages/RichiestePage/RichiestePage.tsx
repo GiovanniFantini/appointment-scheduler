@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
 import { formatBrowserDate, parseDateOnly } from '../../lib/dateUtils'
@@ -54,6 +55,8 @@ function formatDate(dateStr: string): string {
 }
 
 export default function RichiestePage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [requests, setRequests] = useState<ApiEmployeeRequest[]>([])
   const [approvals, setApprovals] = useState<ApiEmployeeRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -124,29 +127,45 @@ export default function RichiestePage() {
   const handleApprove = async (id: number) => {
     try {
       await apiClient.post(`/employee-requests/${id}/approve`)
+      toast.success('Richiesta approvata')
       await fetchApprovals()
     } catch {
-      alert('Errore durante l\'approvazione')
+      toast.error('Errore durante l\'approvazione')
     }
   }
 
   const handleReject = async (id: number) => {
+    const ok = await confirm({
+      title: 'Rifiutare richiesta',
+      message: 'Vuoi davvero rifiutare questa richiesta?',
+      variant: 'warning',
+      confirmLabel: 'Rifiuta',
+    })
+    if (!ok) return
     try {
       await apiClient.post(`/employee-requests/${id}/reject`)
+      toast.success('Richiesta rifiutata')
       await fetchApprovals()
     } catch {
-      alert('Errore durante il rifiuto')
+      toast.error('Errore durante il rifiuto')
     }
   }
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Eliminare questa richiesta?')) return
+    const ok = await confirm({
+      title: 'Eliminare richiesta',
+      message: 'Eliminare questa richiesta?',
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
     try {
       await apiClient.delete(`/employee-requests/${id}`)
+      toast.success('Richiesta eliminata')
       await fetchRequests()
       if (showApprovalsSection) await fetchApprovals()
     } catch {
-      alert('Errore durante l\'eliminazione della richiesta')
+      toast.error('Errore durante l\'eliminazione della richiesta')
     }
   }
 

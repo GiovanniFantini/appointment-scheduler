@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import {
   inventoryApi,
   type CreateGoodsReceiptRequest,
@@ -163,6 +164,8 @@ function getApiErrorMessage(error: unknown, fallback: string): string {
 }
 
 export default function MagazzinoPage({ accessLevel }: Props) {
+  const toast = useToast()
+  const confirm = useConfirm()
   // Gating per livello: cosa il dipendente può fare.
   const canOperate = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Operator
   const canManage = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Manager
@@ -515,14 +518,24 @@ export default function MagazzinoPage({ accessLevel }: Props) {
   }
 
   const handleCancelOrder = async (order: PurchaseOrder) => {
-    if (!window.confirm(`Annullare l'ordine ${order.orderNumber}?`)) return
+    const ok = await confirm({
+      title: 'Annullare ordine',
+      message: `Annullare l'ordine ${order.orderNumber}?`,
+      variant: 'danger',
+      confirmLabel: 'Annulla ordine',
+      cancelLabel: 'Non annullare',
+    })
+    if (!ok) return
 
     try {
       await inventoryApi.cancelOrder(order.id)
       setNotice(`Ordine ${order.orderNumber} annullato.`)
+      toast.success(`Ordine ${order.orderNumber} annullato`)
       await loadInventory()
     } catch (err) {
-      setError(getApiErrorMessage(err, 'Errore durante l’annullamento dell’ordine.'))
+      const msg = getApiErrorMessage(err, 'Errore durante l’annullamento dell’ordine.')
+      setError(msg)
+      toast.error(msg)
     }
   }
 

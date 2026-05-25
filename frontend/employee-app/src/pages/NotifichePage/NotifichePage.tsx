@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { EmptyState, Skeleton } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { formatBrowserDate } from '../../lib/dateUtils'
 import './NotifichePage.css'
@@ -132,19 +133,14 @@ export default function NotifichePage() {
       {error && <div className="notifiche-error">{error}</div>}
 
       {loading ? (
-        <div className="notifiche-loading">
-          <div className="spinner" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {[0, 1, 2, 3].map(i => <Skeleton key={i} variant="box" height={64} />)}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="notifiche-empty">
-          <div className="empty-icon">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <p className="empty-title">Nessuna notifica</p>
-          <p className="empty-subtitle">Sei aggiornato! Non ci sono nuove notifiche.</p>
-        </div>
+        <EmptyState
+          title="Nessuna notifica"
+          description="Sei aggiornato! Non ci sono nuove notifiche."
+        />
       ) : (
         <div className="notifications-list">
           {notifications.map(notif => {

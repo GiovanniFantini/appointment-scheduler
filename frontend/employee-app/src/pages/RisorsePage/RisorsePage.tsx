@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { skillsApi, Skill } from '../../lib/api/skills'
 import { useBranch } from '../../contexts/BranchContext'
@@ -77,6 +78,8 @@ const emptyForm: NewEmployeeForm = {
 }
 
 export default function RisorsePage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const { activeBranches, isMultiBranch } = useBranch()
   const [employees, setEmployees] = useState<Employee[]>([])
   const [roles, setRoles] = useState<Role[]>([])
@@ -243,12 +246,19 @@ export default function RisorsePage() {
   }
 
   const handleRemove = async (emp: Employee) => {
-    if (!confirm(`Rimuovere ${emp.firstName} ${emp.lastName}?`)) return
+    const ok = await confirm({
+      title: 'Rimuovere risorsa',
+      message: `Rimuovere ${emp.firstName} ${emp.lastName}?`,
+      variant: 'danger',
+      confirmLabel: 'Rimuovi',
+    })
+    if (!ok) return
     try {
       await apiClient.delete(`/employee/resources/${emp.id}`)
+      toast.success('Risorsa rimossa')
       await fetchEmployees()
     } catch {
-      alert('Errore durante la rimozione')
+      toast.error('Errore durante la rimozione')
     }
   }
 

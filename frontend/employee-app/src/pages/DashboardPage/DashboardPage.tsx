@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { EmptyState, Skeleton } from '@scheduler/ui'
 import { EmployeeUser } from '../../App'
 import apiClient from '../../lib/axios'
 import { formatBrowserDate, localDateStr } from '../../lib/dateUtils'
@@ -165,13 +166,11 @@ export default function DashboardPage({ user }: Props) {
             <h2 className="dashboard-card-title">Oggi</h2>
           </div>
           {loading ? (
-            <div className="dashboard-loading">
-              <div className="spinner" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0' }}>
+              {[0, 1, 2].map(i => <Skeleton key={i} variant="box" height={56} />)}
             </div>
           ) : todayEvents.length === 0 ? (
-            <div className="dashboard-empty">
-              <p>Nessun evento per oggi</p>
-            </div>
+            <EmptyState title="Nessun evento per oggi" />
           ) : (
             <div className="event-list">
               {todayEvents.map(event => (

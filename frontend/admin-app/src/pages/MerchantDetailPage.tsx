@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { Breadcrumb, Skeleton } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './MerchantDetailPage.css'
@@ -141,7 +142,13 @@ export default function MerchantDetailPage() {
     }
   }
 
-  if (loading) return <div className="detail-loading">Loading merchant details…</div>
+  if (loading) return (
+    <div className="merchant-detail-page" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <Skeleton variant="text" width="40%" />
+      <Skeleton variant="box" height={120} />
+      <Skeleton variant="box" height={240} />
+    </div>
+  )
   if (fetchError) return <div className="detail-error">{fetchError}</div>
   if (!merchant) return <div className="detail-error">Merchant not found.</div>
 
@@ -152,6 +159,12 @@ export default function MerchantDetailPage() {
       {/* Header */}
       <div className="detail-header">
         <div className="detail-header-left">
+          <Breadcrumb
+            items={[
+              { label: 'Merchants', to: '/merchants' },
+              { label: merchant.companyName },
+            ]}
+          />
           <Link to="/merchants" className="back-link">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
               <polyline points="15 18 9 12 15 6" />

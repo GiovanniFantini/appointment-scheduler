@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Skeleton } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { MerchantUser } from '../../App'
 import './DashboardPage.css'
@@ -87,7 +88,7 @@ export default function DashboardPage({ user }: DashboardPageProps) {
         <div className="stat-card stat-card--static">
           <div className="stat-icon blue">👥</div>
           <div className="stat-info">
-            <div className="stat-value">{loadingStats ? '—' : stats.totalEmployees}</div>
+            <div className="stat-value">{loadingStats ? <Skeleton variant="text" width={40} /> : stats.totalEmployees}</div>
             <div className="stat-label">Dipendenti totali</div>
           </div>
         </div>

@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
@@ -112,6 +112,7 @@ function App() {
       loadingFallback={LoadingScreen}
     >
       <Toaster>
+        <ConfirmProvider>
         <Router>
           <Routes>
             <Route path="/login" element={<PublicLogin />} />
@@ -231,6 +232,7 @@ function App() {
             <Route path="*" element={<UnknownRoute />} />
           </Routes>
         </Router>
+        </ConfirmProvider>
       </Toaster>
     </AuthProvider>
   )

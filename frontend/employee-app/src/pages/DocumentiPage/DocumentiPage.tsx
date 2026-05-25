@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import { documentsApi } from '../../lib/api/documents'
 import { HRDocumentType } from '../../types/documents'
 import type {
@@ -108,6 +109,8 @@ function getApiErrorMessage(error: unknown): string | null {
 }
 
 export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPageProps) {
+  const toast = useToast()
+  const confirm = useConfirm()
   const canUploadForOthers = accessLevel === 'Operator' || accessLevel === 'Manager'
   const canDeleteDocuments = accessLevel === 'Manager'
 
@@ -232,37 +235,46 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
 
   const handleAcknowledge = async (id: number, versionNumber: number) => {
     // La presa visione è un atto formale e non revocabile: chiediamo conferma.
-    if (!window.confirm(
-      `Confermi di aver preso visione della versione ${versionNumber}? ` +
-      'L\'azione viene registrata e non può essere annullata.'
-    )) {
-      return
-    }
+    const ok = await confirm({
+      title: 'Conferma presa visione',
+      message: `Confermi di aver preso visione della versione ${versionNumber}? L'azione viene registrata e non può essere annullata.`,
+      variant: 'warning',
+      confirmLabel: 'Confermo presa visione',
+    })
+    if (!ok) return
 
     setDetailError('')
     setAckingVersion(versionNumber)
     try {
       await documentsApi.acknowledgeVersion(id, versionNumber)
       await refreshDetail(id)
+      toast.success('Presa visione registrata')
     } catch {
       setDetailError('Impossibile registrare la presa visione')
+      toast.error('Impossibile registrare la presa visione')
     } finally {
       setAckingVersion(null)
     }
   }
 
   const handleDeleteDocument = async (id: number) => {
-    if (!window.confirm('Confermi la cancellazione di questo documento?')) {
-      return
-    }
+    const ok = await confirm({
+      title: 'Eliminare documento',
+      message: 'Confermi la cancellazione di questo documento?',
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
 
     setError('')
     try {
       await documentsApi.deleteDocument(id)
       setSelectedDetail(null)
       await fetchDocuments()
+      toast.success('Documento eliminato')
     } catch {
       setError('Impossibile cancellare il documento')
+      toast.error('Impossibile cancellare il documento')
     }
   }
 

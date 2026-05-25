@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useToast } from '@scheduler/ui'
 import { useBranch } from '../../contexts/BranchContext'
 import {
   timeClockApi,
@@ -440,6 +441,7 @@ function PresenzeTab({ branchId }: { branchId: number }) {
 // ── Tab Anomalie ───────────────────────────────────────────────────────────
 
 function AnomalieTab({ branchId }: { branchId: number }) {
+  const toast = useToast()
   const [anomalies, setAnomalies] = useState<TimeClockAnomaly[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<number | ''>('')
@@ -476,7 +478,7 @@ function AnomalieTab({ branchId }: { branchId: number }) {
       setAnomalies(prev => prev.map(a => (a.id === id ? updated : a)))
     } catch (err: unknown) {
       const e = err as { response?: { data?: { message?: string } } }
-      alert(e.response?.data?.message ?? 'Errore durante la revisione.')
+      toast.error(e.response?.data?.message ?? 'Errore durante la revisione.')
     } finally {
       setActingId(null)
     }

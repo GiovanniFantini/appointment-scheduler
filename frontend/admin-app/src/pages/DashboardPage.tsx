@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { EmptyState, PageHeader, Skeleton, useToast } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './DashboardPage.css'
@@ -28,6 +29,7 @@ interface Stats {
 }
 
 export default function DashboardPage() {
+  const toast = useToast()
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, pending: 0, totalEmployees: 0 })
   const [loading, setLoading] = useState(true)
@@ -59,7 +61,10 @@ export default function DashboardPage() {
     setActionLoading(id)
     try {
       await apiClient.patch(`/merchants/${id}/approve`)
+      toast.success('Merchant approvato')
       await fetchData()
+    } catch {
+      toast.error('Errore durante l\'approvazione')
     } finally {
       setActionLoading(null)
     }
@@ -69,7 +74,10 @@ export default function DashboardPage() {
     setActionLoading(id)
     try {
       await apiClient.patch(`/merchants/${id}/reject`)
+      toast.success('Merchant rifiutato')
       await fetchData()
+    } catch {
+      toast.error('Errore durante l\'operazione')
     } finally {
       setActionLoading(null)
     }
@@ -129,10 +137,7 @@ export default function DashboardPage() {
 
   return (
     <div className="dashboard-page">
-      <div className="page-header">
-        <h1 className="page-title">Dashboard</h1>
-        <p className="page-subtitle">Platform overview and pending actions</p>
-      </div>
+      <PageHeader title="Dashboard" subtitle="Platform overview and pending actions" />
 
       {/* Stats */}
       <div className="stats-grid">
@@ -142,7 +147,9 @@ export default function DashboardPage() {
               <span className="stat-card-label">{card.label}</span>
               <div className={`stat-card-icon ${card.iconColor}`}>{card.icon}</div>
             </div>
-            <div className="stat-card-value">{loading ? '—' : card.value}</div>
+            <div className="stat-card-value">
+              {loading ? <Skeleton variant="text" width="40%" /> : card.value}
+            </div>
             <div className="stat-card-desc">{card.desc}</div>
           </div>
         ))}
@@ -158,9 +165,11 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="loading-state">Loading merchants…</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '0.5rem 0' }}>
+            {[0, 1, 2].map(i => <Skeleton key={i} variant="box" height={48} />)}
+          </div>
         ) : pendingMerchants.length === 0 ? (
-          <div className="empty-state">No merchants pending approval</div>
+          <EmptyState title="Tutto in regola" description="Non ci sono merchant in attesa di approvazione." />
         ) : (
           <div className="pending-list">
             {pendingMerchants.map((m) => (

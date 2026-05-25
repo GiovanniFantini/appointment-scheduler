@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { EmptyState, PageHeader, Skeleton, useToast } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './MerchantsPage.css'
@@ -40,6 +41,7 @@ function statusClass(status: string) {
 export default function MerchantsPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const toast = useToast()
 
   const initialTab = (searchParams.get('tab') as TabKey) ?? 'all'
   const [tab, setTab] = useState<TabKey>(initialTab)
@@ -70,7 +72,10 @@ export default function MerchantsPage() {
     setActionLoading(id)
     try {
       await apiClient.patch(`/merchants/${id}/approve`)
+      toast.success('Merchant approvato')
       await fetchMerchants()
+    } catch {
+      toast.error('Errore durante l\'approvazione')
     } finally {
       setActionLoading(null)
     }
@@ -80,7 +85,10 @@ export default function MerchantsPage() {
     setActionLoading(id)
     try {
       await apiClient.patch(`/merchants/${id}/reject`)
+      toast.success('Merchant disattivato')
       await fetchMerchants()
+    } catch {
+      toast.error('Errore durante l\'operazione')
     } finally {
       setActionLoading(null)
     }
@@ -88,10 +96,7 @@ export default function MerchantsPage() {
 
   return (
     <div className="merchants-page">
-      <div className="page-header">
-        <h1 className="page-title">Merchants</h1>
-        <p className="page-subtitle">Manage merchant accounts and approvals</p>
-      </div>
+      <PageHeader title="Merchants" subtitle="Manage merchant accounts and approvals" />
 
       {/* Filter tabs */}
       <div className="filter-tabs">
@@ -122,9 +127,18 @@ export default function MerchantsPage() {
 
         <div className="table-wrapper">
           {loading ? (
-            <div className="table-loading">Loading merchants…</div>
+            <div style={{ padding: '0.75rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {[0, 1, 2, 3, 4].map(i => (
+                <Skeleton key={i} variant="box" height={36} />
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <div className="table-empty">No merchants found for this filter.</div>
+            <EmptyState
+              title="Nessun merchant"
+              description={tab === 'all'
+                ? 'Non ci sono ancora merchant registrati.'
+                : `Nessun merchant con stato "${tab}".`}
+            />
           ) : (
             <table>
               <thead>

@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
+import { EmptyState, PageHeader, Skeleton, useConfirm, useToast } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import './RuoliPage.css'
 
@@ -89,6 +90,8 @@ const DEFAULT_ROLE_NAME = 'Responsabile App'
 type RoleFeatureLevels = Record<number, Record<number, FeatureAccessLevel>>
 
 export default function RuoliPage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [roles, setRoles] = useState<MerchantRole[]>([])
   const [loading, setLoading] = useState(true)
   const [savingId, setSavingId] = useState<number | null>(null)
@@ -183,8 +186,9 @@ export default function RuoliPage() {
         name: role.name,
         features: buildFeaturesPayload(role.id, enabledValues),
       })
+      toast.success('Ruolo aggiornato')
     } catch {
-      alert('Errore durante il salvataggio')
+      toast.error('Errore durante il salvataggio')
     } finally {
       setSavingId(null)
     }
@@ -192,12 +196,19 @@ export default function RuoliPage() {
 
   const handleDeleteRole = async (role: MerchantRole) => {
     if (role.name === DEFAULT_ROLE_NAME || role.isDefault) return
-    if (!confirm(`Eliminare il ruolo "${role.name}"?`)) return
+    const ok = await confirm({
+      title: 'Eliminare ruolo',
+      message: `Eliminare il ruolo "${role.name}"?`,
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
     try {
       await apiClient.delete(`/merchant-roles/${role.id}`)
+      toast.success('Ruolo eliminato')
       await fetchRoles()
     } catch {
-      alert('Errore durante l\'eliminazione')
+      toast.error('Errore durante l\'eliminazione')
     }
   }
 
@@ -226,18 +237,35 @@ export default function RuoliPage() {
 
   return (
     <div className="ruoli-page">
-      <div className="page-header-row">
-        <div>
-          <h1 className="page-title">Ruoli</h1>
-          <p className="page-subtitle">Configura ruoli e funzionalità accessibili</p>
-        </div>
-        <button className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
-          + Nuovo Ruolo
-        </button>
-      </div>
+      <PageHeader
+        title="Ruoli"
+        subtitle="Configura ruoli e funzionalità accessibili"
+        actions={
+          <button className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
+            + Nuovo Ruolo
+          </button>
+        }
+      />
 
       {loading ? (
-        <div className="loading-text">Caricamento ruoli...</div>
+        <div className="roles-grid">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="role-card">
+              <Skeleton variant="text" width="60%" />
+              <Skeleton variant="box" height={180} />
+              <Skeleton variant="text" width="40%" />
+            </div>
+          ))}
+        </div>
+      ) : roles.length === 0 ? (
+        <EmptyState
+          title="Nessun ruolo configurato"
+          description="Crea il primo ruolo per assegnare permessi e funzionalità ai dipendenti."
+          action={{
+            label: '+ Nuovo Ruolo',
+            onClick: () => { setNewRoleName(''); setCreateError(''); setShowModal(true) },
+          }}
+        />
       ) : (
         <div className="roles-grid">
           {roles.map(role => (

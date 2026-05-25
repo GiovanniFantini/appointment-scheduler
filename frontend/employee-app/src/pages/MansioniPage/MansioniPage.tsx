@@ -1,4 +1,5 @@
 import { useEffect, useState, FormEvent } from 'react'
+import { useConfirm, useToast } from '@scheduler/ui'
 import { skillsApi, Skill } from '../../lib/api/skills'
 import './MansioniPage.css'
 
@@ -16,6 +17,8 @@ interface FormState {
 const emptyForm: FormState = { name: '', color: PRESET_COLORS[0], isActive: true }
 
 export default function MansioniPage() {
+  const toast = useToast()
+  const confirm = useConfirm()
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -82,13 +85,20 @@ export default function MansioniPage() {
   }
 
   const handleDelete = async (s: Skill) => {
-    if (!confirm(`Eliminare la mansione "${s.name}"?`)) return
+    const ok = await confirm({
+      title: 'Eliminare mansione',
+      message: `Eliminare la mansione "${s.name}"?`,
+      variant: 'danger',
+      confirmLabel: 'Elimina',
+    })
+    if (!ok) return
     try {
       await skillsApi.remove(s.id)
+      toast.success('Mansione eliminata')
       await fetchSkills()
       if (drawerSkill?.id === s.id) setDrawerSkill(null)
     } catch {
-      alert('Errore durante l\'eliminazione')
+      toast.error('Errore durante l\'eliminazione')
     }
   }
 
