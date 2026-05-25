@@ -27,7 +27,7 @@ jobs:
       - name: Install dependencies
         run: |
           cd frontend/employee-app
-          npm ci
+          npm ci --force
 
       - name: Extract version info
         id: version
