@@ -32,7 +32,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd frontend/admin-app
-          npm ci --force
+          npm cache clean --force
+          npm install
 
       - name: Extract version info
         id: version
