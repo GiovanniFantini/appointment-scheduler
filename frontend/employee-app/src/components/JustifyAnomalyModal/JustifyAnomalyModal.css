@@ -110,7 +110,7 @@
 
 .jam-btn-cancel {
   background: var(--su-border-strong);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border: none;
   border-radius: 8px;
   padding: 9px 16px;

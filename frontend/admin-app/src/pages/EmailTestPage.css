@@ -18,7 +18,7 @@
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: var(--su-border);
+  color: var(--su-text-primary);
 }
 
 .et-card {
@@ -48,7 +48,7 @@
   text-transform: uppercase;
 }
 
-.et-value { font-size: 13px; color: var(--su-border); }
+.et-value { font-size: 13px; color: var(--su-text-primary); }
 
 .et-code {
   background: var(--su-surface-bg);
@@ -102,7 +102,7 @@
   border: 1px solid var(--su-border-strong);
   border-radius: 6px;
   padding: 9px 12px;
-  color: var(--su-border);
+  color: var(--su-text-primary);
   font-size: 14px;
   font-family: inherit;
   outline: none;
@@ -135,7 +135,7 @@
 
 .et-refresh-btn {
   background: var(--su-border-strong);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border: 1px solid var(--su-text-muted);
   border-radius: 6px;
   padding: 6px 12px;

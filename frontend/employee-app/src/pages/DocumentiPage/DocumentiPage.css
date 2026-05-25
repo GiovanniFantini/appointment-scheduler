@@ -74,7 +74,7 @@
 
 .documenti-filter-select {
   background-color: var(--su-surface-bg);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 0.5rem 0.625rem;
@@ -301,7 +301,7 @@
 }
 
 .documenti-access-table td {
-  color: var(--su-border);
+  color: var(--su-text-primary);
 }
 
 .documenti-modal-footer {

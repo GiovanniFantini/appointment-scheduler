@@ -156,7 +156,7 @@
 .tcm-geo-btn {
   margin-top: 12px;
   background: var(--su-border-strong);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border: none;
   border-radius: 8px;
   padding: 8px 14px;
@@ -262,7 +262,7 @@
 .tcm-table td {
   padding: 10px 14px;
   border-bottom: 1px solid var(--su-surface-elevated);
-  color: var(--su-border);
+  color: var(--su-text-primary);
 }
 
 .tcm-table tr:last-child td { border-bottom: none; }

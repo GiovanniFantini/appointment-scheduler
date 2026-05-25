@@ -347,7 +347,7 @@
 .calendar-filter-select {
   background: var(--su-surface-bg);
   border: 1px solid var(--su-border-strong);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border-radius: 8px;
   padding: 6px 10px;
   font-size: 13px;
@@ -373,7 +373,7 @@
   border-radius: 12px;
   padding: 12px 14px;
   box-shadow: 0 12px 30px rgba(0,0,0,0.45);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   font-size: 13px;
   pointer-events: none;
   animation: fadeIn 0.12s ease-out;

@@ -881,7 +881,7 @@
 .selected-participants-skill {
   background: var(--su-surface-elevated);
   border: 1px solid var(--su-border-strong);
-  color: var(--su-border);
+  color: var(--su-text-primary);
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 12px;
