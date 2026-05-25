@@ -52,7 +52,8 @@
       "Bash(python scripts/refactor_theme_colors.py)",
       "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm frontend/admin-app/package-lock.json frontend/merchant-app/package-lock.json frontend/employee-app/package-lock.json)",
       "Bash(npm ci *)",
-      "Bash(bash prepare-deploy.sh)"
+      "Bash(bash prepare-deploy.sh)",
+      "Bash(npm ls *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

@@ -16,5 +16,15 @@
     "build:merchant": "npm run build -w appointment-scheduler-merchant",
     "build:employee": "npm run build -w appointment-scheduler-employee",
     "build": "npm run build --workspaces --if-present"
+  },
+  "devDependencies": {
+    "rollup": "^4.54.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.54.0",
+    "@rollup/rollup-linux-x64-musl": "^4.54.0",
+    "@rollup/rollup-darwin-x64": "^4.54.0",
+    "@rollup/rollup-darwin-arm64": "^4.54.0",
+    "@rollup/rollup-win32-x64-msvc": "^4.54.0"
   }
 }

@@ -36,9 +36,26 @@ jobs:
         # Si parte dalla root del workspace: npm ci installa tutte le app +
         # shared-ui in un colpo solo, rispettando il package-lock e includendo
         # gli optional native binaries (es. @rollup/rollup-linux-x64-gnu).
+        # Rollup e' dichiarato nel root frontend/package.json come devDep, con
+        # le optional binaries platform-specific come optionalDependencies
+        # esplicite — necessario per aggirare il bug npm#4828.
         run: |
           cd frontend
           npm ci
+
+      - name: Guard against npm bug 4828 (rollup native binary)
+        # Se nonostante optionalDependencies+npm ci il binary rollup linux non
+        # e' installato, eseguiamo un npm install (che ripara la situazione)
+        # invece di esplodere alla build con un errore criptico.
+        run: |
+          cd frontend
+          if [ ! -d node_modules/@rollup/rollup-linux-x64-gnu ]; then
+            echo "::warning::Rollup linux native binary mancante dopo npm ci — applico fallback npm install"
+            rm -rf node_modules/.package-lock.json
+            npm install --no-audit --no-fund
+          else
+            echo "Rollup linux native binary OK"
+          fi
 
       - name: Extract version info
         id: version
