@@ -10,6 +10,7 @@ import MerchantsPage from './pages/MerchantsPage'
 import MerchantDetailPage from './pages/MerchantDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
+import UserDetailPage from './pages/UserDetailPage'
 import DebugPage from './pages/DebugPage'
 import EmailTestPage from './pages/EmailTestPage'
 
@@ -108,6 +109,7 @@ function App() {
               <Route path="merchants/:id" element={<MerchantDetailPage />} />
               <Route path="reports" element={<ReportsPage />} />
               <Route path="users" element={<UsersPage />} />
+              <Route path="users/:id" element={<UserDetailPage />} />
               <Route path="debug" element={<DebugPage />} />
               <Route path="tools/email" element={<EmailTestPage />} />
               <Route path="profile" element={<ProfileWrapper />} />

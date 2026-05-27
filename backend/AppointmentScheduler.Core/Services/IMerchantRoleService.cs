@@ -32,4 +32,14 @@ public interface IMerchantRoleService
     /// </summary>
     Task<bool> DeleteAsync(int id, int merchantId);
 
+    /// <summary>
+    /// Recupera il ruolo predefinito (IsDefault=true) del merchant.
+    /// </summary>
+    Task<MerchantRoleDto?> GetDefaultRoleAsync(int merchantId);
+
+    /// <summary>
+    /// Aggiorna le feature del ruolo predefinito del merchant.
+    /// Usato dal sys-admin per attivare/disattivare le feature disponibili al tenant.
+    /// </summary>
+    Task<MerchantRoleDto?> UpdateDefaultRoleFeaturesAsync(int merchantId, List<MerchantFeatureRequest> features);
 }

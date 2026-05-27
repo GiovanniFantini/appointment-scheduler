@@ -100,6 +100,7 @@ function buildSections(): NavSection[] {
 function deriveTitle(pathname: string): string {
   if (pathname === '/') return 'Dashboard'
   if (pathname.startsWith('/merchants/')) return 'Merchant Detail'
+  if (pathname.startsWith('/users/')) return 'User Detail'
   const item = ADMIN_NAV.find((i) => i.path !== '/' && pathname.startsWith(i.path))
   return item?.label ?? 'Admin Hub'
 }

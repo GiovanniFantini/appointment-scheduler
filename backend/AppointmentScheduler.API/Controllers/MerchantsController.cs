@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -15,10 +16,12 @@ namespace AppointmentScheduler.API.Controllers;
 public class MerchantsController : ControllerBase
 {
     private readonly IMerchantService _merchantService;
+    private readonly IMerchantRoleService _merchantRoleService;
 
-    public MerchantsController(IMerchantService merchantService)
+    public MerchantsController(IMerchantService merchantService, IMerchantRoleService merchantRoleService)
     {
         _merchantService = merchantService;
+        _merchantRoleService = merchantRoleService;
     }
 
     /// <summary>
@@ -113,5 +116,65 @@ public class MerchantsController : ControllerBase
             return NotFound(new { message = "Merchant non trovato" });
 
         return Ok(merchant);
+    }
+
+    /// <summary>
+    /// Recupera i ruoli di un merchant (solo Admin).
+    /// </summary>
+    [HttpGet("{id}/roles")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<List<MerchantRoleDto>>> GetRoles(int id)
+    {
+        var merchant = await _merchantService.GetByIdAsync(id);
+        if (merchant == null)
+            return NotFound(new { message = "Merchant non trovato" });
+
+        var roles = await _merchantRoleService.GetRolesAsync(id);
+        return Ok(roles);
+    }
+
+    /// <summary>
+    /// Recupera lo stato di abilitazione delle feature del merchant (sul ruolo predefinito).
+    /// Ritorna sempre tutte le 10 MerchantFeature; quelle non presenti nel ruolo default
+    /// sono restituite con IsEnabled=false e AccessLevel=null.
+    /// </summary>
+    [HttpGet("{id}/features")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<List<RoleFeatureDto>>> GetFeatures(int id)
+    {
+        var merchant = await _merchantService.GetByIdAsync(id);
+        if (merchant == null)
+            return NotFound(new { message = "Merchant non trovato" });
+
+        var defaultRole = await _merchantRoleService.GetDefaultRoleAsync(id);
+        if (defaultRole == null)
+            return NotFound(new { message = "Ruolo predefinito del merchant non trovato" });
+
+        var byFeature = defaultRole.Features.ToDictionary(f => f.Feature);
+        var allFeatures = Enum.GetValues<MerchantFeature>()
+            .Select(f => byFeature.TryGetValue(f, out var existing)
+                ? existing
+                : new RoleFeatureDto { Feature = f, IsEnabled = false, AccessLevel = null })
+            .ToList();
+
+        return Ok(allFeatures);
+    }
+
+    /// <summary>
+    /// Aggiorna lo stato delle feature del merchant operando sul ruolo predefinito (solo Admin).
+    /// </summary>
+    [HttpPut("{id}/features")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<ActionResult<MerchantRoleDto>> UpdateFeatures(int id, [FromBody] List<MerchantFeatureRequest> features)
+    {
+        var merchant = await _merchantService.GetByIdAsync(id);
+        if (merchant == null)
+            return NotFound(new { message = "Merchant non trovato" });
+
+        var updated = await _merchantRoleService.UpdateDefaultRoleFeaturesAsync(id, features);
+        if (updated == null)
+            return NotFound(new { message = "Ruolo predefinito del merchant non trovato" });
+
+        return Ok(updated);
     }
 }

@@ -5,6 +5,7 @@ namespace AppointmentScheduler.API.Tests.Controllers;
 public class MerchantsControllerTests
 {
     private readonly Mock<IMerchantService> _merchantService = new();
+    private readonly Mock<IMerchantRoleService> _merchantRoleService = new();
 
     [Fact]
     public async Task GetAll_ReturnsAllMerchants()
@@ -145,6 +146,6 @@ public class MerchantsControllerTests
 
     private MerchantsController CreateController(params Claim[] claims)
     {
-        return new MerchantsController(_merchantService.Object).WithUser(claims);
+        return new MerchantsController(_merchantService.Object, _merchantRoleService.Object).WithUser(claims);
     }
 }

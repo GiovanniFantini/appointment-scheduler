@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { Breadcrumb, Skeleton } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
+import MerchantFeaturesTab from './MerchantFeaturesTab'
 import './MerchantDetailPage.css'
 
 interface MerchantDetail {
@@ -54,6 +55,8 @@ interface EditData {
   businessEmail: string
 }
 
+type TabKey = 'overview' | 'features'
+
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
 
@@ -68,6 +71,8 @@ export default function MerchantDetailPage() {
   const [saveError, setSaveError] = useState('')
 
   const [actionLoading, setActionLoading] = useState(false)
+
+  const [activeTab, setActiveTab] = useState<TabKey>('overview')
 
   const fetchMerchant = async () => {
     setLoading(true)
@@ -188,7 +193,7 @@ export default function MerchantDetailPage() {
               Deactivate
             </button>
           )}
-          {!editMode && (
+          {activeTab === 'overview' && !editMode && (
             <button className="btn-primary" onClick={startEdit}>
               Edit
             </button>
@@ -196,127 +201,155 @@ export default function MerchantDetailPage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="detail-tabs" role="tablist">
+        <button
+          role="tab"
+          aria-selected={activeTab === 'overview'}
+          className={`detail-tab${activeTab === 'overview' ? ' active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          Overview
+        </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'features'}
+          className={`detail-tab${activeTab === 'features' ? ' active' : ''}`}
+          onClick={() => setActiveTab('features')}
+        >
+          Features
+        </button>
+      </div>
+
       {saveSuccess && <div className="success-banner">Changes saved successfully.</div>}
       {saveError && <div className="error-banner">{saveError}</div>}
 
-      {/* Company info */}
-      <div className="info-card">
-        <div className="info-card-header">
-          <span className="info-card-title">Company Information</span>
-        </div>
+      {activeTab === 'overview' && (
+        <>
+          {/* Company info */}
+          <div className="info-card">
+            <div className="info-card-header">
+              <span className="info-card-title">Company Information</span>
+            </div>
 
-        {editMode ? (
-          <div className="edit-form">
-            <div className="edit-grid">
-              {(
-                [
-                  { key: 'companyName', label: 'Company Name' },
-                  { key: 'vatNumber', label: 'VAT Number' },
-                  { key: 'city', label: 'City' },
-                  { key: 'address', label: 'Address' },
-                  { key: 'phone', label: 'Phone' },
-                  { key: 'businessEmail', label: 'Business Email' },
-                ] as { key: keyof EditData; label: string }[]
-              ).map(({ key, label }) => (
-                <div key={key} className="edit-field">
-                  <label className="edit-field-label">{label}</label>
-                  <input
-                    className="edit-input"
-                    value={editData[key]}
-                    onChange={(e) => setEditData((prev) => ({ ...prev, [key]: e.target.value }))}
-                  />
+            {editMode ? (
+              <div className="edit-form">
+                <div className="edit-grid">
+                  {(
+                    [
+                      { key: 'companyName', label: 'Company Name' },
+                      { key: 'vatNumber', label: 'VAT Number' },
+                      { key: 'city', label: 'City' },
+                      { key: 'address', label: 'Address' },
+                      { key: 'phone', label: 'Phone' },
+                      { key: 'businessEmail', label: 'Business Email' },
+                    ] as { key: keyof EditData; label: string }[]
+                  ).map(({ key, label }) => (
+                    <div key={key} className="edit-field">
+                      <label className="edit-field-label">{label}</label>
+                      <input
+                        className="edit-input"
+                        value={editData[key]}
+                        onChange={(e) => setEditData((prev) => ({ ...prev, [key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <div className="edit-form-actions">
-              <button className="btn-primary" onClick={saveEdit} disabled={saving}>
-                {saving ? 'Saving…' : 'Save changes'}
-              </button>
-              <button className="btn-secondary" onClick={cancelEdit} disabled={saving}>
-                Cancel
-              </button>
-            </div>
+                <div className="edit-form-actions">
+                  <button className="btn-primary" onClick={saveEdit} disabled={saving}>
+                    {saving ? 'Saving…' : 'Save changes'}
+                  </button>
+                  <button className="btn-secondary" onClick={cancelEdit} disabled={saving}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="info-grid">
+                <div className="info-field">
+                  <div className="info-field-label">Company Name</div>
+                  <div className="info-field-value">{merchant.companyName}</div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">VAT Number</div>
+                  <div className={`info-field-value${merchant.vatNumber ? '' : ' secondary'}`}>
+                    {merchant.vatNumber ?? '—'}
+                  </div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">City</div>
+                  <div className={`info-field-value${merchant.city ? '' : ' secondary'}`}>
+                    {merchant.city ?? '—'}
+                  </div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">Address</div>
+                  <div className={`info-field-value${merchant.address ? '' : ' secondary'}`}>
+                    {merchant.address ?? '—'}
+                  </div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">Phone</div>
+                  <div className={`info-field-value${merchant.phone ? '' : ' secondary'}`}>
+                    {merchant.phone ?? '—'}
+                  </div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">Business Email</div>
+                  <div className={`info-field-value${merchant.businessEmail ? '' : ' secondary'}`}>
+                    {merchant.businessEmail ?? '—'}
+                  </div>
+                </div>
+                <div className="info-field">
+                  <div className="info-field-label">Registered</div>
+                  <div className="info-field-value">
+                    {formatBrowserDate(new Date(merchant.createdAt))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="info-grid">
-            <div className="info-field">
-              <div className="info-field-label">Company Name</div>
-              <div className="info-field-value">{merchant.companyName}</div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">VAT Number</div>
-              <div className={`info-field-value${merchant.vatNumber ? '' : ' secondary'}`}>
-                {merchant.vatNumber ?? '—'}
-              </div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">City</div>
-              <div className={`info-field-value${merchant.city ? '' : ' secondary'}`}>
-                {merchant.city ?? '—'}
-              </div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">Address</div>
-              <div className={`info-field-value${merchant.address ? '' : ' secondary'}`}>
-                {merchant.address ?? '—'}
-              </div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">Phone</div>
-              <div className={`info-field-value${merchant.phone ? '' : ' secondary'}`}>
-                {merchant.phone ?? '—'}
-              </div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">Business Email</div>
-              <div className={`info-field-value${merchant.businessEmail ? '' : ' secondary'}`}>
-                {merchant.businessEmail ?? '—'}
-              </div>
-            </div>
-            <div className="info-field">
-              <div className="info-field-label">Registered</div>
-              <div className="info-field-value">
-                {formatBrowserDate(new Date(merchant.createdAt))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
 
-      {/* Owner info */}
-      <div className="info-card">
-        <div className="info-card-header">
-          <span className="info-card-title">Owner Information</span>
-        </div>
-        <div className="info-grid">
-          <div className="info-field">
-            <div className="info-field-label">First Name</div>
-            <div className={`info-field-value${merchant.owner?.firstName ? '' : ' secondary'}`}>
-              {merchant.owner?.firstName ?? '—'}
+          {/* Owner info */}
+          <div className="info-card">
+            <div className="info-card-header">
+              <span className="info-card-title">Owner Information</span>
+            </div>
+            <div className="info-grid">
+              <div className="info-field">
+                <div className="info-field-label">First Name</div>
+                <div className={`info-field-value${merchant.owner?.firstName ? '' : ' secondary'}`}>
+                  {merchant.owner?.firstName ?? '—'}
+                </div>
+              </div>
+              <div className="info-field">
+                <div className="info-field-label">Last Name</div>
+                <div className={`info-field-value${merchant.owner?.lastName ? '' : ' secondary'}`}>
+                  {merchant.owner?.lastName ?? '—'}
+                </div>
+              </div>
+              <div className="info-field">
+                <div className="info-field-label">Email</div>
+                <div className={`info-field-value${merchant.owner?.email ? '' : ' secondary'}`}>
+                  {merchant.owner?.email ?? '—'}
+                </div>
+              </div>
+              <div className="info-field">
+                <div className="info-field-label">Employees</div>
+                <div className="info-field-value">{merchant.employeeCount}</div>
+              </div>
+              <div className="info-field">
+                <div className="info-field-label">Branches</div>
+                <div className="info-field-value">{merchant.branchCount}</div>
+              </div>
             </div>
           </div>
-          <div className="info-field">
-            <div className="info-field-label">Last Name</div>
-            <div className={`info-field-value${merchant.owner?.lastName ? '' : ' secondary'}`}>
-              {merchant.owner?.lastName ?? '—'}
-            </div>
-          </div>
-          <div className="info-field">
-            <div className="info-field-label">Email</div>
-            <div className={`info-field-value${merchant.owner?.email ? '' : ' secondary'}`}>
-              {merchant.owner?.email ?? '—'}
-            </div>
-          </div>
-          <div className="info-field">
-            <div className="info-field-label">Employees</div>
-            <div className="info-field-value">{merchant.employeeCount}</div>
-          </div>
-          <div className="info-field">
-            <div className="info-field-label">Branches</div>
-            <div className="info-field-value">{merchant.branchCount}</div>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
+
+      {activeTab === 'features' && (
+        <MerchantFeaturesTab merchantId={Number(id)} />
+      )}
     </div>
   )
 }

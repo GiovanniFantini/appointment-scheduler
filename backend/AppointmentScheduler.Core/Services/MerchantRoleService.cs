@@ -141,6 +141,51 @@ public class MerchantRoleService : IMerchantRoleService
         return true;
     }
 
+    /// <summary>
+    /// Ritorna il ruolo predefinito del merchant (IsDefault=true), se presente.
+    /// </summary>
+    public async Task<MerchantRoleDto?> GetDefaultRoleAsync(int merchantId)
+    {
+        var role = await _context.MerchantRoles
+            .Include(r => r.Features)
+            .Include(r => r.Memberships)
+            .FirstOrDefaultAsync(r => r.MerchantId == merchantId && r.IsDefault);
+
+        return role == null ? null : MapToDto(role);
+    }
+
+    /// <summary>
+    /// Aggiorna le feature del ruolo predefinito del merchant. Riservato al sys-admin.
+    /// </summary>
+    public async Task<MerchantRoleDto?> UpdateDefaultRoleFeaturesAsync(int merchantId, List<MerchantFeatureRequest> features)
+    {
+        var role = await _context.MerchantRoles
+            .Include(r => r.Features)
+            .Include(r => r.Memberships)
+            .FirstOrDefaultAsync(r => r.MerchantId == merchantId && r.IsDefault);
+
+        if (role == null)
+            return null;
+
+        _context.RoleFeatures.RemoveRange(role.Features);
+        role.Features.Clear();
+
+        foreach (var featureRequest in features)
+        {
+            role.Features.Add(new RoleFeature
+            {
+                RoleId = role.Id,
+                Feature = featureRequest.Feature,
+                IsEnabled = featureRequest.IsEnabled,
+                AccessLevel = ResolveAccessLevel(featureRequest)
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        return MapToDto(role);
+    }
+
     private static MerchantRoleDto MapToDto(MerchantRole role)
     {
         return new MerchantRoleDto

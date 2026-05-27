@@ -121,6 +121,7 @@ try
     builder.Services.AddScoped<IMerchantRoleService, MerchantRoleService>();
     builder.Services.AddScoped<INotificationService, NotificationService>();
     builder.Services.AddScoped<IMerchantService, MerchantService>();
+    builder.Services.AddScoped<IAdminUserService, AdminUserService>();
     builder.Services.AddScoped<IEmployeeService, EmployeeService>();
     builder.Services.AddScoped<IEmployeeRequestService, EmployeeRequestService>();
     builder.Services.AddScoped<ISkillService, SkillService>();
