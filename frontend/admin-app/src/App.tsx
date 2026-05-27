@@ -11,6 +11,8 @@ import MerchantDetailPage from './pages/MerchantDetailPage'
 import ReportsPage from './pages/ReportsPage'
 import UsersPage from './pages/UsersPage'
 import UserDetailPage from './pages/UserDetailPage'
+import EmployeesPage from './pages/EmployeesPage'
+import EmployeeDetailPage from './pages/EmployeeDetailPage'
 import DebugPage from './pages/DebugPage'
 import EmailTestPage from './pages/EmailTestPage'
 
@@ -110,6 +112,8 @@ function App() {
               <Route path="reports" element={<ReportsPage />} />
               <Route path="users" element={<UsersPage />} />
               <Route path="users/:id" element={<UserDetailPage />} />
+              <Route path="employees" element={<EmployeesPage />} />
+              <Route path="employees/:id" element={<EmployeeDetailPage />} />
               <Route path="debug" element={<DebugPage />} />
               <Route path="tools/email" element={<EmailTestPage />} />
               <Route path="profile" element={<ProfileWrapper />} />

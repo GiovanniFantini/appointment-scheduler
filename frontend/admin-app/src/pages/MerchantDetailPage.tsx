@@ -4,6 +4,7 @@ import { Breadcrumb, Skeleton } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import MerchantFeaturesTab from './MerchantFeaturesTab'
+import EmployeesTable from './EmployeesTable'
 import './MerchantDetailPage.css'
 
 interface MerchantDetail {
@@ -55,7 +56,7 @@ interface EditData {
   businessEmail: string
 }
 
-type TabKey = 'overview' | 'features'
+type TabKey = 'overview' | 'features' | 'employees'
 
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -219,6 +220,14 @@ export default function MerchantDetailPage() {
         >
           Features
         </button>
+        <button
+          role="tab"
+          aria-selected={activeTab === 'employees'}
+          className={`detail-tab${activeTab === 'employees' ? ' active' : ''}`}
+          onClick={() => setActiveTab('employees')}
+        >
+          Employees
+        </button>
       </div>
 
       {saveSuccess && <div className="success-banner">Changes saved successfully.</div>}
@@ -349,6 +358,10 @@ export default function MerchantDetailPage() {
 
       {activeTab === 'features' && (
         <MerchantFeaturesTab merchantId={Number(id)} />
+      )}
+
+      {activeTab === 'employees' && (
+        <EmployeesTable merchantId={Number(id)} showFilters={false} />
       )}
     </div>
   )

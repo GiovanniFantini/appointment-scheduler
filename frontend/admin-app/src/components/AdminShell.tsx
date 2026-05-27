@@ -51,6 +51,19 @@ export const ADMIN_NAV: Array<NavItem & { section: string }> = [
     )
   },
   {
+    section: 'Management',
+    path: '/employees',
+    label: 'Employees',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} width={18} height={18}>
+        <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+        <circle cx="9" cy="7" r="4" />
+        <path d="M22 11l-3-3-3 3" />
+        <path d="M19 8v8" />
+      </svg>
+    )
+  },
+  {
     section: 'Analytics',
     path: '/reports',
     label: 'Reports',
@@ -101,6 +114,7 @@ function deriveTitle(pathname: string): string {
   if (pathname === '/') return 'Dashboard'
   if (pathname.startsWith('/merchants/')) return 'Merchant Detail'
   if (pathname.startsWith('/users/')) return 'User Detail'
+  if (pathname.startsWith('/employees/')) return 'Employee Detail'
   const item = ADMIN_NAV.find((i) => i.path !== '/' && pathname.startsWith(i.path))
   return item?.label ?? 'Admin Hub'
 }

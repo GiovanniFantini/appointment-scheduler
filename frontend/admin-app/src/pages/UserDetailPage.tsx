@@ -257,7 +257,7 @@ export default function UserDetailPage() {
             <div className="info-field">
               <div className="info-field-label">Tipo</div>
               <div className="info-field-value">
-                {user.employee.kind === 2 ? 'Esterno' : 'Interno'}
+                {user.employee.kind === 1 ? 'Esterno' : 'Interno'}
               </div>
             </div>
             <div className="info-field">
