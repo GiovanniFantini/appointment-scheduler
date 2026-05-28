@@ -130,6 +130,31 @@ public class PasswordResetServiceTests
         saveChangesTracker.Count.Should().Be(1);
     }
 
+    [Fact]
+    public async Task ResetPasswordAsync_AcceptsLegacyToken_WhenPlusIsConvertedToSpace()
+    {
+        var now = new DateTime(2026, 5, 22, 10, 30, 0, DateTimeKind.Utc);
+        var user = new User { Id = 11, Email = "legacy@example.com", PasswordHash = "old-hash", AccountType = AccountType.Employee, IsActive = true };
+        var tokens = new List<PasswordResetToken>
+        {
+            new() { Id = 9, UserId = 11, Token = "abc+def/ghi==", CreatedAt = now.AddMinutes(-5), ExpiresAt = now.AddMinutes(30), User = user }
+        };
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Users, new List<User> { user }, entity => [entity.Id])
+            .WithSet(x => x.PasswordResetTokens, tokens, token => [token.Id])
+            .Build(out var saveChangesTracker);
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+        _passwordHasher.Setup(x => x.HashPassword("new-password-123")).Returns("new-hash");
+        var service = CreateService(context.Object);
+
+        var result = await service.ResetPasswordAsync("abc def/ghi==", "new-password-123");
+
+        result.Should().BeTrue();
+        user.PasswordHash.Should().Be("new-hash");
+        tokens[0].UsedAt.Should().Be(now);
+        saveChangesTracker.Count.Should().Be(1);
+    }
+
     private PasswordResetService CreateService(IApplicationDbContext context)
     {
         _clock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 22, 10, 30, 0, DateTimeKind.Utc));

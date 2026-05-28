@@ -4,6 +4,7 @@ using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Net;
 
 namespace AppointmentScheduler.Core.Services;
 
@@ -83,7 +84,7 @@ public class PasswordResetService : IPasswordResetService
         await _context.SaveChangesAsync();
 
         var frontendBaseUrl = GetFrontendBaseUrl(user);
-        var resetUrl = $"{frontendBaseUrl.TrimEnd('/')}/reset-password?token={tokenValue}";
+        var resetUrl = $"{frontendBaseUrl.TrimEnd('/')}/reset-password?token={WebUtility.UrlEncode(tokenValue)}";
         var htmlBody = BuildResetEmailHtml(user.FirstName, resetUrl);
 
         try
@@ -107,6 +108,8 @@ public class PasswordResetService : IPasswordResetService
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
             return false;
 
+        var normalizedToken = NormalizeIncomingToken(token);
+
         // Stessa lunghezza minima dei flussi di registrazione (vedi AuthService).
         if (newPassword.Length < AuthService.MinPasswordLength)
             return false;
@@ -116,7 +119,7 @@ public class PasswordResetService : IPasswordResetService
         var resetToken = await _context.PasswordResetTokens
             .Include(t => t.User)
             .FirstOrDefaultAsync(t =>
-                t.Token == token &&
+                t.Token == normalizedToken &&
                 t.UsedAt == null &&
                 t.ExpiresAt > now);
 
@@ -134,6 +137,14 @@ public class PasswordResetService : IPasswordResetService
     private string GetFrontendBaseUrl(User user)
     {
         return _frontendUrlOptions.GetBaseUrl(user.AccountType);
+    }
+
+    private static string NormalizeIncomingToken(string token)
+    {
+        var trimmed = token.Trim();
+
+        // Supporta token passati in querystring legacy dove '+' puo diventare spazio.
+        return WebUtility.UrlDecode(trimmed).Replace(' ', '+');
     }
 
     private static string BuildResetEmailHtml(string firstName, string resetUrl) => $$"""
