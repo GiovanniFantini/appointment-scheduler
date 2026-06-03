@@ -1,8 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Net;
 using System.Text;
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Core.Interfaces;
@@ -178,6 +182,49 @@ try
     // Handler della policy ApprovedMerchantOnly.
     builder.Services.AddSingleton<IAuthorizationHandler, ApprovedMerchantHandler>();
 
+    // Necessario per leggere IP / User-Agent dai servizi (AuthService userà
+    // l'IP per audit log e per il rate limiting per-email applicativo).
+    builder.Services.AddHttpContextAccessor();
+
+    // ── Rate Limiting (endpoint auth) ──────────────────────────────────────
+    // Politica per IP applicata a tutti gli endpoint di /api/auth/* tramite
+    // attributo [EnableRateLimiting("auth-ip")] sul controller. Il rate limit
+    // per-email è invece applicato lato AuthService perché richiede l'email
+    // già deserializzata dal binder (leggere il body dal limiter è fragile).
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
+
+        options.AddPolicy("auth-ip", httpContext =>
+        {
+            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+        });
+
+        options.OnRejected = async (context, cancellationToken) =>
+        {
+            // Calcola i minuti residui dalla metadata del lease (RetryAfter è
+            // TimeSpan). Se il limiter non la espone usiamo il fallback vago.
+            var retryAfterSeconds = 0;
+            if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+            {
+                retryAfterSeconds = (int)Math.Ceiling(retryAfter.TotalSeconds);
+                context.HttpContext.Response.Headers["Retry-After"] = retryAfterSeconds.ToString();
+            }
+
+            var minutes = AuthThrottleMessages.CeilToMinutes(TimeSpan.FromSeconds(retryAfterSeconds));
+            var body = JsonSerializer.Serialize(new { message = AuthThrottleMessages.GenericRetry(minutes) });
+            context.HttpContext.Response.ContentType = "application/json";
+            await context.HttpContext.Response.WriteAsync(body, cancellationToken);
+        };
+    });
+
     // ── CORS ───────────────────────────────────────────────────────────────
     var corsOrigins = builder.Configuration.GetSection("CorsOrigins").Get<string[]>()
         ?? Array.Empty<string>();
@@ -240,12 +287,21 @@ try
     if (!app.Environment.IsDevelopment())
         app.UseHttpsRedirection();
 
+    // Security headers su tutte le risposte (X-Frame-Options, CSP, HSTS in prod).
+    app.UseMiddleware<SecurityHeadersMiddleware>();
+
     // Log every API error status (4xx/5xx) and unhandled exceptions in one place.
     app.UseMiddleware<ApiErrorLoggingMiddleware>();
 
     app.UseCors("AllowFrontend");
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Rate limiter è dopo l'autenticazione così che eventuali politiche
+    // per-utente possano usare l'identità in claim, ma prima di MapControllers
+    // per intercettare le richieste prima del binding del DTO.
+    app.UseRateLimiter();
+
     app.MapControllers();
 
     app.MapHealthChecks("/health");

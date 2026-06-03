@@ -35,16 +35,20 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task MerchantRegister_ReturnsBadRequest_WhenEmailIsAlreadyRegistered()
+    public async Task MerchantRegister_ReturnsOkWithGenericMessage_WhenEmailIsAlreadyRegistered()
     {
-        var request = new RegisterMerchantRequest { Email = "merchant@example.com", Password = "secret123", CompanyName = "Contoso" };
+        // Anti-enumeration: il controller risponde 200 OK con messaggio generico
+        // sia se l'email è libera sia se è già usata. AuthService notifica
+        // l'utente legittimo per email (best-effort, non bloccante).
+        var request = new RegisterMerchantRequest { Email = "merchant@example.com", Password = "Secret12345!", CompanyName = "Contoso" };
         _authService.Setup(service => service.RegisterMerchantAsync(request)).ReturnsAsync((AuthResponse?)null);
         var controller = CreateController();
 
         var result = await controller.MerchantRegister(request);
 
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Email già registrata");
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.GetAnonymousString("message").Should().Be(
+            "Se i dati sono validi, riceverai a breve un'email di conferma.");
     }
 
     [Fact]
@@ -129,16 +133,17 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task EmployeeRegister_ReturnsBadRequest_WhenEmailIsAlreadyRegistered()
+    public async Task EmployeeRegister_ReturnsOkWithGenericMessage_WhenEmailIsAlreadyRegistered()
     {
-        var request = new EmployeeRegisterRequest { Email = "employee@example.com", Password = "secret123", FirstName = "Jane", LastName = "Doe" };
+        var request = new EmployeeRegisterRequest { Email = "employee@example.com", Password = "Secret12345!", FirstName = "Jane", LastName = "Doe" };
         _authService.Setup(service => service.RegisterEmployeeAsync(request)).ReturnsAsync((AuthResponse?)null);
         var controller = CreateController();
 
         var result = await controller.EmployeeRegister(request);
 
-        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Email già registrata");
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.GetAnonymousString("message").Should().Be(
+            "Se i dati sono validi, riceverai a breve un'email di conferma.");
     }
 
     [Fact]

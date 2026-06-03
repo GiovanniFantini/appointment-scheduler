@@ -53,7 +53,8 @@
       "Bash(git -C \"c:\\\\Repos\\\\appointment-scheduler\" rm frontend/admin-app/package-lock.json frontend/merchant-app/package-lock.json frontend/employee-app/package-lock.json)",
       "Bash(npm ci *)",
       "Bash(bash prepare-deploy.sh)",
-      "Bash(npm ls *)"
+      "Bash(npm ls *)",
+      "Bash(Select-Object -Last 50)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

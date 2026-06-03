@@ -1,8 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 using AppointmentScheduler.Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
@@ -20,23 +22,55 @@ public class AuthService : IAuthService
     /// lo stesso valore come attributo minLength, ma la validazione autorevole
     /// è qui: una chiamata diretta all'API non può aggirarla.
     /// </summary>
-    public const int MinPasswordLength = 8;
+    public const int MinPasswordLength = 12;
+
+    // Pattern di complessità: almeno una maiuscola, una minuscola, una cifra.
+    // Volutamente NON imponiamo simboli (riduce errori utente senza guadagnare
+    // entropia significativa contro hash BCrypt). La lunghezza ≥12 è il vero
+    // moltiplicatore di sicurezza.
+    private static readonly Regex PasswordComplexityRegex =
+        new(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$", RegexOptions.Compiled);
 
     private readonly IApplicationDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUtcClock _clock;
     private readonly JwtTokenOptions _jwtTokenOptions;
+    private readonly IEmailService? _emailService;
+    private readonly ILogger<AuthService>? _logger;
+
+    // Hash BCrypt "civetta": usato come fallback nel verify quando l'utente
+    // non esiste, così il tempo di risposta resta paragonabile al caso reale e
+    // un attaccante non può enumerare account misurando la latenza del login.
+    // Calcolato pigramente al primo uso col PasswordHasher iniettato → eredita
+    // automaticamente il work factor configurato della libreria BCrypt.
+    private static readonly object _dummyHashLock = new();
+    private static string? _dummyBcryptHash;
 
     public AuthService(
         IApplicationDbContext context,
         IPasswordHasher passwordHasher,
         IUtcClock clock,
-        JwtTokenOptions jwtTokenOptions)
+        JwtTokenOptions jwtTokenOptions,
+        IEmailService? emailService = null,
+        ILogger<AuthService>? logger = null)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _clock = clock;
         _jwtTokenOptions = jwtTokenOptions;
+        _emailService = emailService;
+        _logger = logger;
+    }
+
+    private string GetDummyBcryptHash()
+    {
+        if (_dummyBcryptHash != null) return _dummyBcryptHash;
+        lock (_dummyHashLock)
+        {
+            _dummyBcryptHash ??= _passwordHasher.HashPassword(
+                "dummy-password-for-timing-mitigation-only");
+            return _dummyBcryptHash;
+        }
     }
 
     // ── Admin Login ────────────────────────────────────────────────────────
@@ -47,10 +81,9 @@ public class AuthService : IAuthService
                                    && u.AccountType == AccountType.Admin
                                    && u.IsActive);
 
-        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
-            return null;
+        if (!VerifyPasswordConstantTime(request.Password, user)) return null;
 
-        var token = GenerateJwtToken(user.Id, user.Email, "Admin");
+        var token = GenerateJwtToken(user!.Id, user.Email, "Admin");
         return BuildAuthResponse(user, token);
     }
 
@@ -63,13 +96,12 @@ public class AuthService : IAuthService
                                    && u.AccountType == AccountType.Merchant
                                    && u.IsActive);
 
-        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
-            return null;
+        if (!VerifyPasswordConstantTime(request.Password, user)) return null;
 
         // L'azienda è operativa solo se attiva E approvata dall'admin. Un merchant
         // disattivato (o non ancora approvato) può autenticarsi ma non operare:
         // niente claim di approvazione → il frontend mostra la schermata di attesa.
-        var merchantOperational = (user.Merchant?.IsActive ?? false)
+        var merchantOperational = (user!.Merchant?.IsActive ?? false)
                                   && (user.Merchant?.IsApproved ?? false);
 
         var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
@@ -92,8 +124,15 @@ public class AuthService : IAuthService
         ValidatePassword(request.Password);
 
         var email = request.Email.ToLower();
-        if (await _context.Users.AnyAsync(u => u.Email == email))
+        var existing = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == email);
+        if (existing != null)
+        {
+            // Anti-enumeration: l'API ritorna comunque OK al chiamante. Avvisiamo
+            // l'utente legittimo che qualcuno ha provato a usare la sua email.
+            await NotifyRegistrationAttemptAsync(existing);
             return null;
+        }
 
         var user = new User
         {
@@ -275,10 +314,9 @@ public class AuthService : IAuthService
                                    && (u.AccountType == AccountType.Employee || u.AccountType == AccountType.Merchant)
                                    && u.IsActive);
 
-        if (user == null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
-            return null;
+        if (!VerifyPasswordConstantTime(request.Password, user)) return null;
 
-        var employee = user.Employee;
+        var employee = user!.Employee;
         if (employee == null) return null;
 
         // Token base senza company — frontend mostra select-company
@@ -319,8 +357,13 @@ public class AuthService : IAuthService
 
         var email = request.Email.ToLower();
 
-        if (await _context.Users.AnyAsync(u => u.Email == email))
+        var existing = await _context.Users
+            .FirstOrDefaultAsync(u => u.Email == email);
+        if (existing != null)
+        {
+            await NotifyRegistrationAttemptAsync(existing);
             return null;
+        }
 
         var user = new User
         {
@@ -492,14 +535,67 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
-    /// Valida la password in fase di registrazione. Lancia ArgumentException
-    /// (mappata a 400 dal controller) se non rispetta la lunghezza minima.
+    /// Valida la password in fase di registrazione e reset. Lancia
+    /// ArgumentException (mappata a 400 dal controller) se non rispetta la
+    /// lunghezza minima o non contiene almeno una maiuscola, una minuscola e
+    /// una cifra.
     /// </summary>
-    private static void ValidatePassword(string password)
+    public static void ValidatePassword(string password)
     {
         if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
             throw new ArgumentException(
                 $"La password deve contenere almeno {MinPasswordLength} caratteri.");
+
+        if (!PasswordComplexityRegex.IsMatch(password))
+            throw new ArgumentException(
+                "La password deve contenere almeno una lettera maiuscola, una minuscola e una cifra.");
+    }
+
+    /// <summary>
+    /// Verifica la password contro l'hash dell'utente. Quando <paramref name="user"/>
+    /// è null esegue comunque un BCrypt verify contro un hash precomputato, in
+    /// modo che il tempo di risposta non riveli l'esistenza dell'account
+    /// (mitigazione timing attack per enumeration).
+    /// </summary>
+    private bool VerifyPasswordConstantTime(string password, User? user)
+    {
+        var hash = user?.PasswordHash ?? GetDummyBcryptHash();
+        var passwordOk = _passwordHasher.Verify(password, hash);
+        return user != null && passwordOk;
+    }
+
+    /// <summary>
+    /// Invia all'utente legittimo una notifica che qualcuno ha tentato di
+    /// registrarsi con la sua email. Best-effort: errori di invio vengono
+    /// silenziati per non rompere il flusso di register (la risposta al
+    /// chiamante deve restare uniforme — vedi controller).
+    /// </summary>
+    private async Task NotifyRegistrationAttemptAsync(User existing)
+    {
+        if (_emailService == null) return;
+
+        try
+        {
+            var html = $"""
+                <p>Ciao {existing.FirstName},</p>
+                <p>Qualcuno ha appena provato a registrarsi su Gestionale Aziendale
+                usando il tuo indirizzo email. Se sei stato tu, accedi normalmente:
+                hai già un account.</p>
+                <p>Se non sei stato tu, puoi ignorare questa email — non è stato
+                creato alcun nuovo account.</p>
+                """;
+            await _emailService.SendAsync(
+                existing.Email,
+                $"{existing.FirstName} {existing.LastName}",
+                "Tentativo di registrazione con la tua email",
+                html);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex,
+                "Errore invio notifica tentativo registrazione per UserId {UserId}",
+                existing.Id);
+        }
     }
 
     private static AuthResponse BuildAuthResponse(User user, string token) => new()

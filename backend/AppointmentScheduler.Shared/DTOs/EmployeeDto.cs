@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.Shared.DTOs;
@@ -122,9 +123,25 @@ public class EmployeeDto
 
 public class EmployeeRegisterRequest
 {
+    [Required]
+    [StringLength(100)]
     public string FirstName { get; set; } = string.Empty;
+
+    [Required]
+    [StringLength(100)]
     public string LastName { get; set; } = string.Empty;
+
+    [Required]
+    [EmailAddress]
+    [StringLength(254)]
     public string Email { get; set; } = string.Empty;
+
+    // Stessa regola di RegisterMerchantRequest: la complessità  in
+    // AuthService.ValidatePassword, qui solo lunghezza minima/massima.
+    [Required]
+    [StringLength(256, MinimumLength = 12)]
     public string Password { get; set; } = string.Empty;
+
+    [StringLength(32)]
     public string? PhoneNumber { get; set; }
 }

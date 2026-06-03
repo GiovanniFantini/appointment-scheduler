@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using AppointmentScheduler.Core.Interfaces;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
@@ -8,8 +9,18 @@ namespace AppointmentScheduler.API.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+// Rate limit per IP su tutti gli endpoint di autenticazione pubblici. Il
+// rate limit per-email (es. brute force su un singolo account) è applicato
+// dentro AuthService perché richiede l'email già deserializzata dal binder.
+[EnableRateLimiting("auth-ip")]
 public class AuthController : ControllerBase
 {
+    // Risposta uniforme per i due register quando l'email è già usata o quando
+    // la registrazione è andata effettivamente a buon fine ma non vogliamo
+    // emettere subito un token (futuro: email verification). Anti-enumeration.
+    private const string GenericRegisterAck =
+        "Se i dati sono validi, riceverai a breve un'email di conferma.";
+
     private readonly IAuthService _authService;
     private readonly IPasswordResetService _passwordResetService;
 
@@ -38,8 +49,13 @@ public class AuthController : ControllerBase
         try
         {
             var response = await _authService.RegisterMerchantAsync(request);
+            // Email già registrata: rispondiamo come per il caso di successo
+            // ma senza emettere un token. Anti-enumeration: un client non può
+            // distinguere "email libera" da "email già in uso" leggendo la
+            // risposta. AuthService manda all'utente legittimo una notifica
+            // "qualcuno ha tentato di registrarsi con la tua email".
             if (response == null)
-                return BadRequest(new { message = "Email già registrata" });
+                return Ok(new { message = GenericRegisterAck });
             return Ok(response);
         }
         catch (ArgumentException ex)
@@ -80,7 +96,7 @@ public class AuthController : ControllerBase
         {
             var response = await _authService.RegisterEmployeeAsync(request);
             if (response == null)
-                return BadRequest(new { message = "Email già registrata" });
+                return Ok(new { message = GenericRegisterAck });
             return Ok(response);
         }
         catch (ArgumentException ex)

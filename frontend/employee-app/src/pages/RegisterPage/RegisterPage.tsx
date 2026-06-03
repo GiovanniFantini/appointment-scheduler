@@ -53,9 +53,11 @@ export default function RegisterPage() {
         {success ? (
           <div className="register-success">
             <div className="success-icon">✅</div>
-            <h2 className="success-title">Registrazione completata</h2>
+            <h2 className="success-title">Richiesta ricevuta</h2>
             <p className="success-message">
-              Account creato con successo. Puoi ora accedere con le tue credenziali.
+              Se i dati inseriti sono validi, riceverai a breve un'email di
+              conferma. Se hai già un account con questa email, accedi
+              direttamente.
             </p>
             <Link to="/login" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none', padding: '10px 24px', borderRadius: '8px' }}>
               Accedi
@@ -110,13 +112,18 @@ export default function RegisterPage() {
               <input
                 type="password"
                 className="form-input"
-                placeholder="••••••••"
+                placeholder="••••••••••••"
                 value={formData.password}
                 onChange={e => handleChange('password', e.target.value)}
                 required
-                minLength={8}
+                minLength={12}
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{12,}"
+                title="Almeno 12 caratteri, con una maiuscola, una minuscola e una cifra"
                 autoComplete="new-password"
               />
+              <small className="form-hint">
+                Minimo 12 caratteri, con almeno una maiuscola, una minuscola e una cifra.
+              </small>
             </div>
 
             <div className="form-group">
