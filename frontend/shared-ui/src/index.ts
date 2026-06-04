@@ -4,7 +4,8 @@ export type { BaseUser, AuthContextValue } from './auth/types'
 
 // Shell
 export { AppShell } from './shell/AppShell'
-export type { AppShellProps, NavItem, NavSection } from './shell/AppShell'
+export type { AppShellProps, AppShellFab, NavItem, NavSection } from './shell/AppShell'
+export { BottomNav, Fab } from './shell/BottomNav'
 export { Sidebar } from './shell/Sidebar'
 export { TopHeader } from './shell/TopHeader'
 export { UserMenu } from './shell/UserMenu'
@@ -26,6 +27,18 @@ export { Badge } from './ui/Badge'
 export type { BadgeVariant } from './ui/Badge'
 export { Skeleton } from './ui/Skeleton'
 export { EmptyState } from './ui/EmptyState'
+export { BottomSheet } from './ui/BottomSheet'
+export type { BottomSheetProps } from './ui/BottomSheet'
+export { Avatar } from './ui/Avatar'
+export type { AvatarProps, AvatarSize } from './ui/Avatar'
+export { AvatarStack } from './ui/AvatarStack'
+export type { AvatarStackProps, AvatarStackPerson } from './ui/AvatarStack'
+export { StatusChip } from './ui/StatusChip'
+export type { StatusChipProps, StatusChipVariant } from './ui/StatusChip'
+export { SegmentedTabs } from './ui/SegmentedTabs'
+export type { SegmentedTabsProps, SegmentedTabOption } from './ui/SegmentedTabs'
+export { KeyValueRows } from './ui/KeyValueRows'
+export type { KeyValueRowsProps, KeyValueRow } from './ui/KeyValueRows'
 
 // Toast
 export { Toaster, useToast } from './ui/Toast/Toaster'
@@ -59,3 +72,6 @@ export { useIsMobile } from './hooks/useIsMobile'
 
 // Icons (set minimo riusabile da tutte le app)
 export * from './icons'
+
+// Icone Tabler (set del mockup Turnis)
+export * from './icons/tabler'

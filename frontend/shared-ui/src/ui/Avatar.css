@@ -1,0 +1,44 @@
+.su-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--su-radius-pill);
+  color: #fff;
+  font-weight: 500;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.su-avatar--sm { width: 22px; height: 22px; font-size: 10px; }
+.su-avatar--md { width: 32px; height: 32px; font-size: 11px; }
+.su-avatar--lg { width: 36px; height: 36px; font-size: 13px; }
+.su-avatar--xl { width: 44px; height: 44px; font-size: 14px; }
+
+/* ===== AvatarStack ===== */
+.su-avatar-stack {
+  display: inline-flex;
+  align-items: center;
+}
+.su-avatar-stack .su-avatar {
+  border: 2px solid var(--su-surface-elevated);
+  margin-right: -7px;
+}
+.su-avatar-stack .su-avatar:last-child {
+  margin-right: 0;
+}
+.su-avatar-stack__more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--su-radius-pill);
+  background: var(--su-surface);
+  border: 2px solid var(--su-surface-elevated);
+  color: var(--su-text-secondary);
+  font-weight: 500;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.su-avatar-stack__more--sm { width: 22px; height: 22px; font-size: 9px; }
+.su-avatar-stack__more--md { width: 32px; height: 32px; font-size: 10px; }
+.su-avatar-stack__more--lg { width: 36px; height: 36px; font-size: 11px; }
+.su-avatar-stack__more--xl { width: 44px; height: 44px; font-size: 12px; }

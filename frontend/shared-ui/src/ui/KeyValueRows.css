@@ -1,0 +1,27 @@
+.su-kvrows {
+  display: flex;
+  flex-direction: column;
+}
+
+.su-kvrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 0;
+}
+
+.su-kvrow__label {
+  font-size: 12px;
+  color: var(--su-text-secondary);
+}
+
+.su-kvrow__value {
+  font-size: 13px;
+  color: var(--su-text-primary);
+  text-align: right;
+}
+.su-kvrow__value--success { color: var(--su-accent-success); }
+.su-kvrow__value--warning { color: var(--su-accent-warning); }
+.su-kvrow__value--danger { color: var(--su-accent-danger-soft-text); }
+.su-kvrow__value--muted { color: var(--su-text-secondary); }

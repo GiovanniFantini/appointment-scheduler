@@ -30,7 +30,7 @@
   width: 32px;
   height: 32px;
   border-radius: var(--su-radius-pill);
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-primary-hover));
   color: white;
   font-weight: 700;
   font-size: 12px;
@@ -127,7 +127,7 @@
   color: var(--su-accent-danger);
 }
 .su-usermenu__item--danger:hover {
-  background: rgba(239, 68, 68, 0.08);
+  background: var(--su-danger-soft);
 }
 
 .su-usermenu__sep {

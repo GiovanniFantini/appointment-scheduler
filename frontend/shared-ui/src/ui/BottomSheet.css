@@ -1,0 +1,104 @@
+.su-sheet__backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--su-surface-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--su-z-modal-backdrop);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: su-sheet-fade 0.15s ease-out;
+}
+@keyframes su-sheet-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.su-sheet {
+  position: relative;
+  width: 100%;
+  background: var(--su-surface-elevated);
+  border-top-left-radius: var(--su-radius-sheet);
+  border-top-right-radius: var(--su-radius-sheet);
+  box-shadow: var(--su-shadow-overlay);
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: var(--su-z-modal);
+  padding-top: 12px;
+  animation: su-sheet-up 0.2s ease-out;
+}
+@keyframes su-sheet-up {
+  from { transform: translateY(16px); opacity: 0.6; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Desktop: si comporta come una card modale centrata. */
+@media (min-width: 768px) {
+  .su-sheet__backdrop {
+    align-items: center;
+    padding: 16px;
+  }
+  .su-sheet {
+    max-width: 560px;
+    border-radius: var(--su-radius-lg);
+    max-height: 90vh;
+  }
+  .su-sheet__handle {
+    display: none;
+  }
+}
+
+.su-sheet__handle {
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 0 auto 14px;
+  padding: 0;
+  border: none;
+  border-radius: var(--su-radius-pill);
+  background: var(--su-border-strong);
+  cursor: pointer;
+}
+
+.su-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 22px 14px;
+}
+.su-sheet__title {
+  font-size: 17px;
+  font-weight: 500;
+  color: var(--su-text-primary);
+  margin: 0;
+}
+.su-sheet__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--su-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+}
+.su-sheet__close:hover { color: var(--su-text-primary); }
+
+.su-sheet__body {
+  padding: 0 22px 22px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.su-sheet__footer {
+  padding: 14px 22px;
+  padding-bottom: max(14px, env(safe-area-inset-bottom));
+  border-top: 1px solid var(--su-border);
+  background: var(--su-surface);
+  display: flex;
+  gap: 10px;
+}
+.su-sheet__footer > * { flex: 1; }

@@ -112,10 +112,10 @@
   flex-shrink: 0;
 }
 .su-confirm__icon--danger {
-  background: rgba(239, 68, 68, 0.12);
+  background: var(--su-danger-soft);
   color: var(--su-accent-danger);
 }
 .su-confirm__icon--warning {
-  background: rgba(245, 158, 11, 0.12);
+  background: var(--su-warning-soft);
   color: var(--su-accent-warning);
 }

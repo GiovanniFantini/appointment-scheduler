@@ -39,7 +39,7 @@
 }
 .su-btn--primary:hover:not(:disabled) {
   filter: brightness(1.1);
-  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 18px var(--su-accent-primary-glow);
 }
 
 /* secondary: outline elegante */
@@ -115,6 +115,6 @@
 }
 .su-iconbtn:disabled { cursor: not-allowed; opacity: 0.5; }
 .su-iconbtn--danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--su-danger-soft);
   color: var(--su-accent-danger);
 }

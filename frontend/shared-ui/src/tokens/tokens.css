@@ -2,36 +2,60 @@
  * Design tokens (CSS variables) condivisi tra le 3 app.
  * Importati da ogni index.css via:
  *   @import '@scheduler/ui/tokens.css';
+ *
+ * Palette "Turnis" (mobile-first dark viola) — vedi docs/turnis-mockup.html.
+ * I nomi restano semantici: ritarando qui si propaga a admin/merchant/employee.
  */
 :root {
   /* surfaces */
-  --su-surface-bg: #0a0a0f;
-  --su-surface: #13131a;
-  --su-surface-elevated: #1a1a24;
-  --su-surface-overlay: rgba(10, 10, 15, 0.85);
-  --su-border: #2a2a3a;
-  --su-border-strong: #3a3a4a;
+  --su-surface-bg: #0E1116;
+  --su-surface: #14181F;
+  --su-surface-elevated: #1c2129;
+  --su-surface-overlay: rgba(20, 24, 31, 0.6);
+  --su-border: #2a2f38;
+  --su-border-strong: #3a4150;
 
   /* text */
-  --su-text-primary: #f1f5f9;
-  --su-text-secondary: #94a3b8;
-  --su-text-muted: #64748b;
+  --su-text-primary: #E6E8EC;
+  --su-text-secondary: #7d838e;
+  --su-text-muted: #555c6a;
   --su-text-inverse: #0f172a;
 
   /* accents */
-  --su-accent-primary: #6366f1;
-  --su-accent-primary-hover: #4f46e5;
-  --su-accent-secondary: #b24bf3;
-  --su-accent-success: #10b981;
-  --su-accent-danger: #ef4444;
-  --su-accent-warning: #f59e0b;
-  --su-accent-info: #00d4ff;
+  --su-accent-primary: #7F77DD;
+  --su-accent-primary-hover: #534AB7;
+  --su-accent-secondary: #AFA9EC;
+  --su-accent-success: #97C459;
+  --su-accent-danger: #E24B4A;
+  --su-accent-danger-soft-text: #F09595;
+  --su-accent-warning: #EF9F27;
+  --su-accent-info: #85B7EB;
+
+  /* accent tints (riempimenti translucidi del mockup) */
+  --su-accent-primary-soft: rgba(127, 119, 221, 0.16);
+  --su-accent-primary-faint: rgba(127, 119, 221, 0.08);
+  --su-accent-primary-glow: rgba(127, 119, 221, 0.4);
+  --su-success-soft: rgba(151, 196, 89, 0.16);
+  --su-danger-soft: rgba(226, 75, 74, 0.16);
+  --su-warning-soft: rgba(239, 159, 39, 0.16);
+  --su-info-soft: rgba(133, 183, 235, 0.16);
+
+  /* avatar palette (cerchi iniziali — Avatar/AvatarStack scelgono per hash) */
+  --su-avatar-1: #534AB7;
+  --su-avatar-2: #1D9E75;
+  --su-avatar-3: #D85A30;
+  --su-avatar-4: #BA7517;
+  --su-avatar-5: #639922;
+  --su-avatar-6: #993556;
+  --su-avatar-7: #185FA5;
 
   /* radii */
   --su-radius-sm: 4px;
   --su-radius-md: 8px;
   --su-radius-lg: 12px;
   --su-radius-xl: 16px;
+  --su-radius-chip: 20px;
+  --su-radius-sheet: 22px;
   --su-radius-pill: 999px;
 
   /* shadows */
@@ -55,8 +79,10 @@
 }
 
 /* Light theme: override quando l'utente sceglie "Chiaro" in Preferenze.
-   Volutamente conservativo — solo le superfici e il testo cambiano;
-   accenti (primary/danger/success/warning/info) restano leggibili anche su bg chiaro. */
+   Volutamente conservativo — superfici, testo, ombre e le tinte *-soft.
+   Gli accenti (primary/danger/success/warning/info) restano leggibili su bg chiaro;
+   --su-accent-secondary (#AFA9EC lavanda) ha contrasto basso come link su bianco,
+   quindi qui passa al viola scuro. */
 :root[data-theme='light'] {
   --su-surface-bg: #f5f6fa;
   --su-surface: #ffffff;
@@ -69,6 +95,15 @@
   --su-text-secondary: #475569;
   --su-text-muted: #94a3b8;
   --su-text-inverse: #ffffff;
+
+  --su-accent-secondary: #534AB7;
+
+  --su-accent-primary-soft: rgba(127, 119, 221, 0.12);
+  --su-accent-primary-faint: rgba(127, 119, 221, 0.06);
+  --su-success-soft: rgba(120, 158, 60, 0.14);
+  --su-danger-soft: rgba(226, 75, 74, 0.12);
+  --su-warning-soft: rgba(239, 159, 39, 0.14);
+  --su-info-soft: rgba(56, 132, 196, 0.12);
 
   --su-shadow-card: 0 4px 16px rgba(15, 23, 42, 0.08);
   --su-shadow-elevated: 0 12px 32px rgba(15, 23, 42, 0.12);

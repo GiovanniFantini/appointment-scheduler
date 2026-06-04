@@ -3,9 +3,16 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar, type NavSection, type NavItem } from './Sidebar'
 import { TopHeader } from './TopHeader'
 import { UserMenu, type UserMenuItem } from './UserMenu'
+import { BottomNav, Fab } from './BottomNav'
 import './AppShell.css'
 
 export type { NavItem, NavSection }
+
+export interface AppShellFab {
+  icon: ReactNode
+  label?: string
+  onClick: () => void
+}
 
 export interface AppShellProps {
   user: { firstName: string; lastName: string; email: string }
@@ -23,6 +30,10 @@ export interface AppShellProps {
   companyName?: string
   /** Slot extra a sinistra del UserMenu (es. campanella notifiche). */
   headerExtras?: ReactNode
+  /** Se true, mostra una bottom-nav (mobile <768px) ricavata dalle navSections. */
+  bottomNav?: boolean
+  /** Se valorizzato, mostra un FAB in basso a destra (mobile <768px). */
+  fab?: AppShellFab
 }
 
 export function AppShell({
@@ -33,12 +44,14 @@ export function AppShell({
   brand,
   headerTitle,
   companyName,
-  headerExtras
+  headerExtras,
+  bottomNav = false,
+  fab
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   return (
-    <div className="su-shell">
+    <div className={`su-shell ${bottomNav ? 'su-shell--has-bottomnav' : ''}`}>
       <div
         className={`su-shell__overlay ${mobileOpen ? 'su-shell__overlay--visible' : ''}`}
         onClick={() => setMobileOpen(false)}
@@ -68,6 +81,11 @@ export function AppShell({
           <Outlet />
         </main>
       </div>
+
+      {bottomNav && (
+        <BottomNav sections={navSections} onOverflowClick={() => setMobileOpen(true)} />
+      )}
+      {fab && <Fab icon={fab.icon} label={fab.label} onClick={fab.onClick} />}
     </div>
   )
 }

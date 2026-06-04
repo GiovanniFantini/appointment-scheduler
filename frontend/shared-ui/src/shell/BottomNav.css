@@ -1,0 +1,90 @@
+/* Bottom-nav + FAB: visibili solo sotto 768px (mobile). Sopra restano nascosti
+   e la navigazione resta la sidebar desktop. */
+.su-bottomnav {
+  display: none;
+}
+.su-fab {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .su-bottomnav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: stretch;
+    background: var(--su-surface);
+    border-top: 1px solid var(--su-border);
+    padding: 8px 0;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    z-index: 1050;
+  }
+
+  .su-bottomnav__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: transparent;
+    border: none;
+    padding: 2px 0;
+    color: var(--su-text-secondary);
+    text-decoration: none;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .su-bottomnav__item--active {
+    color: var(--su-accent-secondary);
+  }
+
+  .su-bottomnav__icon {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .su-bottomnav__badge {
+    position: absolute;
+    top: -4px;
+    right: -8px;
+    background: var(--su-accent-danger);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 500;
+    line-height: 1;
+    padding: 1px 5px;
+    border-radius: var(--su-radius-pill);
+    min-width: 14px;
+    text-align: center;
+  }
+
+  .su-bottomnav__label {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .su-fab {
+    position: fixed;
+    right: 18px;
+    bottom: calc(64px + env(safe-area-inset-bottom));
+    width: 52px;
+    height: 52px;
+    border-radius: var(--su-radius-pill);
+    background: var(--su-accent-primary);
+    border: none;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--su-shadow-elevated);
+    cursor: pointer;
+    z-index: 1055;
+  }
+  .su-fab:active {
+    filter: brightness(1.08);
+  }
+}

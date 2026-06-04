@@ -1,0 +1,41 @@
+.su-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--su-radius-sm);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.su-status-chip__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.su-status-chip--neutral {
+  background: var(--su-surface-elevated);
+  color: var(--su-text-secondary);
+}
+.su-status-chip--accent {
+  background: var(--su-accent-primary-soft);
+  color: var(--su-accent-secondary);
+}
+.su-status-chip--success {
+  background: var(--su-success-soft);
+  color: var(--su-accent-success);
+}
+.su-status-chip--warning {
+  background: var(--su-warning-soft);
+  color: var(--su-accent-warning);
+}
+.su-status-chip--danger {
+  background: var(--su-danger-soft);
+  color: var(--su-accent-danger-soft-text);
+}
+.su-status-chip--info {
+  background: var(--su-info-soft);
+  color: var(--su-accent-info);
+}
