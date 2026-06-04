@@ -4,6 +4,7 @@ import { FormField } from '../form/FormField'
 import { Input } from '../form/Input'
 import { Button } from '../ui/Button'
 import { useToast } from '../ui/Toast/Toaster'
+import { extractApiError } from '../lib/apiError'
 import './profile.css'
 
 interface AccountProfile {
@@ -41,11 +42,6 @@ interface ProfilePageProps {
   readOnlyProfile?: boolean
 }
 
-function extractMessage(err: unknown, fallback: string): string {
-  const e = err as { response?: { data?: { message?: string } } }
-  return e?.response?.data?.message ?? fallback
-}
-
 export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: ProfilePageProps) {
   const toast = useToast()
   const [loading, setLoading] = useState(true)
@@ -73,7 +69,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
         setLastName(data.lastName)
         setPhoneNumber(data.phoneNumber ?? '')
       } catch (err) {
-        if (!cancelled) toast.error(extractMessage(err, 'Impossibile caricare il profilo'))
+        if (!cancelled) toast.error(extractApiError(err, 'Impossibile caricare il profilo'))
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -101,7 +97,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
       onProfileUpdated?.(data)
       toast.success('Profilo aggiornato')
     } catch (err) {
-      toast.error(extractMessage(err, 'Errore durante il salvataggio'))
+      toast.error(extractApiError(err, 'Errore durante il salvataggio'))
     } finally {
       setSaving(false)
     }
@@ -110,8 +106,8 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPwdError(undefined)
-    if (newPassword.length < 8) {
-      setPwdError('La nuova password deve essere di almeno 8 caratteri')
+    if (newPassword.length < 12) {
+      setPwdError('La nuova password deve essere di almeno 12 caratteri')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -126,7 +122,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
       setConfirmPassword('')
       toast.success('Password aggiornata')
     } catch (err) {
-      setPwdError(extractMessage(err, 'Errore durante il cambio password'))
+      setPwdError(extractApiError(err, 'Errore durante il cambio password'))
     } finally {
       setChangingPwd(false)
     }
@@ -233,9 +229,9 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
               <FormField
                 label="Nuova password"
                 required
-                helper="Minimo 8 caratteri"
+                helper="Minimo 12 caratteri"
                 htmlFor="newPwd"
-                error={pwdError && newPassword.length < 8 ? pwdError : undefined}
+                error={pwdError && newPassword.length < 12 ? pwdError : undefined}
               >
                 <Input
                   id="newPwd"
@@ -244,7 +240,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  error={!!pwdError && newPassword.length < 8}
+                  error={!!pwdError && newPassword.length < 12}
                 />
               </FormField>
               <FormField

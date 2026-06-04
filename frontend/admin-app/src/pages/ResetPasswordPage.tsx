@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { extractApiError } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import './LoginPage.css'
 import './ResetPasswordPage.css'
@@ -18,8 +19,8 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (newPassword.length < 8) {
-      setError('Password must be at least 8 characters.')
+    if (newPassword.length < 12) {
+      setError('Password must be at least 12 characters.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -32,9 +33,7 @@ export default function ResetPasswordPage() {
       await apiClient.post('/auth/reset-password', { token, newPassword })
       setSuccess(true)
     } catch (err) {
-      const serverMessage =
-        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
-      setError(serverMessage ?? 'The link is no longer valid or has expired. Please request a new password reset.')
+      setError(extractApiError(err, 'An error occurred. Please try again or request a new password reset.'))
     } finally {
       setLoading(false)
     }
@@ -108,7 +107,7 @@ export default function ResetPasswordPage() {
                   value={newPassword}
                   onChange={e => setNewPassword(e.target.value)}
                   required
-                  minLength={8}
+                  minLength={12}
                   autoComplete="new-password"
                 />
               </div>
@@ -122,7 +121,7 @@ export default function ResetPasswordPage() {
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
                   required
-                  minLength={8}
+                  minLength={12}
                   autoComplete="new-password"
                 />
               </div>

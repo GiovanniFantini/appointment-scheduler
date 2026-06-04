@@ -611,6 +611,10 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .HasForeignKey(e => e.UploadedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Propaga il soft-delete del documento parent: una versione di un
+            // documento eliminato non deve risultare nelle query (vedi filtro su HRDocument).
+            entity.HasQueryFilter(e => !e.HRDocument.IsDeleted);
+
             entity.HasIndex(e => new { e.HRDocumentId, e.VersionNumber }).IsUnique();
             entity.HasIndex(e => e.UploadStatus);
         });
@@ -624,6 +628,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(v => v.Downloads)
                 .HasForeignKey(e => e.HRDocumentVersionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Propaga il soft-delete del documento parent attraverso la versione.
+            entity.HasQueryFilter(e => !e.HRDocumentVersion.HRDocument.IsDeleted);
 
             entity.HasOne(e => e.Employee)
                 .WithMany()
@@ -642,6 +649,9 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
                 .WithMany(v => v.Acknowledgements)
                 .HasForeignKey(e => e.HRDocumentVersionId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Propaga il soft-delete del documento parent attraverso la versione.
+            entity.HasQueryFilter(e => !e.HRDocumentVersion.HRDocument.IsDeleted);
 
             entity.HasOne(e => e.Employee)
                 .WithMany()

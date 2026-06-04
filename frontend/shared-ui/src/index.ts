@@ -68,6 +68,9 @@ export { useWizard } from './wizard/useWizard'
 export { useMediaQuery } from './hooks/useMediaQuery'
 export { useIsMobile } from './hooks/useIsMobile'
 
+// Lib
+export { extractApiError } from './lib/apiError'
+
 // Icons re-export di comodo (singolo punto di import)
 
 // Icons (set minimo riusabile da tutte le app)

@@ -39,6 +39,34 @@ try
             options.JsonSerializerOptions.Converters.Add(
                 new AppointmentScheduler.API.Converters.NullableTimeOnlyJsonConverter());
         });
+
+    // Validazione automatica del model (DataAnnotations): la risposta resta il
+    // ProblemDetails standard (400 con `errors`), ma logghiamo i campi falliti
+    // lato server. Senza questo un 400 di validazione appariva nei log solo come
+    // "status 400" senza dire QUALE campo: ci ha nascosto il caso reale in cui
+    // una password troppo corta veniva poi mostrata all'utente come "link scaduto".
+    builder.Services.Configure<Microsoft.AspNetCore.Mvc.ApiBehaviorOptions>(options =>
+    {
+        var defaultFactory = options.InvalidModelStateResponseFactory;
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("ModelValidation");
+
+            var fields = context.ModelState
+                .Where(kvp => kvp.Value?.Errors.Count > 0)
+                .Select(kvp => kvp.Key);
+
+            logger.LogWarning(
+                "Validazione fallita su {Path}: campi non validi = {Fields}",
+                context.HttpContext.Request.Path,
+                string.Join(", ", fields));
+
+            return defaultFactory(context);
+        };
+    });
+
     builder.Services.AddEndpointsApiExplorer();
 
     // Health checks

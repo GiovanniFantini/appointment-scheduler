@@ -19,7 +19,13 @@
       "Read(//c/Program Files/dotnet/**)",
       "Read(//c/Program Files \\(x86\\)/dotnet/**)",
       "Bash(\"/c/Program Files/dotnet/dotnet.exe\" test \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API.Tests/AppointmentScheduler.API.Tests.csproj\" --filter \"FullyQualifiedName~PasswordReset|FullyQualifiedName~AuthControllerTests\")",
-      "Bash(\"/c/Windows/System32/tasklist.exe\" //FI \"PID eq 24488\")"
+      "Bash(\"/c/Windows/System32/tasklist.exe\" //FI \"PID eq 24488\")",
+      "Bash(Select-Object -Last 20)",
+      "Bash(powershell -NoProfile -Command \"dotnet build backend/AppointmentScheduler.Data/AppointmentScheduler.Data.csproj -nologo -v q 2>&1 | Select-Object -Last 25\")",
+      "Bash(pwsh -NoProfile -Command \"dotnet build backend/AppointmentScheduler.Data/AppointmentScheduler.Data.csproj -nologo -v q 2>&1 | Select-Object -Last 25\")",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.Core/AppointmentScheduler.Core.csproj\" -v q --nologo)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj\" -v q --nologo)",
+      "Bash(\"/c/Windows/System32/taskkill.exe\" //PID 24488 //F)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"
