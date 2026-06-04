@@ -31,8 +31,10 @@ export default function ResetPasswordPage() {
     try {
       await apiClient.post('/auth/reset-password', { token, newPassword })
       setSuccess(true)
-    } catch {
-      setError('Il link non è più valido o è scaduto. Richiedi un nuovo recupero password.')
+    } catch (err) {
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(serverMessage ?? 'Il link non è più valido o è scaduto. Richiedi un nuovo recupero password.')
     } finally {
       setLoading(false)
     }

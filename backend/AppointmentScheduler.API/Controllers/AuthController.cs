@@ -137,9 +137,27 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
     {
-        var success = await _passwordResetService.ResetPasswordAsync(request.Token, request.NewPassword);
-        if (!success)
-            return BadRequest(new { message = "Il link non è più valido. Richiedi un nuovo recupero password." });
-        return Ok(new { message = "Password aggiornata con successo." });
+        var result = await _passwordResetService.ResetPasswordAsync(request.Token, request.NewPassword);
+
+        return result switch
+        {
+            ResetPasswordResult.Success =>
+                Ok(new { message = "Password aggiornata con successo." }),
+
+            // Esponiamo un codice macchina (reason) per permettere al frontend di
+            // mostrare un messaggio specifico, mantenendo un testo leggibile lato server.
+            ResetPasswordResult.InvalidInput =>
+                BadRequest(new { reason = "invalid_input", message = "Dati non validi. Controlla la password e riprova." }),
+
+            ResetPasswordResult.TokenExpired =>
+                BadRequest(new { reason = "expired", message = "Il link è scaduto. Richiedi un nuovo recupero password." }),
+
+            ResetPasswordResult.TokenAlreadyUsed =>
+                BadRequest(new { reason = "used", message = "Il link è già stato utilizzato. Richiedi un nuovo recupero password." }),
+
+            // TokenNotFound e qualsiasi altro caso: non riveliamo se il token esiste.
+            _ =>
+                BadRequest(new { reason = "not_found", message = "Il link non è valido. Richiedi un nuovo recupero password." })
+        };
     }
 }

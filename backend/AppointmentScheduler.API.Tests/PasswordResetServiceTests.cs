@@ -100,7 +100,7 @@ public class PasswordResetServiceTests
 
         var result = await service.ResetPasswordAsync("token", "short");
 
-        result.Should().BeFalse();
+        result.Should().Be(ResetPasswordResult.InvalidInput);
         _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
     }
 
@@ -123,11 +123,74 @@ public class PasswordResetServiceTests
 
         var result = await service.ResetPasswordAsync("valid-token", "new-password-123");
 
-        result.Should().BeTrue();
+        result.Should().Be(ResetPasswordResult.Success);
         user.PasswordHash.Should().Be("new-hash");
         user.UpdatedAt.Should().Be(now);
         tokens[0].UsedAt.Should().Be(now);
         saveChangesTracker.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ResetPasswordAsync_ReturnsTokenNotFound_WhenTokenDoesNotExist()
+    {
+        var now = new DateTime(2026, 5, 22, 10, 30, 0, DateTimeKind.Utc);
+        var context = new ApplicationDbContextMockBuilder()
+            .WithEmptySet(x => x.Users, user => [user.Id])
+            .WithEmptySet(x => x.PasswordResetTokens, token => [token.Id])
+            .Build();
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+        var service = CreateService(context.Object);
+
+        var result = await service.ResetPasswordAsync("missing-token", "new-password-123");
+
+        result.Should().Be(ResetPasswordResult.TokenNotFound);
+        _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPasswordAsync_ReturnsTokenExpired_WhenTokenIsExpired()
+    {
+        var now = new DateTime(2026, 5, 22, 10, 30, 0, DateTimeKind.Utc);
+        var user = new User { Id = 7, Email = "user@example.com", PasswordHash = "old-hash", AccountType = AccountType.Employee, IsActive = true };
+        var tokens = new List<PasswordResetToken>
+        {
+            new() { Id = 1, UserId = 7, Token = "expired-token", CreatedAt = now.AddHours(-2), ExpiresAt = now.AddMinutes(-1), User = user }
+        };
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Users, new List<User> { user }, entity => [entity.Id])
+            .WithSet(x => x.PasswordResetTokens, tokens, token => [token.Id])
+            .Build();
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+        var service = CreateService(context.Object);
+
+        var result = await service.ResetPasswordAsync("expired-token", "new-password-123");
+
+        result.Should().Be(ResetPasswordResult.TokenExpired);
+        user.PasswordHash.Should().Be("old-hash");
+        _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task ResetPasswordAsync_ReturnsTokenAlreadyUsed_WhenTokenWasUsed()
+    {
+        var now = new DateTime(2026, 5, 22, 10, 30, 0, DateTimeKind.Utc);
+        var user = new User { Id = 7, Email = "user@example.com", PasswordHash = "old-hash", AccountType = AccountType.Employee, IsActive = true };
+        var tokens = new List<PasswordResetToken>
+        {
+            new() { Id = 1, UserId = 7, Token = "used-token", CreatedAt = now.AddMinutes(-5), ExpiresAt = now.AddMinutes(30), UsedAt = now.AddMinutes(-2), User = user }
+        };
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Users, new List<User> { user }, entity => [entity.Id])
+            .WithSet(x => x.PasswordResetTokens, tokens, token => [token.Id])
+            .Build();
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+        var service = CreateService(context.Object);
+
+        var result = await service.ResetPasswordAsync("used-token", "new-password-123");
+
+        result.Should().Be(ResetPasswordResult.TokenAlreadyUsed);
+        user.PasswordHash.Should().Be("old-hash");
+        _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
     }
 
     [Fact]
@@ -149,7 +212,7 @@ public class PasswordResetServiceTests
 
         var result = await service.ResetPasswordAsync("abc def/ghi==", "new-password-123");
 
-        result.Should().BeTrue();
+        result.Should().Be(ResetPasswordResult.Success);
         user.PasswordHash.Should().Be("new-hash");
         tokens[0].UsedAt.Should().Be(now);
         saveChangesTracker.Count.Should().Be(1);

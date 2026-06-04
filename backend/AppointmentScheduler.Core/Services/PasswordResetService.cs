@@ -103,35 +103,51 @@ public class PasswordResetService : IPasswordResetService
         return true;
     }
 
-    public async Task<bool> ResetPasswordAsync(string token, string newPassword)
+    public async Task<ResetPasswordResult> ResetPasswordAsync(string token, string newPassword)
     {
         if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(newPassword))
-            return false;
+            return ResetPasswordResult.InvalidInput;
 
         var normalizedToken = NormalizeIncomingToken(token);
 
         // Stessa lunghezza minima dei flussi di registrazione (vedi AuthService).
         if (newPassword.Length < AuthService.MinPasswordLength)
-            return false;
+            return ResetPasswordResult.InvalidInput;
 
         var now = _clock.UtcNow;
 
+        // Cerchiamo solo per Token, senza filtrare su UsedAt/ExpiresAt nella query:
+        // così possiamo distinguere "non trovato" da "scaduto" da "già usato" e
+        // restituire un esito specifico (loggabile e mostrabile all'utente).
         var resetToken = await _context.PasswordResetTokens
             .Include(t => t.User)
-            .FirstOrDefaultAsync(t =>
-                t.Token == normalizedToken &&
-                t.UsedAt == null &&
-                t.ExpiresAt > now);
+            .FirstOrDefaultAsync(t => t.Token == normalizedToken);
 
         if (resetToken == null)
-            return false;
+        {
+            _logger.LogWarning("Reset password: token non trovato (len={Length})", normalizedToken.Length);
+            return ResetPasswordResult.TokenNotFound;
+        }
+
+        if (resetToken.UsedAt != null)
+        {
+            _logger.LogWarning("Reset password: token già usato per UserId {UserId}", resetToken.UserId);
+            return ResetPasswordResult.TokenAlreadyUsed;
+        }
+
+        if (resetToken.ExpiresAt <= now)
+        {
+            _logger.LogWarning("Reset password: token scaduto per UserId {UserId} (ExpiresAt={ExpiresAt}, Now={Now})",
+                resetToken.UserId, resetToken.ExpiresAt, now);
+            return ResetPasswordResult.TokenExpired;
+        }
 
         resetToken.User.PasswordHash = _passwordHasher.HashPassword(newPassword);
         resetToken.User.UpdatedAt = now;
         resetToken.UsedAt = now;
 
         await _context.SaveChangesAsync();
-        return true;
+        return ResetPasswordResult.Success;
     }
 
     private string GetFrontendBaseUrl(User user)
@@ -141,10 +157,15 @@ public class PasswordResetService : IPasswordResetService
 
     private static string NormalizeIncomingToken(string token)
     {
+        // I token attuali sono base64url (solo [A-Za-z0-9-_], vedi
+        // PasswordResetTokenGenerator): arrivano nel body JSON e non subiscono
+        // alcun escaping di querystring, quindi basta il Trim().
         var trimmed = token.Trim();
 
-        // Supporta token passati in querystring legacy dove '+' puo diventare spazio.
-        return WebUtility.UrlDecode(trimmed).Replace(' ', '+');
+        // Token legacy in base64 standard potevano contenere '+', che in una
+        // querystring diventava spazio: lo ripristiniamo SOLO se nel token
+        // compaiono spazi, per non corrompere i token URL-safe attuali.
+        return trimmed.Contains(' ') ? trimmed.Replace(' ', '+') : trimmed;
     }
 
     private static string BuildResetEmailHtml(string firstName, string resetUrl) => $$"""

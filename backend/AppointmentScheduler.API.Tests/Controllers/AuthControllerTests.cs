@@ -221,24 +221,30 @@ public class AuthControllerTests
         _passwordResetService.Verify(service => service.RequestPasswordResetAsync("person@example.com"), Times.Once);
     }
 
-    [Fact]
-    public async Task ResetPassword_ReturnsBadRequest_WhenResetFails()
+    [Theory]
+    [InlineData(ResetPasswordResult.TokenExpired, "expired", "Il link è scaduto. Richiedi un nuovo recupero password.")]
+    [InlineData(ResetPasswordResult.TokenAlreadyUsed, "used", "Il link è già stato utilizzato. Richiedi un nuovo recupero password.")]
+    [InlineData(ResetPasswordResult.TokenNotFound, "not_found", "Il link non è valido. Richiedi un nuovo recupero password.")]
+    [InlineData(ResetPasswordResult.InvalidInput, "invalid_input", "Dati non validi. Controlla la password e riprova.")]
+    public async Task ResetPassword_ReturnsBadRequestWithReason_WhenResetFails(
+        ResetPasswordResult outcome, string expectedReason, string expectedMessage)
     {
-        var request = new ResetPasswordRequest { Token = "expired", NewPassword = "secret123" };
-        _passwordResetService.Setup(service => service.ResetPasswordAsync("expired", "secret123")).ReturnsAsync(false);
+        var request = new ResetPasswordRequest { Token = "tok", NewPassword = "secret123" };
+        _passwordResetService.Setup(service => service.ResetPasswordAsync("tok", "secret123")).ReturnsAsync(outcome);
         var controller = CreateController();
 
         var result = await controller.ResetPassword(request);
 
         var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
-        badRequest.GetAnonymousString("message").Should().Be("Il link non è più valido. Richiedi un nuovo recupero password.");
+        badRequest.GetAnonymousString("reason").Should().Be(expectedReason);
+        badRequest.GetAnonymousString("message").Should().Be(expectedMessage);
     }
 
     [Fact]
     public async Task ResetPassword_ReturnsOk_WhenResetSucceeds()
     {
         var request = new ResetPasswordRequest { Token = "valid", NewPassword = "secret123" };
-        _passwordResetService.Setup(service => service.ResetPasswordAsync("valid", "secret123")).ReturnsAsync(true);
+        _passwordResetService.Setup(service => service.ResetPasswordAsync("valid", "secret123")).ReturnsAsync(ResetPasswordResult.Success);
         var controller = CreateController();
 
         var result = await controller.ResetPassword(request);

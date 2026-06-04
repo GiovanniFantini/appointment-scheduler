@@ -12,7 +12,14 @@
       "Bash(printf:*)",
       "Bash(xargs:*)",
       "Bash(echo:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(Select-Object -Last 40)",
+      "Bash(where.exe dotnet *)",
+      "Bash(dotnet --version)",
+      "Read(//c/Program Files/dotnet/**)",
+      "Read(//c/Program Files \\(x86\\)/dotnet/**)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" test \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API.Tests/AppointmentScheduler.API.Tests.csproj\" --filter \"FullyQualifiedName~PasswordReset|FullyQualifiedName~AuthControllerTests\")",
+      "Bash(\"/c/Windows/System32/tasklist.exe\" //FI \"PID eq 24488\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

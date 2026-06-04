@@ -31,8 +31,10 @@ export default function ResetPasswordPage() {
     try {
       await apiClient.post('/auth/reset-password', { token, newPassword })
       setSuccess(true)
-    } catch {
-      setError('The link is no longer valid or has expired. Please request a new password reset.')
+    } catch (err) {
+      const serverMessage =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setError(serverMessage ?? 'The link is no longer valid or has expired. Please request a new password reset.')
     } finally {
       setLoading(false)
     }
