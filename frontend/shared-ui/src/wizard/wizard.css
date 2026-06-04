@@ -39,7 +39,7 @@
   background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-secondary));
   border-color: transparent;
   color: white;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 4px var(--su-accent-primary-soft);
 }
 .su-stepper__item--done .su-stepper__dot {
   background: var(--su-accent-success);

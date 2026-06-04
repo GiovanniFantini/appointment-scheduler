@@ -68,7 +68,7 @@
 }
 .su-theme-toggle__row--active {
   border-color: var(--su-accent-primary);
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(178, 75, 243, 0.04));
+  background: linear-gradient(135deg, var(--su-accent-primary-faint), var(--su-accent-primary-faint));
 }
 .su-theme-toggle__title {
   font-size: 14px;

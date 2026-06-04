@@ -561,14 +561,14 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
               <rect width="80" height="80" rx="20" fill="rgba(99,102,241,0.08)" />
               <path
                 d="M50 20H28a4 4 0 00-4 4v32a4 4 0 004 4h24a4 4 0 004-4V30l-6-10z"
-                stroke="#6366f1"
+                stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
               <path
                 d="M50 20v10h10M35 40h10M35 46h10M35 52h6"
-                stroke="#6366f1"
+                stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
               />

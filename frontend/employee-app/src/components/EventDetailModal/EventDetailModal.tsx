@@ -50,7 +50,7 @@ function getEventTypeColor(type?: string): string {
     Malattia: '#f59e0b',
     ChiusuraAziendale: '#475569',
   }
-  return type ? (map[type] ?? '#6366f1') : '#6366f1'
+  return type ? (map[type] ?? '#7F77DD') : '#7F77DD'
 }
 
 function formatDateTime(dateStr: string, allDay?: boolean): string {

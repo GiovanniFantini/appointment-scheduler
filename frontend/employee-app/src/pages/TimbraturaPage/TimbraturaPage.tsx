@@ -43,7 +43,7 @@ function entryColor(type: TimeEntryType): string {
     case TimeEntryType.ClockOut: return '#ef4444'
     case TimeEntryType.BreakStart:
     case TimeEntryType.BreakEnd: return '#f59e0b'
-    default: return '#6366f1'
+    default: return '#7F77DD'
   }
 }
 

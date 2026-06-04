@@ -213,7 +213,7 @@ function summarizeRequiredSkills(requiredSkills?: ApiRequiredSkill[]): string | 
 }
 
 function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
-  const color = EVENT_COLORS[r.typeName] ?? '#6366f1'
+  const color = EVENT_COLORS[r.typeName] ?? '#7F77DD'
   const isPending = r.statusName === 'Pending'
   const hasHourly = !!(r.startTime && r.endTime)
 
@@ -261,7 +261,7 @@ function requestToFCEvent(r: ApiEmployeeRequest): EventInput {
 function toFCEvent(e: ApiEvent, showBranchBadge: boolean): EventInput {
   // Per i Turni con mansione richiesta, usa il colore della mansione "principale"
   // (la prima della lista) come pillola — UX stile Google Calendar.
-  let color = EVENT_COLORS[e.eventTypeName] ?? '#6366f1'
+  let color = EVENT_COLORS[e.eventTypeName] ?? '#7F77DD'
   if (e.eventTypeName === 'Turno' && e.requiredSkills && e.requiredSkills.length > 0) {
     color = e.requiredSkills[0].skillColor || color
   }
