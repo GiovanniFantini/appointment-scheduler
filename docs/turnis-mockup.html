@@ -1,0 +1,1008 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Turnis — Mockup Merchant mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root {
+  --color-background-primary: #ffffff;
+  --color-background-secondary: #f7f7f5;
+  --color-background-tertiary: #ededeb;
+  --color-border-primary: #c5c5c2;
+  --color-border-secondary: #d8d8d4;
+  --color-border-tertiary: #e9e9e5;
+  --color-text-primary: #181818;
+  --color-text-secondary: #5e5e5e;
+  --color-text-tertiary: #8a8a8a;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+  background: #fafaf7;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.ti { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; stroke-width: 2; }
+
+.app-shell { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 280px;
+  background: #ffffff;
+  border-right: 1px solid var(--color-border-tertiary);
+  padding: 28px 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+.sidebar-brand {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid var(--color-border-tertiary);
+  margin-bottom: 16px;
+}
+.sidebar-brand-title { font-size: 18px; font-weight: 600; color: var(--color-text-primary); margin: 0; }
+.sidebar-brand-sub { font-size: 12px; color: var(--color-text-tertiary); margin-top: 4px; }
+
+.sidebar-section {
+  padding: 0 24px;
+  margin-top: 18px;
+}
+.sidebar-section-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 8px;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  margin-left: -8px;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  width: calc(100% + 8px);
+  text-align: left;
+  font-family: inherit;
+  line-height: 1.35;
+}
+.sidebar-link:hover { background: var(--color-background-secondary); }
+.sidebar-link.active { background: rgba(127,119,221,0.12); color: #534AB7; font-weight: 500; }
+.sidebar-link .num {
+  background: var(--color-background-tertiary);
+  color: var(--color-text-secondary);
+  font-size: 11px;
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-weight: 500;
+}
+.sidebar-link.active .num { background: rgba(127,119,221,0.25); color: #534AB7; }
+
+.content {
+  flex: 1;
+  padding: 32px 40px 64px;
+  max-width: 1200px;
+}
+.content h1 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.content .lede {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 24px;
+}
+
+.block { display: none; }
+.block.active { display: block; }
+
+/* === stili comuni mockup === */
+.tabnav { border: 1px solid var(--color-border-secondary); padding: 8px 14px; border-radius: var(--border-radius-md); font-size: 13px; cursor: pointer; background: transparent; color: var(--color-text-primary); font-family: inherit; }
+.tabnav.active { background: var(--color-background-primary); border-color: var(--color-text-primary); }
+.tphone { width: 360px; height: 720px; background: #0E1116; border-radius: 38px; padding: 12px; border: 1px solid #2a2f38; position: relative; flex-shrink: 0; }
+.tscreen { width: 100%; height: 100%; background: #14181F; border-radius: 28px; overflow: hidden; position: relative; color: #E6E8EC; }
+.tnotch { position: absolute; top: 18px; left: 50%; transform: translateX(-50%); width: 100px; height: 26px; background: #000; border-radius: 16px; z-index: 10; }
+.tstatus { display: flex; justify-content: space-between; align-items: center; padding: 14px 26px 6px; font-size: 12px; font-weight: 500; }
+.tinput { width: 100%; background: #1c2129; border: 0.5px solid #2a2f38; padding: 12px 14px; border-radius: 10px; color: #E6E8EC; font-size: 14px; font-family: inherit; }
+.tinput::placeholder { color: #555c6a; }
+.tlabel { font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+.tcta { width: 100%; background: #7F77DD; border: none; color: #fff; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; }
+.tstep { display: flex; gap: 14px; padding: 14px; border-radius: 10px; margin-bottom: 8px; cursor: pointer; border: 1px solid transparent; }
+.tstep:hover { background: var(--color-background-secondary); border-color: var(--color-border-tertiary); }
+.tstepnum { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; background: rgba(127,119,221,0.15); color: #534AB7; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; }
+.dot { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #7F77DD; color: #fff; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 4px rgba(127,119,221,0.25); z-index: 30; opacity: 0; transition: opacity 0.2s; }
+.dot.show { opacity: 1; }
+.vw { display: none; }
+.vw.active { display: flex; flex-direction: column; height: calc(100% - 32px); }
+/* Per stati che sono overlay (bottom sheet su schermo attenuato): block invece di flex */
+[data-scope="d"] .vw.active,
+.vw.vw-overlay.active { display: block; position: relative; height: calc(100% - 32px); }
+.mockup-wrap { background: var(--color-background-secondary); border-radius: var(--border-radius-lg); padding: 24px 16px; }
+.mockup-grid { display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+.tutorial-pane { flex: 1; min-width: 280px; max-width: 420px; }
+.tab-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+
+/* Block C specifics */
+.tabseg { display: flex; background: #1c2129; border-radius: 10px; padding: 3px; gap: 2px; margin: 0 18px 12px; }
+.tabseg button { flex: 1; background: transparent; border: none; padding: 8px; border-radius: 8px; color: #7d838e; font-size: 12px; cursor: pointer; font-family: inherit; }
+.tabseg button.act { background: #14181F; color: #E6E8EC; font-weight: 500; }
+
+/* Block D specifics */
+.basescreen { position: absolute; inset: 0; padding: 12px 22px; box-sizing: border-box; opacity: 0.4; pointer-events: none; }
+.baseheader { font-size: 17px; font-weight: 500; margin-bottom: 16px; }
+.basecard { background: #14181F; border: 0.5px solid #2a2f38; border-radius: 10px; padding: 11px 14px; margin-bottom: 8px; color: #E6E8EC; font-size: 13px; }
+.sheet { position: absolute; bottom: 0; left: 0; right: 0; background: #1c2129; border-radius: 22px 22px 0 0; padding: 12px 0 24px; }
+.sheethandle { width: 40px; height: 4px; background: #3a4150; border-radius: 2px; margin: 0 auto 14px; }
+.dimcal { background: rgba(20,24,31,0.6); position: absolute; inset: 0; }
+.dayno { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 13px; cursor: pointer; }
+.dayno.muted { color: #555c6a; }
+.dayno.sel { background: #7F77DD; color: #fff; font-weight: 500; }
+.dayno.today { border: 1px solid #AFA9EC; }
+.row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid #2a2f38; }
+.avs { width: 36px; height: 36px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.chip { background: rgba(127,119,221,0.16); color: #AFA9EC; padding: 2px 8px; border-radius: 6px; font-size: 10px; }
+.chipgreen { background: rgba(151,196,89,0.16); color: #97C459; padding: 2px 8px; border-radius: 6px; font-size: 10px; }
+.chipamber { background: rgba(186,117,23,0.16); color: #EF9F27; padding: 2px 8px; border-radius: 6px; font-size: 10px; }
+.checkbox { width: 22px; height: 22px; border-radius: 6px; border: 1.5px solid #3a4150; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.checkbox.on { background: #7F77DD; border-color: #7F77DD; color: #fff; }
+.timecol { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 0; position: relative; }
+.timecol::before, .timecol::after { content: ''; position: absolute; left: 8px; right: 8px; height: 36px; pointer-events: none; }
+.timecol::before { top: 16px; background: linear-gradient(to bottom, #1c2129, transparent); }
+.timecol::after { bottom: 16px; background: linear-gradient(to top, #1c2129, transparent); }
+.timev { padding: 6px 0; font-size: 17px; color: #555c6a; font-variant-numeric: tabular-nums; }
+.timev.mid { color: #E6E8EC; font-size: 22px; font-weight: 500; }
+.timesel { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); height: 36px; background: rgba(127,119,221,0.10); border-top: 0.5px solid rgba(127,119,221,0.3); border-bottom: 0.5px solid rgba(127,119,221,0.3); pointer-events: none; }
+
+/* responsive */
+@media (max-width: 900px) {
+  .app-shell { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; padding: 16px; }
+  .sidebar-brand { padding: 0 8px 12px; margin-bottom: 8px; }
+  .content { padding: 24px 16px 48px; }
+}
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;" id="ti-sprite"><symbol id="ti-alert-triangle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4" />
+  <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636 -2.87l-8.106 -13.536a1.914 1.914 0 0 0 -3.274 0" />
+  <path d="M12 16h.01" /></symbol><symbol id="ti-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" />
+  <path d="M5 12l6 6" />
+  <path d="M5 12l6 -6" /></symbol><symbol id="ti-arrow-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l14 0" />
+  <path d="M13 18l6 -6" />
+  <path d="M13 6l6 6" /></symbol><symbol id="ti-battery-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h11a2 2 0 0 1 2 2v.5a.5 .5 0 0 0 .5 .5a.5 .5 0 0 1 .5 .5v3a.5 .5 0 0 1 -.5 .5a.5 .5 0 0 0 -.5 .5v.5a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2" />
+  <path d="M7 10l0 4" />
+  <path d="M10 10l0 4" />
+  <path d="M13 10l0 4" /></symbol><symbol id="ti-beach" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.553 16.75a7.5 7.5 0 0 0 -10.606 0" />
+  <path d="M18 3.804a6 6 0 0 0 -8.196 2.196l10.392 6a6 6 0 0 0 -2.196 -8.196" />
+  <path d="M16.732 10c1.658 -2.87 2.225 -5.644 1.268 -6.196c-.957 -.552 -3.075 1.326 -4.732 4.196" />
+  <path d="M15 9l-3 5.196" />
+  <path d="M3 19.25a2.4 2.4 0 0 1 1 -.25a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 1 .25" /></symbol><symbol id="ti-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+  <path d="M9 17v1a3 3 0 0 0 6 0v-1" /></symbol><symbol id="ti-brand-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9" />
+  <path d="M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1" /></symbol><symbol id="ti-calendar-event" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" />
+  <path d="M16 3l0 4" />
+  <path d="M8 3l0 4" />
+  <path d="M4 11l16 0" />
+  <path d="M8 15h2v2h-2l0 -2" /></symbol><symbol id="ti-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" />
+  <path d="M16 3v4" />
+  <path d="M8 3v4" />
+  <path d="M4 11h16" />
+  <path d="M11 15h1" />
+  <path d="M12 15v3" /></symbol><symbol id="ti-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5l10 -10" /></symbol><symbol id="ti-chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6l6 -6" /></symbol><symbol id="ti-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6l6 6" /></symbol><symbol id="ti-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6l-6 6" /></symbol><symbol id="ti-chevron-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6 -6l6 6" /></symbol><symbol id="ti-clock-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.633 5.64a9 9 0 1 0 12.735 12.72m1.674 -2.32a9 9 0 0 0 -12.082 -12.082" />
+  <path d="M12 7v1" />
+  <path d="M3 3l18 18" /></symbol><symbol id="ti-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+  <path d="M12 7v5l3 3" /></symbol><symbol id="ti-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9.667a2.667 2.667 0 0 1 2.667 -2.667h8.666a2.667 2.667 0 0 1 2.667 2.667v8.666a2.667 2.667 0 0 1 -2.667 2.667h-8.666a2.667 2.667 0 0 1 -2.667 -2.667l0 -8.666" />
+  <path d="M4.012 16.737a2.005 2.005 0 0 1 -1.012 -1.737v-10c0 -1.1 .9 -2 2 -2h10c.75 0 1.158 .385 1.5 1" /></symbol><symbol id="ti-current-location" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+  <path d="M4 12a8 8 0 1 0 16 0a8 8 0 1 0 -16 0" />
+  <path d="M12 2l0 2" />
+  <path d="M12 20l0 2" />
+  <path d="M20 12l2 0" />
+  <path d="M2 12l2 0" /></symbol><symbol id="ti-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h-1a2 2 0 0 0 -2 2v9a2 2 0 0 0 2 2h9a2 2 0 0 0 2 -2v-1" />
+  <path d="M20.385 6.585a2.1 2.1 0 0 0 -2.97 -2.97l-8.415 8.385v3h3l8.385 -8.415" />
+  <path d="M16 5l3 3" /></symbol><symbol id="ti-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l-2 0l9 -9l9 9l-2 0" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" /></symbol><symbol id="ti-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2l0 -12" />
+  <path d="M4 13h3l3 3h4l3 -3h3" /></symbol><symbol id="ti-info-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0" />
+  <path d="M12 9h.01" />
+  <path d="M11 12h1v4h1" /></symbol><symbol id="ti-map-pin-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.442 9.432a3 3 0 0 0 4.113 4.134m1.445 -2.566a3 3 0 0 0 -3 -3" />
+  <path d="M17.152 17.162l-3.738 3.738a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 0 1 -.476 -10.794m2.18 -1.82a8.003 8.003 0 0 1 10.91 10.912" />
+  <path d="M3 3l18 18" /></symbol><symbol id="ti-map-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" />
+  <path d="M17.657 16.657l-4.243 4.243a2 2 0 0 1 -2.827 0l-4.244 -4.243a8 8 0 1 1 11.314 0" /></symbol><symbol id="ti-menu-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l16 0" />
+  <path d="M4 12l16 0" />
+  <path d="M4 18l16 0" /></symbol><symbol id="ti-message-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l1.3 -3.9c-2.324 -3.437 -1.426 -7.872 2.1 -10.374c3.526 -2.501 8.59 -2.296 11.845 .48c3.255 2.777 3.695 7.266 1.029 10.501c-2.666 3.235 -7.615 4.215 -11.574 2.293l-4.7 1" /></symbol><symbol id="ti-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l0 14" />
+  <path d="M5 12l14 0" /></symbol><symbol id="ti-repeat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v-3a3 3 0 0 1 3 -3h13m-3 -3l3 3l-3 3" />
+  <path d="M20 12v3a3 3 0 0 1 -3 3h-13m3 3l-3 -3l3 -3" /></symbol><symbol id="ti-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+  <path d="M21 21l-6 -6" /></symbol><symbol id="ti-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14l11 -11" />
+  <path d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5" /></symbol><symbol id="ti-signal-4g" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8v3a1 1 0 0 0 1 1h3" />
+  <path d="M10 8v8" />
+  <path d="M17 8h-2a2 2 0 0 0 -2 2v4a2 2 0 0 0 2 2h2v-4h-1" /></symbol><symbol id="ti-sparkles" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 18a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m0 -12a2 2 0 0 1 2 2a2 2 0 0 1 2 -2a2 2 0 0 1 -2 -2a2 2 0 0 1 -2 2m-7 12a6 6 0 0 1 6 -6a6 6 0 0 1 -6 -6a6 6 0 0 1 -6 6a6 6 0 0 1 6 6" /></symbol><symbol id="ti-user-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+  <path d="M16 19h6" />
+  <path d="M19 16v6" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4" /></symbol><symbol id="ti-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" /></symbol><symbol id="ti-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+  <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" /></symbol><symbol id="ti-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6l-12 12" />
+  <path d="M6 6l12 12" /></symbol></svg>
+
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-title">Turnis</div>
+      <div class="sidebar-brand-sub">Mockup Merchant mobile</div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Esplora i flussi</div>
+      <button class="sidebar-link active" data-block="a">
+        <span class="num">A</span>
+        <span>Onboarding &amp; setup<br><small style="color: var(--color-text-tertiary); font-weight: 400;">5 schermate</small></span>
+      </button>
+      <button class="sidebar-link" data-block="b">
+        <span class="num">B</span>
+        <span>Gestione turni<br><small style="color: var(--color-text-tertiary); font-weight: 400;">3 schermate</small></span>
+      </button>
+      <button class="sidebar-link" data-block="c">
+        <span class="num">C</span>
+        <span>Approvazioni &amp; anomalie<br><small style="color: var(--color-text-tertiary); font-weight: 400;">5 schermate</small></span>
+      </button>
+      <button class="sidebar-link" data-block="d">
+        <span class="num">D</span>
+        <span>Nuovo turno — stati dinamici<br><small style="color: var(--color-text-tertiary); font-weight: 400;">4 overlay</small></span>
+      </button>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-section-title">Come si usa</div>
+      <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.55;">
+        Passa il mouse sui numeri del tutorial per evidenziare l'elemento corrispondente nel telefono. Clicca le tab in alto per saltare tra le schermate, oppure interagisci direttamente col telefono (es. tap su una card scoperta).
+      </div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div id="block-a" class="block active">
+<div data-scope="a">
+  <h1>Blocco A — Onboarding &amp; setup del titolare</h1>
+  <div class="lede">Cinque schermate: registrazione, benvenuto, sede, reparti, invita team. Tempo dichiarato dall'app: ~2,5 minuti. Cliccabile.</div>
+
+  <div class="mockup-wrap">
+    <div class="tab-row">
+      <button class="tabnav active" data-view="signup">1. Registrazione</button>
+      <button class="tabnav" data-view="welcome">2. Benvenuto</button>
+      <button class="tabnav" data-view="branch">3. Sede</button>
+      <button class="tabnav" data-view="departments">4. Reparti</button>
+      <button class="tabnav" data-view="invite">5. Invita team</button>
+    </div>
+
+    <div class="mockup-grid">
+
+      <div class="tphone">
+        <div class="tnotch"></div>
+        <div class="tscreen">
+          <div class="tstatus"><span>9:41</span><span><svg class="ti" style="width: 13px; height: 13px;" aria-hidden="true"><use href="#ti-signal-4g"/></svg> <svg class="ti" style="width: 15px; height: 15px;" aria-hidden="true"><use href="#ti-battery-3"/></svg></span></div>
+
+          <div id="a-view-signup" class="vw active">
+            <div style="padding: 8px 22px 0;">
+              <div style="font-size: 22px; font-weight: 500; margin-top: 12px;">Crea il tuo<br>account Turnis</div>
+              <div style="font-size: 13px; color: #7d838e; margin-top: 6px;">Bastano 60 secondi. Userai questo account per gestire la tua azienda.</div>
+            </div>
+            <div style="flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 12px; position: relative;">
+              <div>
+                <div class="tlabel">Nome e cognome</div>
+                <input class="tinput" placeholder="Mario Rossi" />
+                <div class="dot" id="a-dot-1" style="top: -2px; right: -2px;">1</div>
+              </div>
+              <div><div class="tlabel">Email</div><input class="tinput" placeholder="mario@trattoriarossi.it" /></div>
+              <div><div class="tlabel">Password</div><input class="tinput" type="password" placeholder="almeno 6 caratteri" /></div>
+              <div><div class="tlabel">Nome azienda</div><input class="tinput" placeholder="Trattoria da Mario" /></div>
+              <div><div class="tlabel">P.IVA</div><input class="tinput" placeholder="01234567890" /></div>
+              <div style="font-size: 11px; color: #555c6a; margin-top: 4px; line-height: 1.5;">Continuando accetti i <span style="color: #AFA9EC;">Termini</span> e la <span style="color: #AFA9EC;">Privacy</span>.</div>
+              <button class="tcta" style="margin-top: auto; position: relative;">Crea account<div class="dot" id="a-dot-2" style="top: -8px; right: -8px;">2</div></button>
+              <div style="text-align: center; font-size: 12px; color: #7d838e;">Hai già un account? <span style="color: #AFA9EC;">Accedi</span></div>
+            </div>
+          </div>
+
+          <div id="a-view-welcome" class="vw">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 32px 28px; text-align: center;">
+              <div style="width: 72px; height: 72px; border-radius: 50%; background: rgba(151,196,89,0.15); display: flex; align-items: center; justify-content: center; margin-bottom: 22px;">
+                <svg class="ti" style="width: 36px; height: 36px; color: #97C459; stroke: #97C459;" aria-hidden="true"><use href="#ti-check"/></svg>
+              </div>
+              <div style="font-size: 22px; font-weight: 500; margin-bottom: 8px;">Benvenuto Mario!</div>
+              <div style="font-size: 14px; color: #7d838e; line-height: 1.6; margin-bottom: 32px;">Trattoria da Mario è stata creata. Ora configuriamo l'azienda in 3 passi:</div>
+              <div style="width: 100%; text-align: left; margin-bottom: 36px;">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #2a2f38;"><div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(127,119,221,0.16); color: #AFA9EC; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500;">1</div><div style="flex: 1; font-size: 14px;">Imposta la sede</div><span style="font-size: 11px; color: #7d838e;">30s</span></div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 0.5px solid #2a2f38;"><div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(127,119,221,0.16); color: #AFA9EC; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500;">2</div><div style="flex: 1; font-size: 14px;">Aggiungi reparti</div><span style="font-size: 11px; color: #7d838e;">1min</span></div>
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;"><div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(127,119,221,0.16); color: #AFA9EC; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500;">3</div><div style="flex: 1; font-size: 14px;">Invita il team</div><span style="font-size: 11px; color: #7d838e;">1min</span></div>
+              </div>
+              <button class="tcta" style="position: relative;">Inizia <svg class="ti" style="width: 18px; height: 18px; vertical-align: -3px; margin-left: 4px;" aria-hidden="true"><use href="#ti-arrow-right"/></svg><div class="dot" id="a-dot-3" style="top: -8px; right: -8px;">3</div></button>
+              <button style="background: transparent; border: none; color: #7d838e; font-size: 13px; padding: 14px; margin-top: 8px; cursor: pointer;">Salta e fai dopo</button>
+            </div>
+          </div>
+
+          <div id="a-view-branch" class="vw">
+            <div style="padding: 6px 22px 0;">
+              <div style="display: flex; gap: 6px; margin-top: 12px; margin-bottom: 18px;"><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #2a2f38; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #2a2f38; border-radius: 2px;"></div></div>
+              <div style="font-size: 20px; font-weight: 500;">La tua sede</div>
+              <div style="font-size: 13px; color: #7d838e; margin-top: 4px;">Dove si trova il tuo locale? Servirà per la timbratura geolocalizzata.</div>
+            </div>
+            <div style="flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 14px; position: relative;">
+              <div><div class="tlabel">Nome sede</div><input class="tinput" value="Trattoria da Mario" /></div>
+              <div><div class="tlabel">Indirizzo</div><input class="tinput" placeholder="Via Roma 12, Piacenza" /><div class="dot" id="a-dot-4" style="top: 14px; right: 6px;">4</div></div>
+              <button style="background: rgba(127,119,221,0.12); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 11px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; position: relative; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-current-location"/></svg> Usa la posizione attuale<div class="dot" id="a-dot-5" style="top: -8px; right: -8px;">5</div></button>
+              <div style="margin-top: 4px; height: 130px; background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;"><div style="position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(127,119,221,0.05) 8px, rgba(127,119,221,0.05) 16px);"></div><div style="text-align: center; z-index: 2;"><svg class="ti" style="width: 32px; height: 32px; color: #7F77DD; stroke: #7F77DD;" aria-hidden="true"><use href="#ti-map-pin"/></svg><div style="font-size: 11px; color: #7d838e; margin-top: 4px;">anteprima mappa</div></div></div>
+              <div><div class="tlabel">Raggio timbratura</div><div style="background: #1c2129; border: 0.5px solid #2a2f38; padding: 12px 14px; border-radius: 10px; display: flex; align-items: center; gap: 12px;"><input type="range" min="50" max="200" value="100" style="flex: 1;" /><span style="font-size: 13px; font-weight: 500; min-width: 50px; text-align: right;">100 m</span></div></div>
+              <button class="tcta" style="margin-top: auto;">Avanti</button>
+            </div>
+          </div>
+
+          <div id="a-view-departments" class="vw">
+            <div style="padding: 6px 22px 0;">
+              <div style="display: flex; gap: 6px; margin-top: 12px; margin-bottom: 18px;"><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #2a2f38; border-radius: 2px;"></div></div>
+              <div style="font-size: 20px; font-weight: 500;">I tuoi reparti</div>
+              <div style="font-size: 13px; color: #7d838e; margin-top: 4px;">Tocca quelli che usi. Puoi aggiungerne di nuovi sempre.</div>
+            </div>
+            <div style="flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 18px; position: relative;">
+              <div>
+                <div class="tlabel">Consigliati per la ristorazione</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; position: relative;">
+                  <div style="background: rgba(216,90,48,0.16); border: 0.5px solid rgba(216,90,48,0.4); color: #F0997B; padding: 8px 14px; border-radius: 22px; font-size: 13px; display: flex; align-items: center; gap: 6px;"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-check"/></svg> Cucina</div>
+                  <div style="background: rgba(29,158,117,0.16); border: 0.5px solid rgba(29,158,117,0.4); color: #5DCAA5; padding: 8px 14px; border-radius: 22px; font-size: 13px; display: flex; align-items: center; gap: 6px;"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-check"/></svg> Sala</div>
+                  <div style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 8px 14px; border-radius: 22px; font-size: 13px;">+ Bar</div>
+                  <div style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 8px 14px; border-radius: 22px; font-size: 13px;">+ Cassa</div>
+                  <div style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 8px 14px; border-radius: 22px; font-size: 13px;">+ Pasticceria</div>
+                  <div style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 8px 14px; border-radius: 22px; font-size: 13px;">+ Magazzino</div>
+                  <div class="dot" id="a-dot-6" style="top: -10px; left: 60px;">6</div>
+                </div>
+              </div>
+              <div>
+                <div class="tlabel">Oppure crea il tuo</div>
+                <div style="display: flex; gap: 8px; margin-top: 6px;"><input class="tinput" placeholder="es. Pizzeria" style="flex: 1;" /><button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 0 14px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-plus"/></svg></button></div>
+              </div>
+              <div style="background: rgba(127,119,221,0.08); border: 0.5px solid rgba(127,119,221,0.2); border-radius: 10px; padding: 12px 14px; font-size: 12px; color: #AFA9EC; display: flex; gap: 10px; align-items: flex-start;"><svg class="ti" style="width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px;" aria-hidden="true"><use href="#ti-info-circle"/></svg><span>I reparti servono per organizzare i turni (es. "Cucina alle 18"). Le mansioni le imposti dopo per ogni persona.</span></div>
+              <button class="tcta" style="margin-top: auto;">Avanti · 2 reparti selezionati</button>
+            </div>
+          </div>
+
+          <div id="a-view-invite" class="vw">
+            <div style="padding: 6px 22px 0;">
+              <div style="display: flex; gap: 6px; margin-top: 12px; margin-bottom: 18px;"><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div><div style="flex: 1; height: 3px; background: #7F77DD; border-radius: 2px;"></div></div>
+              <div style="font-size: 20px; font-weight: 500;">Invita il tuo team</div>
+              <div style="font-size: 13px; color: #7d838e; margin-top: 4px;">Manda il codice ai tuoi dipendenti via WhatsApp. Lo useranno per registrarsi.</div>
+            </div>
+            <div style="flex: 1; padding: 22px; display: flex; flex-direction: column; gap: 18px; position: relative;">
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 14px; padding: 18px; text-align: center; position: relative;">
+                <div style="width: 130px; height: 130px; background: #fff; margin: 0 auto 12px; border-radius: 10px; padding: 8px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
+                  <svg width="114" height="114" viewBox="0 0 21 21" style="image-rendering: pixelated;"><rect width="21" height="21" fill="#fff"/><g fill="#000"><rect x="0" y="0" width="7" height="7"/><rect x="1" y="1" width="5" height="5" fill="#fff"/><rect x="2" y="2" width="3" height="3"/><rect x="14" y="0" width="7" height="7"/><rect x="15" y="1" width="5" height="5" fill="#fff"/><rect x="16" y="2" width="3" height="3"/><rect x="0" y="14" width="7" height="7"/><rect x="1" y="15" width="5" height="5" fill="#fff"/><rect x="2" y="16" width="3" height="3"/><rect x="9" y="2" width="1" height="1"/><rect x="11" y="2" width="1" height="1"/><rect x="8" y="4" width="1" height="1"/><rect x="10" y="4" width="2" height="1"/><rect x="9" y="6" width="3" height="1"/><rect x="2" y="9" width="1" height="1"/><rect x="4" y="9" width="2" height="1"/><rect x="8" y="9" width="2" height="1"/><rect x="11" y="9" width="1" height="1"/><rect x="14" y="9" width="2" height="1"/><rect x="17" y="9" width="1" height="1"/><rect x="19" y="9" width="2" height="1"/><rect x="0" y="11" width="2" height="1"/><rect x="3" y="11" width="2" height="1"/><rect x="7" y="11" width="3" height="1"/><rect x="12" y="11" width="1" height="1"/><rect x="14" y="11" width="2" height="1"/><rect x="18" y="11" width="2" height="1"/><rect x="9" y="13" width="2" height="1"/><rect x="12" y="13" width="1" height="1"/><rect x="14" y="13" width="1" height="1"/><rect x="16" y="13" width="3" height="1"/><rect x="9" y="15" width="1" height="1"/><rect x="11" y="15" width="3" height="1"/><rect x="16" y="15" width="1" height="1"/><rect x="18" y="15" width="2" height="1"/><rect x="9" y="17" width="2" height="1"/><rect x="12" y="17" width="1" height="1"/><rect x="14" y="17" width="2" height="1"/><rect x="17" y="17" width="1" height="1"/><rect x="19" y="17" width="1" height="1"/><rect x="8" y="19" width="3" height="1"/><rect x="13" y="19" width="2" height="1"/><rect x="16" y="19" width="1" height="1"/><rect x="18" y="19" width="3" height="1"/></g></svg>
+                </div>
+                <div style="font-size: 12px; color: #7d838e;">Codice azienda</div>
+                <div style="font-size: 18px; font-weight: 500; letter-spacing: 2px; font-family: var(--font-mono); margin-top: 2px;">MARIO-7K2P</div>
+                <div class="dot" id="a-dot-7" style="top: 10px; right: 10px;">7</div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                <button style="background: rgba(127,119,221,0.14); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 12px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-brand-whatsapp"/></svg> Condividi</button>
+                <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 12px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-copy"/></svg> Copia</button>
+              </div>
+              <div style="text-align: center; font-size: 12px; color: #7d838e;">— oppure invita via email —</div>
+              <div style="display: flex; gap: 8px;"><input class="tinput" placeholder="dipendente@email.it" style="flex: 1;" /><button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 0 14px; border-radius: 10px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-send"/></svg></button></div>
+              <button class="tcta" style="margin-top: auto; position: relative;">Vai al calendario<div class="dot" id="a-dot-8" style="top: -8px; right: -8px;">8</div></button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tutorial-pane">
+        <div style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 14px;">Tutorial — passa il mouse sui numeri per evidenziarli sul mockup, oppure clicca le tab in alto per saltare alla schermata.</div>
+        <div data-view="signup" data-dot="a-dot-1" class="tstep"><div class="tstepnum">1</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Schermata "Crea il tuo account"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il titolare apre l'app per la prima volta e tocca "Registrati". Compila Nome, Email, Password, Nome azienda, P.IVA. Niente di più: ogni campo extra qui è un motivo per abbandonare.</div></div></div>
+        <div data-view="signup" data-dot="a-dot-2" class="tstep"><div class="tstepnum">2</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Tap su "Crea account"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il bottone è full-width, vicino al pollice. Backend: crea l'azienda + crea il profilo del titolare (con ruolo "Responsabile App" preassegnato).</div></div></div>
+        <div data-view="welcome" data-dot="a-dot-3" class="tstep"><div class="tstepnum">3</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Schermata "Benvenuto" + checklist 3 passi</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il titolare vede subito che il setup è breve (30s + 1min + 1min). La rassicurazione sul tempo è la cosa più importante di questa schermata. C'è anche "Salta e fai dopo" perché alcuni vorranno entrare subito.</div></div></div>
+        <div data-view="branch" data-dot="a-dot-4" class="tstep"><div class="tstepnum">4</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Imposta sede: indirizzo</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il nome è già precompilato col nome azienda. Resta solo l'indirizzo. L'anteprima mappa sotto conferma visivamente che il sistema ha trovato il posto.</div></div></div>
+        <div data-view="branch" data-dot="a-dot-5" class="tstep"><div class="tstepnum">5</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Scorciatoia: "Usa la posizione attuale"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Se il titolare sta facendo l'onboarding mentre è nel locale, questa è la via più veloce. Chiede il permesso GPS, riempie indirizzo + coordinate automaticamente.</div></div></div>
+        <div data-view="departments" data-dot="a-dot-6" class="tstep"><div class="tstepnum">6</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Reparti: tap su quelli pertinenti</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">I reparti più comuni per HORECA sono pre-suggeriti (Cucina, Sala, Bar, Cassa, Pasticceria, Magazzino). Cucina e Sala sono pre-selezionati perché coprono il 90% dei casi: il titolare deve solo confermare. Aggiungere reparti personalizzati è in fondo, secondario.</div></div></div>
+        <div data-view="invite" data-dot="a-dot-7" class="tstep"><div class="tstepnum">7</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Codice azienda + QR</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Qui c'è la scelta più strategica di tutto l'onboarding. Il codice "MARIO-7K2P" è leggibile e memorizzabile. Il QR è scansionabile dall'altro telefono. "Condividi via WhatsApp" è il punto di forza: il titolare manda il codice nel gruppo del personale in 5 secondi.</div></div></div>
+        <div data-view="invite" data-dot="a-dot-8" class="tstep"><div class="tstepnum">8</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Vai al calendario"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il setup finisce qui. Il titolare entra subito nella home calendario. Anche se ha invitato zero dipendenti, può comunque iniziare a creare turni "vuoti" e assegnarli dopo.</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="block-b" class="block">
+<div data-scope="b">
+  <h1>Blocco B — Gestione dei turni</h1>
+  <div class="lede">Le 3 schermate quotidiane del manager mobile: home calendario, dettaglio turno con "Chiedi sostituto", creazione rapida via template. Prova a cliccare la card col bordo rosso o il bottone viola "+".</div>
+
+  <div class="mockup-wrap">
+    <div class="tab-row">
+      <button class="tabnav active" data-view="home">1. Home calendario</button>
+      <button class="tabnav" data-view="detail">2. Dettaglio turno</button>
+      <button class="tabnav" data-view="new">3. Nuovo turno</button>
+    </div>
+
+    <div class="mockup-grid">
+
+      <div class="tphone">
+        <div class="tnotch"></div>
+        <div class="tscreen">
+          <div class="tstatus"><span>9:41</span><span><svg class="ti" style="width: 13px; height: 13px;" aria-hidden="true"><use href="#ti-signal-4g"/></svg> <svg class="ti" style="width: 15px; height: 15px;" aria-hidden="true"><use href="#ti-battery-3"/></svg></span></div>
+
+          <div id="b-view-home" class="vw active">
+            <div style="padding: 12px 18px 8px; display: flex; justify-content: space-between; align-items: center; position: relative;">
+              <div>
+                <div style="font-size: 10px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px;">Sede</div>
+                <button style="background: transparent; border: none; padding: 0; color: #E6E8EC; font-size: 15px; font-weight: 500; display: flex; align-items: center; gap: 6px; cursor: pointer; font-family: inherit;">Trattoria da Mario <svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-chevron-down"/></svg></button>
+                <div class="dot" id="b-dotB-1" style="top: 6px; left: 6px;">1</div>
+              </div>
+              <button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-bell"/></svg></button>
+            </div>
+
+            <div style="padding: 4px 18px 10px; display: flex; align-items: center; justify-content: space-between;">
+              <button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-chevron-left"/></svg></button>
+              <div style="text-align: center;"><div style="font-size: 14px; font-weight: 500;">25 — 31 maggio</div><div style="font-size: 11px; color: #7d838e;">questa settimana</div></div>
+              <button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-chevron-right"/></svg></button>
+            </div>
+
+            <div style="padding: 0 18px 10px; position: relative;">
+              <button style="width: 100%; background: rgba(127,119,221,0.12); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 10px 12px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-copy"/></svg> Copia settimana scorsa</button>
+              <div class="dot" id="b-dotB-2" style="top: -6px; right: 10px;">2</div>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; padding: 0 18px 90px;">
+
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px;"><div style="font-size: 14px; font-weight: 500;">Lunedì 25</div><div style="font-size: 10px; background: rgba(127,119,221,0.18); color: #AFA9EC; padding: 2px 8px; border-radius: 4px; font-weight: 500;">oggi</div><div style="flex: 1; height: 0.5px; background: #2a2f38;"></div></div>
+
+                <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; display: flex; gap: 10px;">
+                  <div style="display: flex; flex-direction: column; align-items: center; min-width: 44px;"><div style="font-size: 14px; font-weight: 500;">06:30</div><div style="width: 1px; height: 10px; background: #2a2f38; margin: 1px 0;"></div><div style="font-size: 12px; color: #7d838e;">14:00</div></div>
+                  <div style="flex: 1;"><div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Apertura</div>
+                    <div style="display: flex; margin-bottom: 4px;"><div style="width: 22px; height: 22px; border-radius: 50%; background: #534AB7; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #1c2129; margin-right: -7px;">AM</div><div style="width: 22px; height: 22px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #1c2129; margin-right: -7px;">RP</div><div style="width: 22px; height: 22px; border-radius: 50%; background: #D85A30; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #1c2129;">GL</div></div>
+                    <div style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #97C459; background: rgba(151,196,89,0.12); padding: 2px 8px; border-radius: 4px;"><svg class="ti" style="width: 12px; height: 12px;" aria-hidden="true"><use href="#ti-check"/></svg> Coperto</div>
+                  </div>
+                </div>
+
+                <div id="b-card-uncovered" style="background: #1c2129; border: 0.5px solid #A32D2D; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; display: flex; gap: 10px; position: relative; cursor: pointer;">
+                  <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; background: #E24B4A; border-radius: 12px 0 0 12px;"></div>
+                  <div style="display: flex; flex-direction: column; align-items: center; min-width: 44px;"><div style="font-size: 14px; font-weight: 500;">18:00</div><div style="width: 1px; height: 10px; background: #2a2f38; margin: 1px 0;"></div><div style="font-size: 12px; color: #7d838e;">23:00</div></div>
+                  <div style="flex: 1;"><div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Serale</div><div style="font-size: 11px; color: #7d838e; margin-bottom: 4px;">Cucina · 2 mansioni</div><div style="display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: #F09595; background: rgba(226,75,74,0.14); padding: 2px 8px; border-radius: 4px;"><svg class="ti" style="width: 12px; height: 12px;" aria-hidden="true"><use href="#ti-alert-triangle"/></svg> Manca 1 persona</div></div>
+                  <div style="display: flex; align-items: center; color: #7d838e;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-chevron-right"/></svg></div>
+                  <div class="dot" id="b-dotB-3" style="top: -8px; left: -8px;">3</div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px;"><div style="font-size: 14px; font-weight: 500;">Martedì 26</div><div style="flex: 1; height: 0.5px; background: #2a2f38;"></div></div>
+                <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px; display: flex; gap: 10px;">
+                  <div style="display: flex; flex-direction: column; align-items: center; min-width: 44px;"><div style="font-size: 14px; font-weight: 500;">06:30</div><div style="width: 1px; height: 10px; background: #2a2f38; margin: 1px 0;"></div><div style="font-size: 12px; color: #7d838e;">14:00</div></div>
+                  <div style="flex: 1;"><div style="font-size: 13px; font-weight: 500; margin-bottom: 4px;">Apertura</div><div style="display: flex;"><div style="width: 22px; height: 22px; border-radius: 50%; background: #534AB7; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #1c2129; margin-right: -7px;">AM</div><div style="width: 22px; height: 22px; border-radius: 50%; background: #D85A30; color: #fff; font-size: 10px; display: flex; align-items: center; justify-content: center; border: 2px solid #1c2129;">GL</div></div></div>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 16px;">
+                <div style="display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px;"><div style="font-size: 14px; font-weight: 500;">Mercoledì 27</div><div style="flex: 1; height: 0.5px; background: #2a2f38;"></div></div>
+                <div style="text-align: center; padding: 12px; background: #1c2129; border: 0.5px dashed #2a2f38; border-radius: 12px; font-size: 11px; color: #7d838e;"><svg class="ti" style="width: 14px; height: 14px; vertical-align: -2px;" aria-hidden="true"><use href="#ti-x"/></svg> Chiusura settimanale</div>
+              </div>
+            </div>
+
+            <button id="b-fab-btn" style="position: absolute; bottom: 80px; right: 18px; width: 52px; height: 52px; border-radius: 50%; background: #7F77DD; border: none; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 15; font-family: inherit;"><svg class="ti" style="width: 24px; height: 24px;" aria-hidden="true"><use href="#ti-plus"/></svg><div class="dot" id="b-dotB-4" style="top: -8px; right: -8px;">4</div></button>
+
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #0E1116; border-top: 0.5px solid #2a2f38; display: flex; justify-content: space-around; padding: 9px 0 18px;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #AFA9EC;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-calendar"/></svg><span style="font-size: 9px;">Turni</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-users"/></svg><span style="font-size: 9px;">Persone</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-inbox"/></svg><span style="font-size: 9px;">Richieste</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-menu-2"/></svg><span style="font-size: 9px;">Altro</span></div>
+            </div>
+          </div>
+
+          <div id="b-view-detail" class="vw vw-overlay" style="height: calc(100% - 32px); position: relative;">
+            <div style="position: absolute; inset: 0; background: #14181F; opacity: 0.4;"></div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #1c2129; border-radius: 22px 22px 0 0; padding: 12px 0 24px; max-height: 92%;">
+              <div style="width: 40px; height: 4px; background: #3a4150; border-radius: 2px; margin: 0 auto 14px;"></div>
+              <div style="padding: 0 22px;">
+                <div style="display: flex; align-items: center; gap: 8px; background: rgba(226,75,74,0.12); border: 0.5px solid rgba(226,75,74,0.35); padding: 10px 12px; border-radius: 10px; margin-bottom: 18px;"><svg class="ti" style="width: 18px; height: 18px; color: #F09595; stroke: #F09595;" aria-hidden="true"><use href="#ti-alert-triangle"/></svg><div style="flex: 1; font-size: 13px; color: #F09595;">Manca 1 cameriere per essere coperto</div></div>
+                <div style="margin-bottom: 16px;"><div style="font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Lunedì 25 maggio</div><div style="font-size: 20px; font-weight: 500;">Serale</div><div style="font-size: 13px; color: #7d838e; margin-top: 2px;">18:00 → 23:00 · Cucina</div></div>
+                <div style="margin-bottom: 14px; position: relative;">
+                  <div style="font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Assegnati (1/2)</div>
+                  <div style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 0.5px solid #2a2f38;"><div style="width: 36px; height: 36px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center;">RP</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Roberta Pia</div><div style="font-size: 11px; color: #7d838e;">Cuoca · 35h/40h</div></div><button style="background: transparent; border: none; color: #7d838e; padding: 4px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 18px; height: 18px;" aria-hidden="true"><use href="#ti-x"/></svg></button></div>
+                  <button style="width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 0; background: transparent; border: none; cursor: pointer; position: relative; font-family: inherit;"><div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(127,119,221,0.16); color: #AFA9EC; display: flex; align-items: center; justify-content: center;"><svg class="ti" style="width: 18px; height: 18px;" aria-hidden="true"><use href="#ti-plus"/></svg></div><div style="text-align: left; flex: 1;"><div style="font-size: 13px; font-weight: 500; color: #AFA9EC;">Aggiungi cameriere</div><div style="font-size: 11px; color: #7d838e;">scegli da 4 disponibili oggi</div></div><div class="dot" id="b-dotB-5" style="top: 6px; right: 6px;">5</div></button>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 20px; position: relative;">
+                  <button style="background: rgba(127,119,221,0.14); border: 0.5px solid rgba(127,119,221,0.3); color: #AFA9EC; padding: 12px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-message-circle"/></svg> Chiedi sostituto</button>
+                  <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 12px; border-radius: 10px; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-edit"/></svg> Modifica</button>
+                  <div class="dot" id="b-dotB-6" style="top: -10px; left: -8px;">6</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="b-view-new" class="vw vw-overlay" style="height: calc(100% - 32px); position: relative;">
+            <div style="position: absolute; inset: 0; background: #14181F; opacity: 0.4;"></div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #1c2129; border-radius: 22px 22px 0 0; padding: 12px 0 24px; max-height: 92%; overflow-y: auto;">
+              <div style="width: 40px; height: 4px; background: #3a4150; border-radius: 2px; margin: 0 auto 14px;"></div>
+              <div style="padding: 0 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div style="font-size: 17px; font-weight: 500;">Nuovo turno</div><button style="background: transparent; border: none; color: #7d838e; padding: 0; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 22px; height: 22px;" aria-hidden="true"><use href="#ti-x"/></svg></button></div>
+                <div style="margin-bottom: 16px; position: relative;">
+                  <div style="font-size: 10px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Riusa un turno tipo</div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button style="background: rgba(127,119,221,0.12); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">Apertura 06:30-14</button>
+                    <button style="background: rgba(127,119,221,0.12); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">Serale 18-23</button>
+                    <button style="background: transparent; border: 0.5px solid #3a4150; color: #7d838e; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">+ vuoto</button>
+                  </div>
+                  <div class="dot" id="b-dotB-7" style="top: -10px; right: 6px;">7</div>
+                </div>
+                <div style="margin-bottom: 12px;">
+                  <div style="font-size: 10px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Quando</div>
+                  <button style="width: 100%; text-align: left; background: #14181F; border: 0.5px solid #2a2f38; padding: 11px 14px; border-radius: 10px; color: #E6E8EC; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 8px; font-family: inherit;"><span><svg class="ti" style="width: 15px; height: 15px; vertical-align: -2px; margin-right: 6px; color: #7d838e; stroke: #7d838e;" aria-hidden="true"><use href="#ti-calendar"/></svg> Lunedì 25 maggio</span><svg class="ti" style="width: 15px; height: 15px; color: #7d838e; stroke: #7d838e;" aria-hidden="true"><use href="#ti-chevron-down"/></svg></button>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <button style="text-align: left; background: #14181F; border: 0.5px solid #2a2f38; padding: 11px 14px; border-radius: 10px; color: #E6E8EC; font-size: 13px; cursor: pointer; font-family: inherit;"><span style="font-size: 10px; color: #7d838e; display: block; margin-bottom: 2px;">Da</span>06:30</button>
+                    <button style="text-align: left; background: #14181F; border: 0.5px solid #2a2f38; padding: 11px 14px; border-radius: 10px; color: #E6E8EC; font-size: 13px; cursor: pointer; font-family: inherit;"><span style="font-size: 10px; color: #7d838e; display: block; margin-bottom: 2px;">A</span>14:00</button>
+                  </div>
+                </div>
+                <div style="margin-bottom: 16px; position: relative;">
+                  <div style="font-size: 10px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Chi</div>
+                  <button style="width: 100%; text-align: left; background: #14181F; border: 0.5px solid #2a2f38; padding: 11px 14px; border-radius: 10px; color: #7d838e; font-size: 13px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-family: inherit;"><span><svg class="ti" style="width: 15px; height: 15px; vertical-align: -2px; margin-right: 6px;" aria-hidden="true"><use href="#ti-user-plus"/></svg> Aggiungi dipendenti</span><span style="background: rgba(127,119,221,0.16); color: #AFA9EC; padding: 2px 8px; border-radius: 4px; font-size: 10px;">consigliati 3</span></button>
+                  <div class="dot" id="b-dotB-8" style="top: 32px; right: 6px;">8</div>
+                </div>
+                <button style="background: transparent; border: none; color: #AFA9EC; font-size: 12px; padding: 4px 0; display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 16px; font-family: inherit;"><svg class="ti" style="width: 15px; height: 15px;" aria-hidden="true"><use href="#ti-repeat"/></svg> Ripeti questo turno…</button>
+                <button style="width: 100%; background: #7F77DD; border: none; color: #fff; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;">Crea turno</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tutorial-pane">
+        <div style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 14px;">Passa sopra i numeri per evidenziarli sul mockup, oppure clicca le tab in alto.</div>
+        <div data-view="home" data-dot="b-dotB-1" class="tstep"><div class="tstepnum">1</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Sede attiva (selettore in alto)</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Per aziende con più di una sede, qui si cambia il contesto del calendario. Se hai una sola sede, diventa solo testo informativo.</div></div></div>
+        <div data-view="home" data-dot="b-dotB-2" class="tstep"><div class="tstepnum">2</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Copia settimana scorsa"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">L'azione che il manager fa più spesso: il lunedì replica la settimana precedente come base, poi ritocca. Un tap solo. Senza questo bottone si perdono 10 minuti ogni settimana.</div></div></div>
+        <div data-view="home" data-dot="b-dotB-3" class="tstep"><div class="tstepnum">3</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Card "scoperta" col bordo rosso</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il bordo sinistro rosso = manca personale. Si vede al volo anche scorrendo. Tap sulla card → si apre il dettaglio (vista 2). È il modo in cui il manager mobile vede il problema da risolvere.</div></div></div>
+        <div data-view="home" data-dot="b-dotB-4" class="tstep"><div class="tstepnum">4</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">FAB viola = nuovo turno</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Floating Action Button in basso a destra. Posizione raggiungibile col pollice destro. Tap → si apre il bottom sheet "Nuovo turno" (vista 3).</div></div></div>
+        <div data-view="detail" data-dot="b-dotB-5" class="tstep"><div class="tstepnum">5</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Aggiungi cameriere"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Tap qui → si apre la lista dei dipendenti disponibili oggi con la mansione richiesta. Pre-filtrata: niente scroll inutile. Il manager assegna in 1 tap e il turno diventa coperto.</div></div></div>
+        <div data-view="detail" data-dot="b-dotB-6" class="tstep"><div class="tstepnum">6</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Chiedi sostituto" — feature killer</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il differenziatore vs WhatsApp. Tap → notifica push a tutti i dipendenti disponibili con quella mansione: "C'è un turno da coprire stasera, chi può?". Chi accetta per primo lo ottiene. Niente più "ho mandato il messaggio al gruppo e nessuno risponde".</div></div></div>
+        <div data-view="new" data-dot="b-dotB-7" class="tstep"><div class="tstepnum">7</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Template "Apertura / Serale"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Tap su un template → orari, reparto e mansioni sono già precompilati. Resta da scegliere giorno e persone. 80% dei turni nasce così. Per il restante 20% c'è "+ vuoto" che apre il form completo.</div></div></div>
+        <div data-view="new" data-dot="b-dotB-8" class="tstep"><div class="tstepnum">8</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Aggiungi dipendenti" con consigliati</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Tap → il sistema suggerisce i 3 dipendenti più probabili (quelli che hanno la mansione giusta + non sono in ferie + non sono già in altri turni). Il manager spunta i nomi e chiude. Niente scroll attraverso tutto il team.</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="block-c" class="block">
+<div data-scope="c">
+  <h1>Blocco C — Approvazioni richieste e anomalie</h1>
+  <div class="lede">Cinque schermate: inbox richieste con tab segmentate, dettaglio richiesta ferie con avviso intelligente, notifica anomalia, lista anomalie, dettaglio anomalia con mappa.</div>
+
+  <div class="mockup-wrap">
+    <div class="tab-row">
+      <button class="tabnav active" data-view="inbox">1. Inbox richieste</button>
+      <button class="tabnav" data-view="reqdetail">2. Dettaglio richiesta</button>
+      <button class="tabnav" data-view="notif">3. Notifica anomalia</button>
+      <button class="tabnav" data-view="anlist">4. Lista anomalie</button>
+      <button class="tabnav" data-view="andetail">5. Dettaglio anomalia</button>
+    </div>
+
+    <div class="mockup-grid">
+
+      <div class="tphone">
+        <div class="tnotch"></div>
+        <div class="tscreen">
+          <div class="tstatus"><span>9:41</span><span><svg class="ti" style="width: 13px; height: 13px;" aria-hidden="true"><use href="#ti-signal-4g"/></svg> <svg class="ti" style="width: 15px; height: 15px;" aria-hidden="true"><use href="#ti-battery-3"/></svg></span></div>
+
+          <div id="c-view-inbox" class="vw active">
+            <div style="padding: 12px 18px 8px; display: flex; justify-content: space-between; align-items: center;">
+              <div style="font-size: 17px; font-weight: 500;">Richieste</div>
+              <button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-bell"/></svg></button>
+            </div>
+            <div class="tabseg" style="position: relative;">
+              <button class="act">In attesa <span style="background: rgba(127,119,221,0.25); color: #AFA9EC; padding: 1px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">3</span></button>
+              <button>Approvate</button>
+              <button>Rifiutate</button>
+              <div class="dot" id="c-dotC-1" style="top: -6px; left: 30px;">1</div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 0 18px 80px;">
+              <div id="c-req-1" style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer; position: relative;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center;">RP</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Roberta Pia</div><div style="font-size: 11px; color: #7d838e;">Cuoca</div></div><div style="font-size: 10px; color: #7d838e;">2h fa</div></div>
+                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(58,138,221,0.14); color: #85B7EB; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 6px;"><svg class="ti" style="width: 12px; height: 12px;" aria-hidden="true"><use href="#ti-beach"/></svg> Ferie</div>
+                <div style="font-size: 13px;">29 luglio → 8 agosto <span style="color: #7d838e;">(10 giorni)</span></div>
+                <div class="dot" id="c-dotC-2" style="top: -8px; right: -8px;">2</div>
+              </div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #D85A30; color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center;">GL</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Giulia Longo</div><div style="font-size: 11px; color: #7d838e;">Cameriera</div></div><div style="font-size: 10px; color: #7d838e;">ieri</div></div>
+                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(186,117,23,0.16); color: #EF9F27; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 6px;"><svg class="ti" style="width: 12px; height: 12px;" aria-hidden="true"><use href="#ti-clock"/></svg> Permesso</div>
+                <div style="font-size: 13px;">venerdì 30 — 14:00 / 16:00 <span style="color: #7d838e;">(2h)</span></div>
+              </div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #534AB7; color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center;">AM</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Andrea Marini</div><div style="font-size: 11px; color: #7d838e;">Cameriere</div></div><div style="font-size: 10px; color: #7d838e;">3 g fa</div></div>
+                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(58,138,221,0.14); color: #85B7EB; padding: 3px 8px; border-radius: 4px; font-size: 11px; margin-bottom: 6px;"><svg class="ti" style="width: 12px; height: 12px;" aria-hidden="true"><use href="#ti-beach"/></svg> Ferie</div>
+                <div style="font-size: 13px;">12 → 14 giugno <span style="color: #7d838e;">(3 giorni)</span></div>
+              </div>
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; background: #0E1116; border-top: 0.5px solid #2a2f38; display: flex; justify-content: space-around; padding: 9px 0 18px;">
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-calendar"/></svg><span style="font-size: 9px;">Turni</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-users"/></svg><span style="font-size: 9px;">Persone</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #AFA9EC; position: relative;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-inbox"/></svg><span style="position: absolute; top: -2px; right: 6px; background: #E24B4A; color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 8px; font-weight: 500;">3</span><span style="font-size: 9px;">Richieste</span></div>
+              <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; color: #7d838e;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-menu-2"/></svg><span style="font-size: 9px;">Altro</span></div>
+            </div>
+          </div>
+
+          <div id="c-view-reqdetail" class="vw">
+            <div style="padding: 12px 18px 8px; display: flex; align-items: center; gap: 10px;"><button style="background: transparent; border: none; padding: 4px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-arrow-left"/></svg></button><div style="font-size: 16px; font-weight: 500;">Richiesta ferie</div></div>
+            <div style="flex: 1; overflow-y: auto; padding: 14px 18px 80px;">
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 14px; padding: 16px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 14px;"><div style="width: 44px; height: 44px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 14px; font-weight: 500; display: flex; align-items: center; justify-content: center;">RP</div><div style="flex: 1;"><div style="font-size: 15px; font-weight: 500;">Roberta Pia</div><div style="font-size: 12px; color: #7d838e;">Cuoca · 35h settimanali</div></div></div>
+                <div style="border-top: 0.5px solid #2a2f38; padding-top: 12px;">
+                  <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span style="font-size: 12px; color: #7d838e;">Tipo</span><span style="font-size: 13px;"><svg class="ti" style="width: 14px; height: 14px; vertical-align: -2px; color: #85B7EB; stroke: #85B7EB;" aria-hidden="true"><use href="#ti-beach"/></svg> Ferie</span></div>
+                  <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span style="font-size: 12px; color: #7d838e;">Dal</span><span style="font-size: 13px;">Mar 29 luglio</span></div>
+                  <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span style="font-size: 12px; color: #7d838e;">Al</span><span style="font-size: 13px;">Ven 8 agosto</span></div>
+                  <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span style="font-size: 12px; color: #7d838e;">Giorni totali</span><span style="font-size: 13px; font-weight: 500;">10 giorni</span></div>
+                  <div style="display: flex; justify-content: space-between; padding: 5px 0;"><span style="font-size: 12px; color: #7d838e;">Residuo dopo</span><span style="font-size: 13px; color: #97C459;">14 / 24 giorni</span></div>
+                </div>
+              </div>
+              <div style="margin-bottom: 14px;"><div style="font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Nota di Roberta</div><div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-style: italic; color: #B8BEC8;">"Matrimonio del cugino fuori città, abbiamo già prenotato hotel e voli. Grazie!"</div></div>
+              <div style="background: rgba(186,117,23,0.10); border: 0.5px solid rgba(186,117,23,0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; display: flex; gap: 10px; align-items: flex-start; position: relative;"><svg class="ti" style="width: 18px; height: 18px; color: #EF9F27; stroke: #EF9F27; flex-shrink: 0; margin-top: 1px;" aria-hidden="true"><use href="#ti-alert-triangle"/></svg><div style="font-size: 12px; color: #EF9F27; line-height: 1.5;"><strong style="font-weight: 500;">Attenzione</strong>: il 31 luglio e il 1 agosto sono in alta stagione. Anche Andrea è in ferie quei giorni.</div><div class="dot" id="c-dotC-3" style="top: -8px; right: -8px;">3</div></div>
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 18px 26px; background: #14181F; border-top: 0.5px solid #2a2f38; display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+              <button style="background: transparent; border: 0.5px solid rgba(226,75,74,0.5); color: #F09595; padding: 13px; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: inherit;">Rifiuta</button>
+              <button style="background: #97C459; border: none; color: #fff; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; position: relative; font-family: inherit;"><svg class="ti" style="width: 18px; height: 18px; vertical-align: -3px; margin-right: 4px;" aria-hidden="true"><use href="#ti-check"/></svg> Approva<div class="dot" id="c-dotC-4" style="top: -8px; right: -8px;">4</div></button>
+            </div>
+          </div>
+
+          <div id="c-view-notif" class="vw">
+            <div style="padding: 12px 18px 8px; display: flex; justify-content: space-between; align-items: center;"><div><div style="font-size: 10px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px;">Sede</div><div style="font-size: 15px; font-weight: 500;">Trattoria da Mario</div></div><button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; position: relative; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-bell"/></svg><span style="position: absolute; top: 0; right: 2px; width: 8px; height: 8px; background: #E24B4A; border-radius: 50%; border: 2px solid #14181F;"></span></button></div>
+            <div style="flex: 1; padding: 18px; position: relative;">
+              <div style="background: rgba(226,75,74,0.10); border: 0.5px solid rgba(226,75,74,0.4); border-radius: 14px; padding: 14px 16px; margin-bottom: 18px; position: relative; cursor: pointer;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 10px;"><div style="width: 36px; height: 36px; border-radius: 50%; background: rgba(226,75,74,0.18); display: flex; align-items: center; justify-content: center;"><svg class="ti" style="width: 20px; height: 20px; color: #F09595; stroke: #F09595;" aria-hidden="true"><use href="#ti-map-pin-off"/></svg></div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500; color: #F09595;">Timbratura fuori area</div><div style="font-size: 11px; color: #7d838e;">10 minuti fa</div></div></div>
+                <div style="font-size: 13px; line-height: 1.5; color: #E6E8EC;"><strong style="font-weight: 500;">Roberta Pia</strong> ha timbrato l'entrata a 240m dalla sede. Ha lasciato una nota di giustificazione.</div>
+                <button style="margin-top: 10px; background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 8px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; font-family: inherit;">Vai all'anomalia <svg class="ti" style="width: 14px; height: 14px; vertical-align: -2px;" aria-hidden="true"><use href="#ti-arrow-right"/></svg></button>
+                <div class="dot" id="c-dotC-5" style="top: -10px; right: -10px;">5</div>
+              </div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;"><div style="display: flex; align-items: center; gap: 10px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(58,138,221,0.16); display: flex; align-items: center; justify-content: center;"><svg class="ti" style="width: 18px; height: 18px; color: #85B7EB; stroke: #85B7EB;" aria-hidden="true"><use href="#ti-inbox"/></svg></div><div style="flex: 1;"><div style="font-size: 13px;">Nuova richiesta ferie</div><div style="font-size: 11px; color: #7d838e;">Roberta Pia · 2h fa</div></div></div></div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px;"><div style="display: flex; align-items: center; gap: 10px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: rgba(151,196,89,0.16); display: flex; align-items: center; justify-content: center;"><svg class="ti" style="width: 18px; height: 18px; color: #97C459; stroke: #97C459;" aria-hidden="true"><use href="#ti-user-plus"/></svg></div><div style="flex: 1;"><div style="font-size: 13px;">Andrea ha accettato l'invito</div><div style="font-size: 11px; color: #7d838e;">ieri</div></div></div></div>
+            </div>
+          </div>
+
+          <div id="c-view-anlist" class="vw">
+            <div style="padding: 12px 18px 8px; display: flex; align-items: center; gap: 10px;"><button style="background: transparent; border: none; padding: 4px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-arrow-left"/></svg></button><div style="font-size: 16px; font-weight: 500;">Anomalie timbratura</div></div>
+            <div class="tabseg" style="position: relative;">
+              <button class="act">Aperte <span style="background: rgba(226,75,74,0.25); color: #F09595; padding: 1px 6px; border-radius: 8px; font-size: 10px; margin-left: 4px;">2</span></button>
+              <button>In revisione <span style="color: #7d838e;">1</span></button>
+              <button>Chiuse</button>
+              <div class="dot" id="c-dotC-6" style="top: -6px; right: 14px;">6</div>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 0 18px 24px;">
+              <div style="background: #1c2129; border: 0.5px solid rgba(226,75,74,0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; position: relative; cursor: pointer;">
+                <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; background: #E24B4A; border-radius: 12px 0 0 12px;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center;">RP</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Roberta Pia</div><div style="font-size: 11px; color: #7d838e;">oggi · 06:35</div></div><div style="font-size: 10px; color: #F09595; background: rgba(226,75,74,0.14); padding: 2px 8px; border-radius: 4px;">Aperta</div></div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #F09595;"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-map-pin-off"/></svg> Fuori area (240m)</div>
+              </div>
+              <div style="background: #1c2129; border: 0.5px solid rgba(226,75,74,0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; position: relative;">
+                <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 3px; background: #E24B4A; border-radius: 12px 0 0 12px;"></div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div style="width: 32px; height: 32px; border-radius: 50%; background: #534AB7; color: #fff; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center;">AM</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Andrea Marini</div><div style="font-size: 11px; color: #7d838e;">ieri · turno 18-23</div></div><div style="font-size: 10px; color: #F09595; background: rgba(226,75,74,0.14); padding: 2px 8px; border-radius: 4px;">Aperta</div></div>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #F09595;"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-clock-off"/></svg> Timbratura uscita mancante</div>
+              </div>
+            </div>
+          </div>
+
+          <div id="c-view-andetail" class="vw">
+            <div style="padding: 12px 18px 8px; display: flex; align-items: center; gap: 10px;"><button style="background: transparent; border: none; padding: 4px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 20px; height: 20px;" aria-hidden="true"><use href="#ti-arrow-left"/></svg></button><div style="font-size: 16px; font-weight: 500;">Anomalia timbratura</div></div>
+            <div style="flex: 1; overflow-y: auto; padding: 12px 18px 90px;">
+              <div style="background: rgba(226,75,74,0.10); border: 0.5px solid rgba(226,75,74,0.35); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; display: flex; gap: 10px;"><svg class="ti" style="width: 20px; height: 20px; color: #F09595; stroke: #F09595; flex-shrink: 0;" aria-hidden="true"><use href="#ti-map-pin-off"/></svg><div style="font-size: 13px; color: #F09595;">Timbratura fuori area<div style="font-size: 11px; color: #7d838e; margin-top: 2px;">240m dalla sede (raggio: 100m)</div></div></div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 14px; margin-bottom: 12px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;"><div style="width: 40px; height: 40px; border-radius: 50%; background: #1D9E75; color: #fff; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center;">RP</div><div style="flex: 1;"><div style="font-size: 14px; font-weight: 500;">Roberta Pia</div><div style="font-size: 12px; color: #7d838e;">Cuoca</div></div></div>
+                <div style="border-top: 0.5px solid #2a2f38; padding-top: 10px;">
+                  <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 12px; color: #7d838e;">Turno</span><span style="font-size: 13px;">Apertura · 06:30-14:00</span></div>
+                  <div style="display: flex; justify-content: space-between; padding: 4px 0;"><span style="font-size: 12px; color: #7d838e;">Timbratura</span><span style="font-size: 13px; font-weight: 500;">06:35</span></div>
+                </div>
+              </div>
+              <div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 14px; margin-bottom: 12px; position: relative;">
+                <div style="font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Posizione</div>
+                <div style="height: 120px; background: #0E1116; border-radius: 8px; position: relative; overflow: hidden;">
+                  <div style="position: absolute; inset: 0; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(127,119,221,0.04) 10px, rgba(127,119,221,0.04) 20px);"></div>
+                  <div style="position: absolute; top: 50%; left: 35%; transform: translate(-50%,-50%); width: 60px; height: 60px; border: 1.5px dashed #7F77DD; border-radius: 50%; background: rgba(127,119,221,0.1);"></div>
+                  <div style="position: absolute; top: 50%; left: 35%; transform: translate(-50%,-50%); width: 8px; height: 8px; background: #7F77DD; border-radius: 50%;"></div>
+                  <div style="position: absolute; top: 50%; left: 35%; transform: translate(-50%, 20px); font-size: 10px; color: #AFA9EC; white-space: nowrap;">sede</div>
+                  <div style="position: absolute; top: 30%; left: 72%; transform: translate(-50%,-50%); width: 10px; height: 10px; background: #E24B4A; border-radius: 50%; box-shadow: 0 0 0 4px rgba(226,75,74,0.25);"></div>
+                  <div style="position: absolute; top: 30%; left: 72%; transform: translate(-50%, 12px); font-size: 10px; color: #F09595; white-space: nowrap;">timbratura</div>
+                </div>
+              </div>
+              <div style="position: relative;"><div style="font-size: 11px; color: #7d838e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Nota di Roberta</div><div style="background: #1c2129; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-style: italic; color: #B8BEC8;">"Ho dovuto parcheggiare lontano per via dei lavori in via Roma, ho timbrato dalla macchina mentre arrivavo a piedi."</div><div class="dot" id="c-dotC-7" style="top: 26px; right: -8px;">7</div></div>
+            </div>
+            <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 18px 26px; background: #14181F; border-top: 0.5px solid #2a2f38; display: grid; grid-template-columns: 1fr 2fr; gap: 8px; position: relative;">
+              <button style="background: transparent; border: 0.5px solid rgba(226,75,74,0.5); color: #F09595; padding: 13px; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: inherit;">Segnala</button>
+              <button style="background: #97C459; border: none; color: #fff; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 18px; height: 18px; vertical-align: -3px; margin-right: 4px;" aria-hidden="true"><use href="#ti-check"/></svg> Approva timbratura</button>
+              <div class="dot" id="c-dotC-8" style="top: -8px; right: 30px;">8</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tutorial-pane">
+        <div style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 14px;">Passa sopra i numeri per evidenziarli sul mockup, o clicca le tab in alto.</div>
+        <div data-view="inbox" data-dot="c-dotC-1" class="tstep"><div class="tstepnum">1</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Inbox richieste con tab segmentate</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">"In attesa / Approvate / Rifiutate". Il numero sulla tab attiva dice subito quante azioni ci sono da fare. È la prima cosa che il manager vede quando apre la sezione.</div></div></div>
+        <div data-view="inbox" data-dot="c-dotC-2" class="tstep"><div class="tstepnum">2</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Card richiesta scansionabile</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Avatar, nome, tipo (badge colorato: blu per ferie, ambra per permessi), date in chiaro. Senza aprire il dettaglio il manager capisce di cosa si tratta. Tap → dettaglio.</div></div></div>
+        <div data-view="reqdetail" data-dot="c-dotC-3" class="tstep"><div class="tstepnum">3</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Avviso intelligente sui conflitti</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il sistema controlla se la richiesta cade in alta stagione o si sovrappone con altre ferie già approvate. Se sì, mostra un warning ambra. Non blocca, segnala.</div></div></div>
+        <div data-view="reqdetail" data-dot="c-dotC-4" class="tstep"><div class="tstepnum">4</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Approva / Rifiuta sempre visibili</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Bottoni "sticky" in fondo, mai sopra il fold. Approva è verde e largo (azione principale), Rifiuta è solo contornato (azione secondaria). Tap Approva → notifica push automatica al dipendente, ferie inserite in calendario.</div></div></div>
+        <div data-view="notif" data-dot="c-dotC-5" class="tstep"><div class="tstepnum">5</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Notifica anomalia ad alta priorità</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Le notifiche di anomalia timbratura sono visivamente diverse dalle altre: sfondo rosso, icona dedicata, "vai all'anomalia" come CTA. Sono le cose che il manager deve vedere per prime quando apre l'app la mattina.</div></div></div>
+        <div data-view="anlist" data-dot="c-dotC-6" class="tstep"><div class="tstepnum">6</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Tab "Aperte / In revisione / Chiuse"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Stessa logica dell'inbox richieste. "Aperte" = anomalie senza giustificazione del dipendente. "In revisione" = il dipendente ha già scritto la nota e aspetta la decisione del manager.</div></div></div>
+        <div data-view="andetail" data-dot="c-dotC-7" class="tstep"><div class="tstepnum">7</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Nota del dipendente + mappa</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il manager vede a colpo d'occhio: dove ha timbrato (puntino rosso sulla mappa rispetto al cerchio della sede), cosa ha scritto il dipendente. Decisione basata su evidenza, non su sensazione.</div></div></div>
+        <div data-view="andetail" data-dot="c-dotC-8" class="tstep"><div class="tstepnum">8</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Approva timbratura"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">La timbratura passa allo stato "Approvata" e viene conteggiata regolarmente nelle ore del mese. "Segnala" = la giustificazione non convince, il sistema registra l'evento ma le ore non vengono pagate (la regola dipende dal CCNL applicato).</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+<div id="block-d" class="block">
+<div data-scope="d">
+  <h1>Blocco D — Nuovo turno · stati dinamici</h1>
+  <div class="lede">Quattro overlay che si aprono sopra lo schermo "Nuovo turno": datepicker, timepicker, picker dipendenti (con espansione lista completa), avviso conflitti. Sullo schermo 3 puoi davvero cliccare "Mostra tutti i 9 dipendenti".</div>
+
+  <div class="mockup-wrap">
+    <div class="tab-row">
+      <button class="tabnav active" data-view="date">1. Data</button>
+      <button class="tabnav" data-view="time">2. Orario</button>
+      <button class="tabnav" data-view="people">3. Dipendenti</button>
+      <button class="tabnav" data-view="conflict">4. Conflitto</button>
+    </div>
+
+    <div class="mockup-grid">
+
+      <div class="tphone">
+        <div class="tnotch"></div>
+        <div class="tscreen">
+          <div class="tstatus"><span>9:41</span><span><svg class="ti" style="width: 13px; height: 13px;" aria-hidden="true"><use href="#ti-signal-4g"/></svg> <svg class="ti" style="width: 15px; height: 15px;" aria-hidden="true"><use href="#ti-battery-3"/></svg></span></div>
+
+          <div id="d-view-date" class="vw active">
+            <div class="basescreen">
+              <div class="baseheader">Nuovo turno</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Quando</div>
+              <div class="basecard" style="display: flex; justify-content: space-between; align-items: center;"><span>Lunedì 25 maggio</span><svg class="ti" style="width: 14px; height: 14px; color: #7d838e; stroke: #7d838e;" aria-hidden="true"><use href="#ti-chevron-down"/></svg></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;"><div class="basecard" style="padding: 9px 14px;"><div style="font-size: 10px; color: #7d838e;">Da</div>06:30</div><div class="basecard" style="padding: 9px 14px;"><div style="font-size: 10px; color: #7d838e;">A</div>14:00</div></div>
+              <div class="tlabel" style="margin-bottom: 6px;">Chi</div>
+              <div class="basecard" style="color: #7d838e;">+ Aggiungi dipendenti</div>
+            </div>
+            <div class="dimcal"></div>
+            <div class="sheet" style="max-height: 80%;">
+              <div class="sheethandle"></div>
+              <div style="padding: 0 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;"><div style="font-size: 16px; font-weight: 500;">Scegli la data</div><button style="background: transparent; border: none; color: #7d838e; padding: 0; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 22px; height: 22px;" aria-hidden="true"><use href="#ti-x"/></svg></button></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; position: relative;"><button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 18px; height: 18px;" aria-hidden="true"><use href="#ti-chevron-left"/></svg></button><div style="font-size: 14px; font-weight: 500;">Maggio 2026</div><button style="background: transparent; border: none; padding: 6px; color: #E6E8EC; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 18px; height: 18px;" aria-hidden="true"><use href="#ti-chevron-right"/></svg></button><div class="dot" id="d-dotD-1" style="top: -8px; right: 0;">1</div></div>
+                <div style="display: grid; grid-template-columns: repeat(7,1fr); font-size: 11px; color: #7d838e; text-align: center; margin-bottom: 6px;"><div>L</div><div>M</div><div>M</div><div>G</div><div>V</div><div>S</div><div style="color: #F09595;">D</div></div>
+                <div style="display: grid; grid-template-columns: repeat(7,1fr); justify-items: center; row-gap: 2px; position: relative;">
+                  <div class="dayno muted">27</div><div class="dayno muted">28</div><div class="dayno muted">29</div><div class="dayno muted">30</div><div class="dayno">1</div><div class="dayno">2</div><div class="dayno">3</div>
+                  <div class="dayno">4</div><div class="dayno">5</div><div class="dayno">6</div><div class="dayno">7</div><div class="dayno">8</div><div class="dayno">9</div><div class="dayno">10</div>
+                  <div class="dayno">11</div><div class="dayno">12</div><div class="dayno">13</div><div class="dayno">14</div><div class="dayno">15</div><div class="dayno">16</div><div class="dayno">17</div>
+                  <div class="dayno">18</div><div class="dayno">19</div><div class="dayno">20</div><div class="dayno">21</div><div class="dayno">22</div><div class="dayno">23</div><div class="dayno">24</div>
+                  <div class="dayno today">25</div><div class="dayno">26</div><div class="dayno">27</div><div class="dayno sel">28</div><div class="dayno">29</div><div class="dayno">30</div><div class="dayno">31</div>
+                  <div class="dot" id="d-dotD-2" style="top: 70px; left: 50%; transform: translateX(-50%);">2</div>
+                </div>
+                <div style="display: flex; justify-content: center; gap: 14px; margin-top: 14px; font-size: 11px; color: #7d838e;"><span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; border: 1px solid #AFA9EC; border-radius: 50%; display: inline-block;"></span> oggi</span><span style="display: flex; align-items: center; gap: 4px;"><span style="width: 8px; height: 8px; background: #7F77DD; border-radius: 50%; display: inline-block;"></span> selezionato</span></div>
+                <button class="tcta" style="margin-top: 16px;">Conferma · Gio 28 maggio</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="d-view-time" class="vw">
+            <div class="basescreen">
+              <div class="baseheader">Nuovo turno</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Quando</div>
+              <div class="basecard">Gio 28 maggio</div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;"><div class="basecard" style="padding: 9px 14px;"><div style="font-size: 10px; color: #7d838e;">Da</div>06:30</div><div class="basecard" style="padding: 9px 14px;"><div style="font-size: 10px; color: #7d838e;">A</div>14:00</div></div>
+              <div class="tlabel" style="margin-bottom: 6px;">Chi</div>
+              <div class="basecard" style="color: #7d838e;">+ Aggiungi dipendenti</div>
+            </div>
+            <div class="dimcal"></div>
+            <div class="sheet" style="max-height: 80%;">
+              <div class="sheethandle"></div>
+              <div style="padding: 0 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;"><div style="font-size: 16px; font-weight: 500;">Orari</div><button style="background: transparent; border: none; color: #7d838e; padding: 0; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 22px; height: 22px;" aria-hidden="true"><use href="#ti-x"/></svg></button></div>
+                <div style="display: flex; background: #14181F; border-radius: 10px; padding: 3px; gap: 2px; margin-bottom: 16px; position: relative;">
+                  <button style="flex: 1; background: #1c2129; border: 0.5px solid #2a2f38; padding: 10px; border-radius: 8px; color: #E6E8EC; font-size: 13px; cursor: pointer; font-family: inherit;"><div style="font-size: 10px; color: #7d838e;">Inizio</div><div style="font-size: 16px; font-weight: 500;">06:30</div></button>
+                  <button style="flex: 1; background: transparent; border: none; padding: 10px; border-radius: 8px; color: #7d838e; font-size: 13px; cursor: pointer; font-family: inherit;"><div style="font-size: 10px;">Fine</div><div style="font-size: 16px;">14:00</div></button>
+                  <div class="dot" id="d-dotT-1" style="top: -8px; left: 14px;">3</div>
+                </div>
+                <div style="background: #14181F; border: 0.5px solid #2a2f38; border-radius: 12px; padding: 8px; display: flex; position: relative; height: 200px; overflow: hidden;">
+                  <div class="timesel"></div>
+                  <div class="timecol"><div class="timev">04</div><div class="timev">05</div><div class="timev mid">06</div><div class="timev">07</div><div class="timev">08</div></div>
+                  <div style="display: flex; align-items: center; font-size: 22px; color: #E6E8EC; font-weight: 500;">:</div>
+                  <div class="timecol"><div class="timev">00</div><div class="timev">15</div><div class="timev mid">30</div><div class="timev">45</div><div class="timev">00</div></div>
+                  <div class="dot" id="d-dotT-2" style="top: 8px; right: 8px;">4</div>
+                </div>
+                <div style="margin-top: 16px; position: relative;">
+                  <div class="tlabel" style="margin-bottom: 8px;">Scorciatoie</div>
+                  <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button style="background: rgba(127,119,221,0.12); border: 0.5px solid rgba(127,119,221,0.35); color: #AFA9EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">06:30</button>
+                    <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">08:00</button>
+                    <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">12:00</button>
+                    <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">18:00</button>
+                    <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: inherit;">19:00</button>
+                  </div>
+                  <div class="dot" id="d-dotT-3" style="top: 24px; right: 0;">5</div>
+                </div>
+                <button class="tcta" style="margin-top: 18px;">Conferma · 06:30 → 14:00</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="d-view-people" class="vw">
+            <div class="basescreen">
+              <div class="baseheader">Nuovo turno</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Quando</div>
+              <div class="basecard">Gio 28 maggio · 06:30 → 14:00</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Chi</div>
+              <div class="basecard" style="color: #7d838e;">+ Aggiungi dipendenti</div>
+            </div>
+            <div class="dimcal"></div>
+            <div class="sheet" style="max-height: 92%; height: 92%;">
+              <div class="sheethandle"></div>
+              <div style="padding: 0 22px; height: calc(100% - 18px); display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;"><div><div style="font-size: 16px; font-weight: 500;">Aggiungi al turno</div><div style="font-size: 11px; color: #7d838e; margin-top: 2px;">Gio 28 · 06:30 → 14:00 · Cucina</div></div><button style="background: transparent; border: none; color: #7d838e; padding: 0; cursor: pointer; font-family: inherit;"><svg class="ti" style="width: 22px; height: 22px;" aria-hidden="true"><use href="#ti-x"/></svg></button></div>
+                <div style="flex: 1; overflow-y: auto; padding-right: 4px; margin-right: -4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; position: relative;">
+                    <div class="tlabel">Consigliati per te</div>
+                    <div style="font-size: 10px; color: #7d838e; display: flex; align-items: center; gap: 3px;"><svg class="ti" style="width: 12px; height: 12px; color: #AFA9EC; stroke: #AFA9EC;" aria-hidden="true"><use href="#ti-sparkles"/></svg> automatici</div>
+                    <div class="dot" id="d-dotP-1" style="top: -10px; left: 100px;">6</div>
+                  </div>
+                  <div class="row" style="border-bottom: 0.5px solid #2a2f38;"><div class="avs" style="background: #1D9E75;">RP</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Roberta Pia</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cuoca</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox on" style="position: relative;"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-check"/></svg><div class="dot" id="d-dotP-2" style="top: -10px; right: -10px;">7</div></div></div>
+                  <div class="row"><div class="avs" style="background: #D85A30;">GL</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Giulia Longo</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cameriera</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox on"><svg class="ti" style="width: 14px; height: 14px;" aria-hidden="true"><use href="#ti-check"/></svg></div></div>
+                  <div class="row"><div class="avs" style="background: #534AB7;">AM</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Andrea Marini</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cameriere</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox"></div></div>
+                  <button id="d-expand-all" style="width: 100%; background: transparent; border: none; color: #AFA9EC; padding: 14px 0 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-family: inherit; position: relative;"><svg class="ti" style="width: 16px; height: 16px;" aria-hidden="true"><use href="#ti-chevron-down"/></svg> Mostra tutti i 9 dipendenti<div class="dot" id="d-dotP-3" style="top: -2px; right: 10px;">8</div></button>
+                  <div id="d-all-employees" style="display: none;">
+                    <div style="position: relative; margin-top: 10px;"><input type="text" placeholder="Cerca per nome…" style="width: 100%; box-sizing: border-box; background: #14181F; border: 0.5px solid #2a2f38; padding: 10px 12px 10px 36px; border-radius: 10px; color: #E6E8EC; font-size: 13px; font-family: inherit;" /><svg class="ti" style="width: 16px; height: 16px; color: #7d838e; stroke: #7d838e; position: absolute; left: 12px; top: 11px;" aria-hidden="true"><use href="#ti-search"/></svg></div>
+                    <div class="tlabel" style="margin: 12px 0 0;">Tutti i dipendenti</div>
+                    <div class="row"><div class="avs" style="background: #BA7517;">SF</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Silvia Ferri</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cameriera</span><span class="chipamber">in turno fino alle 10</span></div></div><div class="checkbox"></div></div>
+                    <div class="row" style="opacity: 0.55;"><div class="avs" style="background: #639922;">MC</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Marco Conti</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cuoco</span><span style="color: #F09595;">in ferie</span></div></div><div class="checkbox" style="opacity: 0.4;"></div></div>
+                    <div class="row"><div class="avs" style="background: #993556;">EL</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Elena Locatelli</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cameriera</span><span style="color: #7d838e;">part-time mattina</span></div></div><div class="checkbox"></div></div>
+                    <div class="row"><div class="avs" style="background: #185FA5;">DT</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Davide Trotti</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Aiuto cucina</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox"></div></div>
+                    <div class="row"><div class="avs" style="background: #533C89;">PT</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Paola Torri</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Cameriera</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox"></div></div>
+                    <div class="row"><div class="avs" style="background: #097064;">FR</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Francesco Rossi</div><div style="font-size: 11px; color: #7d838e; display: flex; align-items: center; gap: 4px; margin-top: 2px;"><span class="chip">Lavapiatti</span><span style="color: #97C459;">disponibile</span></div></div><div class="checkbox"></div></div>
+                  </div>
+                </div>
+                <button class="tcta" style="margin-top: 14px;">Aggiungi 2 dipendenti</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="d-view-conflict" class="vw">
+            <div class="basescreen">
+              <div class="baseheader">Nuovo turno</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Quando</div>
+              <div class="basecard">Gio 28 maggio · 06:30 → 14:00</div>
+              <div class="tlabel" style="margin-bottom: 6px;">Chi</div>
+              <div class="basecard">Roberta Pia, Giulia Longo</div>
+            </div>
+            <div class="dimcal"></div>
+            <div class="sheet" style="max-height: 70%;">
+              <div class="sheethandle"></div>
+              <div style="padding: 0 22px;">
+                <div style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; position: relative;">
+                  <div style="width: 40px; height: 40px; border-radius: 50%; background: rgba(186,117,23,0.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0;"><svg class="ti" style="width: 22px; height: 22px; color: #EF9F27; stroke: #EF9F27;" aria-hidden="true"><use href="#ti-alert-triangle"/></svg></div>
+                  <div style="flex: 1;"><div style="font-size: 16px; font-weight: 500;">Trovato 1 conflitto</div><div style="font-size: 13px; color: #7d838e; margin-top: 2px; line-height: 1.4;">Puoi salvare comunque, ma controlla prima.</div></div>
+                  <div class="dot" id="d-dotCF-1" style="top: -8px; right: -8px;">9</div>
+                </div>
+                <div style="background: #14181F; border: 0.5px solid rgba(186,117,23,0.3); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px;">
+                  <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;"><div class="avs" style="background: #1D9E75;">RP</div><div style="flex: 1;"><div style="font-size: 13px; font-weight: 500;">Roberta Pia</div><div style="font-size: 11px; color: #EF9F27;">già in turno "Apertura sala" 07:00 → 11:00</div></div></div>
+                  <div style="background: rgba(127,119,221,0.08); padding: 8px 10px; border-radius: 8px; font-size: 11px; color: #B8BEC8; line-height: 1.4;"><svg class="ti" style="width: 14px; height: 14px; vertical-align: -2px; color: #AFA9EC; stroke: #AFA9EC;" aria-hidden="true"><use href="#ti-info-circle"/></svg> Sovrapposizione di 4h sul turno esistente</div>
+                </div>
+                <label style="display: flex; align-items: flex-start; gap: 10px; padding: 12px 0; cursor: pointer; position: relative;"><div class="checkbox" style="margin-top: 1px;"></div><div style="font-size: 13px; line-height: 1.4;">Ho letto, salvo comunque<div style="font-size: 11px; color: #7d838e; margin-top: 2px;">Sarà compito tuo cancellare o spostare il turno in conflitto</div></div><div class="dot" id="d-dotCF-2" style="top: 6px; left: -8px;">10</div></label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; position: relative;">
+                  <button style="background: transparent; border: 0.5px solid #3a4150; color: #E6E8EC; padding: 13px; border-radius: 12px; font-size: 14px; cursor: pointer; font-family: inherit;">Torna indietro</button>
+                  <button style="background: #BA7517; border: none; color: #fff; padding: 13px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit; opacity: 0.6;">Salva comunque</button>
+                  <div class="dot" id="d-dotCF-3" style="top: -8px; right: -8px;">11</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="tutorial-pane">
+        <div style="font-size: 14px; color: var(--color-text-secondary); margin-bottom: 14px;">Quattro stati che si aprono dallo schermo "Nuovo turno". Passa sui numeri o clicca le tab.</div>
+        <div data-view="date" data-dot="d-dotD-1" class="tstep"><div class="tstepnum">1</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Mese navigabile</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Frecce per cambiare mese, label centrale ("Maggio 2026"). Voluta semplicità: niente vista anno o year picker. Per spostarsi più in là si scorre col tap-tap, gli HORECA pianificano max 1-2 mesi avanti.</div></div></div>
+        <div data-view="date" data-dot="d-dotD-2" class="tstep"><div class="tstepnum">2</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Giorno selezionato + oggi</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il 25 ha il bordo viola = "oggi". Il 28 ha lo sfondo pieno = "selezionato". Due pattern visivi differenti per due significati diversi. La domenica ha l'header in rosso (italian convention).</div></div></div>
+        <div data-view="time" data-dot="d-dotT-1" class="tstep"><div class="tstepnum">3</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Tab Inizio / Fine</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Un solo bottom sheet gestisce entrambi gli orari. Tap sulla tab per passare da "inizio" a "fine" senza riaprire il modale. È più veloce di due picker separati.</div></div></div>
+        <div data-view="time" data-dot="d-dotT-2" class="tstep"><div class="tstepnum">4</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Rotelle a step di 15 min</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Step di 15 minuti (00, 15, 30, 45): copre il 99% dei casi HORECA. Se serve davvero un minuto preciso, c'è "Personalizza" nel menu Altro. Rotella nativa = familiarità totale.</div></div></div>
+        <div data-view="time" data-dot="d-dotT-3" class="tstep"><div class="tstepnum">5</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Scorciatoie orari frequenti</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il sistema impara dalle abitudini: se in questa azienda i turni iniziano sempre alle 6:30, 8, 12, 18, 19 — quelle 5 chip stanno qui. È un'ottimizzazione "stupida ma efficace": -3 secondi a turno × 50 turni a settimana = 2,5 minuti risparmiati ogni lunedì.</div></div></div>
+        <div data-view="people" data-dot="d-dotP-1" class="tstep"><div class="tstepnum">6</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Sezione "Consigliati per te"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Logica: dipendenti con la mansione richiesta + disponibili in quella fascia + senza conflitti già in calendario. Le sparkles e l'etichetta "automatici" comunicano che è una scelta del sistema, non degli ordini editati a mano.</div></div></div>
+        <div data-view="people" data-dot="d-dotP-2" class="tstep"><div class="tstepnum">7</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Multi-selezione con checkbox</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Il manager spunta più persone, vede il contatore in basso ("Aggiungi 2 dipendenti"). Niente "modifica" o "conferma" individuale per riga — workflow troppo lungo. Tap = spunta.</div></div></div>
+        <div data-view="people" data-dot="d-dotP-3" class="tstep"><div class="tstepnum">8</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">"Mostra tutti i 9 dipendenti"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Tap → si espande la lista completa con search box. Provalo: clicca davvero quel bottone nel mockup. Compaiono anche persone "in ferie" (grigiate, non selezionabili) e con stato part-time o conflitti — l'opacità + il chip ambra comunicano tutto a colpo d'occhio.</div></div></div>
+        <div data-view="conflict" data-dot="d-dotCF-1" class="tstep"><div class="tstepnum">9</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Avviso conflitto NON bloccante</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Colore ambra, non rosso: è un warning, non un errore. La filosofia è "il manager sa cosa fa". Bloccare a tutti i costi le sovrapposizioni significa anche bloccare i casi legittimi (es. doppio turno spezzato con pausa lunga).</div></div></div>
+        <div data-view="conflict" data-dot="d-dotCF-2" class="tstep"><div class="tstepnum">10</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">Checkbox "Ho letto"</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">Pattern preso dalle UI di rischio (es. GitHub "delete repository"). Il manager deve fare un atto cosciente: spuntare la casella. Finché non è spuntata, il bottone "Salva comunque" resta opaco (60%) e non cliccabile.</div></div></div>
+        <div data-view="conflict" data-dot="d-dotCF-3" class="tstep"><div class="tstepnum">11</div><div><div style="font-size: 14px; font-weight: 500; margin-bottom: 4px;">CTA in ambra, non viola</div><div style="font-size: 13px; color: var(--color-text-secondary); line-height: 1.5;">L'azione principale qui non è "happy path", è "accetto il rischio". Il bottone è ambra (warning) non viola (default). Stesso pattern di Linear e Notion: cambi colore per ricordare al manager che sta forzando il sistema.</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+  </main>
+</div>
+
+<script>
+(function() {
+  // Navigazione blocchi via sidebar
+  document.querySelectorAll('.sidebar-link[data-block]').forEach(function(link) {
+    link.addEventListener('click', function() {
+      var target = link.dataset.block;
+      document.querySelectorAll('.sidebar-link').forEach(function(l) { l.classList.remove('active'); });
+      link.classList.add('active');
+      document.querySelectorAll('.block').forEach(function(b) { b.classList.remove('active'); });
+      var bl = document.getElementById('block-' + target);
+      if (bl) bl.classList.add('active');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  // Tab interne ai blocchi
+  document.querySelectorAll('[data-scope]').forEach(function(scope) {
+    var scopeId = scope.dataset.scope;
+    scope.querySelectorAll('.tabnav').forEach(function(b) {
+      b.addEventListener('click', function() {
+        showView(scopeId, b.dataset.view);
+      });
+    });
+    scope.querySelectorAll('.tstep').forEach(function(s) {
+      s.addEventListener('mouseenter', function() {
+        showView(scopeId, s.dataset.view);
+        var d = document.getElementById(s.dataset.dot);
+        if (d) d.classList.add('show');
+      });
+      s.addEventListener('mouseleave', function() {
+        var d = document.getElementById(s.dataset.dot);
+        if (d) d.classList.remove('show');
+      });
+      s.addEventListener('click', function() { showView(scopeId, s.dataset.view); });
+    });
+  });
+
+  function showView(scopeId, view) {
+    var scope = document.querySelector('[data-scope="' + scopeId + '"]');
+    if (!scope) return;
+    scope.querySelectorAll('.vw').forEach(function(el) { el.classList.remove('active'); });
+    var el = scope.querySelector('#' + scopeId + '-view-' + view);
+    if (el) el.classList.add('active');
+    scope.querySelectorAll('.tabnav').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+  }
+
+  // Card scoperta → dettaglio (blocco B)
+  var c = document.getElementById('b-card-uncovered');
+  if (c) c.addEventListener('click', function() { showView('b', 'detail'); });
+  var fab = document.getElementById('b-fab-btn');
+  if (fab) fab.addEventListener('click', function() { showView('b', 'new'); });
+  var r = document.getElementById('c-req-1');
+  if (r) r.addEventListener('click', function() { showView('c', 'reqdetail'); });
+
+  // Espandi tutti dipendenti (blocco D)
+  var ex = document.getElementById('d-expand-all');
+  if (ex) ex.addEventListener('click', function() {
+    var all = document.getElementById('d-all-employees');
+    if (all) {
+      all.style.display = all.style.display === 'none' ? 'block' : 'none';
+      ex.style.display = 'none';
+    }
+  });
+})();
+</script>
+</body>
+</html>
