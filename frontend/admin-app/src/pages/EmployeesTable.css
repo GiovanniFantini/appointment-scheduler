@@ -29,7 +29,7 @@
 
 .employees-filter-input:focus,
 .employees-filter-select:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .employees-filter-input {
@@ -50,7 +50,7 @@
 
 .employees-filter-reset:hover {
   color: var(--su-text-primary);
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .employees-table-card {
@@ -117,7 +117,7 @@
 }
 
 .employees-table tbody tr:hover {
-  background-color: rgba(99, 102, 241, 0.06);
+  background-color: var(--su-accent-primary-faint);
 }
 
 .kind-chip {
@@ -183,5 +183,5 @@
 
 .employees-pagination button:not(:disabled):hover {
   color: var(--su-text-primary);
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }

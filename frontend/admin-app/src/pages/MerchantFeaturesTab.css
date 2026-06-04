@@ -24,7 +24,7 @@
 
 .detail-tab.active {
   color: var(--su-text-primary);
-  border-bottom-color: #6366f1;
+  border-bottom-color: var(--su-accent-primary);
 }
 
 .info-card-hint {
@@ -97,7 +97,7 @@
 }
 
 .feature-level:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 /* Toggle */
@@ -137,13 +137,13 @@
 }
 
 .toggle input:checked + .toggle-slider {
-  background-color: rgba(99,102,241,0.25);
-  border-color: #6366f1;
+  background-color: var(--su-accent-primary-soft);
+  border-color: var(--su-accent-primary);
 }
 
 .toggle input:checked + .toggle-slider::before {
   transform: translateX(16px);
-  background-color: #6366f1;
+  background-color: var(--su-accent-primary);
 }
 
 .features-footer {

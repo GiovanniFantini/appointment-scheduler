@@ -1,9 +1,19 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { EmptyState, PageHeader, Skeleton, useToast } from '@scheduler/ui'
+import {
+  EmptyState,
+  PageHeader,
+  Skeleton,
+  SegmentedTabs,
+  StatusChip,
+  Avatar,
+  type StatusChipVariant,
+  useToast
+} from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './MerchantsPage.css'
+import '../styles/admin-cards.css'
 
 interface Merchant {
   id: number
@@ -30,12 +40,16 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: 'inactive', label: 'Inactive' },
 ]
 
-function statusClass(status: string) {
+function statusVariant(status: string): StatusChipVariant {
   switch (status) {
-    case 'active': return 'status-badge status-active'
-    case 'pending': return 'status-badge status-pending'
-    default: return 'status-badge status-inactive'
+    case 'active': return 'success'
+    case 'pending': return 'warning'
+    default: return 'neutral'
   }
+}
+
+function statusLabel(status: string): string {
+  return status.charAt(0).toUpperCase() + status.slice(1)
 }
 
 export default function MerchantsPage() {
@@ -99,20 +113,18 @@ export default function MerchantsPage() {
       <PageHeader title="Merchants" subtitle="Manage merchant accounts and approvals" />
 
       {/* Filter tabs */}
-      <div className="filter-tabs">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            className={`filter-tab${tab === t.key ? ' active' : ''}`}
-            onClick={() => setTab(t.key)}
-          >
-            {t.label}
-            {t.key !== 'all' && !loading && (
-              <> ({merchants.filter((m) => getMerchantStatus(m) === t.key).length})</>
-            )}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs<TabKey>
+        className="merchants-tabs"
+        value={tab}
+        onChange={setTab}
+        options={TABS.map((t) => ({
+          value: t.key,
+          label: t.label,
+          count: t.key === 'all'
+            ? undefined
+            : (loading ? undefined : merchants.filter((m) => getMerchantStatus(m) === t.key).length)
+        }))}
+      />
 
       {/* Table */}
       <div className="table-card">
@@ -140,47 +152,34 @@ export default function MerchantsPage() {
                 : `Nessun merchant con stato "${tab}".`}
             />
           ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Company Name</th>
-                  <th>City</th>
-                  <th>VAT Number</th>
-                  <th>Status</th>
-                  <th>Registered</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((m) => (
-                  <tr key={m.id}>
-                    <td style={{ fontWeight: 600 }}>{m.companyName}</td>
-                    <td className="td-secondary">{m.city ?? '—'}</td>
-                    <td className="td-secondary">{m.vatNumber ?? '—'}</td>
-                    <td>
-                        <span className={statusClass(getMerchantStatus(m))}>
-                          {getMerchantStatus(m).charAt(0).toUpperCase() + getMerchantStatus(m).slice(1)}
-                        </span>
-                    </td>
-                    <td className="td-secondary">
-                      {formatBrowserDate(new Date(m.createdAt))}
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        {/* View */}
-                        <button
-                          className="btn-icon btn-icon-view"
-                          title="View details"
-                          onClick={() => navigate(`/merchants/${m.id}`)}
-                        >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </button>
-
-                        {/* Approve (show only if pending/inactive) */}
-                        {getMerchantStatus(m) !== 'active' && (
+            <div className="admin-card-grid">
+              {filtered.map((m) => {
+                const status = getMerchantStatus(m)
+                return (
+                  <div
+                    key={m.id}
+                    className="admin-list-card"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => navigate(`/merchants/${m.id}`)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/merchants/${m.id}`) }}
+                  >
+                    <div className="admin-list-card-head">
+                      <Avatar name={m.companyName} size="lg" />
+                      <div className="admin-list-card-id">
+                        <span className="admin-list-card-title">{m.companyName}</span>
+                        <span className="admin-list-card-sub">{m.city ?? '—'}{m.vatNumber ? ` · ${m.vatNumber}` : ''}</span>
+                      </div>
+                    </div>
+                    <div className="admin-list-card-chips">
+                      <StatusChip variant={statusVariant(status)}>{statusLabel(status)}</StatusChip>
+                    </div>
+                    <div className="admin-list-card-meta">
+                      <span>Registrato</span>
+                      <span className="admin-list-card-date">{formatBrowserDate(new Date(m.createdAt))}</span>
+                    </div>
+                    <div className="admin-list-card-actions" onClick={(e) => e.stopPropagation()}>
+                        {status !== 'active' && (
                           <button
                             className="btn-icon btn-icon-approve"
                             title="Approve"
@@ -192,9 +191,7 @@ export default function MerchantsPage() {
                             </svg>
                           </button>
                         )}
-
-                        {/* Reject (show only if pending/active) */}
-                        {getMerchantStatus(m) !== 'inactive' && (
+                        {status !== 'inactive' && (
                           <button
                             className="btn-icon btn-icon-reject"
                             title="Reject / Deactivate"
@@ -207,12 +204,11 @@ export default function MerchantsPage() {
                             </svg>
                           </button>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>

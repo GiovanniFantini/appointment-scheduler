@@ -1,0 +1,84 @@
+/* Griglia di card per le liste admin (restyle Turnis: tabelle → card).
+   Condivisa tra Employees / Merchants / Users. */
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  padding: 12px;
+}
+@media (max-width: 767px) {
+  .admin-card-grid {
+    grid-template-columns: 1fr;
+    padding: 12px 8px;
+  }
+}
+
+.admin-list-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+  width: 100%;
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
+  padding: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.admin-list-card:hover {
+  border-color: var(--su-accent-primary);
+  background: var(--su-accent-primary-faint);
+}
+
+.admin-list-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-list-card-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.admin-list-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--su-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.admin-list-card-sub {
+  font-size: 12px;
+  color: var(--su-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.admin-list-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-list-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--su-text-secondary);
+}
+.admin-list-card-date {
+  color: var(--su-text-muted);
+}
+
+.admin-list-card-actions {
+  display: flex;
+  gap: 8px;
+}

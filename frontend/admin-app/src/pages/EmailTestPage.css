@@ -108,7 +108,7 @@
   outline: none;
   transition: border-color 0.15s;
 }
-.et-input:focus { border-color: #0ea5e9; }
+.et-input:focus { border-color: var(--su-accent-info); }
 
 .et-actions {
   display: flex;
@@ -118,7 +118,7 @@
 }
 
 .et-send-btn {
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  background: linear-gradient(135deg, var(--su-accent-info), var(--su-accent-primary));
   color: #fff;
   border: none;
   border-radius: 6px;

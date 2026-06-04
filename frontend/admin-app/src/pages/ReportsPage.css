@@ -19,12 +19,12 @@
 .reports-placeholder-icon {
   width: 64px;
   height: 64px;
-  background-color: rgba(99, 102, 241, 0.12);
+  background-color: var(--su-accent-primary-soft);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6366f1;
+  color: var(--su-accent-primary);
 }
 
 .reports-placeholder-title {

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { PageHeader, Skeleton } from '@scheduler/ui'
+import { PageHeader, Skeleton, Avatar, StatusChip, type StatusChipVariant } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './UsersPage.css'
+import '../styles/admin-cards.css'
 
 // Allineato a backend/AppointmentScheduler.Shared/Enums/AccountType.cs
 const ACCOUNT_TYPE: Record<number, string> = {
@@ -12,11 +13,11 @@ const ACCOUNT_TYPE: Record<number, string> = {
   3: 'Employee',
 }
 
-function accountChipClass(t: number) {
+function accountTypeVariant(t: number): StatusChipVariant {
   switch (t) {
-    case 1: return 'acct-chip acct-chip-admin'
-    case 2: return 'acct-chip acct-chip-merchant'
-    default: return 'acct-chip acct-chip-employee'
+    case 1: return 'accent'
+    case 2: return 'info'
+    default: return 'success'
   }
 }
 
@@ -160,38 +161,31 @@ export default function UsersPage() {
               {hasFilters ? 'Nessun risultato per i filtri selezionati.' : 'Nessun utente.'}
             </div>
           ) : (
-            <table className="users-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Nome</th>
-                  <th>Tipo</th>
-                  <th>Merchant</th>
-                  <th>Stato</th>
-                  <th>Registrato</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((u) => (
-                  <tr key={u.id} onClick={() => navigate(`/users/${u.id}`)}>
-                    <td style={{ fontWeight: 600 }}>{u.email}</td>
-                    <td className="td-secondary">{u.firstName} {u.lastName}</td>
-                    <td>
-                      <span className={accountChipClass(u.accountType)}>
-                        {ACCOUNT_TYPE[u.accountType] ?? '?'}
-                      </span>
-                    </td>
-                    <td className="td-secondary">{u.merchantName ?? '—'}</td>
-                    <td>
-                      <span className={`user-status user-status-${u.isActive ? 'active' : 'inactive'}`}>
-                        {u.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="td-secondary">{formatBrowserDate(new Date(u.createdAt))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="admin-card-grid">
+              {items.map((u) => (
+                <button key={u.id} className="admin-list-card" onClick={() => navigate(`/users/${u.id}`)}>
+                  <div className="admin-list-card-head">
+                    <Avatar name={`${u.firstName} ${u.lastName}`} size="lg" />
+                    <div className="admin-list-card-id">
+                      <span className="admin-list-card-title">{u.email}</span>
+                      <span className="admin-list-card-sub">{u.firstName} {u.lastName}</span>
+                    </div>
+                  </div>
+                  <div className="admin-list-card-chips">
+                    <StatusChip variant={accountTypeVariant(u.accountType)}>
+                      {ACCOUNT_TYPE[u.accountType] ?? '?'}
+                    </StatusChip>
+                    <StatusChip variant={u.isActive ? 'success' : 'neutral'}>
+                      {u.isActive ? 'Active' : 'Inactive'}
+                    </StatusChip>
+                  </div>
+                  <div className="admin-list-card-meta">
+                    <span>{u.merchantName ?? '—'}</span>
+                    <span className="admin-list-card-date">{formatBrowserDate(new Date(u.createdAt))}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
 

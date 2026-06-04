@@ -63,8 +63,8 @@
 }
 
 .stat-card-icon.indigo {
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #6366f1;
+  background-color: var(--su-accent-primary-soft);
+  color: var(--su-accent-primary);
 }
 
 .stat-card-icon.green {
@@ -234,13 +234,13 @@
   text-align: center;
   font-size: 13px;
   font-weight: 500;
-  color: #6366f1;
+  color: var(--su-accent-primary);
   border-top: 1px solid var(--su-border-strong);
   transition: background-color 0.15s;
 }
 
 .view-all-link:hover {
-  background-color: rgba(99, 102, 241, 0.06);
+  background-color: var(--su-accent-primary-faint);
 }
 
 @media (max-width: 1024px) {

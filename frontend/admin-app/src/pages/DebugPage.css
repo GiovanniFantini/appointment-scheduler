@@ -47,7 +47,7 @@
 }
 
 .dbg-run-btn:hover:not(:disabled) {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
   color: #c7d2fe;
 }
 

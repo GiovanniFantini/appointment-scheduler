@@ -31,7 +31,7 @@
 }
 
 .membership-merchant:hover {
-  color: #6366f1;
+  color: var(--su-accent-primary);
 }
 
 .membership-meta {

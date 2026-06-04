@@ -27,7 +27,7 @@
 .login-brand-icon {
   width: 52px;
   height: 52px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-primary-hover));
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -81,7 +81,7 @@
 }
 
 .form-input:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .form-input::placeholder {
@@ -91,7 +91,7 @@
 .btn-login {
   width: 100%;
   padding: 11px;
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-primary-hover));
   color: #fff;
   border: none;
   border-radius: 8px;

@@ -30,7 +30,7 @@
 
 .users-filter-input:focus,
 .users-filter-select:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .users-filter-input {
@@ -51,7 +51,7 @@
 
 .users-filter-reset:hover {
   color: var(--su-text-primary);
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 /* Table card */
@@ -119,7 +119,7 @@
 }
 
 .users-table tbody tr:hover {
-  background-color: rgba(99, 102, 241, 0.06);
+  background-color: var(--su-accent-primary-faint);
 }
 
 .td-secondary {
@@ -136,7 +136,7 @@
   font-weight: 600;
 }
 
-.acct-chip-admin { background: rgba(99,102,241,0.16); color: #818cf8; }
+.acct-chip-admin { background: var(--su-accent-primary-soft); color: #818cf8; }
 .acct-chip-merchant { background: rgba(14,165,233,0.16); color: #38bdf8; }
 .acct-chip-employee { background: rgba(34,197,94,0.16); color: #22c55e; }
 
@@ -186,7 +186,7 @@
 
 .users-pagination button:not(:disabled):hover {
   color: var(--su-text-primary);
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .users-empty {

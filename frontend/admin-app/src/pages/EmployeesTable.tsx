@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Skeleton } from '@scheduler/ui'
+import { Skeleton, Avatar, StatusChip } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './EmployeesTable.css'
+import '../styles/admin-cards.css'
 
 // EmployeeKind: Internal=0, External=1 (vedi backend/AppointmentScheduler.Shared/Enums/EmployeeKind.cs)
 const KIND_LABEL: Record<number, string> = { 0: 'Interno', 1: 'Esterno' }
@@ -152,50 +153,36 @@ export default function EmployeesTable({ merchantId, showFilters = true }: Emplo
               {hasFilters ? 'Nessun risultato per i filtri selezionati.' : 'Nessun employee.'}
             </div>
           ) : (
-            <table className="employees-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>Nome</th>
-                  <th>Tipo</th>
-                  {!merchantId && <th>Merchant</th>}
-                  <th>Account</th>
-                  <th>Stato</th>
-                  <th>Creato</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.map((e) => (
-                  <tr key={e.id} onClick={() => navigate(`/employees/${e.id}`)}>
-                    <td style={{ fontWeight: 600 }}>{e.email}</td>
-                    <td className="td-secondary">{e.firstName} {e.lastName}</td>
-                    <td>
-                      <span className={`kind-chip kind-chip-${e.kind === 1 ? 'external' : 'internal'}`}>
-                        {KIND_LABEL[e.kind] ?? '?'}
-                      </span>
-                    </td>
-                    {!merchantId && (
-                      <td className="td-secondary">
-                        {e.merchantCount === 0 && '—'}
-                        {e.merchantCount === 1 && e.primaryMerchantName}
-                        {e.merchantCount > 1 && `${e.merchantCount} merchant`}
-                      </td>
-                    )}
-                    <td>
-                      <span className={`account-chip account-chip-${e.hasAccount ? 'yes' : 'no'}`}>
-                        {e.hasAccount ? 'Registrato' : 'Pre-caricato'}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={`user-status user-status-${e.isActive ? 'active' : 'inactive'}`}>
-                        {e.isActive ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td className="td-secondary">{formatBrowserDate(new Date(e.createdAt))}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="admin-card-grid">
+              {items.map((e) => (
+                <button key={e.id} className="admin-list-card" onClick={() => navigate(`/employees/${e.id}`)}>
+                  <div className="admin-list-card-head">
+                    <Avatar name={`${e.firstName} ${e.lastName}`} size="lg" />
+                    <div className="admin-list-card-id">
+                      <span className="admin-list-card-title">{e.email}</span>
+                      <span className="admin-list-card-sub">{e.firstName} {e.lastName}</span>
+                    </div>
+                  </div>
+                  <div className="admin-list-card-chips">
+                    <StatusChip variant={e.kind === 1 ? 'accent' : 'success'}>
+                      {KIND_LABEL[e.kind] ?? '?'}
+                    </StatusChip>
+                    <StatusChip variant={e.hasAccount ? 'info' : 'neutral'}>
+                      {e.hasAccount ? 'Registrato' : 'Pre-caricato'}
+                    </StatusChip>
+                    <StatusChip variant={e.isActive ? 'success' : 'neutral'}>
+                      {e.isActive ? 'Active' : 'Inactive'}
+                    </StatusChip>
+                  </div>
+                  {!merchantId && e.merchantCount > 0 && (
+                    <div className="admin-list-card-meta">
+                      {e.merchantCount === 1 ? e.primaryMerchantName : `${e.merchantCount} merchant`}
+                      <span className="admin-list-card-date">{formatBrowserDate(new Date(e.createdAt))}</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
           )}
         </div>
 
