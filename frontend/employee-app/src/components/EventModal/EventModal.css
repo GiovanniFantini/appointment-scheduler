@@ -103,7 +103,7 @@
 .modal-input:focus,
 .modal-select:focus,
 .modal-textarea:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .modal-input::placeholder,
@@ -169,12 +169,12 @@
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background: rgba(99, 102, 241, 0.3);
+  background: var(--su-accent-primary-soft);
 }
 
 .toggle-switch input:checked + .toggle-slider::before {
   transform: translateX(18px);
-  background: #6366f1;
+  background: var(--su-accent-primary);
 }
 
 .toggle-label {
@@ -191,7 +191,7 @@
 .modal-checkbox {
   width: 16px;
   height: 16px;
-  accent-color: #6366f1;
+  accent-color: var(--su-accent-primary);
   cursor: pointer;
 }
 
@@ -215,7 +215,7 @@
 }
 
 .multi-select:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .multi-select option {
@@ -225,7 +225,7 @@
 }
 
 .multi-select option:checked {
-  background: #6366f1;
+  background: var(--su-accent-primary);
 }
 
 .clone-section {
@@ -241,7 +241,7 @@
 .clone-section-title {
   font-size: 12px;
   font-weight: 600;
-  color: #6366f1;
+  color: var(--su-accent-primary);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -261,7 +261,7 @@
 }
 
 .btn-save {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -273,7 +273,7 @@
 }
 
 .btn-save:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
 }
 
 .btn-save:disabled {
@@ -304,7 +304,7 @@
 
 .btn-clone {
   background: rgba(14, 165, 233, 0.1);
-  color: #0ea5e9;
+  color: var(--su-accent-info);
   border: 1px solid rgba(14, 165, 233, 0.3);
   border-radius: 8px;
   padding: 9px 16px;
@@ -515,7 +515,7 @@
 }
 
 .wizard-stepper .step.active .step-num {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
 }
 
@@ -579,7 +579,7 @@
 
 .link-button {
   display: inline-block;
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   text-decoration: none;
   padding: 8px 14px;
@@ -822,8 +822,8 @@
 }
 
 .suggested-add:hover:not(:disabled) {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--su-accent-primary);
+  border-color: var(--su-accent-primary);
   color: #fff;
 }
 
@@ -906,4 +906,28 @@
   border: 1px solid var(--su-border-strong);
   border-radius: 8px;
   padding: 10px 12px;
+}
+
+/* === Aspetto bottom-sheet su mobile (restyle Turnis) === */
+@media (max-width: 767px) {
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-container {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--su-radius-sheet) var(--su-radius-sheet) 0 0;
+    overflow-y: auto;
+  }
+  .modal-container::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 2px;
+    border-radius: var(--su-radius-pill);
+    background: var(--su-border-strong);
+  }
 }

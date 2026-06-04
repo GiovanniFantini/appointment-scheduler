@@ -101,8 +101,8 @@
 }
 
 .form-input:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  border-color: var(--su-accent-primary);
+  box-shadow: 0 0 0 3px var(--su-accent-primary-soft);
 }
 
 .form-input::placeholder {
@@ -139,14 +139,14 @@
 }
 
 .tipo-btn:hover {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
   color: var(--su-text-primary);
 }
 
 .tipo-btn--active {
-  border-color: #6366f1;
-  background-color: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
+  border-color: var(--su-accent-primary);
+  background-color: var(--su-accent-primary-soft);
+  color: var(--su-accent-secondary);
 }
 
 /* Toggle */
@@ -169,7 +169,7 @@
 }
 
 .toggle--on {
-  background-color: #6366f1;
+  background-color: var(--su-accent-primary);
 }
 
 .toggle-thumb {
@@ -211,7 +211,7 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-primary-hover));
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -264,5 +264,29 @@
 
   .tipo-selector {
     grid-template-columns: 1fr;
+  }
+}
+
+/* === Aspetto bottom-sheet su mobile (restyle Turnis) === */
+@media (max-width: 767px) {
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .create-request-modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--su-radius-sheet) var(--su-radius-sheet) 0 0;
+    overflow-y: auto;
+  }
+  .create-request-modal::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 2px;
+    border-radius: var(--su-radius-pill);
+    background: var(--su-border-strong);
   }
 }

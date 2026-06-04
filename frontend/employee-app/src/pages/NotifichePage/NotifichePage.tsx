@@ -1,12 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EmptyState, Skeleton } from '@scheduler/ui'
+import { EmptyState, Skeleton, SegmentedTabs, TiBell, TiFileText } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { formatBrowserDate } from '../../lib/dateUtils'
 import './NotifichePage.css'
 
 // Allineato all'enum C# NotificationType (serializzato come numero dall'API).
 const NOTIFICATION_TYPE_DOCUMENT_PUBLISHED = 7
+
+type NotifFilter = 'all' | 'unread'
 
 interface Notification {
   id: number
@@ -18,13 +20,13 @@ interface Notification {
   relatedEntityId?: number
 }
 
-/** Emoji rappresentativa per tipo di notifica. */
-function getNotificationIcon(type?: number): string {
+/** Icona rappresentativa per tipo di notifica. */
+function getNotificationIcon(type?: number) {
   switch (type) {
     case NOTIFICATION_TYPE_DOCUMENT_PUBLISHED:
-      return '📄'
+      return <TiFileText size={18} />
     default:
-      return '🔔'
+      return <TiBell size={18} />
   }
 }
 
@@ -49,6 +51,7 @@ export default function NotifichePage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [markingAll, setMarkingAll] = useState(false)
+  const [filter, setFilter] = useState<NotifFilter>('all')
 
   const fetchNotifications = useCallback(async () => {
     setLoading(true)
@@ -109,6 +112,9 @@ export default function NotifichePage() {
   }
 
   const unreadCount = notifications.filter(n => !n.isRead).length
+  const visibleNotifications = filter === 'unread'
+    ? notifications.filter(n => !n.isRead)
+    : notifications
 
   return (
     <div className="notifiche-page">
@@ -132,6 +138,18 @@ export default function NotifichePage() {
 
       {error && <div className="notifiche-error">{error}</div>}
 
+      {!loading && notifications.length > 0 && (
+        <SegmentedTabs<NotifFilter>
+          className="notifiche-tabs"
+          value={filter}
+          onChange={setFilter}
+          options={[
+            { value: 'all', label: 'Tutte', count: notifications.length },
+            { value: 'unread', label: 'Non lette', count: unreadCount },
+          ]}
+        />
+      )}
+
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
           {[0, 1, 2, 3].map(i => <Skeleton key={i} variant="box" height={64} />)}
@@ -143,7 +161,7 @@ export default function NotifichePage() {
         />
       ) : (
         <div className="notifications-list">
-          {notifications.map(notif => {
+          {visibleNotifications.map(notif => {
             const isLinked = getNotificationLink(notif) !== null
             return (
               <div

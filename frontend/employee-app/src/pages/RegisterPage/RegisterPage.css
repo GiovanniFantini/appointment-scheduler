@@ -25,7 +25,7 @@
 .register-logo-icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-info));
   border-radius: 14px;
   display: inline-flex;
   align-items: center;
@@ -90,7 +90,7 @@
 }
 
 .form-input:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .form-input::placeholder {
@@ -98,7 +98,7 @@
 }
 
 .btn-primary {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -112,7 +112,7 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
 }
 
 .btn-primary:disabled {
@@ -163,7 +163,7 @@
 }
 
 .register-footer a {
-  color: #6366f1;
+  color: var(--su-accent-primary);
   text-decoration: none;
   font-weight: 500;
 }

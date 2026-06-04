@@ -22,7 +22,7 @@
 }
 
 .btn-new-event {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -37,7 +37,7 @@
 }
 
 .btn-new-event:hover {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
 }
 
 .calendar-wrapper {
@@ -76,8 +76,8 @@
 }
 
 .calendar-wrapper .fc-button-active {
-  background: #6366f1 !important;
-  border-color: #6366f1 !important;
+  background: var(--su-accent-primary) !important;
+  border-color: var(--su-accent-primary) !important;
 }
 
 .calendar-wrapper .fc-col-header-cell {
@@ -96,7 +96,7 @@
 }
 
 .calendar-wrapper .fc-daygrid-day:hover {
-  background: rgba(99, 102, 241, 0.06);
+  background: var(--su-accent-primary-faint);
 }
 
 .calendar-wrapper .fc-daygrid-day-number {
@@ -105,11 +105,11 @@
 }
 
 .calendar-wrapper .fc-day-today {
-  background: rgba(99, 102, 241, 0.08) !important;
+  background: var(--su-accent-primary-faint) !important;
 }
 
 .calendar-wrapper .fc-day-today .fc-daygrid-day-number {
-  color: #6366f1;
+  color: var(--su-accent-primary);
   font-weight: 700;
 }
 

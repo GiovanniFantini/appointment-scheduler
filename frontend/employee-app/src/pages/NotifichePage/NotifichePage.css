@@ -28,8 +28,8 @@
 .unread-count-badge {
   font-size: 0.75rem;
   font-weight: 600;
-  background-color: rgba(99, 102, 241, 0.2);
-  color: #a5b4fc;
+  background-color: var(--su-accent-primary-soft);
+  color: var(--su-accent-secondary);
   padding: 0.2rem 0.625rem;
   border-radius: 9999px;
 }
@@ -46,8 +46,8 @@
 }
 
 .btn-mark-all:hover:not(:disabled) {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: var(--su-accent-primary);
+  color: var(--su-accent-primary);
 }
 
 .btn-mark-all:disabled {
@@ -74,7 +74,7 @@
   width: 32px;
   height: 32px;
   border: 2px solid var(--su-border-strong);
-  border-top-color: #6366f1;
+  border-top-color: var(--su-accent-primary);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
@@ -93,12 +93,12 @@
 .empty-icon {
   width: 60px;
   height: 60px;
-  background-color: rgba(99, 102, 241, 0.1);
+  background-color: var(--su-accent-primary-faint);
   border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #6366f1;
+  color: var(--su-accent-primary);
   margin-bottom: 1rem;
 }
 
@@ -141,11 +141,11 @@
 
 .notification-item--unread {
   cursor: pointer;
-  background-color: rgba(99, 102, 241, 0.04);
+  background-color: var(--su-accent-primary-faint);
 }
 
 .notification-item--unread:hover {
-  background-color: rgba(99, 102, 241, 0.08);
+  background-color: var(--su-accent-primary-faint);
 }
 
 .notification-item--linked {
@@ -153,7 +153,7 @@
 }
 
 .notification-item--linked:hover {
-  background-color: rgba(99, 102, 241, 0.08);
+  background-color: var(--su-accent-primary-faint);
 }
 
 .notification-icon {
@@ -167,7 +167,7 @@
   margin-top: 0.375rem;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #a5b4fc;
+  color: var(--su-accent-secondary);
 }
 
 .notification-dot-wrapper {
@@ -181,7 +181,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #6366f1;
+  background-color: var(--su-accent-primary);
 }
 
 .notification-body {
@@ -245,4 +245,10 @@
     flex-direction: column;
     gap: 0.125rem;
   }
+}
+
+/* Tab segmentate notifiche (restyle Turnis) */
+.notifiche-tabs {
+  max-width: 320px;
+  margin: 0 0 1rem;
 }

@@ -83,7 +83,7 @@
 
 .copy-arrow-symbol {
   font-size: 22px;
-  color: #6366f1;
+  color: var(--su-accent-primary);
   font-weight: 600;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .copy-footer .btn-primary {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -181,7 +181,7 @@
 }
 
 .copy-footer .btn-primary:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
 }
 
 .copy-footer .btn-primary:disabled {
@@ -206,4 +206,28 @@
 
 .copy-conflict-item {
   margin: 4px 0;
+}
+
+/* === Aspetto bottom-sheet su mobile (restyle Turnis) === */
+@media (max-width: 767px) {
+  .copy-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .copy-dialog {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--su-radius-sheet) var(--su-radius-sheet) 0 0;
+    overflow-y: auto;
+  }
+  .copy-dialog::before {
+    content: '';
+    display: block;
+    width: 40px;
+    height: 4px;
+    margin: 10px auto 2px;
+    border-radius: var(--su-radius-pill);
+    background: var(--su-border-strong);
+  }
 }

@@ -24,7 +24,7 @@
 }
 
 .btn-primary {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -39,7 +39,7 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
 }
 
 .btn-primary:disabled {
@@ -105,7 +105,7 @@ tr:hover td {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #6366f1, #0ea5e9);
+  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-info));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,9 +201,9 @@ tr:hover td {
 }
 
 .btn-edit {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  background: var(--su-accent-primary-faint);
+  color: var(--su-accent-primary);
+  border: 1px solid var(--su-accent-primary-soft);
   border-radius: 6px;
   padding: 5px 12px;
   font-size: 12px;
@@ -213,7 +213,7 @@ tr:hover td {
 }
 
 .btn-edit:hover {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--su-accent-primary-soft);
 }
 
 .btn-remove {
@@ -340,7 +340,7 @@ tr:hover td {
 
 .form-input:focus,
 .form-select:focus {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
 }
 
 .form-input::placeholder {
@@ -478,7 +478,7 @@ tr:hover td {
 
 .branch-cell-extra {
   font-size: 10px;
-  color: #6366f1;
+  color: var(--su-accent-primary);
   font-weight: 600;
 }
 
@@ -567,4 +567,81 @@ tr:hover td {
   .risorse-filter-bar {
     gap: 4px;
   }
+}
+
+/* === Griglia card risorse (restyle Turnis: tabella → card) === */
+.risorse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+@media (max-width: 767px) {
+  .risorse-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.resource-card {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resource-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.resource-card-id {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.resource-card-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--su-text-primary);
+}
+.resource-card-email {
+  font-size: 12px;
+  color: var(--su-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resource-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.resource-card-branch {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--su-text-secondary);
+}
+
+.resource-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 2px;
+}
+.resource-card-actions .btn-edit,
+.resource-card-actions .btn-remove {
+  flex: 1;
+}
+
+.risorse-loading {
+  padding: 32px;
+  text-align: center;
+  color: var(--su-text-secondary);
 }

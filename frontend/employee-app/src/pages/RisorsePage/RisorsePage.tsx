@@ -1,5 +1,5 @@
 import { useState, useEffect, FormEvent } from 'react'
-import { useConfirm, useToast } from '@scheduler/ui'
+import { useConfirm, useToast, Avatar, StatusChip, TiPlus, TiBuildingStore } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { skillsApi, Skill } from '../../lib/api/skills'
 import { useBranch } from '../../contexts/BranchContext'
@@ -276,10 +276,6 @@ export default function RisorsePage() {
     return true
   })
 
-  // Numero colonne tabella (per il colSpan delle righe stato vuoto/loading):
-  // Dipendente, Email, Tipo, Ruolo, [Sede], [Mansioni], Stato, Azioni
-  const tableColumnCount = 6 + (isMultiBranch ? 1 : 0) + (skills.length > 0 ? 1 : 0)
-
   return (
     <div className="risorse-page">
       <div className="page-header-row">
@@ -288,7 +284,7 @@ export default function RisorsePage() {
           <p className="page-subtitle">Gestisci i dipendenti della tua azienda</p>
         </div>
         <button className="btn-primary" onClick={openAddModal}>
-          + Aggiungi Dipendente
+          <TiPlus size={16} /> Aggiungi Dipendente
         </button>
       </div>
 
@@ -355,109 +351,75 @@ export default function RisorsePage() {
         </div>
       )}
 
-      <div className="risorse-table-card">
-        <div className="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Dipendente</th>
-                <th>Email</th>
-                <th>Tipo</th>
-                <th>Ruolo</th>
-                {isMultiBranch && <th>Sede</th>}
-                {skills.length > 0 && <th>Mansioni</th>}
-                <th>Stato</th>
-                <th>Azioni</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr className="loading-row">
-                  <td colSpan={tableColumnCount}>Caricamento...</td>
-                </tr>
-              ) : filteredEmployees.length === 0 ? (
-                <tr>
-                  <td colSpan={tableColumnCount}>
-                    <div className="empty-state">
-                      <div className="empty-icon">👥</div>
-                      <div className="empty-text">Nessun dipendente trovato</div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredEmployees.map(emp => (
-                  <tr key={emp.id}>
-                    <td>
-                      <div className="employee-name-cell">
-                        <div className="emp-avatar">{getInitials(emp)}</div>
-                        <span className="emp-full-name">{emp.firstName} {emp.lastName}</span>
-                      </div>
-                    </td>
-                    <td>{emp.email ? emp.email : <span className="dash">—</span>}</td>
-                    <td>
-                      <span className={`kind-badge ${emp.kind === EMPLOYEE_KIND.External ? 'external' : 'internal'}`}>
-                        {emp.kind === EMPLOYEE_KIND.External ? 'Esterno' : 'Interno'}
-                      </span>
-                    </td>
-                    <td>{emp.roleName ?? '—'}</td>
-                    {isMultiBranch && (
-                      <td>
-                        {emp.homeBranchName ? (
-                          <div className="branch-cell">
-                            <span className="branch-cell-name">🏢 {emp.homeBranchName}</span>
-                            {emp.homeDepartmentName && (
-                              <span className="branch-cell-dept">{emp.homeDepartmentName}</span>
-                            )}
-                            {emp.allowedBranchIds && emp.allowedBranchIds.length > 0 && (
-                              <span className="branch-cell-extra">
-                                +{emp.allowedBranchIds.length} {emp.allowedBranchIds.length === 1 ? 'sede' : 'sedi'}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="dash">—</span>
-                        )}
-                      </td>
-                    )}
-                    {skills.length > 0 && (
-                      <td>
-                        {emp.skills && emp.skills.length > 0 ? (
-                          <div className="skill-chips">
-                            {emp.skills.map(s => (
-                              <span
-                                key={s.skillId}
-                                className="skill-chip"
-                                style={{ background: s.skillColor + '22', color: s.skillColor, borderColor: s.skillColor + '55' }}
-                              >
-                                <span className="skill-chip-dot" style={{ background: s.skillColor }} />
-                                {s.skillName}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="dash">—</span>
-                        )}
-                      </td>
-                    )}
-                    <td>
-                      <span className={`status-badge ${emp.isActive ? 'active' : 'inactive'}`}>
-                        <span className="status-dot" />
-                        {emp.isActive ? 'Attivo' : 'Inattivo'}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="action-buttons">
-                        <button className="btn-edit" onClick={() => openEditModal(emp)}>Modifica</button>
-                        <button className="btn-remove" onClick={() => handleRemove(emp)}>Rimuovi</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="risorse-loading">Caricamento...</div>
+      ) : filteredEmployees.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-icon">👥</div>
+          <div className="empty-text">Nessun dipendente trovato</div>
         </div>
-      </div>
+      ) : (
+        <div className="risorse-grid">
+          {filteredEmployees.map(emp => (
+            <div key={emp.id} className="resource-card">
+              <div className="resource-card-head">
+                <Avatar name={`${emp.firstName} ${emp.lastName}`} initials={getInitials(emp)} size="lg" />
+                <div className="resource-card-id">
+                  <span className="resource-card-name">{emp.firstName} {emp.lastName}</span>
+                  {emp.email ? (
+                    <span className="resource-card-email">{emp.email}</span>
+                  ) : (
+                    <span className="resource-card-email dash">— nessuna email —</span>
+                  )}
+                </div>
+              </div>
+
+              <div className="resource-card-chips">
+                <StatusChip variant={emp.kind === EMPLOYEE_KIND.External ? 'accent' : 'success'}>
+                  {emp.kind === EMPLOYEE_KIND.External ? 'Esterno' : 'Interno'}
+                </StatusChip>
+                <StatusChip variant={emp.isActive ? 'success' : 'neutral'}>
+                  {emp.isActive ? 'Attivo' : 'Inattivo'}
+                </StatusChip>
+                {emp.roleName && <StatusChip variant="neutral">{emp.roleName}</StatusChip>}
+              </div>
+
+              {isMultiBranch && emp.homeBranchName && (
+                <div className="resource-card-branch">
+                  <TiBuildingStore size={14} />
+                  <span>{emp.homeBranchName}</span>
+                  {emp.homeDepartmentName && <span className="branch-cell-dept">· {emp.homeDepartmentName}</span>}
+                  {emp.allowedBranchIds && emp.allowedBranchIds.length > 0 && (
+                    <span className="branch-cell-extra">
+                      +{emp.allowedBranchIds.length} {emp.allowedBranchIds.length === 1 ? 'sede' : 'sedi'}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {emp.skills && emp.skills.length > 0 && (
+                <div className="skill-chips">
+                  {emp.skills.map(s => (
+                    <span
+                      key={s.skillId}
+                      className="skill-chip"
+                      style={{ background: s.skillColor + '22', color: s.skillColor, borderColor: s.skillColor + '55' }}
+                    >
+                      <span className="skill-chip-dot" style={{ background: s.skillColor }} />
+                      {s.skillName}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="resource-card-actions">
+                <button className="btn-edit" onClick={() => openEditModal(emp)}>Modifica</button>
+                <button className="btn-remove" onClick={() => handleRemove(emp)}>Rimuovi</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {showModal && (
         <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>

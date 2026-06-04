@@ -92,7 +92,7 @@
   width: 2rem;
   height: 2rem;
   border: 3px solid rgba(148, 163, 184, 0.25);
-  border-top-color: #6366f1;
+  border-top-color: var(--su-accent-primary);
   border-radius: 999px;
   animation: spin 0.7s linear infinite;
 }
@@ -162,9 +162,9 @@
 }
 
 .btn-primary {
-  background: #4f46e5;
+  background: var(--su-accent-primary-hover);
   color: #fff;
-  border-color: #4f46e5;
+  border-color: var(--su-accent-primary-hover);
 }
 
 .btn-primary:disabled {

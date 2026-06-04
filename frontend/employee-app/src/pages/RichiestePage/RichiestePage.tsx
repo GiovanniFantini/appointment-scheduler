@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useConfirm, useToast } from '@scheduler/ui'
+import {
+  useConfirm,
+  useToast,
+  SegmentedTabs,
+  StatusChip,
+  type StatusChipVariant,
+  TiBeach,
+  TiClock,
+  TiPlus
+} from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
 import { formatBrowserDate, parseDateOnly } from '../../lib/dateUtils'
@@ -18,6 +27,8 @@ interface ApiEmployeeRequest {
   notes?: string
 }
 
+type StatusFilter = 'Pending' | 'Approved' | 'Rejected'
+
 function formatTime(t?: string): string {
   if (!t) return ''
   return t.slice(0, 5)
@@ -32,13 +43,19 @@ function getRequestTypeLabel(type?: string): string {
   return type ? (map[type] ?? type) : 'Richiesta'
 }
 
-function getRequestTypeColor(type?: string): string {
-  const map: Record<string, string> = {
-    Ferie: '#ec4899',
-    Permessi: '#8b5cf6',
-    Malattia: '#f59e0b',
+// Variante chip per tipo richiesta (mockup: ferie=blu, permesso=accent, malattia=ambra).
+function getRequestTypeVariant(type?: string): StatusChipVariant {
+  const map: Record<string, StatusChipVariant> = {
+    Ferie: 'info',
+    Permessi: 'accent',
+    Malattia: 'warning',
   }
-  return type ? (map[type] ?? '#6366f1') : '#6366f1'
+  return type ? (map[type] ?? 'accent') : 'accent'
+}
+
+function getRequestTypeIcon(type?: string) {
+  if (type === 'Malattia' || type === 'Permessi') return <TiClock size={12} />
+  return <TiBeach size={12} />
 }
 
 function getStatusLabel(status?: string): string {
@@ -48,6 +65,15 @@ function getStatusLabel(status?: string): string {
     Rejected: 'Rifiutata',
   }
   return status ? (map[status] ?? status) : 'In attesa'
+}
+
+function getStatusVariant(status?: string): StatusChipVariant {
+  const map: Record<string, StatusChipVariant> = {
+    Pending: 'neutral',
+    Approved: 'success',
+    Rejected: 'danger',
+  }
+  return status ? (map[status] ?? 'neutral') : 'neutral'
 }
 
 function formatDate(dateStr: string): string {
@@ -64,6 +90,7 @@ export default function RichiestePage() {
   const [showApprovalsSection, setShowApprovalsSection] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [error, setError] = useState('')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('Pending')
   const approvalLevels = new Set(['Operator', 'Manager'])
 
   const currentFeatureLevel = (() => {
@@ -169,6 +196,48 @@ export default function RichiestePage() {
     }
   }
 
+  // Conteggi e filtro per le tab segmentate (puro filtro client).
+  const counts = {
+    Pending: requests.filter(r => r.statusName === 'Pending').length,
+    Approved: requests.filter(r => r.statusName === 'Approved').length,
+    Rejected: requests.filter(r => r.statusName === 'Rejected').length,
+  }
+  const visibleRequests = requests.filter(r => r.statusName === statusFilter)
+
+  const renderCard = (req: ApiEmployeeRequest, actions: React.ReactNode) => (
+    <div key={req.id} className="request-card">
+      <div className="request-card-top">
+        <StatusChip variant={getRequestTypeVariant(req.typeName)} icon={getRequestTypeIcon(req.typeName)}>
+          {getRequestTypeLabel(req.typeName)}
+        </StatusChip>
+        <StatusChip variant={getStatusVariant(req.statusName)}>{getStatusLabel(req.statusName)}</StatusChip>
+      </div>
+      <div className="request-card-dates">
+        <div className="request-date">
+          <span className="request-date-label">Dal</span>
+          <span className="request-date-value">{formatDate(req.startDate)}</span>
+        </div>
+        {req.endDate && (
+          <div className="request-date">
+            <span className="request-date-label">Al</span>
+            <span className="request-date-value">{formatDate(req.endDate)}</span>
+          </div>
+        )}
+        {req.startTime && req.endTime && (
+          <div className="request-date">
+            <span className="request-date-label">Orario</span>
+            <span className="request-date-value">{formatTime(req.startTime)} - {formatTime(req.endTime)}</span>
+          </div>
+        )}
+      </div>
+      {req.eventId != null && (
+        <p className="request-notes"><strong>Collegato al turno #{req.eventId}</strong></p>
+      )}
+      {req.notes && <p className="request-notes">{req.notes}</p>}
+      {actions}
+    </div>
+  )
+
   return (
     <div className="richieste-page">
       <div className="richieste-header">
@@ -183,9 +252,7 @@ export default function RichiestePage() {
             </button>
           )}
           <button className="btn-new-request" onClick={() => setShowModal(true)}>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <TiPlus size={18} />
             Nuova richiesta
           </button>
         </div>
@@ -211,50 +278,15 @@ export default function RichiestePage() {
             </div>
           ) : (
             <div className="requests-list">
-              {approvals.map(req => {
-                const color = getRequestTypeColor(req.typeName)
-                return (
-                  <div key={req.id} className="request-card" style={{ borderLeftColor: color }}>
-                    <div className="request-card-top">
-                      <span
-                        className="request-type-badge"
-                        style={{ backgroundColor: color + '22', color }}
-                      >
-                        {getRequestTypeLabel(req.typeName)}
-                      </span>
-                      <span className="request-status-badge">{getStatusLabel(req.statusName)}</span>
-                    </div>
-                    <div className="request-card-dates">
-                      <div className="request-date">
-                        <span className="request-date-label">Dal</span>
-                        <span className="request-date-value">{formatDate(req.startDate)}</span>
-                      </div>
-                      {req.endDate && (
-                        <div className="request-date">
-                          <span className="request-date-label">Al</span>
-                          <span className="request-date-value">{formatDate(req.endDate)}</span>
-                        </div>
-                      )}
-                      {req.startTime && req.endTime && (
-                        <div className="request-date">
-                          <span className="request-date-label">Orario</span>
-                          <span className="request-date-value">{formatTime(req.startTime)} - {formatTime(req.endTime)}</span>
-                        </div>
-                      )}
-                    </div>
-                    {req.eventId != null && (
-                      <p className="request-notes"><strong>Collegato al turno #{req.eventId}</strong></p>
-                    )}
-                    {req.notes && (
-                      <p className="request-notes">{req.notes}</p>
-                    )}
-                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-                      <button className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
-                      <button className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
-                    </div>
+              {approvals.map(req =>
+                renderCard(
+                  req,
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
+                    <button className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
                   </div>
                 )
-              })}
+              )}
             </div>
           )}
         </div>
@@ -278,53 +310,38 @@ export default function RichiestePage() {
           </button>
         </div>
       ) : (
-        <div className="requests-list">
-          {requests.map(req => {
-            const color = getRequestTypeColor(req.typeName)
-            return (
-              <div key={req.id} className="request-card" style={{ borderLeftColor: color }}>
-                <div className="request-card-top">
-                  <span
-                    className="request-type-badge"
-                    style={{ backgroundColor: color + '22', color }}
-                  >
-                    {getRequestTypeLabel(req.typeName)}
-                  </span>
-                  <span className="request-status-badge">{getStatusLabel(req.statusName)}</span>
-                </div>
-                <div className="request-card-dates">
-                  <div className="request-date">
-                    <span className="request-date-label">Dal</span>
-                    <span className="request-date-value">{formatDate(req.startDate)}</span>
-                  </div>
-                  {req.endDate && (
-                    <div className="request-date">
-                      <span className="request-date-label">Al</span>
-                      <span className="request-date-value">{formatDate(req.endDate)}</span>
+        <>
+          <SegmentedTabs<StatusFilter>
+            className="richieste-tabs"
+            value={statusFilter}
+            onChange={setStatusFilter}
+            options={[
+              { value: 'Pending', label: 'In attesa', count: counts.Pending },
+              { value: 'Approved', label: 'Approvate', count: counts.Approved },
+              { value: 'Rejected', label: 'Rifiutate', count: counts.Rejected },
+            ]}
+          />
+          {visibleRequests.length === 0 ? (
+            <div className="richieste-empty" style={{ marginTop: '1rem' }}>
+              <p className="empty-title">Nessuna richiesta {getStatusLabel(statusFilter).toLowerCase()}</p>
+            </div>
+          ) : (
+            <div className="requests-list">
+              {visibleRequests.map(req =>
+                renderCard(
+                  req,
+                  req.statusName === 'Pending' ? (
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                      <button className="btn-new-request-empty" onClick={() => handleDelete(req.id)}>
+                        Elimina richiesta
+                      </button>
                     </div>
-                  )}
-                  {req.startTime && req.endTime && (
-                    <div className="request-date">
-                      <span className="request-date-label">Orario</span>
-                      <span className="request-date-value">{formatTime(req.startTime)} - {formatTime(req.endTime)}</span>
-                    </div>
-                  )}
-                </div>
-                {req.eventId != null && (
-                  <p className="request-notes"><strong>Collegato al turno #{req.eventId}</strong></p>
-                )}
-                {req.notes && (
-                  <p className="request-notes">{req.notes}</p>
-                )}
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                  <button className="btn-new-request-empty" onClick={() => handleDelete(req.id)}>
-                    Elimina richiesta
-                  </button>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+                  ) : null
+                )
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {showModal && (

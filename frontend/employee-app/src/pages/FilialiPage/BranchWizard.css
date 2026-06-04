@@ -55,7 +55,7 @@
   font-weight: 700;
 }
 .wizard-step-dot.active {
-  background: #6366f1;
+  background: var(--su-accent-primary);
   color: #fff;
 }
 
@@ -105,7 +105,7 @@
   transition: border-color 0.15s, transform 0.1s;
 }
 .wizard-choice:hover {
-  border-color: #6366f1;
+  border-color: var(--su-accent-primary);
   transform: translateY(-2px);
 }
 
@@ -132,8 +132,8 @@
 }
 .wizard-preset-chip:hover { border-color: var(--su-text-muted); }
 .wizard-preset-chip.selected {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: var(--su-accent-primary);
+  border-color: var(--su-accent-primary);
   color: #fff;
 }
 
