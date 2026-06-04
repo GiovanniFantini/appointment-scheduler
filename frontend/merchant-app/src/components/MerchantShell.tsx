@@ -4,6 +4,9 @@ import {
   IconLogout,
   IconSettings,
   IconUser,
+  TiHome,
+  TiBriefcase,
+  TiFileText,
   useAuth,
   type NavItem,
   type NavSection,
@@ -16,9 +19,9 @@ interface MerchantNavItem extends NavItem {
 }
 
 const ALL_NAV: MerchantNavItem[] = [
-  { path: '/', label: 'Dashboard', exact: true, icon: <span style={{ fontSize: 16 }}>⊞</span> },
-  { path: '/ruoli', label: 'Ruoli', feature: 'Ruoli', icon: <span style={{ fontSize: 16 }}>🔑</span> },
-  { path: '/report', label: 'Report', feature: 'Report', icon: <span style={{ fontSize: 16 }}>📊</span> }
+  { path: '/', label: 'Dashboard', exact: true, icon: <TiHome size={18} /> },
+  { path: '/ruoli', label: 'Ruoli', feature: 'Ruoli', icon: <TiBriefcase size={18} /> },
+  { path: '/report', label: 'Report', feature: 'Report', icon: <TiFileText size={18} /> }
 ]
 
 function pageTitleFor(pathname: string): string {
@@ -78,6 +81,7 @@ export default function MerchantShell() {
         initial: (user.companyName ?? 'M').charAt(0).toUpperCase()
       }}
       navSections={sections}
+      bottomNav
       headerTitle={pageTitleFor(location.pathname)}
       companyName={user.companyName}
     />
