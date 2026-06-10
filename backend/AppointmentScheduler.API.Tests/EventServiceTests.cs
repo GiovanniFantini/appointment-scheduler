@@ -173,4 +173,69 @@ public class EventServiceTests
         await act.Should().NotThrowAsync<InvalidOperationException>();
         tracker.Count.Should().BeGreaterThan(0);
     }
+
+    // ----- Eliminazione turno -----
+
+    [Fact]
+    public async Task DeleteAsync_Throws_WhenShiftHasTimeEntries()
+    {
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ" };
+        var shift = new Event
+        {
+            Id = 100,
+            MerchantId = 7,
+            BranchId = 3,
+            Branch = branch,
+            EventType = EventType.Turno,
+            Title = "Turno mattina",
+            StartDate = new DateOnly(2026, 6, 1),
+            NotificationEnabled = false,
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 6, 1), ActualTimestampUtc = new DateTime(2026, 6, 1, 7, 0, 0, DateTimeKind.Utc) }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Events, new List<Event> { shift }, item => [item.Id])
+            .WithSet(x => x.TimeEntries, entries, item => [item.Id])
+            .Build(out var tracker);
+
+        var service = new EventService(context.Object, _conflictValidator.Object, _notificationService.Object, _clock.Object);
+
+        var act = () => service.DeleteAsync(100, 7);
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Contain("timbrature registrate");
+        tracker.Count.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_RemovesShift_WhenNoTimeEntriesExist()
+    {
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ" };
+        var shift = new Event
+        {
+            Id = 100,
+            MerchantId = 7,
+            BranchId = 3,
+            Branch = branch,
+            EventType = EventType.Turno,
+            Title = "Turno mattina",
+            StartDate = new DateOnly(2026, 6, 1),
+            NotificationEnabled = false,
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Events, new List<Event> { shift }, item => [item.Id])
+            .WithEmptySet(x => x.TimeEntries, item => [item.Id])
+            .Build(out var tracker);
+
+        var service = new EventService(context.Object, _conflictValidator.Object, _notificationService.Object, _clock.Object);
+
+        var result = await service.DeleteAsync(100, 7);
+
+        result.Should().BeTrue();
+        tracker.Count.Should().Be(1);
+    }
 }

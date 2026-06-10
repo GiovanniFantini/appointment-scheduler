@@ -52,6 +52,19 @@ public class EmployeeTimeClockController : ControllerBase
         return Ok(status);
     }
 
+    /// <summary>Tutti i turni timbrabili del dipendente per la giornata corrente.</summary>
+    [HttpGet("today-shifts")]
+    public async Task<ActionResult<TodayShiftsDto>> GetTodayShifts()
+    {
+        if (!TryGetEmployeeId(out int employeeId) || !TryGetMerchantId(out int merchantId))
+            return BadRequest(new { message = "Token non valido" });
+        if (!HasTimbraturaFeature())
+            return Forbid();
+
+        var shifts = await _timeClockService.GetTodayShiftsAsync(employeeId, merchantId);
+        return Ok(shifts);
+    }
+
     /// <summary>Timbra l'entrata.</summary>
     [HttpPost("clock-in")]
     public Task<ActionResult<ClockActionResultDto>> ClockIn([FromBody] ClockActionRequest request)

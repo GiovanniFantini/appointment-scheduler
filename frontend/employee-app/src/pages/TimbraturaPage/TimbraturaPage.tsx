@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
-import TimeClockWidget from '../../components/TimeClockWidget/TimeClockWidget'
+import TodayShiftsPanel from '../../components/TodayShiftsPanel/TodayShiftsPanel'
 import JustifyAnomalyModal from '../../components/JustifyAnomalyModal/JustifyAnomalyModal'
 import { timeClockApi } from '../../lib/api/timeClock'
-import { TimeEntryType, TimeClockAnomalyStatus } from '../../types/timbratura'
+import { TimeEntryType, TimeClockAnomalyStatus, anomalyTypeLabel } from '../../types/timbratura'
 import type { TimeEntryDto, TimeClockAnomalyDto, WellbeingStatsDto } from '../../types/timbratura'
 import type { FeatureAccessLevel } from '../../App'
 import './TimbraturaPage.css'
@@ -48,7 +48,7 @@ function entryColor(type: TimeEntryType): string {
 }
 
 function formatTimestamp(iso: string): string {
-  return new Date(iso).toLocaleString(undefined, {
+  return new Date(iso).toLocaleString('it-IT', {
     day: '2-digit', month: '2-digit',
     hour: '2-digit', minute: '2-digit',
   })
@@ -114,7 +114,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
         <p className="tp-subtitle">Registra entrata, uscita e pause del tuo turno</p>
       </div>
 
-      <TimeClockWidget onStatusChange={loadHistory} />
+      <TodayShiftsPanel onChange={loadHistory} />
 
       {wellbeing && (
         <div className="tp-wellbeing">
@@ -145,14 +145,14 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
             {anomalies.map(a => (
               <div key={a.id} className="tp-anomaly" data-status={a.status}>
                 <div className="tp-anomaly-main">
-                  <span className="tp-anomaly-type">{a.typeName}</span>
+                  <span className="tp-anomaly-type">{anomalyTypeLabel(a.type, a.typeName)}</span>
                   <span className={`tp-anomaly-status status-${a.status}`}>
                     {ANOMALY_STATUS_LABEL[a.status] ?? a.statusName}
                   </span>
                 </div>
                 <div className="tp-anomaly-meta">
                   <span>
-                    {new Date(a.workDate).toLocaleDateString(undefined, {
+                    {new Date(a.workDate).toLocaleDateString('it-IT', {
                       day: '2-digit', month: 'long',
                     })}
                   </span>
@@ -186,7 +186,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
             {days.map(day => (
               <div key={day} className="tp-day">
                 <div className="tp-day-label">
-                  {new Date(day).toLocaleDateString(undefined, {
+                  {new Date(day).toLocaleDateString('it-IT', {
                     weekday: 'long', day: '2-digit', month: 'long',
                   })}
                 </div>

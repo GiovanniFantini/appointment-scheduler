@@ -14,6 +14,13 @@ public interface ITimeClockService
     /// <summary>Stato corrente di timbratura del dipendente nel merchant.</summary>
     Task<CurrentClockStatusDto> GetCurrentStatusAsync(int employeeId, int merchantId);
 
+    /// <summary>
+    /// Tutti i turni timbrabili del dipendente per la giornata, ciascuno con il
+    /// proprio stato. Usato dalla pagina Timbratura per gestire più turni nello
+    /// stesso giorno senza ambiguità.
+    /// </summary>
+    Task<TodayShiftsDto> GetTodayShiftsAsync(int employeeId, int merchantId);
+
     /// <summary>Registra l'entrata sul turno corrente/indicato.</summary>
     Task<ClockActionResultDto> ClockInAsync(int employeeId, int merchantId, ClockActionRequest request);
 

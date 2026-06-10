@@ -563,6 +563,312 @@ public class TimeClockServiceTests
         result[0].Id.Should().Be(1);
     }
 
+    // ----- Deviazione timbratura (fuso orario) -----
+
+    [Fact]
+    public async Task ClockInAsync_ComputesDeviationInWallClock_NotProcessTimeZone()
+    {
+        // Scenario reale del bug: server in UTC, azienda in UTC+2 (ora legale).
+        // Turno alle 14:25, entrata reale alle 14:38 ora di parete → la deviazione
+        // corretta è +13 minuti (in ritardo), NON -107 (che usciva confrontando
+        // l'ora UTC del processo con l'orario di parete del turno).
+        var nowUtc = new DateTime(2026, 6, 10, 12, 38, 0, DateTimeKind.Utc);   // 14:38 in UTC+2
+        var nowWall = new DateTime(2026, 6, 10, 14, 38, 0, DateTimeKind.Unspecified);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(nowUtc);
+        _wallClock.SetupGet(x => x.Now).Returns(nowWall);
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var shift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Pomeriggio", StartDate = new DateOnly(2026, 6, 10), EndDate = new DateOnly(2026, 6, 10),
+            StartTime = new TimeOnly(14, 25), EndTime = new TimeOnly(17, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shift, EmployeeId = 11, Employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi" } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, GraceInMinutes = 5, EarlyClockInToleranceMinutes = 15 }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, new List<TimeEntry>(), x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, new List<TimeClockAnomaly>(), x => [x.Id])
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.ClockInAsync(11, 7, new ClockActionRequest());
+
+        result.Entry.DeviationMinutes.Should().Be(13);
+        // +13 > GraceInMinutes(5) → anomalia di ritardo, NON di anticipo.
+        result.Anomaly.Should().NotBeNull();
+        result.Anomaly!.Type.Should().Be(TimeClockAnomalyType.LateClockIn);
+    }
+
+    // ----- Turni multipli nello stesso giorno -----
+
+    private static (MerchantBranch branch, Event morning, Event afternoon, List<EventParticipant> participants, List<BranchTimeClockSettings> settings)
+        TwoShiftsSameDay()
+    {
+        var today = new DateOnly(2026, 5, 24);
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+
+        var morning = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Mattina", StartDate = today, EndDate = today,
+            StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(13, 0),
+        };
+        var afternoon = new Event
+        {
+            Id = 101, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Pomeriggio", StartDate = today, EndDate = today,
+            StartTime = new TimeOnly(14, 0), EndTime = new TimeOnly(18, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = morning, EmployeeId = 11 },
+            new() { Id = 502, EventId = 101, Event = afternoon, EmployeeId = 11 },
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, EarlyClockInToleranceMinutes = 15 },
+        };
+        return (branch, morning, afternoon, participants, settings);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_ReturnsAllShifts_AndActivatesTheOneInItsWindow()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        // Ora di parete = 15:00 → siamo nella finestra del turno pomeridiano.
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var (_, _, _, participants, settings) = TwoShiftsSameDay();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.TimeClockEnabled.Should().BeTrue();
+        result.Shifts.Should().HaveCount(2);
+        result.Shifts.Select(s => s.Shift.Title).Should().ContainInOrder("Mattina", "Pomeriggio");
+        result.ActiveEventParticipantId.Should().Be(502); // pomeriggio
+        result.Shifts.Single(s => s.Shift.EventParticipantId == 502).IsActive.Should().BeTrue();
+        result.Shifts.Single(s => s.Shift.EventParticipantId == 501).IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_PrioritisesOpenShift_OverTimeWindow()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        // Ora di parete = 15:00: per la finestra sarebbe attivo il pomeriggio, ma
+        // la mattina è ancora aperta (entrata senza uscita) → ha la priorità.
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var (_, _, _, participants, settings) = TwoShiftsSameDay();
+
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 7, 0, 0, DateTimeKind.Utc) },
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.ActiveEventParticipantId.Should().Be(501); // mattina, ancora aperta
+        var morning = result.Shifts.Single(s => s.Shift.EventParticipantId == 501);
+        morning.IsClockedIn.Should().BeTrue();
+        morning.IsActive.Should().BeTrue();
+        morning.SuggestedAction.Should().Be("Timbra l'uscita");
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_MarksCompletedShift_AndDeactivatesIt()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var (_, _, _, participants, settings) = TwoShiftsSameDay();
+
+        // Mattina conclusa (in+out); pomeriggio non ancora iniziato.
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 7, 0, 0, DateTimeKind.Utc) },
+            new() { Id = 2, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockOut, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 11, 0, 0, DateTimeKind.Utc) },
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        var morning = result.Shifts.Single(s => s.Shift.EventParticipantId == 501);
+        morning.IsCompleted.Should().BeTrue();
+        morning.IsActive.Should().BeFalse();
+        // Con la mattina conclusa, l'attivo è il pomeriggio (nella sua finestra).
+        result.ActiveEventParticipantId.Should().Be(502);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_ReportsDisabled_WhenBranchClockingOff()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var (_, _, _, participants, _) = TwoShiftsSameDay();
+        // Nessuna riga BranchTimeClockSettings → default IsEnabled = false.
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithEmptySet(x => x.BranchTimeClockSettings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.Shifts.Should().HaveCount(2);
+        result.TimeClockEnabled.Should().BeFalse();
+        // Con la timbratura spenta nessun turno è azionabile.
+        result.Shifts.Should().OnlyContain(s => s.IsActive == false);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_ShiftOutsideWindow_IsNotActive_AndWaiting()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 6, 0, 0, DateTimeKind.Utc));
+        // Ora di parete = 08:00: il pomeriggio (14:00) è fuori finestra; la mattina
+        // (09:00, tolleranza 15') inizia alle 08:45 → alle 08:00 ancora in attesa.
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 8, 0, 0, DateTimeKind.Unspecified));
+
+        var (_, _, _, participants, settings) = TwoShiftsSameDay();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        var afternoon = result.Shifts.Single(s => s.Shift.EventParticipantId == 502);
+        afternoon.IsActive.Should().BeFalse();
+        afternoon.StatusMessage.Should().Be("In attesa dell'orario di inizio.");
+        // La mattina è quella più vicina ma fuori finestra → non ancora attiva.
+        result.Shifts.Single(s => s.Shift.EventParticipantId == 501).IsActive.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_IncludesYesterdayShift_StillOpenAcrossMidnight()
+    {
+        // "Oggi" = 25/05 01:00. Un turno notturno iniziato il 24/05 alle 22:00,
+        // con entrata ma senza uscita, deve comparire ed essere quello attivo.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 25, 0, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 25, 1, 0, 0, DateTimeKind.Unspecified));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var night = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Notturno", StartDate = new DateOnly(2026, 5, 24), EndDate = new DateOnly(2026, 5, 25),
+            StartTime = new TimeOnly(22, 0), EndTime = new TimeOnly(6, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = night, EmployeeId = 11 }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, EarlyClockInToleranceMinutes = 15 }
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 20, 0, 0, DateTimeKind.Utc) },
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.Shifts.Should().ContainSingle();
+        result.ActiveEventParticipantId.Should().Be(501);
+        result.Shifts[0].IsClockedIn.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_OpenShiftMessage_UsesWallClockTime_NotProcessZone()
+    {
+        // Entrata reale 09:03 ora di parete (UTC+2 → 07:03 UTC). Il messaggio deve
+        // dire "In turno da 09:03", non l'ora UTC del processo.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 8, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var shift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Mattina", StartDate = new DateOnly(2026, 5, 24), EndDate = new DateOnly(2026, 5, 24),
+            StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(13, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shift, EmployeeId = 11 }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true }
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 7, 3, 0, DateTimeKind.Utc) },
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.Shifts[0].StatusMessage.Should().Be("In turno da 09:03.");
+    }
+
     [Fact]
     public async Task GetWellbeingStatsAsync_ReturnsZeros_WhenNoEntriesExist()
     {

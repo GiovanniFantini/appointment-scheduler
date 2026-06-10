@@ -76,6 +76,27 @@ export interface CurrentClockStatusDto {
   todayEntries: TimeEntryDto[]
 }
 
+export interface ShiftClockStatusDto {
+  shift: TimeClockShiftDto
+  isClockedIn: boolean
+  isOnBreak: boolean
+  isCompleted: boolean
+  isActive: boolean
+  clockInAtUtc?: string
+  breakStartAtUtc?: string
+  workedMinutes: number
+  statusMessage: string
+  suggestedAction?: string
+  entries: TimeEntryDto[]
+}
+
+export interface TodayShiftsDto {
+  timeClockEnabled: boolean
+  requiresGeolocation: boolean
+  activeEventParticipantId?: number
+  shifts: ShiftClockStatusDto[]
+}
+
 export interface ClockActionResultDto {
   success: boolean
   message: string
@@ -98,6 +119,23 @@ export enum TimeClockAnomalyType {
   ExtendedBreak = 7,
   LocationMismatch = 8,
   OvertimeDetected = 9,
+}
+
+const ANOMALY_TYPE_LABEL: Record<number, string> = {
+  [TimeClockAnomalyType.LateClockIn]: 'Entrata in ritardo',
+  [TimeClockAnomalyType.EarlyClockIn]: 'Entrata in anticipo',
+  [TimeClockAnomalyType.LateClockOut]: 'Uscita in ritardo',
+  [TimeClockAnomalyType.EarlyClockOut]: 'Uscita in anticipo',
+  [TimeClockAnomalyType.MissingClockIn]: 'Entrata mancante',
+  [TimeClockAnomalyType.MissingClockOut]: 'Uscita mancante',
+  [TimeClockAnomalyType.ExtendedBreak]: 'Pausa prolungata',
+  [TimeClockAnomalyType.LocationMismatch]: 'Fuori area filiale',
+  [TimeClockAnomalyType.OvertimeDetected]: 'Straordinario rilevato',
+}
+
+/** Etichetta italiana per un tipo di anomalia; fallback al nome inglese dell'enum. */
+export function anomalyTypeLabel(type: TimeClockAnomalyType, fallback?: string): string {
+  return ANOMALY_TYPE_LABEL[type] ?? fallback ?? '—'
 }
 
 export enum TimeClockAnomalyReason {

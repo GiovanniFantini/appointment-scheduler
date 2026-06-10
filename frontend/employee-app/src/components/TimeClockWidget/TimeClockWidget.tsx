@@ -14,7 +14,7 @@ type ActionKind = 'clock-in' | 'clock-out' | 'break-start' | 'break-end'
 
 function formatClock(iso?: string): string {
   if (!iso) return '--:--'
-  return new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
 }
 
 function formatDuration(minutes: number): string {

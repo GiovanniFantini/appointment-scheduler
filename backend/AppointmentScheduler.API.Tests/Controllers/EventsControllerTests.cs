@@ -282,6 +282,24 @@ public class EventsControllerTests
     }
 
     [Fact]
+    public async Task Delete_ReturnsBadRequest_WhenServiceThrowsInvalidOperationException()
+    {
+        // Turno con timbrature registrate: il service blocca, il controller deve
+        // restituire 400 (non lasciar propagare un 500).
+        _eventService.Setup(service => service.DeleteAsync(5, 7))
+            .ThrowsAsync(new InvalidOperationException("Impossibile eliminare il turno: sono presenti timbrature registrate."));
+        var controller = CreateController(
+            new Claim("MerchantId", "7"),
+            new Claim("Feature", MerchantFeature.Calendario.ToString()),
+            new Claim("FeatureLevel", $"{MerchantFeature.Calendario}:Manager"));
+
+        var result = await controller.Delete(5);
+
+        var badRequest = result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("Impossibile eliminare il turno: sono presenti timbrature registrate.");
+    }
+
+    [Fact]
     public async Task GetEmployeeEffectiveSchedule_ReturnsBadRequest_WhenFromIsAfterTo()
     {
         var controller = CreateController(

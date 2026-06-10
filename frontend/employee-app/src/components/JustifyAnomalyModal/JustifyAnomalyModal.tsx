@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { timeClockApi } from '../../lib/api/timeClock'
-import { TimeClockAnomalyReason } from '../../types/timbratura'
+import { TimeClockAnomalyReason, anomalyTypeLabel } from '../../types/timbratura'
 import type { TimeClockAnomalyDto } from '../../types/timbratura'
 import './JustifyAnomalyModal.css'
 
@@ -53,9 +53,9 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
           <div className="jam-body">
             {error && <div className="jam-error">{error}</div>}
             <div className="jam-anomaly-info">
-              <span className="jam-anomaly-type">{anomaly.typeName}</span>
+              <span className="jam-anomaly-type">{anomalyTypeLabel(anomaly.type, anomaly.typeName)}</span>
               <span className="jam-anomaly-date">
-                {new Date(anomaly.workDate).toLocaleDateString(undefined, {
+                {new Date(anomaly.workDate).toLocaleDateString('it-IT', {
                   weekday: 'long', day: '2-digit', month: 'long',
                 })}
               </span>

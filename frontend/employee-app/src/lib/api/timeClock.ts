@@ -1,6 +1,7 @@
 import apiClient from '../axios'
 import type {
   CurrentClockStatusDto,
+  TodayShiftsDto,
   ClockActionResultDto,
   ClockActionRequest,
   TimeEntryDto,
@@ -14,6 +15,11 @@ import { TimeClockAnomalyStatus } from '../../types/timbratura'
 export const timeClockApi = {
   async getStatus(): Promise<CurrentClockStatusDto> {
     const res = await apiClient.get<CurrentClockStatusDto>('/time-clock/status')
+    return res.data
+  },
+
+  async getTodayShifts(): Promise<TodayShiftsDto> {
+    const res = await apiClient.get<TodayShiftsDto>('/time-clock/today-shifts')
     return res.data
   },
 

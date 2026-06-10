@@ -97,6 +97,61 @@ public class CurrentClockStatusDto
 }
 
 /// <summary>
+/// Tutti i turni timbrabili del dipendente per la giornata corrente, ciascuno
+/// con il proprio stato. La pagina Timbratura li elenca per evitare ambiguità
+/// quando in un giorno ci sono più turni (es. mattina + pomeriggio): l'utente
+/// vede su quale turno sta agendo e timbra solo su quello "attivo".
+/// </summary>
+public class TodayShiftsDto
+{
+    /// <summary>True se la timbratura è attiva per il dipendente in questo merchant.</summary>
+    public bool TimeClockEnabled { get; set; }
+
+    /// <summary>True se la filiale richiede la geolocalizzazione alla timbratura.</summary>
+    public bool RequiresGeolocation { get; set; }
+
+    /// <summary>
+    /// EventParticipantId del turno su cui ha senso agire ora (con i pulsanti in
+    /// primo piano). Null se nessun turno è attivabile in questo momento.
+    /// </summary>
+    public int? ActiveEventParticipantId { get; set; }
+
+    /// <summary>Stato di ciascun turno della giornata, in ordine cronologico.</summary>
+    public List<ShiftClockStatusDto> Shifts { get; set; } = new();
+}
+
+/// <summary>
+/// Stato di timbratura di un singolo turno della giornata, all'interno di
+/// <see cref="TodayShiftsDto"/>.
+/// </summary>
+public class ShiftClockStatusDto
+{
+    public TimeClockShiftDto Shift { get; set; } = null!;
+
+    public bool IsClockedIn { get; set; }
+    public bool IsOnBreak { get; set; }
+
+    /// <summary>True se il turno è già stato concluso (clock-out registrato).</summary>
+    public bool IsCompleted { get; set; }
+
+    /// <summary>
+    /// True se questo è il turno su cui ha senso timbrare adesso: solo allora il
+    /// client mostra i pulsanti azione in primo piano.
+    /// </summary>
+    public bool IsActive { get; set; }
+
+    public DateTime? ClockInAtUtc { get; set; }
+    public DateTime? BreakStartAtUtc { get; set; }
+    public double WorkedMinutes { get; set; }
+
+    public string StatusMessage { get; set; } = string.Empty;
+    public string? SuggestedAction { get; set; }
+
+    /// <summary>Timbrature già registrate oggi su questo turno.</summary>
+    public List<TimeEntryDto> Entries { get; set; } = new();
+}
+
+/// <summary>
 /// Riferimento sintetico a un turno, usato dentro CurrentClockStatusDto.
 /// </summary>
 public class TimeClockShiftDto

@@ -262,12 +262,20 @@ public class EventsController : ControllerBase
         if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
             return Forbid();
 
-        var result = await _eventService.DeleteAsync(id, merchantId);
+        try
+        {
+            var result = await _eventService.DeleteAsync(id, merchantId);
 
-        if (!result)
-            return NotFound(new { message = "Evento non trovato o non autorizzato" });
+            if (!result)
+                return NotFound(new { message = "Evento non trovato o non autorizzato" });
 
-        return Ok(new { message = "Evento eliminato con successo" });
+            return Ok(new { message = "Evento eliminato con successo" });
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Turno con timbrature registrate: 400, non 500.
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>

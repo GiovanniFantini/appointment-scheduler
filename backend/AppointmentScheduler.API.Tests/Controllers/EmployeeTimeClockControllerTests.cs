@@ -40,6 +40,40 @@ public class EmployeeTimeClockControllerTests
         ok.Value.Should().BeSameAs(status);
     }
 
+    [Fact]
+    public async Task GetTodayShifts_ReturnsBadRequest_WhenIdentityClaimsAreMissing()
+    {
+        var controller = CreateController();
+
+        var result = await controller.GetTodayShifts();
+
+        var badRequest = result.Result.Should().BeOfType<BadRequestObjectResult>().Subject;
+        badRequest.GetAnonymousString("message").Should().Be("Token non valido");
+    }
+
+    [Fact]
+    public async Task GetTodayShifts_ReturnsForbid_WhenFeatureIsMissing()
+    {
+        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"));
+
+        var result = await controller.GetTodayShifts();
+
+        result.Result.Should().BeOfType<ForbidResult>();
+    }
+
+    [Fact]
+    public async Task GetTodayShifts_ReturnsOk_WhenFeatureExists()
+    {
+        var shifts = new TodayShiftsDto { TimeClockEnabled = true };
+        _timeClockService.Setup(service => service.GetTodayShiftsAsync(11, 7)).ReturnsAsync(shifts);
+        var controller = CreateController(new Claim("EmployeeId", "11"), new Claim("MerchantId", "7"), new Claim("Feature", "Timbratura"));
+
+        var result = await controller.GetTodayShifts();
+
+        var ok = result.Result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.Value.Should().BeSameAs(shifts);
+    }
+
     [Theory]
     [InlineData("ClockIn")]
     [InlineData("ClockOut")]

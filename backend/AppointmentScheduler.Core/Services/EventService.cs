@@ -376,6 +376,18 @@ public class EventService : IEventService
         if (evt == null)
             return false;
 
+        // Le timbrature sono un dato di presenza (rilevanti per paga/audit): non
+        // vanno perse cancellando il turno. La FK TimeEntries→Event è RESTRICT, e
+        // un Remove a cascata sui partecipanti violerebbe comunque quel vincolo
+        // facendo fallire SaveChanges con un 500. Blocchiamo qui con un messaggio
+        // chiaro (il controller lo traduce in 400).
+        var hasTimeEntries = await _context.TimeEntries
+            .AnyAsync(t => t.EventId == id);
+        if (hasTimeEntries)
+            throw new InvalidOperationException(
+                "Impossibile eliminare il turno: sono presenti timbrature registrate. " +
+                "Rimuovi prima le timbrature collegate.");
+
         // I partecipanti vanno avvisati prima di rimuovere l'evento: la notifica
         // resta valida (RelatedEntityId punta a un evento ormai cancellato, ma il
         // testo è autosufficiente).

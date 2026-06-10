@@ -84,8 +84,9 @@ public class TimeClockService : ITimeClockService
         }
         else if (status.IsClockedIn)
         {
-            // L'orario di entrata mostrato è quello effettivamente timbrato.
-            var since = clockIn!.ActualTimestampUtc.ToLocalTime().ToString("HH:mm");
+            // L'orario di entrata mostrato è quello effettivamente timbrato,
+            // convertito nell'ora di parete dell'azienda (non del processo).
+            var since = ToWallClockTime(clockIn!.ActualTimestampUtc);
             status.StatusMessage = $"In turno da {since}.";
             status.SuggestedAction = "Timbra l'uscita";
             status.ShowClockPrompt = true;
@@ -104,6 +105,115 @@ public class TimeClockService : ITimeClockService
         }
 
         return status;
+    }
+
+    public async Task<TodayShiftsDto> GetTodayShiftsAsync(int employeeId, int merchantId)
+    {
+        var nowUtc = _utcClock.UtcNow;
+        var today = DateOnly.FromDateTime(nowUtc);
+
+        var contexts = await GetTodayShiftContextsAsync(employeeId, merchantId, today);
+
+        var result = new TodayShiftsDto();
+        if (contexts.Count == 0)
+            return result;
+
+        // La timbratura è abilitata a livello di filiale: i turni del giorno
+        // possono stare su filiali diverse, ma in pratica la geoloc/abilitazione
+        // del turno attivo guida il client.
+        var active = await PickActiveShiftAsync(contexts);
+        result.ActiveEventParticipantId = active?.Participant.Id;
+
+        // Timbrature di tutti i turni del giorno in un'unica query.
+        var participantIds = contexts.Select(c => c.Participant.Id).ToList();
+        var allEntries = await _context.TimeEntries
+            .Include(e => e.Branch)
+            .Include(e => e.Event)
+            .Include(e => e.Employee)
+            .Where(e => participantIds.Contains(e.EventParticipantId))
+            .OrderBy(e => e.ActualTimestampUtc)
+            .ToListAsync();
+        var entriesByParticipant = allEntries
+            .GroupBy(e => e.EventParticipantId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        foreach (var ctx in contexts)
+        {
+            var settings = await GetOrDefaultSettingsAsync(ctx.Event.BranchId, merchantId);
+            if (settings.IsEnabled) result.TimeClockEnabled = true;
+            if (settings.GeofencingEnabled && ctx.Participant.Id == active?.Participant.Id)
+                result.RequiresGeolocation = true;
+
+            var entries = entriesByParticipant.GetValueOrDefault(ctx.Participant.Id) ?? new List<TimeEntry>();
+            var isActive = ctx.Participant.Id == active?.Participant.Id;
+            result.Shifts.Add(BuildShiftStatus(ctx, entries, settings, isActive, nowUtc));
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Calcola lo stato di un singolo turno per la lista giornaliera. Un turno è
+    /// "attivo" (pulsanti in primo piano) solo se è quello scelto come corrente e
+    /// siamo nella sua finestra utile di timbratura.
+    /// </summary>
+    private ShiftClockStatusDto BuildShiftStatus(
+        ShiftContext ctx, List<TimeEntry> entries, BranchTimeClockSettings settings,
+        bool isSelected, DateTime nowUtc)
+    {
+        var clockIn = entries.LastOrDefault(e => e.Type == TimeEntryType.ClockIn);
+        var clockOut = entries.LastOrDefault(e => e.Type == TimeEntryType.ClockOut);
+        var openBreak = FindOpenBreak(entries);
+
+        var dto = new ShiftClockStatusDto
+        {
+            Shift = MapShift(ctx),
+            Entries = entries.Select(MapEntry).ToList(),
+            IsClockedIn = clockIn != null && clockOut == null,
+            IsOnBreak = openBreak != null,
+            IsCompleted = clockOut != null,
+            ClockInAtUtc = clockIn?.ActualTimestampUtc,
+            BreakStartAtUtc = openBreak?.ActualTimestampUtc,
+            WorkedMinutes = CalculateWorkedMinutes(entries, nowUtc),
+        };
+
+        var (start, end) = ResolveShiftTimes(ctx);
+        var startWall = ToWallClock(ctx.Event.StartDate, start);
+        var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
+        var nowWall = NowWallClock;
+
+        // Dentro la finestra utile = da EarlyClockInTolerance prima dell'inizio
+        // fino alla fine turno.
+        var windowStart = startWall?.AddMinutes(-settings.EarlyClockInToleranceMinutes);
+        var inWindow = windowStart != null && endWall != null
+            && nowWall >= windowStart && nowWall <= endWall;
+
+        if (dto.IsCompleted)
+        {
+            dto.StatusMessage = "Turno completato.";
+        }
+        else if (dto.IsOnBreak)
+        {
+            dto.StatusMessage = "In pausa.";
+            dto.SuggestedAction = "Termina la pausa";
+            dto.IsActive = isSelected && settings.IsEnabled;
+        }
+        else if (dto.IsClockedIn)
+        {
+            dto.StatusMessage = $"In turno da {ToWallClockTime(clockIn!.ActualTimestampUtc)}.";
+            dto.SuggestedAction = "Timbra l'uscita";
+            // Un turno aperto è sempre azionabile (per chiuderlo), a prescindere
+            // dalla finestra oraria.
+            dto.IsActive = isSelected && settings.IsEnabled;
+        }
+        else
+        {
+            dto.StatusMessage = inWindow ? "Turno da iniziare." : "In attesa dell'orario di inizio.";
+            dto.SuggestedAction = "Timbra l'entrata";
+            dto.IsActive = isSelected && settings.IsEnabled && inWindow;
+        }
+
+        return dto;
     }
 
     // ── Azioni di timbratura ───────────────────────────────────────────────
@@ -809,11 +919,12 @@ public class TimeClockService : ITimeClockService
     private sealed record ShiftContext(Event Event, EventParticipant Participant);
 
     /// <summary>
-    /// Risolve il turno "corrente" del dipendente: il turno di tipo Turno con
-    /// data odierna (o quello aperto a cavallo di mezzanotte). Se ce ne sono più
-    /// d'uno sceglie quello la cui finestra è più vicina all'ora corrente.
+    /// Tutti i turni timbrabili del dipendente per la giornata: i turni di tipo
+    /// Turno con data odierna più quelli di ieri ancora aperti (a cavallo di
+    /// mezzanotte). Ordinati per orario di inizio. È la base sia per la pagina
+    /// Timbratura (lista) sia per la risoluzione del turno corrente.
     /// </summary>
-    private async Task<ShiftContext?> ResolveCurrentShiftAsync(int employeeId, int merchantId, DateOnly today)
+    private async Task<List<ShiftContext>> GetTodayShiftContextsAsync(int employeeId, int merchantId, DateOnly today)
     {
         var yesterday = today.AddDays(-1);
 
@@ -826,29 +937,76 @@ public class TimeClockService : ITimeClockService
                         && (p.Event.StartDate == today || p.Event.StartDate == yesterday))
             .ToListAsync();
 
-        if (participants.Count == 0)
-            return null;
-
-        // Preferisci un turno la cui finestra contiene "adesso", altrimenti il
-        // più vicino nel tempo.
-        ShiftContext? best = null;
-        double bestDistance = double.MaxValue;
-
+        var contexts = new List<ShiftContext>();
         foreach (var p in participants)
         {
-            // Scarta i turni di ieri se già chiusi con un clock-out.
+            // Scarta i turni di ieri se già chiusi con un clock-out: non sono più
+            // timbrabili e non vanno mostrati nella giornata corrente.
             if (p.Event.StartDate == yesterday)
             {
                 var hasClockOut = await _context.TimeEntries
                     .AnyAsync(e => e.EventParticipantId == p.Id && e.Type == TimeEntryType.ClockOut);
                 if (hasClockOut) continue;
             }
+            contexts.Add(new ShiftContext(p.Event, p));
+        }
 
-            var ctx = new ShiftContext(p.Event, p);
+        return contexts
+            .OrderBy(c => ToWallClock(c.Event.StartDate, ResolveShiftTimes(c).Start) ?? DateTime.MaxValue)
+            .ThenBy(c => c.Participant.Id)
+            .ToList();
+    }
+
+    /// <summary>
+    /// Risolve il turno "corrente" su cui agire. Regola: se un turno ha l'entrata
+    /// senza l'uscita (turno aperto), ha sempre la priorità — così non si lascia
+    /// un turno aperto iniziando a timbrarne un altro. Altrimenti si sceglie il
+    /// turno la cui finestra contiene "adesso", o il più vicino nel tempo.
+    /// </summary>
+    private async Task<ShiftContext?> ResolveCurrentShiftAsync(int employeeId, int merchantId, DateOnly today)
+    {
+        var contexts = await GetTodayShiftContextsAsync(employeeId, merchantId, today);
+        if (contexts.Count == 0)
+            return null;
+
+        return await PickActiveShiftAsync(contexts);
+    }
+
+    /// <summary>
+    /// Sceglie, tra i turni della giornata, quello "attivo" (priorità al turno
+    /// aperto, poi a quello in corso/più vicino). I clock-out già registrati
+    /// vengono letti in blocco per evitare query per-turno.
+    /// </summary>
+    private async Task<ShiftContext?> PickActiveShiftAsync(List<ShiftContext> contexts)
+    {
+        var participantIds = contexts.Select(c => c.Participant.Id).ToList();
+        var entries = await _context.TimeEntries
+            .Where(e => participantIds.Contains(e.EventParticipantId))
+            .Select(e => new { e.EventParticipantId, e.Type })
+            .ToListAsync();
+
+        var hasIn = entries.Where(e => e.Type == TimeEntryType.ClockIn)
+            .Select(e => e.EventParticipantId).ToHashSet();
+        var hasOut = entries.Where(e => e.Type == TimeEntryType.ClockOut)
+            .Select(e => e.EventParticipantId).ToHashSet();
+
+        // 1) Turno aperto (entrata senza uscita): priorità assoluta.
+        var open = contexts.FirstOrDefault(c =>
+            hasIn.Contains(c.Participant.Id) && !hasOut.Contains(c.Participant.Id));
+        if (open != null) return open;
+
+        // 2) Tra i turni non ancora conclusi, quello in corso o più vicino a ora.
+        ShiftContext? best = null;
+        double bestDistance = double.MaxValue;
+        var nowWall = NowWallClock;
+
+        foreach (var ctx in contexts)
+        {
+            if (hasOut.Contains(ctx.Participant.Id)) continue; // già concluso
+
             var (start, end) = ResolveShiftTimes(ctx);
-            var startWall = ToWallClock(p.Event.StartDate, start);
-            var endWall = ToWallClock(p.Event.EndDate ?? p.Event.StartDate, end);
-            var nowWall = NowWallClock;
+            var startWall = ToWallClock(ctx.Event.StartDate, start);
+            var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
 
             double distance;
             if (startWall.HasValue && endWall.HasValue && nowWall >= startWall && nowWall <= endWall)
@@ -1043,6 +1201,17 @@ public class TimeClockService : ITimeClockService
     /// del progetto trattano gli orari dei turni.
     /// </summary>
     private DateTime NowWallClock => _wallClock.Now;
+
+    /// <summary>
+    /// Formatta un istante UTC come ora di parete dell'azienda (HH:mm). Usa lo
+    /// scarto tra <see cref="IWallClock"/> e <see cref="IUtcClock"/> per non
+    /// dipendere dal fuso del processo (vedi bug deviazione timbratura).
+    /// </summary>
+    private string ToWallClockTime(DateTime utc)
+    {
+        var offset = _wallClock.Now - _utcClock.UtcNow;
+        return DateTime.SpecifyKind(utc, DateTimeKind.Unspecified).Add(offset).ToString("HH:mm");
+    }
 
     // ── Mapping ────────────────────────────────────────────────────────────
 

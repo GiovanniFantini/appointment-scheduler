@@ -1,0 +1,102 @@
+.tsp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tsp-card {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.tsp-card--loading,
+.tsp-card--idle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  text-align: center;
+  gap: 8px;
+}
+
+.tsp-idle-icon { font-size: 32px; opacity: 0.6; }
+.tsp-idle-text { color: var(--su-text-secondary); margin: 0; }
+.tsp-error { color: #fca5a5; text-align: center; }
+
+/* ── Card turno ─────────────────────────────────────────────────────────── */
+
+.tsp-shift {
+  background: var(--su-surface-elevated);
+  border: 1px solid var(--su-border-strong);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tsp-shift--active { border-color: #22c55e55; }
+.tsp-shift--break { border-color: #f59e0b55; }
+
+/* I turni non attivi (conclusi o in attesa) restano presenti ma in secondo
+   piano: niente pulsanti, aspetto attenuato per non competere con l'attivo. */
+.tsp-shift--muted {
+  opacity: 0.62;
+  padding: 14px 20px;
+  gap: 8px;
+}
+
+.tsp-shift-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tsp-shift-title {
+  font-weight: 600;
+  color: var(--su-text-primary);
+  font-size: 15px;
+}
+
+.tsp-shift-meta {
+  color: var(--su-text-secondary);
+  font-size: 13px;
+  margin-top: 2px;
+}
+
+.tsp-info-row { display: flex; gap: 12px; }
+
+.tsp-info {
+  flex: 1;
+  background: var(--su-surface-bg);
+  border-radius: 10px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tsp-info-label {
+  font-size: 11px;
+  color: var(--su-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.tsp-info-value { font-size: 18px; font-weight: 600; color: var(--su-text-primary); }
+
+.tsp-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tsp-completed {
+  text-align: center;
+  color: var(--su-text-secondary);
+  font-size: 14px;
+  padding: 4px;
+}
