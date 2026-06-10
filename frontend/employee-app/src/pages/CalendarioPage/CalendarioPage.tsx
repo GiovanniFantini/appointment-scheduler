@@ -302,7 +302,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
   const canCreate = canManage
   const canAssign = canOperate
   const calendarRef = useRef<FullCalendar>(null)
-  const { activeBranchId, isMultiBranch } = useBranch()
+  const { activeBranchId, activeDepartmentId, isMultiBranch } = useBranch()
   const [events, setEvents] = useState<EventInput[]>([])
   const [selectedEvent, setSelectedEvent] = useState<Partial<CalEvent> | null>(null)
   const [defaultDate, setDefaultDate] = useState<string>('')
@@ -331,16 +331,28 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
 
   const fetchEvents = useCallback(async (from: string, to: string) => {
     try {
+      const eventParams: Record<string, string | number> = { from, to }
+      if (activeBranchId != null) eventParams.branchId = activeBranchId
+      if (activeDepartmentId != null) eventParams.departmentId = activeDepartmentId
+
       const [eventsRes, requestsRes] = await Promise.all([
-        apiClient.get('/events/employee', { params: { from, to } }),
+        apiClient.get('/events/employee', { params: eventParams }),
         apiClient.get(canOperate ? '/employee-requests/calendar' : '/employee-requests/my'),
       ])
 
       // Badge filiale solo quando si vedono più filiali insieme (vista "Tutte").
       const showBranchBadge = isMultiBranch && activeBranchId == null
-      const eventItems: EventInput[] = Array.isArray(eventsRes.data)
-        ? (eventsRes.data as ApiEvent[]).map(e => toFCEvent(e, showBranchBadge))
-        : []
+      const apiEvents: ApiEvent[] = Array.isArray(eventsRes.data) ? (eventsRes.data as ApiEvent[]) : []
+      const eventItems: EventInput[] = apiEvents.map(e => toFCEvent(e, showBranchBadge))
+
+      // Con filiale selezionata, gli eventi sopra arrivano già filtrati per branch dal
+      // backend. Le richieste (Ferie/Malattia/Permessi) non hanno una filiale propria:
+      // le attribuiamo alla filiale solo tramite il turno collegato (eventId). Teniamo
+      // quindi le richieste collegate a un turno visibile nella filiale corrente; quelle
+      // non collegate non sono attribuibili e restano sempre visibili (per non nascondere
+      // assenze del dipendente).
+      const branchSelected = activeBranchId != null
+      const visibleEventIds = new Set(apiEvents.map(e => e.id))
 
       // Filter out rejected and those outside the current range, then convert
       const requestItems: EventInput[] = Array.isArray(requestsRes.data)
@@ -351,6 +363,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
               const end = r.endDate ?? r.startDate
               return end >= from && start <= to
             })
+            .filter(r => !branchSelected || r.eventId == null || visibleEventIds.has(r.eventId))
             .map(requestToFCEvent)
         : []
 
@@ -358,7 +371,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
     } catch {
       // silently fail
     }
-  }, [activeBranchId, isMultiBranch, canOperate])
+  }, [activeBranchId, activeDepartmentId, isMultiBranch, canOperate])
 
   const handleDatesSet = (info: DatesSetArg) => {
     const from = info.startStr.split('T')[0]

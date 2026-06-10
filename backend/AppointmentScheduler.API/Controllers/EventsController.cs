@@ -82,7 +82,9 @@ public class EventsController : ControllerBase
     [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<List<EventDto>>> GetEmployeeEvents(
         [FromQuery] DateOnly? from,
-        [FromQuery] DateOnly? to)
+        [FromQuery] DateOnly? to,
+        [FromQuery] int? branchId = null,
+        [FromQuery] int? departmentId = null)
     {
         if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.ReadOnly))
             return Forbid();
@@ -93,7 +95,7 @@ public class EventsController : ControllerBase
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
-        var events = await _eventService.GetEmployeeEventsAsync(employeeId, merchantId, from, to);
+        var events = await _eventService.GetEmployeeEventsAsync(employeeId, merchantId, from, to, branchId, departmentId);
         return Ok(events);
     }
 

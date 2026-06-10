@@ -104,6 +104,24 @@ public class PasswordResetServiceTests
         _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
     }
 
+    [Theory]
+    [InlineData("alllowercase12")]   // ≥12 ma senza maiuscola/cifra
+    [InlineData("ALLUPPERCASE12")]   // manca minuscola
+    [InlineData("NoDigitsAtAllAB")]  // manca cifra
+    public async Task ResetPasswordAsync_ReturnsInvalidInput_WhenComplexityMissing(string password)
+    {
+        var context = new ApplicationDbContextMockBuilder()
+            .WithEmptySet(x => x.Users, user => [user.Id])
+            .WithEmptySet(x => x.PasswordResetTokens, token => [token.Id])
+            .Build();
+        var service = CreateService(context.Object);
+
+        var result = await service.ResetPasswordAsync("token", password);
+
+        result.Should().Be(ResetPasswordResult.InvalidInput);
+        _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
+    }
+
     [Fact]
     public async Task ResetPasswordAsync_UpdatesHashAndMarksTokenUsed_WhenTokenIsValid()
     {
@@ -118,10 +136,10 @@ public class PasswordResetServiceTests
             .WithSet(x => x.PasswordResetTokens, tokens, token => [token.Id])
             .Build(out var saveChangesTracker);
         _clock.SetupGet(x => x.UtcNow).Returns(now);
-        _passwordHasher.Setup(x => x.HashPassword("new-password-123")).Returns("new-hash");
+        _passwordHasher.Setup(x => x.HashPassword("New-Password-123")).Returns("new-hash");
         var service = CreateService(context.Object);
 
-        var result = await service.ResetPasswordAsync("valid-token", "new-password-123");
+        var result = await service.ResetPasswordAsync("valid-token", "New-Password-123");
 
         result.Should().Be(ResetPasswordResult.Success);
         user.PasswordHash.Should().Be("new-hash");
@@ -141,7 +159,7 @@ public class PasswordResetServiceTests
         _clock.SetupGet(x => x.UtcNow).Returns(now);
         var service = CreateService(context.Object);
 
-        var result = await service.ResetPasswordAsync("missing-token", "new-password-123");
+        var result = await service.ResetPasswordAsync("missing-token", "New-Password-123");
 
         result.Should().Be(ResetPasswordResult.TokenNotFound);
         _passwordHasher.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Never);
@@ -163,7 +181,7 @@ public class PasswordResetServiceTests
         _clock.SetupGet(x => x.UtcNow).Returns(now);
         var service = CreateService(context.Object);
 
-        var result = await service.ResetPasswordAsync("expired-token", "new-password-123");
+        var result = await service.ResetPasswordAsync("expired-token", "New-Password-123");
 
         result.Should().Be(ResetPasswordResult.TokenExpired);
         user.PasswordHash.Should().Be("old-hash");
@@ -186,7 +204,7 @@ public class PasswordResetServiceTests
         _clock.SetupGet(x => x.UtcNow).Returns(now);
         var service = CreateService(context.Object);
 
-        var result = await service.ResetPasswordAsync("used-token", "new-password-123");
+        var result = await service.ResetPasswordAsync("used-token", "New-Password-123");
 
         result.Should().Be(ResetPasswordResult.TokenAlreadyUsed);
         user.PasswordHash.Should().Be("old-hash");
@@ -207,10 +225,10 @@ public class PasswordResetServiceTests
             .WithSet(x => x.PasswordResetTokens, tokens, token => [token.Id])
             .Build(out var saveChangesTracker);
         _clock.SetupGet(x => x.UtcNow).Returns(now);
-        _passwordHasher.Setup(x => x.HashPassword("new-password-123")).Returns("new-hash");
+        _passwordHasher.Setup(x => x.HashPassword("New-Password-123")).Returns("new-hash");
         var service = CreateService(context.Object);
 
-        var result = await service.ResetPasswordAsync("abc def/ghi==", "new-password-123");
+        var result = await service.ResetPasswordAsync("abc def/ghi==", "New-Password-123");
 
         result.Should().Be(ResetPasswordResult.Success);
         user.PasswordHash.Should().Be("new-hash");

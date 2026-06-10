@@ -10,8 +10,13 @@ public class ResetPasswordRequest
     [StringLength(512, MinimumLength = 16, ErrorMessage = "Token non valido. Richiedi un nuovo recupero password.")]
     public string Token { get; set; } = string.Empty;
 
-    /// <summary>Nuova password da impostare (≥12 caratteri, con complessità minima validata lato service).</summary>
+    /// <summary>
+    /// Nuova password da impostare. Policy: ≥12 caratteri, con almeno una
+    /// maiuscola, una minuscola e una cifra (allineata ad AuthService.ValidatePassword).
+    /// </summary>
     [Required(ErrorMessage = "Inserisci la nuova password.")]
     [StringLength(256, MinimumLength = 12, ErrorMessage = "La password deve essere di almeno 12 caratteri.")]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
+        ErrorMessage = "La password deve contenere almeno una lettera maiuscola, una minuscola e una cifra.")]
     public string NewPassword { get; set; } = string.Empty;
 }

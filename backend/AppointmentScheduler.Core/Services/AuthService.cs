@@ -535,20 +535,38 @@ public class AuthService : IAuthService
     }
 
     /// <summary>
-    /// Valida la password in fase di registrazione e reset. Lancia
-    /// ArgumentException (mappata a 400 dal controller) se non rispetta la
-    /// lunghezza minima o non contiene almeno una maiuscola, una minuscola e
-    /// una cifra.
+    /// Valida la password e, se non rispetta la policy, restituisce il motivo.
+    /// Fonte unica della regola (lunghezza + complessità) usata da registrazione,
+    /// reset e cambio password.
+    /// </summary>
+    /// <returns>true se valida; altrimenti false e <paramref name="errorMessage"/> valorizzato.</returns>
+    public static bool TryValidatePassword(string password, out string? errorMessage)
+    {
+        if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
+        {
+            errorMessage = $"La password deve contenere almeno {MinPasswordLength} caratteri.";
+            return false;
+        }
+
+        if (!PasswordComplexityRegex.IsMatch(password))
+        {
+            errorMessage = "La password deve contenere almeno una lettera maiuscola, una minuscola e una cifra.";
+            return false;
+        }
+
+        errorMessage = null;
+        return true;
+    }
+
+    /// <summary>
+    /// Valida la password in fase di registrazione. Lancia ArgumentException
+    /// (mappata a 400 dal controller) se non rispetta la policy. Wrapper su
+    /// <see cref="TryValidatePassword"/>.
     /// </summary>
     public static void ValidatePassword(string password)
     {
-        if (string.IsNullOrEmpty(password) || password.Length < MinPasswordLength)
-            throw new ArgumentException(
-                $"La password deve contenere almeno {MinPasswordLength} caratteri.");
-
-        if (!PasswordComplexityRegex.IsMatch(password))
-            throw new ArgumentException(
-                "La password deve contenere almeno una lettera maiuscola, una minuscola e una cifra.");
+        if (!TryValidatePassword(password, out var error))
+            throw new ArgumentException(error);
     }
 
     /// <summary>

@@ -40,8 +40,8 @@ public class AccountService : IAccountService
     {
         if (string.IsNullOrEmpty(request.CurrentPassword))
             return (false, "Password attuale obbligatoria");
-        if (string.IsNullOrEmpty(request.NewPassword) || request.NewPassword.Length < AuthService.MinPasswordLength)
-            return (false, $"La nuova password deve essere di almeno {AuthService.MinPasswordLength} caratteri");
+        if (!AuthService.TryValidatePassword(request.NewPassword, out var pwdError))
+            return (false, pwdError);
         if (request.CurrentPassword == request.NewPassword)
             return (false, "La nuova password deve essere diversa da quella attuale");
 

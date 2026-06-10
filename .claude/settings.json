@@ -25,7 +25,13 @@
       "Bash(pwsh -NoProfile -Command \"dotnet build backend/AppointmentScheduler.Data/AppointmentScheduler.Data.csproj -nologo -v q 2>&1 | Select-Object -Last 25\")",
       "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.Core/AppointmentScheduler.Core.csproj\" -v q --nologo)",
       "Bash(\"/c/Program Files/dotnet/dotnet.exe\" build \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API/AppointmentScheduler.API.csproj\" -v q --nologo)",
-      "Bash(\"/c/Windows/System32/taskkill.exe\" //PID 24488 //F)"
+      "Bash(\"/c/Windows/System32/taskkill.exe\" //PID 24488 //F)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" test \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API.Tests/AppointmentScheduler.API.Tests.csproj\" --filter \"FullyQualifiedName~PasswordReset|FullyQualifiedName~AuthControllerTests|FullyQualifiedName~AuthServiceTests\" --nologo -v q)",
+      "Bash(\"/c/Program Files/dotnet/dotnet.exe\" test \"/c/Repos/appointment-scheduler/backend/AppointmentScheduler.API.Tests/AppointmentScheduler.API.Tests.csproj\" --nologo -v q)",
+      "Bash(\"/c/Program Files/nodejs/npm.cmd\" --version)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" --version)",
+      "Bash(\"/c/Program Files/nodejs/node.exe\" -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('C:/Repos/appointment-scheduler/frontend/merchant-app/tsconfig.json','utf8'\\);process.stdout.write\\(t\\)\")",
+      "Bash(\"/c/Program Files/nodejs/npx.cmd\" tsc --noEmit)"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { PageHeader } from '../shell/PageHeader'
 import { FormField } from '../form/FormField'
 import { Input } from '../form/Input'
+import { PasswordRequirements, passwordRulesMet } from '../form/PasswordRequirements'
 import { Button } from '../ui/Button'
 import { useToast } from '../ui/Toast/Toaster'
 import { extractApiError } from '../lib/apiError'
@@ -106,8 +107,8 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setPwdError(undefined)
-    if (newPassword.length < 12) {
-      setPwdError('La nuova password deve essere di almeno 12 caratteri')
+    if (!passwordRulesMet(newPassword)) {
+      setPwdError('La password non rispetta i requisiti minimi indicati.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -229,9 +230,8 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
               <FormField
                 label="Nuova password"
                 required
-                helper="Minimo 12 caratteri"
                 htmlFor="newPwd"
-                error={pwdError && newPassword.length < 12 ? pwdError : undefined}
+                error={pwdError && !passwordRulesMet(newPassword) ? pwdError : undefined}
               >
                 <Input
                   id="newPwd"
@@ -240,8 +240,9 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
-                  error={!!pwdError && newPassword.length < 12}
+                  error={!!pwdError && !passwordRulesMet(newPassword)}
                 />
+                {newPassword.length > 0 && <PasswordRequirements password={newPassword} />}
               </FormField>
               <FormField
                 label="Conferma nuova password"

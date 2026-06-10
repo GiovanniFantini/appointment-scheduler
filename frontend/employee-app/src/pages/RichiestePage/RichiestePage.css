@@ -233,3 +233,13 @@
   max-width: 420px;
   margin: 0 0 1rem;
 }
+
+/* Lista turni in conflitto nel dialog di approvazione ferie */
+.approval-conflict-list {
+  margin: 0.5rem 0;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+.approval-conflict-list li {
+  margin: 0.25rem 0;
+}

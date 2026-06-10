@@ -57,4 +57,11 @@ public class ReviewEmployeeRequestRequest
 {
     public string? ReviewNotes { get; set; }
     public int? EventId { get; set; }
+
+    /// <summary>
+    /// Se true, l'approvazione procede anche in presenza di turni sovrapposti
+    /// (conferma esplicita dell'approvatore dopo l'avviso). Default false: la prima
+    /// approvazione viene bloccata segnalando i conflitti.
+    /// </summary>
+    public bool Force { get; set; }
 }

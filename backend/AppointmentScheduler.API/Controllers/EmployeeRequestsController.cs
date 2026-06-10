@@ -147,6 +147,12 @@ public class EmployeeRequestsController : ControllerBase
 
             return Ok(result);
         }
+        catch (EventConflictException ex)
+        {
+            // Avvisa-ma-procedi: turni sovrapposti rilevati. Il client mostra l'avviso e
+            // ri-invoca l'approvazione con Force=true per confermare.
+            return Conflict(new { message = ex.Message, conflicts = ex.Conflicts });
+        }
         catch (InvalidOperationException ex)
         {
             return BadRequest(new { message = ex.Message });

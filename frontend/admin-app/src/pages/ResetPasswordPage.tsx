@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { extractApiError } from '@scheduler/ui'
+import { extractApiError, PasswordRequirements, passwordRulesMet, passwordRulesEn } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import './LoginPage.css'
 import './ResetPasswordPage.css'
@@ -19,8 +19,8 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     setError('')
 
-    if (newPassword.length < 12) {
-      setError('Password must be at least 12 characters.')
+    if (!passwordRulesMet(newPassword)) {
+      setError('The password does not meet the minimum requirements shown.')
       return
     }
     if (newPassword !== confirmPassword) {
@@ -110,6 +110,9 @@ export default function ResetPasswordPage() {
                   minLength={12}
                   autoComplete="new-password"
                 />
+                {newPassword.length > 0 && (
+                  <PasswordRequirements password={newPassword} labels={passwordRulesEn} />
+                )}
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="confirmPassword">Confirm password</label>
@@ -125,7 +128,11 @@ export default function ResetPasswordPage() {
                   autoComplete="new-password"
                 />
               </div>
-              <button type="submit" className="btn-login" disabled={loading}>
+              <button
+                type="submit"
+                className="btn-login"
+                disabled={loading || !passwordRulesMet(newPassword) || newPassword !== confirmPassword}
+              >
                 {loading ? 'Updating…' : 'Update password'}
               </button>
             </form>

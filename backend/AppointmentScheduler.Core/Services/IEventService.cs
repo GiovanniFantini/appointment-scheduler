@@ -19,7 +19,7 @@ public interface IEventService
     /// <summary>
     /// Recupera gli eventi di un dipendente in un merchant specifico
     /// </summary>
-    Task<List<EventDto>> GetEmployeeEventsAsync(int employeeId, int merchantId, DateOnly? from, DateOnly? to);
+    Task<List<EventDto>> GetEmployeeEventsAsync(int employeeId, int merchantId, DateOnly? from, DateOnly? to, int? branchId = null, int? departmentId = null);
 
     /// <summary>
     /// Recupera un evento per ID, verificando l'appartenenza al merchant

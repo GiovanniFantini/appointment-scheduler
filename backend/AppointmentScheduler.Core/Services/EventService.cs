@@ -78,7 +78,7 @@ public class EventService : IEventService
     /// <summary>
     /// Recupera gli eventi di un dipendente in un merchant specifico
     /// </summary>
-    public async Task<List<EventDto>> GetEmployeeEventsAsync(int employeeId, int merchantId, DateOnly? from, DateOnly? to)
+    public async Task<List<EventDto>> GetEmployeeEventsAsync(int employeeId, int merchantId, DateOnly? from, DateOnly? to, int? branchId = null, int? departmentId = null)
     {
         var query = _context.Events
             .Include(e => e.Participants)
@@ -101,6 +101,12 @@ public class EventService : IEventService
 
         if (to.HasValue)
             query = query.Where(e => e.StartDate <= to.Value || (e.EndDate.HasValue && e.EndDate.Value <= to.Value));
+
+        if (branchId.HasValue)
+            query = query.Where(e => e.BranchId == branchId.Value || e.AppliesToAllBranches);
+
+        if (departmentId.HasValue)
+            query = query.Where(e => e.DepartmentId == departmentId.Value || e.AppliesToAllBranches);
 
         var events = await query
             .OrderBy(e => e.StartDate)

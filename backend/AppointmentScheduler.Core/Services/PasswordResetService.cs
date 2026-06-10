@@ -110,8 +110,10 @@ public class PasswordResetService : IPasswordResetService
 
         var normalizedToken = NormalizeIncomingToken(token);
 
-        // Stessa lunghezza minima dei flussi di registrazione (vedi AuthService).
-        if (newPassword.Length < AuthService.MinPasswordLength)
+        // Stessa policy dei flussi di registrazione (lunghezza + complessità).
+        // Rete di sicurezza: il DataAnnotation su ResetPasswordRequest la applica
+        // già al model binding, ma qui copriamo anche eventuali chiamate dirette.
+        if (!AuthService.TryValidatePassword(newPassword, out _))
             return ResetPasswordResult.InvalidInput;
 
         var now = _clock.UtcNow;

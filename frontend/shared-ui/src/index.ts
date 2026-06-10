@@ -53,6 +53,8 @@ export { Checkbox } from './form/Checkbox'
 export { DatePicker } from './form/DatePicker'
 export { useFormValidation } from './form/useFormValidation'
 export type { ValidationRule, FieldErrors } from './form/useFormValidation'
+export { PasswordRequirements, passwordRules, passwordRulesMet, passwordRulesEn } from './form/PasswordRequirements'
+export type { PasswordRule } from './form/PasswordRequirements'
 
 // Self-service pages (Profilo / Preferenze)
 export { ProfilePage } from './pages/ProfilePage'

@@ -12,13 +12,24 @@ public class EmployeeRequestService : IEmployeeRequestService
     private readonly IApplicationDbContext _context;
     private readonly INotificationService _notificationService;
     private readonly IUtcClock _clock;
+    private readonly IShiftConflictValidator _conflictValidator;
 
-    public EmployeeRequestService(IApplicationDbContext context, INotificationService notificationService, IUtcClock clock)
+    public EmployeeRequestService(
+        IApplicationDbContext context,
+        INotificationService notificationService,
+        IUtcClock clock,
+        IShiftConflictValidator conflictValidator)
     {
         _context = context;
         _notificationService = notificationService;
         _clock = clock;
+        _conflictValidator = conflictValidator;
     }
+
+    // Tipi di richiesta che rappresentano un'assenza: se approvati possono lasciare
+    // scoperto un turno già assegnato nelle stesse date.
+    private static readonly EmployeeRequestType[] AbsenceTypes =
+        { EmployeeRequestType.Ferie, EmployeeRequestType.Malattia, EmployeeRequestType.Permessi };
 
     public async Task<List<EmployeeRequestDto>> GetMerchantRequestsAsync(int merchantId, RequestStatus? status = null)
     {
@@ -90,6 +101,18 @@ public class EmployeeRequestService : IEmployeeRequestService
         // Una richiesta già decisa (approvata/rifiutata) non è più modificabile (§9.1).
         if (employeeRequest.Status != RequestStatus.Pending)
             throw new InvalidOperationException("Questa richiesta è già stata decisa e non è più modificabile.");
+
+        // Avvisa-ma-procedi: per le assenze, se il dipendente ha già un turno sovrapposto
+        // nelle date richieste l'approvazione lascerebbe quel turno scoperto. Alla prima
+        // approvazione blocchiamo segnalando i conflitti; l'approvatore conferma con Force=true.
+        if (!(request?.Force ?? false) && AbsenceTypes.Contains(employeeRequest.Type))
+        {
+            var shiftConflicts = await DetectOverlappingShiftsAsync(employeeRequest);
+            if (shiftConflicts.Count > 0)
+                throw new EventConflictException(
+                    "Il dipendente è già assegnato a un turno nelle date richieste: approvando le ferie il turno resterà scoperto.",
+                    shiftConflicts);
+        }
 
         employeeRequest.Status = RequestStatus.Approved;
         employeeRequest.ReviewedByUserId = reviewerUserId;
@@ -163,6 +186,30 @@ public class EmployeeRequestService : IEmployeeRequestService
             message,
             type,
             employeeRequest.Id);
+    }
+
+    /// <summary>
+    /// Rileva i turni (EventType.Turno) a cui il dipendente è già assegnato e che si
+    /// sovrappongono alle date/orari della richiesta di assenza. Riusa lo
+    /// <see cref="IShiftConflictValidator"/> e tiene solo i conflitti di tipo ShiftOverlap.
+    /// Per i permessi orari passa la fascia oraria così che la sovrapposizione sia precisa;
+    /// per ferie/malattia (tutto il giorno) qualsiasi turno nella data è un conflitto.
+    /// </summary>
+    private async Task<List<ShiftConflictDto>> DetectOverlappingShiftsAsync(EmployeeRequest request)
+    {
+        var result = new List<ShiftConflictDto>();
+        var employeeIds = new[] { request.EmployeeId };
+        var endDate = request.EndDate ?? request.StartDate;
+
+        for (var date = request.StartDate; date <= endDate; date = date.AddDays(1))
+        {
+            var conflicts = await _conflictValidator.DetectAssignmentConflictsAsync(
+                request.MerchantId, employeeIds, date, request.StartTime, request.EndTime);
+
+            result.AddRange(conflicts.Where(c => c.Kind == ShiftConflictKind.ShiftOverlap));
+        }
+
+        return result;
     }
 
     public async Task<List<EmployeeRequestDto>> GetEmployeeRequestsAsync(int employeeId, int merchantId, RequestStatus? status = null)

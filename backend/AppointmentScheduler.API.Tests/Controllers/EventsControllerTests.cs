@@ -48,7 +48,7 @@ public class EventsControllerTests
     public async Task GetEmployeeEvents_ReturnsOk_WhenClaimsAreValid()
     {
         var events = new List<EventDto> { new() { Id = 1 } };
-        _eventService.Setup(service => service.GetEmployeeEventsAsync(11, 7, null, null)).ReturnsAsync(events);
+        _eventService.Setup(service => service.GetEmployeeEventsAsync(11, 7, null, null, null, null)).ReturnsAsync(events);
         var controller = CreateController(
             new Claim("EmployeeId", "11"),
             new Claim("MerchantId", "7"),

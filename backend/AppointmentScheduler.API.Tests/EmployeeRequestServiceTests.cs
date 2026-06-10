@@ -1,4 +1,5 @@
 using AppointmentScheduler.API.Tests.Helpers;
+using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.API.Tests;
@@ -7,6 +8,17 @@ public class EmployeeRequestServiceTests
 {
     private readonly Mock<INotificationService> _notifications = new();
     private readonly Mock<IUtcClock> _clock = new();
+    private readonly Mock<IShiftConflictValidator> _conflictValidator = new();
+
+    public EmployeeRequestServiceTests()
+    {
+        // Default: nessun turno sovrapposto. I test sul caso conflitto sovrascrivono questo setup.
+        _conflictValidator
+            .Setup(v => v.DetectAssignmentConflictsAsync(
+                It.IsAny<int>(), It.IsAny<IReadOnlyList<int>>(), It.IsAny<DateOnly>(),
+                It.IsAny<TimeOnly?>(), It.IsAny<TimeOnly?>(), It.IsAny<int?>(), It.IsAny<int?>()))
+            .ReturnsAsync(new List<ShiftConflictDto>());
+    }
 
     [Fact]
     public async Task ApproveAsync_ReturnsNull_WhenRequestDoesNotExist()
@@ -14,7 +26,7 @@ public class EmployeeRequestServiceTests
         var context = new ApplicationDbContextMockBuilder()
             .WithEmptySet(x => x.EmployeeRequests, x => [x.Id])
             .Build();
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var result = await service.ApproveAsync(999, 7, 101);
 
@@ -43,7 +55,7 @@ public class EmployeeRequestServiceTests
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
             .Build();
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var act = () => service.ApproveAsync(3, 7, 101);
 
@@ -87,7 +99,7 @@ public class EmployeeRequestServiceTests
             .WithSet(x => x.Events, events, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var result = await service.ApproveAsync(3, 7, 101, review);
 
@@ -107,6 +119,98 @@ public class EmployeeRequestServiceTests
             NotificationType.RequestApproved,
             3),
             Times.Once);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_Throws_WhenAbsenceOverlapsExistingShift_AndNotForced()
+    {
+        var now = new DateTime(2026, 5, 24, 9, 0, 0, DateTimeKind.Utc);
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 };
+        var requests = new List<EmployeeRequest>
+        {
+            new()
+            {
+                Id = 3,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Employee = employee,
+                Type = EmployeeRequestType.Ferie,
+                Status = RequestStatus.Pending,
+                StartDate = new DateOnly(2026, 6, 12),
+                EndDate = new DateOnly(2026, 6, 12),
+                CreatedAt = now.AddDays(-2)
+            }
+        };
+
+        // Il validator segnala un turno sovrapposto per la data richiesta.
+        _conflictValidator
+            .Setup(v => v.DetectAssignmentConflictsAsync(
+                7, It.IsAny<IReadOnlyList<int>>(), new DateOnly(2026, 6, 12),
+                It.IsAny<TimeOnly?>(), It.IsAny<TimeOnly?>(), It.IsAny<int?>(), It.IsAny<int?>()))
+            .ReturnsAsync(new List<ShiftConflictDto>
+            {
+                new() { EmployeeId = 11, Kind = ShiftConflictKind.ShiftOverlap, Message = "Sovrapposizione con turno \"Mattina\"" }
+            });
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
+            .Build(out var tracker);
+
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
+
+        var act = () => service.ApproveAsync(3, 7, 101);
+
+        var ex = await act.Should().ThrowAsync<EventConflictException>();
+        ex.Which.Conflicts.Should().ContainSingle(c => c.Kind == ShiftConflictKind.ShiftOverlap);
+        requests[0].Status.Should().Be(RequestStatus.Pending);
+        tracker.Count.Should().Be(0);
+    }
+
+    [Fact]
+    public async Task ApproveAsync_Proceeds_WhenAbsenceOverlapsExistingShift_AndForced()
+    {
+        var now = new DateTime(2026, 5, 24, 9, 0, 0, DateTimeKind.Utc);
+        _clock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 };
+        var requests = new List<EmployeeRequest>
+        {
+            new()
+            {
+                Id = 3,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Employee = employee,
+                Type = EmployeeRequestType.Ferie,
+                Status = RequestStatus.Pending,
+                StartDate = new DateOnly(2026, 6, 12),
+                EndDate = new DateOnly(2026, 6, 12),
+                CreatedAt = now.AddDays(-2)
+            }
+        };
+
+        _conflictValidator
+            .Setup(v => v.DetectAssignmentConflictsAsync(
+                7, It.IsAny<IReadOnlyList<int>>(), new DateOnly(2026, 6, 12),
+                It.IsAny<TimeOnly?>(), It.IsAny<TimeOnly?>(), It.IsAny<int?>(), It.IsAny<int?>()))
+            .ReturnsAsync(new List<ShiftConflictDto>
+            {
+                new() { EmployeeId = 11, Kind = ShiftConflictKind.ShiftOverlap, Message = "Sovrapposizione con turno \"Mattina\"" }
+            });
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
+            .Build(out var tracker);
+
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
+
+        var result = await service.ApproveAsync(3, 7, 101, new ReviewEmployeeRequestRequest { Force = true });
+
+        result.Should().NotBeNull();
+        requests[0].Status.Should().Be(RequestStatus.Approved);
+        tracker.Count.Should().Be(1);
     }
 
     [Fact]
@@ -135,7 +239,7 @@ public class EmployeeRequestServiceTests
             .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var result = await service.RejectAsync(9, 7, 101, new ReviewEmployeeRequestRequest { ReviewNotes = "No" });
 
@@ -166,7 +270,7 @@ public class EmployeeRequestServiceTests
             .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var deleted = await service.DeleteAsync(9, 11, 7);
 
@@ -192,7 +296,7 @@ public class EmployeeRequestServiceTests
             .WithEmptySet(x => x.EmployeeRequests, x => [x.Id])
             .Build();
 
-        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object);
+        var service = new EmployeeRequestService(context.Object, _notifications.Object, _clock.Object, _conflictValidator.Object);
 
         var act = () => service.CreateAsync(11, 7, request);
 

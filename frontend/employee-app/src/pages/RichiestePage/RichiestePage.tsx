@@ -27,6 +27,13 @@ interface ApiEmployeeRequest {
   notes?: string
 }
 
+// Subset di ShiftConflictDto restituito dal backend in caso di turno sovrapposto (HTTP 409).
+interface ShiftConflict {
+  message: string
+  employeeFullName?: string
+  conflictingEventTitle?: string
+}
+
 type StatusFilter = 'Pending' | 'Approved' | 'Rejected'
 
 function formatTime(t?: string): string {
@@ -151,12 +158,37 @@ export default function RichiestePage() {
     }
   }, [canApproveRequests])
 
-  const handleApprove = async (id: number) => {
+  const handleApprove = async (id: number, force = false) => {
     try {
-      await apiClient.post(`/employee-requests/${id}/approve`)
+      await apiClient.post(`/employee-requests/${id}/approve`, { force })
       toast.success('Richiesta approvata')
       await fetchApprovals()
-    } catch {
+    } catch (err) {
+      // 409: il dipendente ha già un turno sovrapposto. Avvisa e, su conferma, riprova con force.
+      const e = err as {
+        response?: { status?: number; data?: { message?: string; conflicts?: ShiftConflict[] } }
+      }
+      const conflicts = e.response?.status === 409 ? e.response.data?.conflicts : undefined
+      if (conflicts && conflicts.length > 0) {
+        const ok = await confirm({
+          title: 'Turno sovrapposto',
+          message: (
+            <div>
+              <p>{e.response?.data?.message ?? 'Il dipendente è già assegnato a un turno nelle date richieste.'}</p>
+              <ul className="approval-conflict-list">
+                {conflicts.map((c, idx) => (
+                  <li key={idx}>{c.message}</li>
+                ))}
+              </ul>
+              <p>Approvare comunque? Il turno resterà scoperto.</p>
+            </div>
+          ),
+          variant: 'warning',
+          confirmLabel: 'Approva comunque',
+        })
+        if (ok) await handleApprove(id, true)
+        return
+      }
       toast.error('Errore durante l\'approvazione')
     }
   }
