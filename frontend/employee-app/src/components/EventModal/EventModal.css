@@ -438,6 +438,20 @@
   color: #fca5a5;
 }
 
+.modal-input--error {
+  border-color: #ef4444;
+}
+
+.modal-input--error:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+}
+
+.period-summary {
+  font-weight: 500;
+  color: var(--su-text-primary, #e2e8f0);
+}
+
 .overrides-section {
   background: rgba(148, 163, 184, 0.05);
   border: 1px solid var(--su-border-strong);

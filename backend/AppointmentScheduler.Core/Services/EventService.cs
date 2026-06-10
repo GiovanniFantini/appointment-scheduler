@@ -1168,8 +1168,17 @@ public class EventService : IEventService
 
     private static void ValidateEventRange(Event evt)
     {
+        if (string.IsNullOrWhiteSpace(evt.Title))
+            throw new InvalidOperationException("Il titolo è obbligatorio.");
+
         if (evt.EndDate.HasValue && evt.EndDate.Value < evt.StartDate)
             throw new InvalidOperationException("La data di fine non può essere precedente alla data di inizio.");
+
+        // Un evento a orario (non "tutto il giorno") deve avere entrambi gli orari:
+        // senza, la durata è indefinita e i controlli di sovrapposizione la trattano
+        // come "tutto il giorno", mascherando conflitti reali.
+        if (!evt.IsAllDay && (!evt.StartTime.HasValue || !evt.EndTime.HasValue))
+            throw new InvalidOperationException("Specifica orario di inizio e fine, oppure attiva \"Tutto il giorno\".");
 
         if (!evt.IsAllDay && evt.StartTime.HasValue && evt.EndTime.HasValue && evt.EndTime.Value <= evt.StartTime.Value)
             throw new InvalidOperationException("L'orario di fine deve essere successivo a quello di inizio.");

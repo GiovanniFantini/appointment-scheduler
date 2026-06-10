@@ -4,7 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import itLocale from '@fullcalendar/core/locales/it'
-import type { EventClickArg, DatesSetArg, EventInput, EventDropArg, EventContentArg } from '@fullcalendar/core'
+import type { EventClickArg, DatesSetArg, DateSelectArg, EventInput, EventDropArg, EventContentArg } from '@fullcalendar/core'
 import type { DateClickArg, EventResizeDoneArg } from '@fullcalendar/interaction'
 import apiClient from '../../lib/axios'
 import EventModal from '../../components/EventModal/EventModal'
@@ -481,6 +481,44 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
     setModalOpen(true)
   }
 
+  // Selezione di un intervallo (drag) sul calendario: pre-compila il nuovo turno
+  // con il periodo scelto. Nelle viste orarie (timeGrid) usiamo data + orario
+  // d'inizio/fine; nella vista mensile (allDay) usiamo data inizio/fine.
+  const handleSelect = (info: DateSelectArg) => {
+    if (!canCreate) return
+    setHoverInfo(null)
+
+    const pad = (n: number) => String(n).padStart(2, '0')
+    const toHHmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    // startStr/endStr sono in orario locale: evitano lo slittamento di giorno
+    // che toISOString() (UTC) introdurrebbe vicino alla mezzanotte.
+    const startDate = info.startStr.split('T')[0]
+
+    if (info.allDay) {
+      // end è esclusivo in FullCalendar: l'ultimo giorno selezionato è end - 1.
+      const lastDay = new Date(info.end)
+      lastDay.setDate(lastDay.getDate() - 1)
+      const endDate = `${lastDay.getFullYear()}-${pad(lastDay.getMonth() + 1)}-${pad(lastDay.getDate())}`
+      setSelectedEvent({
+        eventType: 'Turno',
+        isAllDay: true,
+        startDate,
+        endDate: endDate !== startDate ? endDate : undefined,
+      })
+    } else {
+      setSelectedEvent({
+        eventType: 'Turno',
+        isAllDay: false,
+        startDate,
+        startTime: toHHmm(info.start),
+        endTime: toHHmm(info.end),
+      })
+    }
+    setDefaultDate(startDate)
+    setModalOpen(true)
+    info.view.calendar.unselect()
+  }
+
   const handleNewEvent = () => {
     if (!canCreate) return
     setHoverInfo(null)
@@ -767,6 +805,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
           eventContent={renderEventContent}
           eventClick={handleEventClick}
           dateClick={handleDateClick}
+          select={handleSelect}
           datesSet={handleDatesSet}
           eventDrop={handleEventDrop}
           eventResize={handleEventResize}
