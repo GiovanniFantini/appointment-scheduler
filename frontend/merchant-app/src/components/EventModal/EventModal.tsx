@@ -201,6 +201,27 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
   const hasOverrides = participantOverrides.some(o => o.startTimeOverride || o.endTimeOverride || o.participantNotes)
   const timeChanged = isEdit && (startTime !== initialStartTime || endTime !== initialEndTime)
 
+  // Errore inline sull'orario: l'orario di fine deve seguire quello d'inizio.
+  // Calcolato (non stato) così resta sempre allineato ai due input.
+  const timeError = useMemo(() => {
+    if (isAllDay || !startTime || !endTime) return null
+    return endTime <= startTime
+      ? 'L\'orario di fine deve essere successivo a quello di inizio.'
+      : null
+  }, [isAllDay, startTime, endTime])
+
+  // Auto-correzione: cambiando l'orario d'inizio, sposta la fine per mantenere
+  // la stessa durata (default 8h) se la fine resterebbe <= inizio.
+  const handleStartTimeChange = (value: string) => {
+    setStartTime(value)
+    if (value && endTime && endTime <= value) {
+      const [sh, sm] = value.split(':').map(Number)
+      const end = new Date(0, 0, 0, sh + 8, sm)
+      const pad = (n: number) => String(n).padStart(2, '0')
+      setEndTime(`${pad(end.getHours())}:${pad(end.getMinutes())}`)
+    }
+  }
+
   const fetchEmployees = async (): Promise<Employee[]> => {
     try {
       const res = await apiClient.get('/employees')
@@ -436,6 +457,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
     if (isMultiBranch && !branchId) { setError('Seleziona la filiale dell\'evento'); return }
     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
     if (endDate && endDate < startDate) { setError('La data di fine non può essere precedente alla data di inizio'); return }
+    if (timeError) { setError(timeError); return }
     if (isEmployeeAbsenceEvent && selectedOwnerIds.length !== 1) { setError('Seleziona un dipendente'); return }
 
     // Warn before persisting time changes when participant overrides exist
@@ -730,16 +752,24 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
               </div>
 
               {!isAllDay && (
-                <div className="modal-row">
-                  <div className="modal-form-group">
-                    <label className="modal-label">Orario da</label>
-                    <input type="time" className="modal-input" value={startTime} onChange={e => setStartTime(e.target.value)} />
+                <>
+                  <div className="modal-row">
+                    <div className="modal-form-group">
+                      <label className="modal-label">Orario da</label>
+                      <input type="time" className="modal-input" value={startTime} onChange={e => handleStartTimeChange(e.target.value)} />
+                    </div>
+                    <div className="modal-form-group">
+                      <label className="modal-label">Orario a</label>
+                      <input
+                        type="time"
+                        className={`modal-input${timeError ? ' modal-input--error' : ''}`}
+                        value={endTime}
+                        onChange={e => setEndTime(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <div className="modal-form-group">
-                    <label className="modal-label">Orario a</label>
-                    <input type="time" className="modal-input" value={endTime} onChange={e => setEndTime(e.target.value)} />
-                  </div>
-                </div>
+                  {timeError && <div className="modal-field-hint modal-field-hint--error">{timeError}</div>}
+                </>
               )}
 
               {eventType === 'Turno' && (
@@ -1230,6 +1260,7 @@ export default function EventModal({ event, defaultDate, onClose, onSaved }: Eve
                   if (step === 1) {
                     if (isMultiBranch && !branchId) { setError('Seleziona la filiale del turno'); return }
                     if (!startDate) { setError('La data di inizio è obbligatoria'); return }
+                    if (timeError) { setError(timeError); return }
                     if (!endDate) setEndDate(startDate)
                   }
                   setError('')

@@ -202,6 +202,10 @@ export default function PianificazionePage({ accessLevel }: Props) {
       setCloneMessage('Seleziona la settimana target')
       return
     }
+    if (cloneTargetWeek === toISO(weekStart)) {
+      setCloneMessage('La settimana target coincide con quella in vista: scegli una settimana diversa.')
+      return
+    }
     setCloneLoading(true)
     setCloneMessage('')
     setCloneConflicts([])
@@ -271,7 +275,10 @@ export default function PianificazionePage({ accessLevel }: Props) {
 
         {canManage && (
           <div className="pianif-clone">
-            <label className="form-label">Clona a settimana (lun.)</label>
+            <span className="pianif-clone-source">
+              Copia i turni della settimana in vista ({formatWeekLabel()}) →
+            </span>
+            <label className="form-label">a settimana (lun.)</label>
             <input
               type="date"
               className="form-input"
