@@ -31,7 +31,14 @@
       "Bash(\"/c/Program Files/nodejs/npm.cmd\" --version)",
       "Bash(\"/c/Program Files/nodejs/node.exe\" --version)",
       "Bash(\"/c/Program Files/nodejs/node.exe\" -e \"const fs=require\\('fs'\\);const t=fs.readFileSync\\('C:/Repos/appointment-scheduler/frontend/merchant-app/tsconfig.json','utf8'\\);process.stdout.write\\(t\\)\")",
-      "Bash(\"/c/Program Files/nodejs/npx.cmd\" tsc --noEmit)"
+      "Bash(\"/c/Program Files/nodejs/npx.cmd\" tsc --noEmit)",
+      "PowerShell($env:PGPASSWORD='postgres'; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'Users' ORDER BY ordinal_position;\")",
+      "PowerShell($env:PGPASSWORD='postgres'; foreach \\($t in 'Employees','EventParticipants'\\) { Write-Host \"=== $t ===\"; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = '$t' ORDER BY ordinal_position;\" })",
+      "PowerShell($env:PGPASSWORD='postgres'; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT e.\"\"Id\"\" AS emp_id, e.\"\"UserId\"\", e.\"\"Email\"\", e.\"\"Kind\"\", e.\"\"IsActive\"\" FROM \"\"Employees\"\" e WHERE e.\"\"UserId\"\" IS NOT NULL ORDER BY e.\"\"Id\"\" LIMIT 15;\")",
+      "PowerShell($env:PGPASSWORD='postgres'; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT table_name FROM information_schema.columns WHERE column_name = 'EmployeeId' AND table_name LIKE '%Merchant%' OR \\(table_name LIKE '%Branch%' AND column_name='EmployeeId'\\) GROUP BY table_name;\"; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND \\(table_name ILIKE '%employee%' OR table_name ILIKE '%membership%' OR table_name ILIKE '%branchemp%'\\) ORDER BY table_name;\")",
+      "PowerShell($env:PGPASSWORD='postgres'; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = 'Events' ORDER BY ordinal_position;\")",
+      "PowerShell(try { \\(Invoke-WebRequest -Uri 'http://localhost:5000/health' -TimeoutSec 3 -SkipHttpErrorCheck\\).StatusCode } catch { 'no-5000' }; try { \\(Invoke-WebRequest -Uri 'https://localhost:7000/health' -TimeoutSec 3 -SkipCertificateCheck -SkipHttpErrorCheck\\).StatusCode } catch { 'no-7000' }; \\(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -in 5000,5001,7000,7001,5283,7283 } | Select-Object LocalPort -Unique\\))",
+      "PowerShell($env:PGPASSWORD='postgres'; psql -h localhost -U postgres -d AppointmentScheduler -c \"SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_name = 'TimeEntries' ORDER BY ordinal_position;\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\fantigi1\\.claude\\plans"
