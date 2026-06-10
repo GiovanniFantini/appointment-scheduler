@@ -136,10 +136,14 @@ try
     var azureEmailOptions = builder.Configuration.GetSection("AzureCommunicationServices").Get<AzureEmailOptions>()
         ?? new AzureEmailOptions();
 
+    var timeClockTimeZoneOptions = builder.Configuration.GetSection("TimeClock").Get<TimeClockTimeZoneOptions>()
+        ?? new TimeClockTimeZoneOptions();
+
     builder.Services.AddSingleton(jwtTokenOptions);
     builder.Services.AddSingleton(frontendUrlOptions);
     builder.Services.AddSingleton(azureBlobStorageOptions);
     builder.Services.AddSingleton(azureEmailOptions);
+    builder.Services.AddSingleton(timeClockTimeZoneOptions);
     builder.Services.AddSingleton<IUtcClock, SystemUtcClock>();
     builder.Services.AddSingleton<IWallClock, SystemWallClock>();
     builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
