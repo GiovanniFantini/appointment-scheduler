@@ -8,6 +8,7 @@ import {
   type TimeClockAnomaly,
   type TimeClockReportRow,
 } from '../../lib/api/timeClockManagement'
+import { anomalyReasonLabel } from '../../types/timbratura'
 import { nativeDateInputProps } from '../../lib/dateUtils'
 import './TimbraturaGestionePage.css'
 
@@ -555,8 +556,8 @@ function AnomalieTab({ branchId }: { branchId: number }) {
                   </span>
                 </td>
                 <td>
-                  {a.employeeReasonName
-                    ? <span>{a.employeeReasonName}{a.employeeNotes ? ` — ${a.employeeNotes}` : ''}</span>
+                  {a.employeeReason != null
+                    ? <span>{anomalyReasonLabel(a.employeeReason, a.employeeReasonName ?? undefined)}{a.employeeNotes ? ` — ${a.employeeNotes}` : ''}</span>
                     : <span className="tcm-muted">—</span>}
                 </td>
                 <td>

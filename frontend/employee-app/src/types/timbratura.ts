@@ -151,6 +151,24 @@ export enum TimeClockAnomalyReason {
   Other = 8,
 }
 
+const ANOMALY_REASON_LABEL: Record<number, string> = {
+  [TimeClockAnomalyReason.NotSpecified]: 'Non specificata',
+  [TimeClockAnomalyReason.Traffic]: 'Traffico / imprevisto di viaggio',
+  [TimeClockAnomalyReason.AuthorizedLeave]: 'Permesso autorizzato',
+  [TimeClockAnomalyReason.TimeRecovery]: 'Recupero ore',
+  [TimeClockAnomalyReason.PersonalEmergency]: 'Emergenza personale',
+  [TimeClockAnomalyReason.Forgotten]: 'Dimenticanza della timbratura',
+  [TimeClockAnomalyReason.TechnicalIssue]: 'Problema tecnico',
+  [TimeClockAnomalyReason.SmartWorking]: 'Lavoro da remoto',
+  [TimeClockAnomalyReason.Other]: 'Altro',
+}
+
+/** Etichetta italiana per una motivazione di giustificazione; fallback al nome inglese dell'enum. */
+export function anomalyReasonLabel(reason?: TimeClockAnomalyReason, fallback?: string): string {
+  if (reason == null) return fallback ?? '—'
+  return ANOMALY_REASON_LABEL[reason] ?? fallback ?? '—'
+}
+
 export enum TimeClockAnomalyStatus {
   Open = 1,
   Justified = 2,

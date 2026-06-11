@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { timeClockApi } from '../../lib/api/timeClock'
-import { TimeClockAnomalyReason, anomalyTypeLabel } from '../../types/timbratura'
+import { TimeClockAnomalyReason, anomalyReasonLabel, anomalyTypeLabel } from '../../types/timbratura'
 import type { TimeClockAnomalyDto } from '../../types/timbratura'
 import './JustifyAnomalyModal.css'
 
@@ -11,15 +11,15 @@ interface Props {
 }
 
 const REASON_OPTIONS: { value: TimeClockAnomalyReason; label: string }[] = [
-  { value: TimeClockAnomalyReason.Traffic, label: 'Traffico / imprevisto di viaggio' },
-  { value: TimeClockAnomalyReason.AuthorizedLeave, label: 'Permesso autorizzato' },
-  { value: TimeClockAnomalyReason.TimeRecovery, label: 'Recupero ore' },
-  { value: TimeClockAnomalyReason.PersonalEmergency, label: 'Emergenza personale' },
-  { value: TimeClockAnomalyReason.Forgotten, label: 'Dimenticanza della timbratura' },
-  { value: TimeClockAnomalyReason.TechnicalIssue, label: 'Problema tecnico' },
-  { value: TimeClockAnomalyReason.SmartWorking, label: 'Lavoro da remoto' },
-  { value: TimeClockAnomalyReason.Other, label: 'Altro' },
-]
+  TimeClockAnomalyReason.Traffic,
+  TimeClockAnomalyReason.AuthorizedLeave,
+  TimeClockAnomalyReason.TimeRecovery,
+  TimeClockAnomalyReason.PersonalEmergency,
+  TimeClockAnomalyReason.Forgotten,
+  TimeClockAnomalyReason.TechnicalIssue,
+  TimeClockAnomalyReason.SmartWorking,
+  TimeClockAnomalyReason.Other,
+].map(value => ({ value, label: anomalyReasonLabel(value) }))
 
 export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: Props) {
   const [reason, setReason] = useState<TimeClockAnomalyReason>(REASON_OPTIONS[0].value)
