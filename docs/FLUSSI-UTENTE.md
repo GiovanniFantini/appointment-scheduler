@@ -886,7 +886,7 @@ filiale agire.
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
 | Timbratura attiva | Interruttore | Abilita la timbratura per la filiale. | Se spento, tutti gli altri campi sono disabilitati. |
-| Timbratura obbligatoria | Interruttore | Rende la timbratura obbligatoria anziché facoltativa. | Disabilitato se la timbratura non è attiva. |
+| Timbratura obbligatoria | Interruttore | Distingue **obbligatoria** da **facoltativa**. Se **facoltativa**, un turno non timbrato **non** genera l'anomalia di mancata timbratura; chi timbra comunque resta soggetto ai controlli di ritardo/anticipo/pausa. Se **obbligatoria**, il turno non timbrato diventa una mancata entrata da giustificare. | Disabilitato se la timbratura non è attiva. Vale **per filiale**. |
 | Tolleranza ritardo entrata | Campo numero | Minuti di ritardo in **entrata** tollerati (default 5). Oltre → anomalia *Entrata in ritardo*. | Non negativo. |
 | Tolleranza uscita | Campo numero | Minuti di **anticipo in uscita** tollerati (default 5). Oltre → anomalia *Uscita in anticipo*. | Non negativo. |
 | Anticipo massimo entrata | Campo numero | Quanto **prima** dell'inizio turno si può timbrare l'entrata (default 15). Oltre → anomalia *Entrata in anticipo*. Definisce anche l'apertura della finestra di timbratura (vedi §10.1-bis). | Non negativo. |
@@ -945,9 +945,12 @@ l'orario atteso del turno (inizio per l'entrata, fine per l'uscita).
 
 **Finestra di timbratura.** Un turno è timbrabile da `inizio − Anticipo massimo
 entrata` fino a `fine + Ritardo massimo uscita`. Prima dell'apertura il turno è "in
-attesa dell'orario di inizio"; dopo la chiusura, se non è mai stato timbrato, diventa
-una mancata entrata (vedi i corner case in fondo a §10). Un turno **aperto** (entrata
-senza uscita) resta sempre chiudibile, a prescindere dalla finestra.
+attesa dell'orario di inizio"; dopo la chiusura, se non è mai stato timbrato e la
+filiale è a **timbratura obbligatoria**, diventa una mancata entrata (vedi i corner
+case in fondo a §10). Su filiale a **timbratura facoltativa** non diventa anomalia: il
+turno resta semplicemente segnato come "Timbratura facoltativa", senza pulsanti. Un
+turno **aperto** (entrata senza uscita) resta sempre chiudibile, a prescindere dalla
+finestra.
 
 ### 10.2 Timbratura del dipendente (Employee)
 
@@ -1060,10 +1063,10 @@ stateDiagram-v2
 | Pausa oltre la durata massima | Genera un'anomalia di pausa prolungata. |
 | Uscita temporanea durante il turno (es. caffè, commissione) | Si usa la **Pausa** (Inizia pausa / Termina pausa), non l'Uscita: il tempo è scalato dalle ore lavorate. L'Uscita conclude il turno ed è definitiva. |
 | Turno a cavallo della mezzanotte | Il turno del giorno prima resta timbrabile **finché ha l'entrata senza l'uscita** (turno aperto): può essere chiuso a qualsiasi ora. |
-| Turno di ieri mai timbrato, finestra ormai chiusa | **Sparisce** dalla lista turni e diventa un'anomalia di **mancata entrata** (`MissingClockIn`) da giustificare. Non è più timbrabile a posteriori. |
-| Turno di oggi mai timbrato, oltre l'orario di fine | Resta in lista ma con stato **"Finestra di timbratura chiusa"** (non più "in attesa") e senza pulsanti: verrà segnalato come mancata entrata. |
+| Turno di ieri mai timbrato, finestra ormai chiusa | **Sparisce** dalla lista turni e (solo se la filiale è a **timbratura obbligatoria**) diventa un'anomalia di **mancata entrata** (`MissingClockIn`) da giustificare. Non è più timbrabile a posteriori. |
+| Turno di oggi mai timbrato, oltre l'orario di fine | Resta in lista senza pulsanti. Su filiale **obbligatoria** ha stato **"Finestra di timbratura chiusa"** (verrà segnalato come mancata entrata); su filiale **facoltativa** ha stato **"Timbratura facoltativa"** e non genera anomalia. |
 | Più turni nello stesso giorno | Tutti visibili in lista; solo **uno** è "attivo" (con i pulsanti), scelto come quello più vicino all'orario attuale. Un turno aperto ha sempre la priorità. |
-| Rilevamento mancate timbrature | Avviene **automaticamente** all'apertura della pagina Timbratura (lato dipendente, per i propri turni) e della tab Anomalie (lato Merchant, per tutto il merchant), oltre che col bottone manuale "Rileva timbrature mancanti". Le risorse esterne (che non timbrano) sono escluse. |
+| Rilevamento mancate timbrature | Avviene **automaticamente** all'apertura della pagina Timbratura (lato dipendente, per i propri turni) e della tab Anomalie (lato Merchant, per tutto il merchant), oltre che col bottone manuale "Rileva timbrature mancanti". Sono escluse le risorse esterne (che non timbrano) **e i turni su filiali a timbratura facoltativa**. |
 
 ---
 

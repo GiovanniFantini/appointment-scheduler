@@ -200,7 +200,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
         />
         <ToggleRow
           label="Timbratura obbligatoria"
-          hint="Se attiva, i dipendenti devono timbrare; altrimenti è facoltativa."
+          hint="Se attiva, un turno non timbrato genera un'anomalia di mancata timbratura. Se facoltativa, non viene segnalato; chi timbra resta comunque soggetto ai controlli di ritardo/anticipo/pausa."
           checked={settings.clockingRequired}
           onChange={v => update('clockingRequired', v)}
           disabled={!settings.isEnabled}

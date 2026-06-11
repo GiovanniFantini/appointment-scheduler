@@ -254,11 +254,16 @@ public class TimeClockServiceTests
         };
 
         var anomalies = new List<TimeClockAnomaly>();
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+        };
 
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build(out var tracker);
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -897,7 +902,7 @@ public class TimeClockServiceTests
     /// con orari valorizzati e finestra di timbratura ormai chiusa.
     /// </summary>
     private static (List<EventParticipant> participants, List<BranchTimeClockSettings> settings)
-        YesterdayShift(TimeOnly? start, TimeOnly? end, int lateClockOutTolerance = 0)
+        YesterdayShift(TimeOnly? start, TimeOnly? end, int lateClockOutTolerance = 0, bool clockingRequired = true)
     {
         var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
         var yesterday = new Event
@@ -912,7 +917,7 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, LateClockOutToleranceMinutes = lateClockOutTolerance }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = clockingRequired, LateClockOutToleranceMinutes = lateClockOutTolerance }
         };
         return (participants, settings);
     }
@@ -1018,7 +1023,7 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1055,11 +1060,16 @@ public class TimeClockServiceTests
             new() { Id = 502, EventId = 100, Event = pastShift, EmployeeId = 12, Employee = new Employee { Id = 12, Kind = EmployeeKind.Internal } }
         };
         var anomalies = new List<TimeClockAnomaly>();
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+        };
 
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -1087,11 +1097,16 @@ public class TimeClockServiceTests
             new() { Id = 501, EventId = 100, Event = pastShift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
         };
         var anomalies = new List<TimeClockAnomaly>();
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+        };
 
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -1125,11 +1140,16 @@ public class TimeClockServiceTests
         {
             new() { Id = 99, MerchantId = 7, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeClockAnomalyType.MissingClockIn, Status = TimeClockAnomalyStatus.Open, WorkDate = new DateOnly(2026, 5, 23) }
         };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+        };
 
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -1297,11 +1317,16 @@ public class TimeClockServiceTests
             new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 23), ActualTimestampUtc = new DateTime(2026, 5, 23, 7, 0, 0, DateTimeKind.Utc) }
         };
         var anomalies = new List<TimeClockAnomaly>();
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+        };
 
         var context = new ApplicationDbContextMockBuilder()
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -1310,5 +1335,115 @@ public class TimeClockServiceTests
 
         created.Should().Be(1);
         anomalies.Should().ContainSingle(a => a.Type == TimeClockAnomalyType.MissingClockOut);
+    }
+
+    // ── Timbratura facoltativa: niente anomalia di mancata timbratura ────────
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_SkipsShift_WhenBranchClockingOptional()
+    {
+        // Filiale con timbratura FACOLTATIVA (ClockingRequired = false): un turno
+        // passato mai timbrato NON deve generare l'anomalia di mancata entrata.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), new TimeOnly(17, 0), clockingRequired: false);
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(0);
+        anomalies.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionAsync_OnlyFlagsRequiredBranches_InMultiBranchMerchant()
+    {
+        // Stesso merchant, due filiali: A (id 3) obbligatoria, B (id 4) facoltativa.
+        // Due turni passati mai timbrati, uno per filiale: solo quello sulla filiale
+        // obbligatoria deve diventare un'anomalia di mancata entrata.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branchA = new MerchantBranch { Id = 3, MerchantId = 7, Name = "A", IsActive = true };
+        var branchB = new MerchantBranch { Id = 4, MerchantId = 7, Name = "B", IsActive = true };
+        var shiftA = new Event { Id = 100, MerchantId = 7, BranchId = 3, Branch = branchA, EventType = EventType.Turno, StartDate = new DateOnly(2026, 5, 23) };
+        var shiftB = new Event { Id = 101, MerchantId = 7, BranchId = 4, Branch = branchB, EventType = EventType.Turno, StartDate = new DateOnly(2026, 5, 23) };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shiftA, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } },
+            new() { Id = 502, EventId = 101, Event = shiftB, EmployeeId = 12, Employee = new Employee { Id = 12, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true },
+            new() { Id = 11, BranchId = 4, MerchantId = 7, IsEnabled = true, ClockingRequired = false }
+        };
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var created = await service.RunMissingPunchDetectionAsync(7, null);
+
+        created.Should().Be(1);
+        anomalies.Should().ContainSingle(a => a.EventParticipantId == 501 && a.Type == TimeClockAnomalyType.MissingClockIn);
+        anomalies.Should().NotContain(a => a.EventParticipantId == 502);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_OptionalBranchPastWindow_NotMarkedExpired()
+    {
+        // Turno di OGGI 09:00–13:00, ora di parete 15:00, mai timbrato, su filiale
+        // FACOLTATIVA: non è una mancata timbratura, quindi non va marcato "scaduto"
+        // ma indicato come timbratura facoltativa, senza pulsanti.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var shift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Mattina", StartDate = new DateOnly(2026, 5, 24), EndDate = new DateOnly(2026, 5, 24),
+            StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(13, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = false }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        var s = result.Shifts.Single(x => x.Shift.EventParticipantId == 501);
+        s.IsExpired.Should().BeFalse();
+        s.IsActive.Should().BeFalse();
+        s.StatusMessage.Should().Be("Timbratura facoltativa.");
     }
 }

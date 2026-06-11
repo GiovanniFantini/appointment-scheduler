@@ -215,12 +215,18 @@ public class TimeClockService : ITimeClockService
         {
             // Turno mai iniziato: distinguo "non ancora ora" da "finestra ormai
             // chiusa". Quest'ultimo è una mancata entrata (gestita come anomalia),
-            // non un turno in attesa: l'etichetta deve dirlo chiaramente.
+            // non un turno in attesa: l'etichetta deve dirlo chiaramente. Ma se la
+            // filiale è a timbratura facoltativa, la finestra chiusa non è una
+            // mancata timbratura: niente "scaduto", solo una nota neutra.
             var windowClosed = endWall != null && nowWall > endWall.Value;
-            if (windowClosed)
+            if (windowClosed && settings.ClockingRequired)
             {
                 dto.StatusMessage = "Finestra di timbratura chiusa.";
                 dto.IsExpired = true;
+            }
+            else if (windowClosed)
+            {
+                dto.StatusMessage = "Timbratura facoltativa.";
             }
             else
             {
@@ -807,6 +813,22 @@ public class TimeClockService : ITimeClockService
     private async Task<int> DetectMissingPunchForParticipantsAsync(
         int merchantId, List<EventParticipant> participants)
     {
+        if (participants.Count == 0) return 0;
+
+        // Timbratura facoltativa (ClockingRequired = false): la mancata timbratura
+        // non è un'anomalia. Il flag è per-filiale, quindi si filtrano i turni in
+        // base alla filiale a cui appartengono. Le filiali senza riga di config
+        // ereditano il default (facoltativa), coerente con GetOrDefaultSettingsAsync.
+        var branchIds = participants.Select(p => p.Event.BranchId).Distinct().ToList();
+        var requiredBranchIds = await _context.BranchTimeClockSettings
+            .Where(s => branchIds.Contains(s.BranchId) && s.ClockingRequired)
+            .Select(s => s.BranchId)
+            .ToListAsync();
+        var requiredBranchSet = requiredBranchIds.ToHashSet();
+
+        participants = participants
+            .Where(p => requiredBranchSet.Contains(p.Event.BranchId))
+            .ToList();
         if (participants.Count == 0) return 0;
 
         var participantIds = participants.Select(p => p.Id).ToList();
