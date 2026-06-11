@@ -802,7 +802,7 @@ public class TimeClockServiceTests
         };
         var participants = new List<EventParticipant>
         {
-            new() { Id = 501, EventId = 100, Event = night, EmployeeId = 11 }
+            new() { Id = 501, EventId = 100, Event = night, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
         };
         var settings = new List<BranchTimeClockSettings>
         {
@@ -817,6 +817,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.EventParticipants, participants, x => [x.Id])
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
             .Build();
 
         var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
@@ -887,5 +888,290 @@ public class TimeClockServiceTests
         stats.WorkedMinutesThisMonth.Should().Be(0);
         stats.OpenAnomalies.Should().Be(0);
         stats.HasWellbeingAlert.Should().BeFalse();
+    }
+
+    // ── Turni scaduti non timbrati → anomalia (rilevamento lazy) ─────────────
+
+    /// <summary>
+    /// Scenario base: un turno di IERI (rispetto a "oggi") di un dipendente interno,
+    /// con orari valorizzati e finestra di timbratura ormai chiusa.
+    /// </summary>
+    private static (List<EventParticipant> participants, List<BranchTimeClockSettings> settings)
+        YesterdayShift(TimeOnly? start, TimeOnly? end, int lateClockOutTolerance = 0)
+    {
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var yesterday = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Turno Test", StartDate = new DateOnly(2026, 5, 23), EndDate = new DateOnly(2026, 5, 23),
+            StartTime = start, EndTime = end,
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = yesterday, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, LateClockOutToleranceMinutes = lateClockOutTolerance }
+        };
+        return (participants, settings);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_DropsExpiredYesterdayShift_AndCreatesMissingClockInAnomaly()
+    {
+        // "Oggi" = 24/05 10:00. Turno di ieri 09:00–17:00 mai timbrato: finestra chiusa.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), new TimeOnly(17, 0));
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        // Sparisce dalla lista turni di oggi…
+        result.Shifts.Should().BeEmpty();
+        // …e diventa un'anomalia di mancata entrata.
+        anomalies.Should().ContainSingle(a =>
+            a.EventParticipantId == 501
+            && a.Type == TimeClockAnomalyType.MissingClockIn
+            && a.Status == TimeClockAnomalyStatus.Open);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_KeepsYesterdayShift_WhenWindowStillOpenWithinTolerance()
+    {
+        // "Oggi" = 24/05 ma ora di parete 17:20: il turno di ieri finiva alle 17:00
+        // con tolleranza uscita 30' → finestra ancora aperta, resta timbrabile.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 0, 30, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 23, 17, 20, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), new TimeOnly(17, 0), lateClockOutTolerance: 30);
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.Shifts.Should().ContainSingle(s => s.Shift.EventParticipantId == 501);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_KeepsYesterdayShift_WhenNoEndTime_EvenIfNeverPunched()
+    {
+        // Caso limite: turno di ieri senza orario di fine → finestra non determinabile
+        // → non viene scartato (resta timbrabile finché non si interviene).
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), end: null);
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        result.Shifts.Should().ContainSingle(s => s.Shift.EventParticipantId == 501);
+    }
+
+    [Fact]
+    public async Task GetTodayShiftsAsync_TodayShiftPastWindow_NeverPunched_IsMarkedExpired()
+    {
+        // Turno di OGGI 09:00–13:00, ora di parete 15:00, mai timbrato: resta in
+        // lista (turno odierno) ma con stato "scaduto", non più "in attesa".
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 15, 0, 0, DateTimeKind.Unspecified));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var shift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Mattina", StartDate = new DateOnly(2026, 5, 24), EndDate = new DateOnly(2026, 5, 24),
+            StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(13, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.GetTodayShiftsAsync(11, 7);
+
+        var s = result.Shifts.Single(x => x.Shift.EventParticipantId == 501);
+        s.IsExpired.Should().BeTrue();
+        s.IsActive.Should().BeFalse();
+        s.StatusMessage.Should().Be("Finestra di timbratura chiusa.");
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_OnlyCoversTheGivenEmployee()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var pastShift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 23)
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = pastShift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } },
+            new() { Id = 502, EventId = 100, Event = pastShift, EmployeeId = 12, Employee = new Employee { Id = 12, Kind = EmployeeKind.Internal } }
+        };
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(1);
+        anomalies.Should().ContainSingle(a => a.EventParticipantId == 501);
+        anomalies.Should().NotContain(a => a.EventParticipantId == 502);
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_IsIdempotent_OnRepeatedRuns()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var pastShift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 23)
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = pastShift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var first = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+        var second = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        first.Should().Be(1);
+        second.Should().Be(0);
+        anomalies.Should().ContainSingle(a => a.Type == TimeClockAnomalyType.MissingClockIn);
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_SkipsConcurrentlyCreatedAnomaly()
+    {
+        // Simula la corsa: l'anomalia per quel turno è già presente sul DB (creata da
+        // un'altra richiesta). La detction non deve duplicarla.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var pastShift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 23)
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = pastShift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var anomalies = new List<TimeClockAnomaly>
+        {
+            new() { Id = 99, MerchantId = 7, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeClockAnomalyType.MissingClockIn, Status = TimeClockAnomalyStatus.Open, WorkDate = new DateOnly(2026, 5, 23) }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(0);
+        anomalies.Should().ContainSingle();
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_CreatesMissingClockOut_WhenClockInWithoutClockOut()
+    {
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var pastShift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 23)
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = pastShift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 23), ActualTimestampUtc = new DateTime(2026, 5, 23, 7, 0, 0, DateTimeKind.Utc) }
+        };
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(1);
+        anomalies.Should().ContainSingle(a => a.Type == TimeClockAnomalyType.MissingClockOut);
     }
 }

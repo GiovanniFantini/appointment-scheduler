@@ -69,6 +69,10 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
   const loadHistory = useCallback(async () => {
     setLoadingHistory(true)
     try {
+      // getTodayShifts innesca il rilevamento lazy delle mancate timbrature lato
+      // server: va atteso PRIMA di leggere le anomalie, altrimenti quelle appena
+      // generate non comparirebbero in questo stesso caricamento (race).
+      await timeClockApi.getTodayShifts()
       const [entriesData, anomaliesData, wellbeingData] = await Promise.all([
         timeClockApi.getMyEntries(),
         timeClockApi.getMyAnomalies(),

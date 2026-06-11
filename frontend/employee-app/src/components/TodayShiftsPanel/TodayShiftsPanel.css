@@ -100,3 +100,17 @@
   font-size: 14px;
   padding: 4px;
 }
+
+.tsp-shift--expired {
+  opacity: 0.75;
+  padding: 14px 20px;
+  gap: 8px;
+  border-left: 3px solid #ef4444;
+}
+
+.tsp-expired {
+  text-align: center;
+  color: #f87171;
+  font-size: 14px;
+  padding: 4px;
+}

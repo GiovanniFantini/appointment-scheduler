@@ -112,6 +112,11 @@ public class TimeClockService : ITimeClockService
         var nowUtc = _utcClock.UtcNow;
         var today = DateOnly.FromDateTime(nowUtc);
 
+        // Rilevamento lazy: i turni passati mai timbrati diventano anomalie prima di
+        // costruire la vista, così spariscono dalla lista e compaiono tra le anomalie
+        // nello stesso caricamento di pagina.
+        await RunMissingPunchDetectionForEmployeeAsync(employeeId, merchantId);
+
         var contexts = await GetTodayShiftContextsAsync(employeeId, merchantId, today);
 
         var result = new TodayShiftsDto();
@@ -208,8 +213,20 @@ public class TimeClockService : ITimeClockService
         }
         else
         {
-            dto.StatusMessage = inWindow ? "Turno da iniziare." : "In attesa dell'orario di inizio.";
-            dto.SuggestedAction = "Timbra l'entrata";
+            // Turno mai iniziato: distinguo "non ancora ora" da "finestra ormai
+            // chiusa". Quest'ultimo è una mancata entrata (gestita come anomalia),
+            // non un turno in attesa: l'etichetta deve dirlo chiaramente.
+            var windowClosed = endWall != null && nowWall > endWall.Value;
+            if (windowClosed)
+            {
+                dto.StatusMessage = "Finestra di timbratura chiusa.";
+                dto.IsExpired = true;
+            }
+            else
+            {
+                dto.StatusMessage = inWindow ? "Turno da iniziare." : "In attesa dell'orario di inizio.";
+                dto.SuggestedAction = "Timbra l'entrata";
+            }
             dto.IsActive = isSelected && settings.IsEnabled && inWindow;
         }
 
@@ -755,6 +772,38 @@ public class TimeClockService : ITimeClockService
             query = query.Where(p => p.Event.BranchId == branchId.Value);
 
         var participants = await query.ToListAsync();
+        return await DetectMissingPunchForParticipantsAsync(merchantId, participants);
+    }
+
+    public async Task<int> RunMissingPunchDetectionForEmployeeAsync(int employeeId, int merchantId)
+    {
+        var today = DateOnly.FromDateTime(_utcClock.UtcNow);
+
+        // Variante "lazy" per la pagina Timbratura del dipendente: stesso rilevamento
+        // di RunMissingPunchDetectionAsync ma ristretto al singolo dipendente, così la
+        // GET non scansiona l'intero merchant. Le risorse esterne non timbrano.
+        var participants = await _context.EventParticipants
+            .Include(p => p.Event)
+            .Include(p => p.Employee)
+            .Where(p => p.EmployeeId == employeeId
+                        && p.Event.MerchantId == merchantId
+                        && p.Event.EventType == EventType.Turno
+                        && p.Event.StartDate < today
+                        && p.Employee.Kind == EmployeeKind.Internal)
+            .ToListAsync();
+
+        return await DetectMissingPunchForParticipantsAsync(merchantId, participants);
+    }
+
+    /// <summary>
+    /// Logica condivisa di rilevamento mancate timbrature su una lista di turni
+    /// già filtrata (per merchant o per singolo dipendente). Per ogni turno passato
+    /// crea al più una anomalia MissingClockIn (nessuna timbratura) o MissingClockOut
+    /// (entrata senza uscita). Idempotente: salta i turni che hanno già l'anomalia.
+    /// </summary>
+    private async Task<int> DetectMissingPunchForParticipantsAsync(
+        int merchantId, List<EventParticipant> participants)
+    {
         if (participants.Count == 0) return 0;
 
         var participantIds = participants.Select(p => p.Id).ToList();
@@ -767,19 +816,19 @@ public class TimeClockService : ITimeClockService
             .GroupBy(e => e.EventParticipantId)
             .ToDictionary(g => g.Key, g => g.ToList());
 
-        // Anomalie missing-punch già esistenti, per non duplicarle.
-        var existing = await _context.TimeClockAnomalies
-            .Where(a => a.MerchantId == merchantId
+        // Anomalie missing-punch già esistenti su questi turni, per non duplicarle.
+        var existingList = await _context.TimeClockAnomalies
+            .Where(a => participantIds.Contains(a.EventParticipantId!.Value)
                         && (a.Type == TimeClockAnomalyType.MissingClockIn
                             || a.Type == TimeClockAnomalyType.MissingClockOut))
             .Select(a => new { a.EventParticipantId, a.Type })
             .ToListAsync();
-        var existingSet = existing
+        var existingSet = existingList
             .Select(x => (x.EventParticipantId, x.Type))
             .ToHashSet();
 
-        int created = 0;
         var nowUtc = _utcClock.UtcNow;
+        var pending = new List<TimeClockAnomaly>();
 
         foreach (var p in participants)
         {
@@ -794,45 +843,71 @@ public class TimeClockService : ITimeClockService
             if (!hasClockIn && !existingSet.Contains(clockInKey))
             {
                 existingSet.Add(clockInKey);
-                _context.TimeClockAnomalies.Add(new TimeClockAnomaly
-                {
-                    MerchantId = merchantId,
-                    EmployeeId = p.EmployeeId,
-                    EventId = p.EventId,
-                    EventParticipantId = p.Id,
-                    Type = TimeClockAnomalyType.MissingClockIn,
-                    Status = TimeClockAnomalyStatus.Open,
-                    Severity = 2,
-                    WorkDate = p.Event.StartDate,
-                    CreatedAt = nowUtc
-                });
-                created++;
+                pending.Add(BuildMissingPunchAnomaly(merchantId, p, TimeClockAnomalyType.MissingClockIn, nowUtc));
             }
             // Entrata ma nessuna uscita.
             else if (hasClockIn && !hasClockOut && !existingSet.Contains(clockOutKey))
             {
                 existingSet.Add(clockOutKey);
-                _context.TimeClockAnomalies.Add(new TimeClockAnomaly
-                {
-                    MerchantId = merchantId,
-                    EmployeeId = p.EmployeeId,
-                    EventId = p.EventId,
-                    EventParticipantId = p.Id,
-                    Type = TimeClockAnomalyType.MissingClockOut,
-                    Status = TimeClockAnomalyStatus.Open,
-                    Severity = 2,
-                    WorkDate = p.Event.StartDate,
-                    CreatedAt = nowUtc
-                });
-                created++;
+                pending.Add(BuildMissingPunchAnomaly(merchantId, p, TimeClockAnomalyType.MissingClockOut, nowUtc));
             }
         }
 
-        if (created > 0)
-            await _context.SaveChangesAsync();
+        if (pending.Count == 0) return 0;
 
-        return created;
+        // Fallback anti-concorrenza (niente vincolo DB, per scelta): ricontrolla sul
+        // DB se una richiesta concorrente ha già creato le stesse anomalie tra la
+        // lettura iniziale e adesso, e scarta i doppioni prima di accodarli. Resta
+        // una finestra teorica minima fino al SaveChanges, coperta dal catch.
+        var persisted = await _context.TimeClockAnomalies
+            .AsNoTracking()
+            .Where(a => participantIds.Contains(a.EventParticipantId!.Value)
+                        && (a.Type == TimeClockAnomalyType.MissingClockIn
+                            || a.Type == TimeClockAnomalyType.MissingClockOut))
+            .Select(a => new { a.EventParticipantId, a.Type })
+            .ToListAsync();
+        var persistedSet = persisted
+            .Select(x => (x.EventParticipantId, x.Type))
+            .ToHashSet();
+
+        var toInsert = pending
+            .Where(a => !persistedSet.Contains(((int?)a.EventParticipantId, a.Type)))
+            .ToList();
+        if (toInsert.Count == 0) return 0;
+
+        foreach (var a in toInsert)
+            _context.TimeClockAnomalies.Add(a);
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Una richiesta concorrente ha vinto la corsa: stacca gli inserimenti
+            // pendenti e considera l'operazione completata senza duplicare.
+            foreach (var a in toInsert)
+                _context.Entry(a).State = EntityState.Detached;
+            return 0;
+        }
+
+        return toInsert.Count;
     }
+
+    private static TimeClockAnomaly BuildMissingPunchAnomaly(
+        int merchantId, EventParticipant p, TimeClockAnomalyType type, DateTime nowUtc)
+        => new()
+        {
+            MerchantId = merchantId,
+            EmployeeId = p.EmployeeId,
+            EventId = p.EventId,
+            EventParticipantId = p.Id,
+            Type = type,
+            Status = TimeClockAnomalyStatus.Open,
+            Severity = 2,
+            WorkDate = p.Event.StartDate,
+            CreatedAt = nowUtc
+        };
 
     /// <summary>
     /// Rileva un'anomalia sulla timbratura appena registrata in base ai grace
@@ -937,16 +1012,28 @@ public class TimeClockService : ITimeClockService
                         && (p.Event.StartDate == today || p.Event.StartDate == yesterday))
             .ToListAsync();
 
+        var nowWall = NowWallClock;
         var contexts = new List<ShiftContext>();
         foreach (var p in participants)
         {
-            // Scarta i turni di ieri se già chiusi con un clock-out: non sono più
-            // timbrabili e non vanno mostrati nella giornata corrente.
+            // I turni di ieri restano visibili solo se realmente ancora "aperti"
+            // (entrata senza uscita: es. turno notturno a cavallo di mezzanotte).
+            // Si scartano se già chiusi con un clock-out, oppure se mai iniziati e
+            // con la finestra di timbratura ormai chiusa: in quel caso sono mancate
+            // timbrature, gestite come anomalia, non turni su cui agire oggi.
             if (p.Event.StartDate == yesterday)
             {
+                var ctx = new ShiftContext(p.Event, p);
+                var hasClockIn = await _context.TimeEntries
+                    .AnyAsync(e => e.EventParticipantId == p.Id && e.Type == TimeEntryType.ClockIn);
                 var hasClockOut = await _context.TimeEntries
                     .AnyAsync(e => e.EventParticipantId == p.Id && e.Type == TimeEntryType.ClockOut);
+
                 if (hasClockOut) continue;
+                if (!hasClockIn && await IsClockWindowClosedAsync(ctx, merchantId, nowWall)) continue;
+
+                contexts.Add(ctx);
+                continue;
             }
             contexts.Add(new ShiftContext(p.Event, p));
         }
@@ -1201,6 +1288,22 @@ public class TimeClockService : ITimeClockService
     /// del progetto trattano gli orari dei turni.
     /// </summary>
     private DateTime NowWallClock => _wallClock.Now;
+
+    /// <summary>
+    /// True se la finestra di timbratura di un turno è ormai chiusa rispetto a
+    /// <paramref name="nowWall"/>: cioè "adesso" è oltre la fine turno più la
+    /// tolleranza di uscita in ritardo. Un turno senza orario di fine non ha una
+    /// finestra determinabile e non è mai considerato chiuso (resta timbrabile).
+    /// </summary>
+    private async Task<bool> IsClockWindowClosedAsync(ShiftContext ctx, int merchantId, DateTime nowWall)
+    {
+        var (_, end) = ResolveShiftTimes(ctx);
+        var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
+        if (endWall == null) return false;
+
+        var settings = await GetOrDefaultSettingsAsync(ctx.Event.BranchId, merchantId);
+        return nowWall > endWall.Value.AddMinutes(settings.LateClockOutToleranceMinutes);
+    }
 
     /// <summary>
     /// Formatta un istante UTC come ora di parete dell'azienda (HH:mm). Usa lo

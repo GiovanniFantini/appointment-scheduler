@@ -81,6 +81,7 @@ export interface ShiftClockStatusDto {
   isClockedIn: boolean
   isOnBreak: boolean
   isCompleted: boolean
+  isExpired: boolean
   isActive: boolean
   clockInAtUtc?: string
   breakStartAtUtc?: string

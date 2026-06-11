@@ -151,6 +151,11 @@ public class EmployeeTimeClockManagementController : ControllerBase
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Token non valido" });
 
+        // Rilevamento lazy lato manager: aggiorna le mancate timbrature dei turni
+        // passati prima di leggere, così la dashboard mostra sempre dati completi a
+        // prescindere dal fatto che i dipendenti abbiano aperto la propria pagina.
+        await _timeClockService.RunMissingPunchDetectionAsync(merchantId, branchId);
+
         var anomalies = await _timeClockService.GetAnomaliesAsync(merchantId, branchId, status);
         return Ok(anomalies);
     }

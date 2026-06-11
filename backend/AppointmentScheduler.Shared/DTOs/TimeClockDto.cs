@@ -135,6 +135,12 @@ public class ShiftClockStatusDto
     public bool IsCompleted { get; set; }
 
     /// <summary>
+    /// True se il turno non è mai stato iniziato e la sua finestra di timbratura è
+    /// ormai chiusa: non più timbrabile, verrà segnalato come mancata entrata.
+    /// </summary>
+    public bool IsExpired { get; set; }
+
+    /// <summary>
     /// True se questo è il turno su cui ha senso timbrare adesso: solo allora il
     /// client mostra i pulsanti azione in primo piano.
     /// </summary>

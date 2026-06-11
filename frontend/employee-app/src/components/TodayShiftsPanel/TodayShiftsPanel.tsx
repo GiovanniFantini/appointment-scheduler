@@ -143,9 +143,11 @@ function ShiftCard({
   const { shift } = status
   const pillClass = status.isOnBreak ? 'pill-break'
     : status.isClockedIn ? 'pill-active'
-    : status.isCompleted ? 'pill-done' : 'pill-idle'
+    : status.isCompleted ? 'pill-done'
+    : status.isExpired ? 'pill-expired' : 'pill-idle'
 
-  const cardClass = !status.isActive ? 'tsp-shift--muted'
+  const cardClass = status.isExpired ? 'tsp-shift--expired'
+    : !status.isActive ? 'tsp-shift--muted'
     : status.isOnBreak ? 'tsp-shift--break'
     : status.isClockedIn ? 'tsp-shift--active' : ''
 
@@ -200,6 +202,8 @@ function ShiftCard({
         </div>
       ) : status.isCompleted ? (
         <div className="tsp-completed">Turno completato — {formatDuration(status.workedMinutes)}</div>
+      ) : status.isExpired ? (
+        <div className="tsp-expired">Mancata entrata — verrà segnalata come anomalia.</div>
       ) : null}
     </div>
   )

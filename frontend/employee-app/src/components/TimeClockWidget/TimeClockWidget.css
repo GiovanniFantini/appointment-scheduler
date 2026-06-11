@@ -70,6 +70,7 @@
 .pill-break { background: #f59e0b22; color: #fbbf24; }
 .pill-done { background: #47556922; color: var(--su-text-secondary); }
 .pill-idle { background: var(--su-accent-primary-soft); color: var(--su-accent-secondary); }
+.pill-expired { background: #ef444422; color: #f87171; }
 
 .tcw-info-row {
   display: flex;

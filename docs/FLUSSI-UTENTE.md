@@ -982,7 +982,7 @@ stateDiagram-v2
 | Elemento | Tipo | Cosa fa | Controlli |
 |----------|------|---------|-----------|
 | Filtro Stato | Menu a tendina | Filtra per Da giustificare / In revisione / Approvate / Respinte. | — |
-| Rileva timbrature mancanti | Bottone | Cerca i turni conclusi senza timbratura e genera le relative anomalie. | Disattivato durante il controllo. |
+| Rileva timbrature mancanti | Bottone | Forza la ricerca dei turni conclusi senza timbratura e genera le relative anomalie. Lo stesso rilevamento avviene comunque **in automatico** all'apertura di questa tab e della pagina Timbratura del dipendente. | Disattivato durante il controllo. |
 | Approva | Bottone (per anomalia) | Approva la giustificazione (chiede note facoltative). | Compare solo per anomalie "In revisione". |
 | Respingi | Bottone (per anomalia) | Respinge la giustificazione (chiede un motivo facoltativo). | Compare solo per anomalie "In revisione". Sistema: un'anomalia già decisa non è ri-decidibile ⛔. |
 
@@ -1008,8 +1008,12 @@ stateDiagram-v2
 |------------|---------------|
 | Timbratura fuori area di geofencing | Segnalata come anomalia, **non bloccata**; la tolleranza tiene conto dell'imprecisione del GPS. |
 | Pausa oltre la durata massima | Genera un'anomalia di pausa prolungata. |
-| Turno a cavallo della mezzanotte | Il turno del giorno prima resta timbrabile finché non si timbra l'uscita. |
-| Più turni nello stesso giorno | Viene scelto come "turno corrente" quello più vicino all'orario attuale. |
+| Uscita temporanea durante il turno (es. caffè, commissione) | Si usa la **Pausa** (Inizia pausa / Termina pausa), non l'Uscita: il tempo è scalato dalle ore lavorate. L'Uscita conclude il turno ed è definitiva. |
+| Turno a cavallo della mezzanotte | Il turno del giorno prima resta timbrabile **finché ha l'entrata senza l'uscita** (turno aperto): può essere chiuso a qualsiasi ora. |
+| Turno di ieri mai timbrato, finestra ormai chiusa | **Sparisce** dalla lista turni e diventa un'anomalia di **mancata entrata** (`MissingClockIn`) da giustificare. Non è più timbrabile a posteriori. |
+| Turno di oggi mai timbrato, oltre l'orario di fine | Resta in lista ma con stato **"Finestra di timbratura chiusa"** (non più "in attesa") e senza pulsanti: verrà segnalato come mancata entrata. |
+| Più turni nello stesso giorno | Tutti visibili in lista; solo **uno** è "attivo" (con i pulsanti), scelto come quello più vicino all'orario attuale. Un turno aperto ha sempre la priorità. |
+| Rilevamento mancate timbrature | Avviene **automaticamente** all'apertura della pagina Timbratura (lato dipendente, per i propri turni) e della tab Anomalie (lato Merchant, per tutto il merchant), oltre che col bottone manuale "Rileva timbrature mancanti". Le risorse esterne (che non timbrano) sono escluse. |
 
 ---
 

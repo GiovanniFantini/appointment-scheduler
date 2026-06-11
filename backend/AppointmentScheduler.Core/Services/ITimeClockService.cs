@@ -77,6 +77,13 @@ public interface ITimeClockService
     /// </summary>
     Task<int> RunMissingPunchDetectionAsync(int merchantId, int? branchId);
 
+    /// <summary>
+    /// Variante "lazy" del rilevamento mancate timbrature ristretta al singolo
+    /// dipendente, da invocare al caricamento della pagina Timbratura. Restituisce
+    /// il numero di anomalie create.
+    /// </summary>
+    Task<int> RunMissingPunchDetectionForEmployeeAsync(int employeeId, int merchantId);
+
     /// <summary>Report ore lavorate per dipendente/giornata.</summary>
     Task<List<TimeClockReportRowDto>> GetReportAsync(int merchantId, int? branchId, DateOnly from, DateOnly to);
 }
