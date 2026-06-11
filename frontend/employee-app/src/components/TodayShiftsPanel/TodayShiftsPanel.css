@@ -114,3 +114,30 @@
   font-size: 14px;
   padding: 4px;
 }
+
+/* Mobile: l'azione di timbratura è IL gesto della pagina. Il pulsante primario
+   diventa full-width e generoso (target touch ≥ 52px); l'azione secondaria
+   (pausa) scende sotto, più discreta, per non competere con quella primaria. */
+@media (max-width: 640px) {
+  .tsp-shift { padding: 16px; }
+
+  .tsp-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tsp-actions .tcw-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 16px 18px;
+    font-size: 16px;
+  }
+
+  /* La pausa (secondaria) resta full-width ma visivamente subordinata. */
+  .tsp-actions .tcw-btn--secondary {
+    padding: 13px 18px;
+    font-size: 14px;
+  }
+
+  .tsp-info-value { font-size: 17px; }
+}

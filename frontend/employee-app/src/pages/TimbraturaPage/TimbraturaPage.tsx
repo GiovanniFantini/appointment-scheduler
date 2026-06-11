@@ -104,6 +104,12 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
   }, {})
   const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a))
 
+  // Le anomalie aperte sono un'azione che il dipendente DEVE fare (giustificare):
+  // vanno in cima come banner. Le altre (in revisione/risolte) sono consultazione
+  // e finiscono nella sezione collassabile più in basso.
+  const openAnomalies = anomalies.filter(a => a.status === TimeClockAnomalyStatus.Open)
+  const reviewedAnomalies = anomalies.filter(a => a.status !== TimeClockAnomalyStatus.Open)
+
   return (
     <div className="timbratura-page">
       <div className="tp-header">
@@ -118,107 +124,142 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
         <p className="tp-subtitle">Registra entrata, uscita e pause del tuo turno</p>
       </div>
 
+      {/* Avviso prioritario: timbrature da giustificare. Tap → giustifica la prima. */}
+      {openAnomalies.length > 0 && (
+        <button
+          type="button"
+          className="tp-alert-banner"
+          onClick={() => setJustifying(openAnomalies[0])}
+        >
+          <span className="tp-alert-icon">⚠</span>
+          <span className="tp-alert-text">
+            {openAnomalies.length === 1
+              ? '1 timbratura da giustificare'
+              : `${openAnomalies.length} timbrature da giustificare`}
+          </span>
+          <span className="tp-alert-chevron">›</span>
+        </button>
+      )}
+
+      {/* Azione primaria: timbra. Resta sempre in cima, sopra la piega. */}
       <TodayShiftsPanel onChange={loadHistory} />
 
+      {/* Andamento ore — consultazione, collassato di default. */}
       {wellbeing && (
-        <div className="tp-wellbeing">
-          {wellbeing.hasWellbeingAlert && wellbeing.wellbeingMessage && (
-            <div className="tp-wellbeing-alert">⚠ {wellbeing.wellbeingMessage}</div>
-          )}
-          <div className="tp-wellbeing-stats">
-            <div className="tp-stat">
-              <span className="tp-stat-value">{formatHours(wellbeing.workedMinutesThisWeek)}</span>
-              <span className="tp-stat-label">Questa settimana</span>
-            </div>
-            <div className="tp-stat">
-              <span className="tp-stat-value">{formatHours(wellbeing.workedMinutesThisMonth)}</span>
-              <span className="tp-stat-label">Questo mese</span>
-            </div>
-            <div className="tp-stat">
-              <span className="tp-stat-value">{formatHours(wellbeing.overtimeMinutesThisMonth)}</span>
-              <span className="tp-stat-label">Straordinari mese</span>
+        <details className="tp-section">
+          <summary className="tp-section-head">
+            <span className="tp-section-title">Andamento ore</span>
+            {wellbeing.hasWellbeingAlert && <span className="tp-section-flag">⚠</span>}
+            <span className="tp-section-chevron">›</span>
+          </summary>
+          <div className="tp-section-body">
+            {wellbeing.hasWellbeingAlert && wellbeing.wellbeingMessage && (
+              <div className="tp-wellbeing-alert">⚠ {wellbeing.wellbeingMessage}</div>
+            )}
+            <div className="tp-wellbeing-stats">
+              <div className="tp-stat">
+                <span className="tp-stat-value">{formatHours(wellbeing.workedMinutesThisWeek)}</span>
+                <span className="tp-stat-label">Questa settimana</span>
+              </div>
+              <div className="tp-stat">
+                <span className="tp-stat-value">{formatHours(wellbeing.workedMinutesThisMonth)}</span>
+                <span className="tp-stat-label">Questo mese</span>
+              </div>
+              <div className="tp-stat">
+                <span className="tp-stat-value">{formatHours(wellbeing.overtimeMinutesThisMonth)}</span>
+                <span className="tp-stat-label">Straordinari mese</span>
+              </div>
             </div>
           </div>
-        </div>
+        </details>
       )}
 
-      {anomalies.length > 0 && (
-        <div className="tp-anomalies">
-          <h2 className="tp-history-title">Le mie anomalie</h2>
-          <div className="tp-anomaly-list">
-            {anomalies.map(a => (
-              <div key={a.id} className="tp-anomaly" data-status={a.status}>
-                <div className="tp-anomaly-main">
-                  <span className="tp-anomaly-type">{anomalyTypeLabel(a.type, a.typeName)}</span>
-                  <span className={`tp-anomaly-status status-${a.status}`}>
-                    {ANOMALY_STATUS_LABEL[a.status] ?? a.statusName}
-                  </span>
-                </div>
-                <div className="tp-anomaly-meta">
-                  <span>
-                    {new Date(a.workDate).toLocaleDateString('it-IT', {
-                      day: '2-digit', month: 'long',
+      {/* Storico timbrature — collassato di default. */}
+      <details className="tp-section">
+        <summary className="tp-section-head">
+          <span className="tp-section-title">Le mie timbrature</span>
+          {entries.length > 0 && <span className="tp-section-count">{entries.length}</span>}
+          <span className="tp-section-chevron">›</span>
+        </summary>
+        <div className="tp-section-body">
+          {loadingHistory ? (
+            <div className="tp-loading"><div className="tp-spinner" /></div>
+          ) : days.length === 0 ? (
+            <div className="tp-empty">Nessuna timbratura registrata negli ultimi 30 giorni.</div>
+          ) : (
+            <div className="tp-day-list">
+              {days.map(day => (
+                <div key={day} className="tp-day">
+                  <div className="tp-day-label">
+                    {new Date(day).toLocaleDateString('it-IT', {
+                      weekday: 'long', day: '2-digit', month: 'long',
                     })}
-                  </span>
-                  {a.deviationMinutes != null && (
-                    <span>{a.deviationMinutes > 0 ? '+' : ''}{a.deviationMinutes} min</span>
+                  </div>
+                  <div className="tp-entry-list">
+                    {grouped[day]
+                      .slice()
+                      .sort((a, b) => a.actualTimestampUtc.localeCompare(b.actualTimestampUtc))
+                      .map(e => (
+                        <div key={e.id} className="tp-entry" style={{ borderLeftColor: entryColor(e.type) }}>
+                          <div className="tp-entry-main">
+                            <span className="tp-entry-type" style={{ color: entryColor(e.type) }}>
+                              {entryLabel(e.type)}
+                            </span>
+                            <span className="tp-entry-time">{formatTimestamp(e.actualTimestampUtc)}</span>
+                          </div>
+                          <div className="tp-entry-meta">
+                            <span>{e.eventTitle}</span>
+                            {e.isManualCorrection && <span className="tp-badge tp-badge--manual">Correzione</span>}
+                            {e.geofenceOk === false && <span className="tp-badge tp-badge--geo">Fuori area</span>}
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </details>
+
+      {/* Anomalie già giustificate o risolte — collassate di default. */}
+      {reviewedAnomalies.length > 0 && (
+        <details className="tp-section">
+          <summary className="tp-section-head">
+            <span className="tp-section-title">Anomalie in revisione</span>
+            <span className="tp-section-count">{reviewedAnomalies.length}</span>
+            <span className="tp-section-chevron">›</span>
+          </summary>
+          <div className="tp-section-body">
+            <div className="tp-anomaly-list">
+              {reviewedAnomalies.map(a => (
+                <div key={a.id} className="tp-anomaly" data-status={a.status}>
+                  <div className="tp-anomaly-main">
+                    <span className="tp-anomaly-type">{anomalyTypeLabel(a.type, a.typeName)}</span>
+                    <span className={`tp-anomaly-status status-${a.status}`}>
+                      {ANOMALY_STATUS_LABEL[a.status] ?? a.statusName}
+                    </span>
+                  </div>
+                  <div className="tp-anomaly-meta">
+                    <span>
+                      {new Date(a.workDate).toLocaleDateString('it-IT', {
+                        day: '2-digit', month: 'long',
+                      })}
+                    </span>
+                    {a.deviationMinutes != null && (
+                      <span>{a.deviationMinutes > 0 ? '+' : ''}{a.deviationMinutes} min</span>
+                    )}
+                  </div>
+                  {a.employeeNotes && <div className="tp-anomaly-notes">"{a.employeeNotes}"</div>}
+                  {a.reviewNotes && (
+                    <div className="tp-anomaly-review">Risposta responsabile: {a.reviewNotes}</div>
                   )}
                 </div>
-                {a.employeeNotes && <div className="tp-anomaly-notes">"{a.employeeNotes}"</div>}
-                {a.reviewNotes && (
-                  <div className="tp-anomaly-review">Risposta responsabile: {a.reviewNotes}</div>
-                )}
-                {a.status === TimeClockAnomalyStatus.Open && (
-                  <button className="tp-justify-btn" onClick={() => setJustifying(a)}>
-                    Giustifica
-                  </button>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        </details>
       )}
-
-      <div className="tp-history">
-        <h2 className="tp-history-title">Le mie timbrature</h2>
-        {loadingHistory ? (
-          <div className="tp-loading"><div className="tp-spinner" /></div>
-        ) : days.length === 0 ? (
-          <div className="tp-empty">Nessuna timbratura registrata negli ultimi 30 giorni.</div>
-        ) : (
-          <div className="tp-day-list">
-            {days.map(day => (
-              <div key={day} className="tp-day">
-                <div className="tp-day-label">
-                  {new Date(day).toLocaleDateString('it-IT', {
-                    weekday: 'long', day: '2-digit', month: 'long',
-                  })}
-                </div>
-                <div className="tp-entry-list">
-                  {grouped[day]
-                    .slice()
-                    .sort((a, b) => a.actualTimestampUtc.localeCompare(b.actualTimestampUtc))
-                    .map(e => (
-                      <div key={e.id} className="tp-entry" style={{ borderLeftColor: entryColor(e.type) }}>
-                        <div className="tp-entry-main">
-                          <span className="tp-entry-type" style={{ color: entryColor(e.type) }}>
-                            {entryLabel(e.type)}
-                          </span>
-                          <span className="tp-entry-time">{formatTimestamp(e.actualTimestampUtc)}</span>
-                        </div>
-                        <div className="tp-entry-meta">
-                          <span>{e.eventTitle}</span>
-                          {e.isManualCorrection && <span className="tp-badge tp-badge--manual">Correzione</span>}
-                          {e.geofenceOk === false && <span className="tp-badge tp-badge--geo">Fuori area</span>}
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
 
       {justifying && (
         <JustifyAnomalyModal
