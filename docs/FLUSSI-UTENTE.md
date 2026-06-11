@@ -887,17 +887,67 @@ filiale agire.
 |----------|------|---------|-----------|
 | Timbratura attiva | Interruttore | Abilita la timbratura per la filiale. | Se spento, tutti gli altri campi sono disabilitati. |
 | Timbratura obbligatoria | Interruttore | Rende la timbratura obbligatoria anziché facoltativa. | Disabilitato se la timbratura non è attiva. |
-| Tolleranza ritardo entrata | Campo numero | Minuti di ritardo entrata tollerati. | Non negativo. |
-| Tolleranza uscita | Campo numero | Minuti di uscita anticipata tollerati. | Non negativo. |
-| Anticipo massimo entrata | Campo numero | Quanto prima si può timbrare l'entrata. | Non negativo. |
-| Ritardo massimo uscita | Campo numero | Margine di uscita posticipata. | Non negativo. |
+| Tolleranza ritardo entrata | Campo numero | Minuti di ritardo in **entrata** tollerati (default 5). Oltre → anomalia *Entrata in ritardo*. | Non negativo. |
+| Tolleranza uscita | Campo numero | Minuti di **anticipo in uscita** tollerati (default 5). Oltre → anomalia *Uscita in anticipo*. | Non negativo. |
+| Anticipo massimo entrata | Campo numero | Quanto **prima** dell'inizio turno si può timbrare l'entrata (default 15). Oltre → anomalia *Entrata in anticipo*. Definisce anche l'apertura della finestra di timbratura (vedi §10.1-bis). | Non negativo. |
+| Ritardo massimo uscita | Campo numero | Minuti di **ritardo in uscita** tollerati oltre la fine turno (default 15). Oltre → anomalia *Uscita oltre orario* + straordinario. Determina anche la chiusura della finestra di timbratura. | Non negativo. |
 | Registrazione pause | Interruttore | Abilita la timbratura delle pause. | — |
-| Durata massima pausa | Campo numero | Oltre questa durata la pausa genera anomalia. | Disabilitato se le pause non sono attive. |
+| Durata massima pausa | Campo numero | Durata oltre cui una pausa genera anomalia *Pausa prolungata* (default 60). Il controllo scatta alla **chiusura** della pausa. | Disabilitato se le pause non sono attive. |
 | Geofencing | Interruttore | Verifica che la timbratura avvenga vicino alla filiale. | — |
 | Raggio geofence | Campo numero | Raggio entro cui la timbratura è "in area". | Disabilitato se il geofencing è spento. |
 | Latitudine / Longitudine filiale | Campi numero | Coordinate della filiale. | Disabilitati se il geofencing è spento. |
 | 📍 Usa la mia posizione attuale | Bottone | Compila le coordinate con la posizione del dispositivo. | Richiede il consenso alla geolocalizzazione del browser. |
 | Salva configurazione | Bottone | Salva le impostazioni. | Disattivato durante il salvataggio. Sistema: nessun valore può essere negativo ⛔. |
+
+### 10.1-bis Tolleranze, anticipo e pause — come funzionano davvero
+
+Le quattro tolleranze di entrata/uscita lavorano a **coppie** (una per ciascun lato),
+e la parola "anticipo" compare in **due sensi diversi**. Questa sezione chiarisce
+soglie e anomalie. Regola generale: **nessuna anomalia blocca la timbratura** — la
+timbratura passa sempre, poi viene segnalata come anomalia ⚠️ da giustificare.
+
+La **deviazione** è la differenza, in minuti, tra l'orario realmente timbrato e
+l'orario atteso del turno (inizio per l'entrata, fine per l'uscita).
+
+**Entrata (Timbra entrata)**
+
+| Situazione | Soglia | Esito |
+|------------|--------|-------|
+| Entro la tolleranza (né troppo in ritardo né troppo in anticipo) | dentro le soglie | ✅ Entrata regolare. |
+| In ritardo **oltre** "Tolleranza ritardo entrata" | ritardo > soglia (def. 5') | ⚠️ Anomalia **Entrata in ritardo** ("risulti in ritardo"). |
+| In anticipo **oltre** "Anticipo massimo entrata" | anticipo > soglia (def. 15') | ⚠️ Anomalia **Entrata in anticipo**. |
+
+**Uscita (Timbra uscita)**
+
+| Situazione | Soglia | Esito |
+|------------|--------|-------|
+| Entro la tolleranza | dentro le soglie | ✅ Uscita regolare. |
+| In anticipo **oltre** "Tolleranza uscita" | anticipo > soglia (def. 5') | ⚠️ Anomalia **Uscita in anticipo**. |
+| In ritardo **oltre** "Ritardo massimo uscita" | ritardo > soglia (def. 15') | ⚠️ Anomalia **Uscita oltre orario**, con i minuti eccedenti registrati come **straordinario**. |
+
+> **I due significati di "anticipo".** Sono parametri distinti, da non confondere:
+> - **Anticipo massimo entrata** (def. 15') — quanto *prima* dell'inizio turno è
+>   ammesso timbrare l'**entrata**. Ha anche un secondo ruolo: apre la **finestra di
+>   timbratura**, cioè i pulsanti compaiono da `inizio turno − anticipo massimo`.
+> - **Tolleranza uscita** (def. 5') — quanto in *anticipo* è ammesso timbrare
+>   l'**uscita** rispetto alla fine turno.
+
+**Pausa più lunga del consentito**
+
+- La durata massima è **"Durata massima pausa"** (def. 60'), attiva solo se
+  "Registrazione pause" è abilitata.
+- Il controllo scatta quando timbri **Termina pausa**: il sistema misura
+  `fine pausa − inizio pausa`.
+- Se supera la soglia → ⚠️ anomalia **Pausa prolungata** ("Pausa più lunga del
+  previsto"). La pausa si chiude comunque regolarmente.
+- La durata della pausa — qualunque essa sia — viene sempre **scalata dalle ore
+  lavorate** del turno.
+
+**Finestra di timbratura.** Un turno è timbrabile da `inizio − Anticipo massimo
+entrata` fino a `fine + Ritardo massimo uscita`. Prima dell'apertura il turno è "in
+attesa dell'orario di inizio"; dopo la chiusura, se non è mai stato timbrato, diventa
+una mancata entrata (vedi i corner case in fondo a §10). Un turno **aperto** (entrata
+senza uscita) resta sempre chiudibile, a prescindere dalla finestra.
 
 ### 10.2 Timbratura del dipendente (Employee)
 

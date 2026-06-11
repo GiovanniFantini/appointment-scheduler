@@ -1141,6 +1141,96 @@ public class TimeClockServiceTests
     }
 
     [Fact]
+    public async Task ClockOutAsync_OvernightShiftWithoutEndDate_ComputesDeviationAcrossMidnight()
+    {
+        // Turno notturno 22:00→06:00 SENZA EndDate (convenzione: EndDate opzionale).
+        // L'uscita reale alle 06:02 del giorno dopo è in ritardo di soli 2 minuti:
+        // la deviazione non deve essere ~+1440 (= "il giorno prima alle 06:00"),
+        // quindi nessuna anomalia di uscita oltre orario con straordinario fittizio.
+        var nowUtc = new DateTime(2026, 5, 25, 6, 2, 0, DateTimeKind.Utc);
+        var nowWall = new DateTime(2026, 5, 25, 6, 2, 0, DateTimeKind.Unspecified);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(nowUtc);
+        _wallClock.SetupGet(x => x.Now).Returns(nowWall);
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var night = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Notturno", StartDate = new DateOnly(2026, 5, 24), EndDate = null,
+            StartTime = new TimeOnly(22, 0), EndTime = new TimeOnly(6, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = night, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, GraceOutMinutes = 5, LateClockOutToleranceMinutes = 15 }
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 22, 0, 0, DateTimeKind.Utc) }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, new List<TimeClockAnomaly>(), x => [x.Id])
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.ClockOutAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
+
+        result.Entry.DeviationMinutes.Should().Be(2);
+        result.Anomaly.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task ClockInAsync_OvernightShiftWithoutEndDate_IsTimbrableInWindow()
+    {
+        // Turno notturno 22:00→06:00 SENZA EndDate. Entrata alle 22:00 in punto:
+        // la finestra deve essere aperta (la fine 06:00 è del giorno dopo, non prima
+        // dell'inizio). Lo stato corrente deve risultare "in turno".
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 22, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 22, 0, 0, DateTimeKind.Unspecified));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var night = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Notturno", StartDate = new DateOnly(2026, 5, 24), EndDate = null,
+            StartTime = new TimeOnly(22, 0), EndTime = new TimeOnly(6, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = night, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, EarlyClockInToleranceMinutes = 15, GraceInMinutes = 5 }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, new List<TimeEntry>(), x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, new List<TimeClockAnomaly>(), x => [x.Id])
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.ClockInAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
+
+        result.Entry.DeviationMinutes.Should().Be(0);
+        result.Anomaly.Should().BeNull();
+        result.Status.IsClockedIn.Should().BeTrue();
+    }
+
+    [Fact]
     public async Task RunMissingPunchDetectionForEmployeeAsync_CreatesMissingClockOut_WhenClockInWithoutClockOut()
     {
         _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));

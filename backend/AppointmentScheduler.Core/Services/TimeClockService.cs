@@ -69,7 +69,7 @@ public class TimeClockService : ITimeClockService
         status.BreakStartAtUtc = openBreak?.ActualTimestampUtc;
         status.WorkedMinutesToday = CalculateWorkedMinutes(entries, nowUtc);
 
-        var (start, end) = ResolveShiftTimes(shift);
+        var (start, _) = ResolveShiftTimes(shift);
         var startWall = ToWallClock(shift.Event.StartDate, start);
 
         if (clockOut != null)
@@ -97,7 +97,7 @@ public class TimeClockService : ITimeClockService
             status.SuggestedAction = "Timbra l'entrata";
             // Mostra il prompt se siamo nell'intorno dell'inizio turno:
             // da EarlyClockInTolerance prima fino alla fine del turno.
-            var endWall = ToWallClock(shift.Event.EndDate ?? shift.Event.StartDate, end);
+            var endWall = ResolveEndWall(shift);
             var windowStart = startWall?.AddMinutes(-settings.EarlyClockInToleranceMinutes);
             var nowWall = NowWallClock;
             status.ShowClockPrompt = windowStart != null && endWall != null
@@ -182,9 +182,9 @@ public class TimeClockService : ITimeClockService
             WorkedMinutes = CalculateWorkedMinutes(entries, nowUtc),
         };
 
-        var (start, end) = ResolveShiftTimes(ctx);
+        var (start, _) = ResolveShiftTimes(ctx);
         var startWall = ToWallClock(ctx.Event.StartDate, start);
-        var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
+        var endWall = ResolveEndWall(ctx);
         var nowWall = NowWallClock;
 
         // Dentro la finestra utile = da EarlyClockInTolerance prima dell'inizio
@@ -287,9 +287,12 @@ public class TimeClockService : ITimeClockService
         if (expectedTime.HasValue)
         {
             // Deviazione = differenza wall-clock tra adesso e l'orario atteso.
-            var expectedWall = ToWallClock(
-                type == TimeEntryType.ClockOut ? shift.Event.EndDate ?? shift.Event.StartDate : shift.Event.StartDate,
-                expectedTime);
+            // Per l'uscita l'atteso è la FINE turno, che su un turno notturno cade
+            // il giorno dopo (vedi ResolveEndWall): senza questo l'uscita di un
+            // turno a cavallo di mezzanotte risulterebbe in ritardo di ~24h.
+            var expectedWall = type == TimeEntryType.ClockOut
+                ? ResolveEndWall(shift)
+                : ToWallClock(shift.Event.StartDate, expectedTime);
             if (expectedWall.HasValue)
                 deviation = (int)Math.Round((NowWallClock - expectedWall.Value).TotalMinutes);
         }
@@ -1091,9 +1094,9 @@ public class TimeClockService : ITimeClockService
         {
             if (hasOut.Contains(ctx.Participant.Id)) continue; // già concluso
 
-            var (start, end) = ResolveShiftTimes(ctx);
+            var (start, _) = ResolveShiftTimes(ctx);
             var startWall = ToWallClock(ctx.Event.StartDate, start);
-            var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
+            var endWall = ResolveEndWall(ctx);
 
             double distance;
             if (startWall.HasValue && endWall.HasValue && nowWall >= startWall && nowWall <= endWall)
@@ -1283,6 +1286,26 @@ public class TimeClockService : ITimeClockService
         => time.HasValue ? date.ToDateTime(time.Value, DateTimeKind.Unspecified) : null;
 
     /// <summary>
+    /// Istante wall-clock di FINE turno, gestendo i turni a cavallo di mezzanotte.
+    /// Se EndDate è valorizzata si usa quella; se è null (convenzione: EndDate
+    /// opzionale) e l'ora di fine non supera quella di inizio (turno notturno,
+    /// es. 22:00→06:00), la fine cade il giorno dopo lo StartDate. Senza questa
+    /// correzione la fine cadrebbe prima dell'inizio, falsando deviazione e
+    /// finestra di timbratura. Null se l'ora di fine non è valorizzata.
+    /// </summary>
+    private static DateTime? ResolveEndWall(ShiftContext ctx)
+    {
+        var (start, end) = ResolveShiftTimes(ctx);
+        if (!end.HasValue) return null;
+
+        var endDate = ctx.Event.EndDate
+            ?? (start.HasValue && end.Value <= start.Value
+                ? ctx.Event.StartDate.AddDays(1)
+                : ctx.Event.StartDate);
+        return ToWallClock(endDate, end);
+    }
+
+    /// <summary>
     /// "Adesso" come orario wall-clock del server. In produzione il server è
     /// configurato sul fuso del servizio; coerente con come gli altri service
     /// del progetto trattano gli orari dei turni.
@@ -1297,8 +1320,7 @@ public class TimeClockService : ITimeClockService
     /// </summary>
     private async Task<bool> IsClockWindowClosedAsync(ShiftContext ctx, int merchantId, DateTime nowWall)
     {
-        var (_, end) = ResolveShiftTimes(ctx);
-        var endWall = ToWallClock(ctx.Event.EndDate ?? ctx.Event.StartDate, end);
+        var endWall = ResolveEndWall(ctx);
         if (endWall == null) return false;
 
         var settings = await GetOrDefaultSettingsAsync(ctx.Event.BranchId, merchantId);
