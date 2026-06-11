@@ -141,20 +141,6 @@
   font-size: 14px;
 }
 
-.tp-day-list {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.tp-day-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--su-text-secondary);
-  text-transform: capitalize;
-  margin-bottom: 8px;
-}
-
 .tp-entry-list {
   display: flex;
   flex-direction: column;

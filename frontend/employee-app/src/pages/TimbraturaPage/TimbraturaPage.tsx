@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import TodayShiftsPanel from '../../components/TodayShiftsPanel/TodayShiftsPanel'
 import JustifyAnomalyModal from '../../components/JustifyAnomalyModal/JustifyAnomalyModal'
+import DayCarousel, { type DaySlide } from '../../components/DayCarousel/DayCarousel'
 import { timeClockApi } from '../../lib/api/timeClock'
 import { TimeEntryType, TimeClockAnomalyStatus, anomalyTypeLabel } from '../../types/timbratura'
 import type { TimeEntryDto, TimeClockAnomalyDto, WellbeingStatsDto } from '../../types/timbratura'
@@ -54,6 +55,24 @@ function formatTimestamp(iso: string): string {
   })
 }
 
+/** "giovedì 11 giugno" da una data ISO di giornata (YYYY-MM-DD). */
+function formatDayLabel(isoDay: string): string {
+  return new Date(isoDay).toLocaleDateString('it-IT', {
+    weekday: 'long', day: '2-digit', month: 'long',
+  })
+}
+
+/** Raggruppa per workDate e ordina i giorni dal più recente. */
+function groupByDay<T extends { workDate: string }>(items: T[]): [string, T[]][] {
+  const map = items.reduce<Record<string, T[]>>((acc, it) => {
+    (acc[it.workDate] ??= []).push(it)
+    return acc
+  }, {})
+  return Object.keys(map)
+    .sort((a, b) => b.localeCompare(a))
+    .map(day => [day, map[day]])
+}
+
 interface Props {
   accessLevel?: FeatureAccessLevel
 }
@@ -97,18 +116,67 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
     setJustifying(null)
   }
 
-  // Raggruppa le timbrature per giornata di lavoro.
-  const grouped = entries.reduce<Record<string, TimeEntryDto[]>>((acc, e) => {
-    (acc[e.workDate] ??= []).push(e)
-    return acc
-  }, {})
-  const days = Object.keys(grouped).sort((a, b) => b.localeCompare(a))
+  // Storico timbrature aggregato per giorno → una slide per giorno nel carousel.
+  const entryDays = groupByDay(entries)
+  const entrySlides: DaySlide[] = entryDays.map(([day, dayEntries]) => ({
+    key: day,
+    label: formatDayLabel(day),
+    content: (
+      <div className="tp-entry-list">
+        {dayEntries
+          .slice()
+          .sort((a, b) => a.actualTimestampUtc.localeCompare(b.actualTimestampUtc))
+          .map(e => (
+            <div key={e.id} className="tp-entry" style={{ borderLeftColor: entryColor(e.type) }}>
+              <div className="tp-entry-main">
+                <span className="tp-entry-type" style={{ color: entryColor(e.type) }}>
+                  {entryLabel(e.type)}
+                </span>
+                <span className="tp-entry-time">{formatTimestamp(e.actualTimestampUtc)}</span>
+              </div>
+              <div className="tp-entry-meta">
+                <span>{e.eventTitle}</span>
+                {e.isManualCorrection && <span className="tp-badge tp-badge--manual">Correzione</span>}
+                {e.geofenceOk === false && <span className="tp-badge tp-badge--geo">Fuori area</span>}
+              </div>
+            </div>
+          ))}
+      </div>
+    ),
+  }))
 
   // Le anomalie aperte sono un'azione che il dipendente DEVE fare (giustificare):
   // vanno in cima come banner. Le altre (in revisione/risolte) sono consultazione
-  // e finiscono nella sezione collassabile più in basso.
+  // e finiscono nella sezione collassabile più in basso, aggregate per giorno.
   const openAnomalies = anomalies.filter(a => a.status === TimeClockAnomalyStatus.Open)
   const reviewedAnomalies = anomalies.filter(a => a.status !== TimeClockAnomalyStatus.Open)
+  const reviewedSlides: DaySlide[] = groupByDay(reviewedAnomalies).map(([day, dayAnomalies]) => ({
+    key: day,
+    label: formatDayLabel(day),
+    content: (
+      <div className="tp-anomaly-list">
+        {dayAnomalies.map(a => (
+          <div key={a.id} className="tp-anomaly" data-status={a.status}>
+            <div className="tp-anomaly-main">
+              <span className="tp-anomaly-type">{anomalyTypeLabel(a.type, a.typeName)}</span>
+              <span className={`tp-anomaly-status status-${a.status}`}>
+                {ANOMALY_STATUS_LABEL[a.status] ?? a.statusName}
+              </span>
+            </div>
+            <div className="tp-anomaly-meta">
+              {a.deviationMinutes != null && (
+                <span>{a.deviationMinutes > 0 ? '+' : ''}{a.deviationMinutes} min</span>
+              )}
+            </div>
+            {a.employeeNotes && <div className="tp-anomaly-notes">"{a.employeeNotes}"</div>}
+            {a.reviewNotes && (
+              <div className="tp-anomaly-review">Risposta responsabile: {a.reviewNotes}</div>
+            )}
+          </div>
+        ))}
+      </div>
+    ),
+  }))
 
   return (
     <div className="timbratura-page">
@@ -174,56 +242,26 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
         </details>
       )}
 
-      {/* Storico timbrature — collassato di default. */}
+      {/* Storico timbrature — collassato di default, aggregato per giorno e sfogliabile. */}
       <details className="tp-section">
         <summary className="tp-section-head">
           <span className="tp-section-title">Le mie timbrature</span>
-          {entries.length > 0 && <span className="tp-section-count">{entries.length}</span>}
+          {entryDays.length > 0 && <span className="tp-section-count">{entryDays.length} gg</span>}
           <span className="tp-section-chevron">›</span>
         </summary>
         <div className="tp-section-body">
           {loadingHistory ? (
             <div className="tp-loading"><div className="tp-spinner" /></div>
-          ) : days.length === 0 ? (
+          ) : entrySlides.length === 0 ? (
             <div className="tp-empty">Nessuna timbratura registrata negli ultimi 30 giorni.</div>
           ) : (
-            <div className="tp-day-list">
-              {days.map(day => (
-                <div key={day} className="tp-day">
-                  <div className="tp-day-label">
-                    {new Date(day).toLocaleDateString('it-IT', {
-                      weekday: 'long', day: '2-digit', month: 'long',
-                    })}
-                  </div>
-                  <div className="tp-entry-list">
-                    {grouped[day]
-                      .slice()
-                      .sort((a, b) => a.actualTimestampUtc.localeCompare(b.actualTimestampUtc))
-                      .map(e => (
-                        <div key={e.id} className="tp-entry" style={{ borderLeftColor: entryColor(e.type) }}>
-                          <div className="tp-entry-main">
-                            <span className="tp-entry-type" style={{ color: entryColor(e.type) }}>
-                              {entryLabel(e.type)}
-                            </span>
-                            <span className="tp-entry-time">{formatTimestamp(e.actualTimestampUtc)}</span>
-                          </div>
-                          <div className="tp-entry-meta">
-                            <span>{e.eventTitle}</span>
-                            {e.isManualCorrection && <span className="tp-badge tp-badge--manual">Correzione</span>}
-                            {e.geofenceOk === false && <span className="tp-badge tp-badge--geo">Fuori area</span>}
-                          </div>
-                        </div>
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <DayCarousel slides={entrySlides} />
           )}
         </div>
       </details>
 
-      {/* Anomalie già giustificate o risolte — collassate di default. */}
-      {reviewedAnomalies.length > 0 && (
+      {/* Anomalie già giustificate o risolte — collassate, aggregate per giorno e sfogliabili. */}
+      {reviewedSlides.length > 0 && (
         <details className="tp-section">
           <summary className="tp-section-head">
             <span className="tp-section-title">Anomalie in revisione</span>
@@ -231,32 +269,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
             <span className="tp-section-chevron">›</span>
           </summary>
           <div className="tp-section-body">
-            <div className="tp-anomaly-list">
-              {reviewedAnomalies.map(a => (
-                <div key={a.id} className="tp-anomaly" data-status={a.status}>
-                  <div className="tp-anomaly-main">
-                    <span className="tp-anomaly-type">{anomalyTypeLabel(a.type, a.typeName)}</span>
-                    <span className={`tp-anomaly-status status-${a.status}`}>
-                      {ANOMALY_STATUS_LABEL[a.status] ?? a.statusName}
-                    </span>
-                  </div>
-                  <div className="tp-anomaly-meta">
-                    <span>
-                      {new Date(a.workDate).toLocaleDateString('it-IT', {
-                        day: '2-digit', month: 'long',
-                      })}
-                    </span>
-                    {a.deviationMinutes != null && (
-                      <span>{a.deviationMinutes > 0 ? '+' : ''}{a.deviationMinutes} min</span>
-                    )}
-                  </div>
-                  {a.employeeNotes && <div className="tp-anomaly-notes">"{a.employeeNotes}"</div>}
-                  {a.reviewNotes && (
-                    <div className="tp-anomaly-review">Risposta responsabile: {a.reviewNotes}</div>
-                  )}
-                </div>
-              ))}
-            </div>
+            <DayCarousel slides={reviewedSlides} />
           </div>
         </details>
       )}
