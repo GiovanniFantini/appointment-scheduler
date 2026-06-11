@@ -174,13 +174,12 @@ public class EventService : IEventService
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
         var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
 
-        // Add owner participants
         foreach (var empId in request.OwnerEmployeeIds.Distinct())
         {
             evt.Participants.Add(BuildParticipant(empId, true, overrideMap, skillMap));
         }
 
-        // Add co-owner participants (not already added as owner)
+        // I co-owner non vengono aggiunti se già presenti come owner.
         var ownerIds = new HashSet<int>(request.OwnerEmployeeIds);
         foreach (var empId in request.CoOwnerEmployeeIds.Distinct())
         {

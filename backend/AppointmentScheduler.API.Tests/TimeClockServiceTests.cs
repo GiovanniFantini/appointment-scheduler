@@ -1231,6 +1231,53 @@ public class TimeClockServiceTests
     }
 
     [Fact]
+    public async Task ClockOutAsync_DaytimeShiftWithoutEndDate_KeepsEndOnStartDate()
+    {
+        // Turno diurno 09:00→17:00 SENZA EndDate (caso comune). La fine NON deve
+        // slittare al giorno dopo: uscita alle 17:00 → deviazione 0, nessuna anomalia.
+        // Copre il ramo "EndDate null ma end > start" di ResolveEndWall.
+        var nowUtc = new DateTime(2026, 5, 24, 17, 0, 0, DateTimeKind.Utc);
+        var nowWall = new DateTime(2026, 5, 24, 17, 0, 0, DateTimeKind.Unspecified);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(nowUtc);
+        _wallClock.SetupGet(x => x.Now).Returns(nowWall);
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var shift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            Title = "Giornata", StartDate = new DateOnly(2026, 5, 24), EndDate = null,
+            StartTime = new TimeOnly(9, 0), EndTime = new TimeOnly(17, 0),
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = shift, EmployeeId = 11, Employee = new Employee { Id = 11, Kind = EmployeeKind.Internal } }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, GraceOutMinutes = 5, LateClockOutToleranceMinutes = 15 }
+        };
+        var entries = new List<TimeEntry>
+        {
+            new() { Id = 1, MerchantId = 7, BranchId = 3, EmployeeId = 11, EventId = 100, EventParticipantId = 501, Type = TimeEntryType.ClockIn, WorkDate = new DateOnly(2026, 5, 24), ActualTimestampUtc = new DateTime(2026, 5, 24, 9, 0, 0, DateTimeKind.Utc) }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithSet(x => x.TimeEntries, entries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, new List<TimeClockAnomaly>(), x => [x.Id])
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+
+        var result = await service.ClockOutAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
+
+        result.Entry.DeviationMinutes.Should().Be(0);
+        result.Anomaly.Should().BeNull();
+    }
+
+    [Fact]
     public async Task RunMissingPunchDetectionForEmployeeAsync_CreatesMissingClockOut_WhenClockInWithoutClockOut()
     {
         _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));

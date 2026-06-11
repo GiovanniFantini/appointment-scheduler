@@ -42,7 +42,35 @@ fuso; se è un istante e arriva dal client, ricordati `DateTimeUtc.Coerce`.
 
 ## Struttura
 
-- `AppointmentScheduler.API` — controller
-- `AppointmentScheduler.Core` — service (logica applicativa)
-- `AppointmentScheduler.Data` — `ApplicationDbContext`, migration EF
+Backend (`backend/`):
+
+- `AppointmentScheduler.API` — controller, middleware, authorization, converter JSON
+- `AppointmentScheduler.Core` — service (logica applicativa), interfacce, opzioni
+- `AppointmentScheduler.Data` — `ApplicationDbContext`, migration EF, `DbInitializer`
 - `AppointmentScheduler.Shared` — `Models`, `DTOs`, `Enums`, `Helpers`
+- `AppointmentScheduler.API.Tests` — xUnit (test di service e flussi)
+
+Frontend (`frontend/`): quattro app Vite + React + TypeScript + Tailwind che
+condividono `shared-ui` (alias `@scheduler/ui`):
+
+- `admin-app` — back-office amministratore di piattaforma
+- `merchant-app` — gestionale del merchant
+- `employee-app` — app dipendente (turni, timbratura, magazzino, documenti)
+- `shared-ui` — design system condiviso (`ui/`, `form/`, `shell/`, `wizard/`, `auth/`)
+
+## Stile del codice e codice morto
+
+Il codebase è tenuto deliberatamente pulito; quando lavori, mantieni questi invarianti:
+
+- **Commenti**: spiegano *il perché* e i casi limite (turni notturni, concorrenza,
+  wall-clock vs UTC), non *cosa* fa il codice. Non aggiungere commenti che ripetono
+  l'istruzione successiva e non rimuovere quelli che documentano una scelta non ovvia.
+  La lingua dei commenti è l'italiano.
+- **Backend**: la build deve restare a **0 warning** (`dotnet build` in `backend/`).
+  Niente codice commentato, `#region` o `Console.WriteLine` di debug.
+- **Frontend**: i `tsconfig.json` hanno `noUnusedLocals` e `noUnusedParameters`
+  attivi, quindi import/variabili/parametri inutilizzati fanno fallire `tsc`. Niente
+  `console.log` di debug nel codice che va in produzione.
+- **Dead code frontend a livello di modulo** (file/export mai importati): non lo
+  rileva `tsc`. Usa `npx knip` dentro la singola app per trovarli, e verifica sempre
+  con una ricerca prima di eliminare.

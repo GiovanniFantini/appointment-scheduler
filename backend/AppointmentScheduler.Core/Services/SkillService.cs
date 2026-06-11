@@ -266,7 +266,6 @@ public class SkillService : ISkillService
         {
             string? reason = null;
 
-            // Check leaves
             var empLeaves = leaves.Where(l => l.EmployeeId == emp.Id).ToList();
             foreach (var l in empLeaves)
             {
@@ -290,7 +289,7 @@ public class SkillService : ISkillService
                 }
             }
 
-            // Check shift overlap (only if not already unavailable)
+            // Sovrapposizione con altri turni, solo se non già indisponibile per ferie/permessi.
             if (reason == null)
             {
                 foreach (var s in otherShifts.Where(s => s.Participants.Any(p => p.EmployeeId == emp.Id)))

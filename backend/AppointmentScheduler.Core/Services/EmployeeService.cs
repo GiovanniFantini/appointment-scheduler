@@ -164,14 +164,12 @@ public class EmployeeService : IEmployeeService
         // Se RoleId manca/non è valido, usa il ruolo base coerente col tipo risorsa.
         var roleId = await ResolveRoleIdAsync(merchantId, request.RoleId, request.Kind);
 
-        // Check for existing membership (even inactive)
         var existingMembership = await _context.EmployeeMemberships
             .FirstOrDefaultAsync(m => m.EmployeeId == employee.Id && m.MerchantId == merchantId);
 
         EmployeeMembership membershipEntity;
         if (existingMembership != null)
         {
-            // Reactivate existing membership
             existingMembership.IsActive = true;
             existingMembership.RoleId = roleId;
             existingMembership.HomeBranchId = homeBranchId;
@@ -199,7 +197,6 @@ public class EmployeeService : IEmployeeService
         await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
         await SyncBranchAccessAsync(membershipEntity.Id, merchantId, homeBranchId, request.AllowedBranchIds);
 
-        // Return with full membership context
         return (await GetByIdAsync(employee.Id, merchantId))!;
     }
 
@@ -319,12 +316,10 @@ public class EmployeeService : IEmployeeService
 
         var existingSet = existing.Select(e => e.SkillId).ToHashSet();
 
-        // Remove
         var toRemove = existing.Where(e => !desired.Contains(e.SkillId)).ToList();
         if (toRemove.Count > 0)
             _context.EmployeeSkills.RemoveRange(toRemove);
 
-        // Add
         foreach (var sid in desired.Where(s => !existingSet.Contains(s)))
         {
             _context.EmployeeSkills.Add(new EmployeeSkill

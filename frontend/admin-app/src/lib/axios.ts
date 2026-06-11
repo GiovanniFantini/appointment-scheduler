@@ -8,8 +8,6 @@ const baseURL = import.meta.env.PROD
   ? (apiURL.endsWith('/api') ? apiURL : `${apiURL}/api`)
   : '/api'
 
-console.log('API Base URL:', baseURL);
-
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
