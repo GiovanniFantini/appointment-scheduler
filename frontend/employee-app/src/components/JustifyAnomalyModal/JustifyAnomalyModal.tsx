@@ -49,7 +49,7 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
           <h2 className="jam-title">Giustifica anomalia</h2>
           <button className="jam-close" onClick={onClose}>✕</button>
         </div>
-        <form onSubmit={handleSubmit}>
+        <form className="jam-form" onSubmit={handleSubmit}>
           <div className="jam-body">
             {error && <div className="jam-error">{error}</div>}
             <div className="jam-anomaly-info">

@@ -5,7 +5,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  /* Deve stare sopra la bottom-nav mobile (z-index 1050), altrimenti su
+     cellulare la nav copre il footer con il tasto di invio. */
+  z-index: var(--su-z-modal-backdrop);
   padding: 16px;
 }
 
@@ -142,7 +144,9 @@
     width: 100%;
     max-height: 92vh;
     border-radius: var(--su-radius-sheet) var(--su-radius-sheet) 0 0;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
   .jam-box::before {
     content: '';
@@ -152,5 +156,21 @@
     margin: 10px auto 2px;
     border-radius: var(--su-radius-pill);
     background: var(--su-border-strong);
+  }
+  /* Scorre solo il body: header e footer (con "Invia giustificazione")
+     restano ancorati e sempre raggiungibili. */
+  .jam-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+  .jam-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .jam-footer {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
   }
 }

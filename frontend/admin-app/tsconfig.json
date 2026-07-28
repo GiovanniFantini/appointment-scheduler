@@ -15,7 +15,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "baseUrl": ".",
     "paths": {
       "@scheduler/ui": ["../shared-ui/src/index.ts"],
       "@scheduler/ui/*": ["../shared-ui/src/*"]
