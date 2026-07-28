@@ -1,9 +1,12 @@
 import { useState, useEffect, FormEvent } from 'react'
+import { BottomSheet } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import { nativeDateInputProps } from '../../lib/dateUtils'
 import './CreateRequestModal.css'
 
 type RequestType = 'Ferie' | 'Permessi' | 'Malattia'
+
+const FORM_ID = 'create-request-form'
 
 // Mapping from RequestType string to server EmployeeRequestType enum value
 // (see backend/AppointmentScheduler.Shared/Enums/EmployeeRequestType.cs)
@@ -130,132 +133,127 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="create-request-modal" onClick={e => e.stopPropagation()}>
-        <div className="create-request-header">
-          <h2 className="create-request-title">Nuova richiesta</h2>
-          <button className="modal-close-btn" onClick={onClose}>
-            <svg viewBox="0 0 24 24" fill="none">
-              <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+    <BottomSheet
+      open
+      onClose={onClose}
+      title="Nuova richiesta"
+      footer={
+        <>
+          <button type="button" className="btn-secondary" onClick={onClose}>Annulla</button>
+          {/* Il footer dello sheet è fuori dal <form>: l'attributo form= collega il submit. */}
+          <button type="submit" form={FORM_ID} className="btn-primary" disabled={loading}>
+            {loading ? <span className="btn-spinner" /> : 'Invia richiesta'}
           </button>
+        </>
+      }
+    >
+      <form id={FORM_ID} className="create-request-form" onSubmit={handleSubmit}>
+        {error && <div className="form-error">{error}</div>}
+
+        <div className="form-group">
+          <label className="form-label">Tipo richiesta</label>
+          <div className="tipo-selector">
+            {(['Ferie', 'Permessi', 'Malattia'] as RequestType[]).map(t => (
+              <button
+                key={t}
+                type="button"
+                className={`tipo-btn ${tipo === t ? 'tipo-btn--active' : ''}`}
+                onClick={() => setTipo(t)}
+              >
+                {tipoLabels[t]}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <form className="create-request-form" onSubmit={handleSubmit}>
-          {error && <div className="form-error">{error}</div>}
-
+        <div className="form-row">
           <div className="form-group">
-            <label className="form-label">Tipo richiesta</label>
-            <div className="tipo-selector">
-              {(['Ferie', 'Permessi', 'Malattia'] as RequestType[]).map(t => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`tipo-btn ${tipo === t ? 'tipo-btn--active' : ''}`}
-                  onClick={() => setTipo(t)}
-                >
-                  {tipoLabels[t]}
-                </button>
-              ))}
-            </div>
+            <label className="form-label">Data inizio *</label>
+            <input
+              type="date"
+              className="form-input"
+              value={dataInizio}
+              onChange={e => setDataInizio(e.target.value)}
+              {...nativeDateInputProps}
+              required
+            />
           </div>
+          <div className="form-group">
+            <label className="form-label">Data fine</label>
+            <input
+              type="date"
+              className="form-input"
+              value={dataFine}
+              min={dataInizio}
+              onChange={e => setDataFine(e.target.value)}
+              {...nativeDateInputProps}
+            />
+          </div>
+        </div>
 
+        {supportsHourly && (
+          <div className="form-group">
+            <label className="toggle-row">
+              <span className="form-label">Tutto il giorno</span>
+              <div className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
+                <div className="toggle-thumb" />
+              </div>
+            </label>
+          </div>
+        )}
+
+        {supportsHourly && !tuttoIlGiorno && (
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Data inizio *</label>
+              <label className="form-label">Dalle</label>
               <input
-                type="date"
+                type="time"
                 className="form-input"
-                value={dataInizio}
-                onChange={e => setDataInizio(e.target.value)}
-                {...nativeDateInputProps}
+                value={orarioDa}
+                onChange={e => setOrarioDa(e.target.value)}
                 required
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Data fine</label>
+              <label className="form-label">Alle</label>
               <input
-                type="date"
+                type="time"
                 className="form-input"
-                value={dataFine}
-                min={dataInizio}
-                onChange={e => setDataFine(e.target.value)}
-                {...nativeDateInputProps}
+                value={orarioA}
+                onChange={e => setOrarioA(e.target.value)}
+                required
               />
             </div>
           </div>
+        )}
 
-          {supportsHourly && (
-            <div className="form-group">
-              <label className="toggle-row">
-                <span className="form-label">Tutto il giorno</span>
-                <div className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
-                  <div className="toggle-thumb" />
-                </div>
-              </label>
-            </div>
-          )}
-
-          {supportsHourly && !tuttoIlGiorno && (
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label">Dalle</label>
-                <input
-                  type="time"
-                  className="form-input"
-                  value={orarioDa}
-                  onChange={e => setOrarioDa(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label">Alle</label>
-                <input
-                  type="time"
-                  className="form-input"
-                  value={orarioA}
-                  onChange={e => setOrarioA(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-          )}
-
-          {supportsHourly && availableShifts.length > 0 && (
-            <div className="form-group">
-              <label className="form-label">Collega a un turno (opzionale)</label>
-              <select
-                className="form-input"
-                value={linkedEventId ?? ''}
-                onChange={e => setLinkedEventId(e.target.value ? Number(e.target.value) : null)}
-              >
-                <option value="">Nessuno (tutti i turni del giorno)</option>
-                {availableShifts.map(s => (
-                  <option key={s.id} value={s.id}>{formatShiftLabel(s)}</option>
-                ))}
-              </select>
-            </div>
-          )}
-
+        {supportsHourly && availableShifts.length > 0 && (
           <div className="form-group">
-            <label className="form-label">Note</label>
-            <textarea
-              className="form-input form-textarea"
-              placeholder="Eventuali note..."
-              value={note}
-              onChange={e => setNote(e.target.value)}
-              rows={3}
-            />
+            <label className="form-label">Collega a un turno (opzionale)</label>
+            <select
+              className="form-input"
+              value={linkedEventId ?? ''}
+              onChange={e => setLinkedEventId(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">Nessuno (tutti i turni del giorno)</option>
+              {availableShifts.map(s => (
+                <option key={s.id} value={s.id}>{formatShiftLabel(s)}</option>
+              ))}
+            </select>
           </div>
+        )}
 
-          <div className="create-request-footer">
-            <button type="button" className="btn-secondary" onClick={onClose}>Annulla</button>
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? <span className="btn-spinner" /> : 'Invia richiesta'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="form-group">
+          <label className="form-label">Note</label>
+          <textarea
+            className="form-input form-textarea"
+            placeholder="Eventuali note..."
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            rows={3}
+          />
+        </div>
+      </form>
+    </BottomSheet>
   )
 }

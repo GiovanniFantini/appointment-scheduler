@@ -18,12 +18,18 @@ public class TimeClockService : ITimeClockService
     private readonly IApplicationDbContext _context;
     private readonly IUtcClock _utcClock;
     private readonly IWallClock _wallClock;
+    private readonly INotificationService _notificationService;
 
-    public TimeClockService(IApplicationDbContext context, IUtcClock utcClock, IWallClock wallClock)
+    public TimeClockService(
+        IApplicationDbContext context,
+        IUtcClock utcClock,
+        IWallClock wallClock,
+        INotificationService notificationService)
     {
         _context = context;
         _utcClock = utcClock;
         _wallClock = wallClock;
+        _notificationService = notificationService;
     }
 
     // ── Stato corrente ─────────────────────────────────────────────────────
@@ -219,7 +225,7 @@ public class TimeClockService : ITimeClockService
             // filiale è a timbratura facoltativa, la finestra chiusa non è una
             // mancata timbratura: niente "scaduto", solo una nota neutra.
             var windowClosed = endWall != null && nowWall > endWall.Value;
-            if (windowClosed && settings.ClockingRequired)
+            if (windowClosed && settings.IsClockingRequiredOn(ctx.Event.StartDate))
             {
                 dto.StatusMessage = "Finestra di timbratura chiusa.";
                 dto.IsExpired = true;
@@ -542,6 +548,18 @@ public class TimeClockService : ITimeClockService
             _context.BranchTimeClockSettings.Add(settings);
         }
 
+        // L'obbligo di timbratura vale solo da qui in avanti: la data di attivazione
+        // delimita il rilevamento delle mancate timbrature, altrimenti abilitandolo
+        // il dipendente si troverebbe da giustificare tutti i turni precedenti.
+        // Si aggiorna solo sui passaggi di stato, così un salvataggio di altre
+        // impostazioni non sposta in avanti la decorrenza.
+        var wasRequired = settings.IsEnabled && settings.ClockingRequired;
+        var isRequired = request.IsEnabled && request.ClockingRequired;
+        if (isRequired && !wasRequired)
+            settings.ClockingRequiredSince = DateOnly.FromDateTime(_utcClock.UtcNow);
+        else if (!isRequired)
+            settings.ClockingRequiredSince = null;
+
         settings.IsEnabled = request.IsEnabled;
         settings.ClockingRequired = request.ClockingRequired;
         settings.GraceInMinutes = request.GraceInMinutes;
@@ -646,6 +664,11 @@ public class TimeClockService : ITimeClockService
         anomaly.UpdatedAt = _utcClock.UtcNow;
 
         await _context.SaveChangesAsync();
+
+        // Il giustificativo non è auto-accettato: resta in attesa finché un
+        // responsabile non lo revisiona, quindi va notificato a chi può deciderlo.
+        await NotifyReviewersAsync(anomaly);
+
         return MapAnomaly(anomaly);
     }
 
@@ -758,9 +781,159 @@ public class TimeClockService : ITimeClockService
         anomaly.ReviewedAt = _utcClock.UtcNow;
         anomaly.UpdatedAt = _utcClock.UtcNow;
 
+        // Giustificativo respinto su una giornata non timbrata: la giornata non è
+        // recuperabile come lavorata e viene registrata come ferie già approvate.
+        var leaveCreated = false;
+        if (newStatus == TimeClockAnomalyStatus.Rejected)
+            leaveCreated = await TryCreateLeaveForRejectedAnomalyAsync(anomaly, userId);
+
         await _context.SaveChangesAsync();
+
+        await NotifyEmployeeOfReviewAsync(anomaly, newStatus, leaveCreated);
+
         return MapAnomaly(anomaly);
     }
+
+    /// <summary>
+    /// Registra una giornata di ferie approvate quando il responsabile respinge il
+    /// giustificativo di una mancata entrata: il turno non è stato lavorato e la
+    /// giornata va scalata dalle ferie. Vale solo per <see cref="TimeClockAnomalyType.MissingClockIn"/>
+    /// (giornata intera non lavorata): una mancata uscita o un ritardo non
+    /// corrispondono a un giorno di assenza. Ritorna false se le ferie erano già
+    /// presenti per quella data.
+    /// </summary>
+    private async Task<bool> TryCreateLeaveForRejectedAnomalyAsync(TimeClockAnomaly anomaly, int userId)
+    {
+        if (anomaly.Type != TimeClockAnomalyType.MissingClockIn)
+            return false;
+
+        var alreadyOnLeave = await _context.EmployeeRequests.AnyAsync(r =>
+            r.MerchantId == anomaly.MerchantId
+            && r.EmployeeId == anomaly.EmployeeId
+            && r.Status != RequestStatus.Rejected
+            && r.StartDate <= anomaly.WorkDate
+            && (r.EndDate ?? r.StartDate) >= anomaly.WorkDate);
+
+        if (alreadyOnLeave)
+            return false;
+
+        var now = _utcClock.UtcNow;
+        _context.EmployeeRequests.Add(new EmployeeRequest
+        {
+            EmployeeId = anomaly.EmployeeId,
+            MerchantId = anomaly.MerchantId,
+            Type = EmployeeRequestType.Ferie,
+            Status = RequestStatus.Approved,
+            StartDate = anomaly.WorkDate,
+            EndDate = anomaly.WorkDate,
+            EventId = anomaly.EventId,
+            Notes = $"Ferie registrate d'ufficio: giustificativo di mancata timbratura del {anomaly.WorkDate:dd/MM/yyyy} respinto.",
+            ReviewNotes = anomaly.ReviewNotes,
+            ReviewedByUserId = userId,
+            ReviewedAt = now,
+            CreatedAt = now,
+            UpdatedAt = now
+        });
+
+        return true;
+    }
+
+    /// <summary>
+    /// Notifica i responsabili abilitati alla revisione (livello Manager sulla feature
+    /// Timbratura) più l'utente titolare del merchant. No-op per i dipendenti non
+    /// ancora associati a un account utente.
+    /// </summary>
+    private async Task NotifyReviewersAsync(TimeClockAnomaly anomaly)
+    {
+        var reviewerUserIds = await _context.EmployeeMemberships
+            .Where(m => m.MerchantId == anomaly.MerchantId
+                        && m.IsActive
+                        && m.Employee.UserId != null
+                        && m.Role.Features.Any(f => f.Feature == MerchantFeature.Timbratura
+                                                    && f.IsEnabled
+                                                    && f.AccessLevel == FeatureAccessLevel.Manager))
+            .Select(m => m.Employee.UserId!.Value)
+            .ToListAsync();
+
+        var ownerUserId = await _context.Merchants
+            .Where(m => m.Id == anomaly.MerchantId)
+            .Select(m => (int?)m.UserId)
+            .FirstOrDefaultAsync();
+
+        if (ownerUserId.HasValue)
+            reviewerUserIds.Add(ownerUserId.Value);
+
+        var employeeName = anomaly.Employee == null
+            ? "Un dipendente"
+            : $"{anomaly.Employee.FirstName} {anomaly.Employee.LastName}";
+
+        var title = "Giustificativo timbratura da approvare";
+        var message = $"{employeeName} ha giustificato \"{AnomalyTypeLabel(anomaly.Type)}\" del {anomaly.WorkDate:dd/MM/yyyy}"
+                      + $" — motivo: {ReasonLabel(anomaly.EmployeeReason)}.";
+        if (!string.IsNullOrWhiteSpace(anomaly.EmployeeNotes))
+            message += $" Note: {anomaly.EmployeeNotes}";
+
+        foreach (var reviewerUserId in reviewerUserIds.Distinct())
+        {
+            await _notificationService.CreateAsync(
+                reviewerUserId, title, message, NotificationType.RequestSubmitted, anomaly.Id);
+        }
+    }
+
+    /// <summary>
+    /// Notifica al dipendente l'esito della revisione del giustificativo.
+    /// No-op se l'employee non ha ancora un account utente.
+    /// </summary>
+    private async Task NotifyEmployeeOfReviewAsync(
+        TimeClockAnomaly anomaly, TimeClockAnomalyStatus newStatus, bool leaveCreated)
+    {
+        if (anomaly.Employee?.UserId == null)
+            return;
+
+        var approved = newStatus == TimeClockAnomalyStatus.Approved;
+        var outcomeLabel = approved ? "approvato" : "respinto";
+
+        var title = $"Giustificativo timbratura {outcomeLabel}";
+        var message = $"Il giustificativo per \"{AnomalyTypeLabel(anomaly.Type)}\" del {anomaly.WorkDate:dd/MM/yyyy} è stato {outcomeLabel}.";
+        if (leaveCreated)
+            message += " La giornata è stata registrata come ferie.";
+        if (!string.IsNullOrWhiteSpace(anomaly.ReviewNotes))
+            message += $" Note: {anomaly.ReviewNotes}";
+
+        await _notificationService.CreateAsync(
+            anomaly.Employee.UserId.Value,
+            title,
+            message,
+            approved ? NotificationType.RequestApproved : NotificationType.RequestRejected,
+            anomaly.Id);
+    }
+
+    private static string AnomalyTypeLabel(TimeClockAnomalyType type) => type switch
+    {
+        TimeClockAnomalyType.LateClockIn => "Entrata in ritardo",
+        TimeClockAnomalyType.EarlyClockIn => "Entrata in anticipo",
+        TimeClockAnomalyType.LateClockOut => "Uscita in ritardo",
+        TimeClockAnomalyType.EarlyClockOut => "Uscita in anticipo",
+        TimeClockAnomalyType.MissingClockIn => "Entrata mancante",
+        TimeClockAnomalyType.MissingClockOut => "Uscita mancante",
+        TimeClockAnomalyType.ExtendedBreak => "Pausa prolungata",
+        TimeClockAnomalyType.LocationMismatch => "Fuori area filiale",
+        TimeClockAnomalyType.OvertimeDetected => "Straordinario rilevato",
+        _ => "Anomalia timbratura"
+    };
+
+    private static string ReasonLabel(TimeClockAnomalyReason? reason) => reason switch
+    {
+        TimeClockAnomalyReason.Traffic => "traffico / imprevisto di viaggio",
+        TimeClockAnomalyReason.AuthorizedLeave => "permesso autorizzato",
+        TimeClockAnomalyReason.TimeRecovery => "recupero ore",
+        TimeClockAnomalyReason.PersonalEmergency => "emergenza personale",
+        TimeClockAnomalyReason.Forgotten => "dimenticanza della timbratura",
+        TimeClockAnomalyReason.TechnicalIssue => "problema tecnico",
+        TimeClockAnomalyReason.SmartWorking => "lavoro da remoto",
+        TimeClockAnomalyReason.Other => "altro",
+        _ => "non specificato"
+    };
 
     public async Task<int> RunMissingPunchDetectionAsync(int merchantId, int? branchId)
     {
@@ -815,19 +988,19 @@ public class TimeClockService : ITimeClockService
     {
         if (participants.Count == 0) return 0;
 
-        // Timbratura facoltativa (ClockingRequired = false): la mancata timbratura
-        // non è un'anomalia. Il flag è per-filiale, quindi si filtrano i turni in
-        // base alla filiale a cui appartengono. Le filiali senza riga di config
-        // ereditano il default (facoltativa), coerente con GetOrDefaultSettingsAsync.
+        // La mancata timbratura è un'anomalia solo dove l'obbligo era in vigore il
+        // giorno del turno: il flag e la sua decorrenza sono per-filiale, quindi si
+        // valutano turno per turno sulla filiale a cui appartengono. Le filiali
+        // senza riga di config ereditano il default (facoltativa), coerente con
+        // GetOrDefaultSettingsAsync.
         var branchIds = participants.Select(p => p.Event.BranchId).Distinct().ToList();
-        var requiredBranchIds = await _context.BranchTimeClockSettings
-            .Where(s => branchIds.Contains(s.BranchId) && s.ClockingRequired)
-            .Select(s => s.BranchId)
-            .ToListAsync();
-        var requiredBranchSet = requiredBranchIds.ToHashSet();
+        var settingsByBranch = await _context.BranchTimeClockSettings
+            .Where(s => branchIds.Contains(s.BranchId))
+            .ToDictionaryAsync(s => s.BranchId);
 
         participants = participants
-            .Where(p => requiredBranchSet.Contains(p.Event.BranchId))
+            .Where(p => settingsByBranch.TryGetValue(p.Event.BranchId, out var s)
+                        && s.IsClockingRequiredOn(p.Event.StartDate))
             .ToList();
         if (participants.Count == 0) return 0;
 
@@ -1434,6 +1607,7 @@ public class TimeClockService : ITimeClockService
         BranchName = branch.Name,
         IsEnabled = s.IsEnabled,
         ClockingRequired = s.ClockingRequired,
+        ClockingRequiredSince = s.ClockingRequiredSince,
         GraceInMinutes = s.GraceInMinutes,
         GraceOutMinutes = s.GraceOutMinutes,
         EarlyClockInToleranceMinutes = s.EarlyClockInToleranceMinutes,

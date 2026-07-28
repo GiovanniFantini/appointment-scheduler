@@ -613,6 +613,17 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
     setParticipantSkills(prev => prev.filter(p => p.employeeId !== employeeId))
   }
 
+  // Avviso non bloccante su un turno già iniziato: modificarlo è legittimo
+  // (capita di aggiungere un collaboratore a turno avviato), ma chi ha già
+  // timbrato non può essere tolto. Gli orari del turno sono wall-clock locali,
+  // quindi il confronto va fatto con l'ora locale del browser, non in UTC.
+  const shiftAlreadyStarted = useMemo(() => {
+    if (!isEdit || event?.eventType !== 'Turno' || !event.startDate) return false
+    const time = event.isAllDay || !event.startTime ? '00:00' : event.startTime.slice(0, 5)
+    const start = new Date(`${event.startDate}T${time}:00`)
+    return !isNaN(start.getTime()) && start.getTime() <= Date.now()
+  }, [isEdit, event])
+
   const selectedEmployeeConflictCount = isEmployeeAbsenceEvent && selectedOwnerIds[0] != null
     ? blockingConflicts.filter(conflict => conflict.employeeId === selectedOwnerIds[0]).length
     : 0
@@ -643,6 +654,13 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
         <div className="modal-body">
           {error && <div className="modal-error">{error}</div>}
+
+          {shiftAlreadyStarted && (
+            <div className="modal-notice" role="status">
+              Turno già iniziato: puoi comunque modificarlo e aggiungere personale.
+              I dipendenti che hanno già timbrato non possono essere rimossi.
+            </div>
+          )}
 
           {blockingConflicts.length > 0 && (
             <div className="modal-conflict" role="alert">

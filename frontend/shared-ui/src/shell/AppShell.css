@@ -12,7 +12,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.6);
-  z-index: 1100;
+  z-index: var(--su-z-drawer-backdrop);
 }
 .su-shell__overlay--visible {
   display: block;
@@ -59,7 +59,7 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.25s ease, width 0.25s ease;
-  z-index: 1150;
+  z-index: var(--su-z-drawer);
 }
 
 .su-sidebar__brand {
@@ -212,7 +212,7 @@
   gap: 16px;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: var(--su-z-sticky);
 }
 
 .su-header__hamburger {

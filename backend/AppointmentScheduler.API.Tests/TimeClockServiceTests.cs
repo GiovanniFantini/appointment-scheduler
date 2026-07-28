@@ -7,6 +7,7 @@ public class TimeClockServiceTests
 {
     private readonly Mock<IUtcClock> _utcClock = new();
     private readonly Mock<IWallClock> _wallClock = new();
+    private readonly Mock<INotificationService> _notifications = new();
 
     [Fact]
     public async Task GetMyEntriesAsync_ReturnsMappedEntriesInDescendingOrder()
@@ -64,7 +65,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetMyEntriesAsync(11, 7, new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31));
 
@@ -88,7 +89,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetEntriesAsync(7, branchId: 3, from: new DateOnly(2026, 5, 1), to: new DateOnly(2026, 5, 31), employeeId: 11);
 
@@ -107,7 +108,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.EventParticipants, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetCurrentStatusAsync(11, 7);
 
@@ -127,7 +128,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.EventParticipants, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.ClockInAsync(11, 7, new ClockActionRequest());
 
@@ -172,7 +173,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.ClockOutAsync(11, 7, new ClockActionRequest());
 
@@ -188,7 +189,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.BranchTimeClockSettings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.GetSettingsAsync(3, 7);
 
@@ -209,7 +210,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.BranchTimeClockSettings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.UpdateSettingsAsync(3, 7, new UpdateTimeClockSettingsRequest
         {
@@ -256,7 +257,7 @@ public class TimeClockServiceTests
         var anomalies = new List<TimeClockAnomaly>();
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -266,7 +267,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionAsync(7, null);
 
@@ -296,7 +297,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.JustifyAnomalyAsync(1, 11, 7, new JustifyAnomalyRequest { Reason = TimeClockAnomalyReason.PersonalEmergency });
 
@@ -329,7 +330,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.ApproveAnomalyAsync(7, 7, 101, new ReviewAnomalyRequest { ReviewNotes = "Giustificata" });
 
@@ -338,6 +339,188 @@ public class TimeClockServiceTests
         anomalies[0].ReviewedAt.Should().Be(now);
         anomalies[0].UpdatedAt.Should().Be(now);
         tracker.Count.Should().Be(1);
+    }
+
+    [Fact]
+    public async Task JustifyAnomalyAsync_LeavesAnomalyPending_AndNotifiesReviewers()
+    {
+        var now = new DateTime(2026, 5, 24, 12, 0, 0, DateTimeKind.Utc);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var anomalies = new List<TimeClockAnomaly>
+        {
+            new()
+            {
+                Id = 7,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Status = TimeClockAnomalyStatus.Open,
+                Type = TimeClockAnomalyType.MissingClockIn,
+                WorkDate = new DateOnly(2026, 5, 23),
+                Employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 }
+            }
+        };
+
+        var managerRole = new MerchantRole
+        {
+            Id = 1,
+            MerchantId = 7,
+            Features =
+            [
+                new RoleFeature { Id = 1, RoleId = 1, Feature = MerchantFeature.Timbratura, IsEnabled = true, AccessLevel = FeatureAccessLevel.Manager }
+            ]
+        };
+        var operatorRole = new MerchantRole
+        {
+            Id = 2,
+            MerchantId = 7,
+            Features =
+            [
+                new RoleFeature { Id = 2, RoleId = 2, Feature = MerchantFeature.Timbratura, IsEnabled = true, AccessLevel = FeatureAccessLevel.Operator }
+            ]
+        };
+
+        var memberships = new List<EmployeeMembership>
+        {
+            new() { Id = 1, MerchantId = 7, EmployeeId = 20, RoleId = 1, Role = managerRole, IsActive = true, Employee = new Employee { Id = 20, UserId = 90 } },
+            new() { Id = 2, MerchantId = 7, EmployeeId = 21, RoleId = 2, Role = operatorRole, IsActive = true, Employee = new Employee { Id = 21, UserId = 91 } }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.EmployeeMemberships, memberships, x => [x.Id])
+            .WithSet(x => x.Merchants, [new Merchant { Id = 7, UserId = 1 }], x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        var result = await service.JustifyAnomalyAsync(
+            7, 11, 7, new JustifyAnomalyRequest { Reason = TimeClockAnomalyReason.Forgotten, Notes = "Ho dimenticato" });
+
+        result.Status.Should().Be(TimeClockAnomalyStatus.Justified);
+        _notifications.Verify(x => x.CreateAsync(90, It.IsAny<string>(), It.IsAny<string>(), NotificationType.RequestSubmitted, 7), Times.Once);
+        _notifications.Verify(x => x.CreateAsync(1, It.IsAny<string>(), It.IsAny<string>(), NotificationType.RequestSubmitted, 7), Times.Once);
+        _notifications.Verify(x => x.CreateAsync(91, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<NotificationType>(), It.IsAny<int?>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task RejectAnomalyAsync_RegistersApprovedLeave_ForMissingClockIn()
+    {
+        var now = new DateTime(2026, 5, 24, 12, 0, 0, DateTimeKind.Utc);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var anomalies = new List<TimeClockAnomaly>
+        {
+            new()
+            {
+                Id = 7,
+                MerchantId = 7,
+                EmployeeId = 11,
+                EventId = 100,
+                Status = TimeClockAnomalyStatus.Justified,
+                Type = TimeClockAnomalyType.MissingClockIn,
+                WorkDate = new DateOnly(2026, 5, 23),
+                Employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 }
+            }
+        };
+        var requests = new List<EmployeeRequest>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        var result = await service.RejectAnomalyAsync(7, 7, 101, new ReviewAnomalyRequest { ReviewNotes = "Assenza non giustificata" });
+
+        result.Status.Should().Be(TimeClockAnomalyStatus.Rejected);
+        requests.Should().ContainSingle();
+        requests[0].Type.Should().Be(EmployeeRequestType.Ferie);
+        requests[0].Status.Should().Be(RequestStatus.Approved);
+        requests[0].StartDate.Should().Be(new DateOnly(2026, 5, 23));
+        requests[0].EndDate.Should().Be(new DateOnly(2026, 5, 23));
+        requests[0].EventId.Should().Be(100);
+        requests[0].ReviewedByUserId.Should().Be(101);
+        _notifications.Verify(x => x.CreateAsync(55, It.IsAny<string>(), It.IsAny<string>(), NotificationType.RequestRejected, 7), Times.Once);
+    }
+
+    [Fact]
+    public async Task RejectAnomalyAsync_DoesNotRegisterLeave_ForMissingClockOut()
+    {
+        var now = new DateTime(2026, 5, 24, 12, 0, 0, DateTimeKind.Utc);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var anomalies = new List<TimeClockAnomaly>
+        {
+            new()
+            {
+                Id = 7,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Status = TimeClockAnomalyStatus.Justified,
+                Type = TimeClockAnomalyType.MissingClockOut,
+                WorkDate = new DateOnly(2026, 5, 23),
+                Employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 }
+            }
+        };
+        var requests = new List<EmployeeRequest>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        await service.RejectAnomalyAsync(7, 7, 101, new ReviewAnomalyRequest());
+
+        requests.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RejectAnomalyAsync_DoesNotDuplicateLeave_WhenDayAlreadyCoveredByRequest()
+    {
+        var now = new DateTime(2026, 5, 24, 12, 0, 0, DateTimeKind.Utc);
+        _utcClock.SetupGet(x => x.UtcNow).Returns(now);
+
+        var anomalies = new List<TimeClockAnomaly>
+        {
+            new()
+            {
+                Id = 7,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Status = TimeClockAnomalyStatus.Justified,
+                Type = TimeClockAnomalyType.MissingClockIn,
+                WorkDate = new DateOnly(2026, 5, 23),
+                Employee = new Employee { Id = 11, FirstName = "Mario", LastName = "Rossi", UserId = 55 }
+            }
+        };
+        var requests = new List<EmployeeRequest>
+        {
+            new()
+            {
+                Id = 1,
+                MerchantId = 7,
+                EmployeeId = 11,
+                Type = EmployeeRequestType.Malattia,
+                Status = RequestStatus.Approved,
+                StartDate = new DateOnly(2026, 5, 22),
+                EndDate = new DateOnly(2026, 5, 25)
+            }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .WithSet(x => x.EmployeeRequests, requests, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        await service.RejectAnomalyAsync(7, 7, 101, new ReviewAnomalyRequest());
+
+        requests.Should().ContainSingle();
     }
 
     [Fact]
@@ -350,7 +533,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.BranchTimeClockSettings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetSettingsAsync(3, 7);
 
@@ -373,7 +556,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build(out var tracker);
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.UpdateSettingsAsync(3, 7, new UpdateTimeClockSettingsRequest
         {
@@ -402,13 +585,86 @@ public class TimeClockServiceTests
     }
 
     [Fact]
+    public async Task UpdateSettingsAsync_SetsClockingRequiredSince_OnlyWhenObligationStarts()
+    {
+        // L'obbligo decorre dal giorno in cui viene acceso; i salvataggi successivi
+        // di altre impostazioni non devono spostarne la decorrenza in avanti,
+        // altrimenti i turni già coperti tornerebbero fuori perimetro.
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var settings = new List<BranchTimeClockSettings>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+        var enabled = await service.UpdateSettingsAsync(3, 7, RequiredSettingsRequest());
+        enabled.ClockingRequiredSince.Should().Be(new DateOnly(2026, 5, 24));
+
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 30, 13, 0, 0, DateTimeKind.Utc));
+        var resaved = await service.UpdateSettingsAsync(3, 7, RequiredSettingsRequest());
+        resaved.ClockingRequiredSince.Should().Be(new DateOnly(2026, 5, 24));
+    }
+
+    [Fact]
+    public async Task UpdateSettingsAsync_ClearsClockingRequiredSince_WhenObligationIsRemoved()
+    {
+        // Tolto l'obbligo la decorrenza si azzera: se verrà riattivato ripartirà
+        // dalla nuova data, senza segnalare i turni del periodo di sospensione.
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new()
+            {
+                Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true,
+                ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1)
+            }
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 13, 0, 0, DateTimeKind.Utc));
+
+        var request = RequiredSettingsRequest();
+        request.ClockingRequired = false;
+        var result = await service.UpdateSettingsAsync(3, 7, request);
+
+        result.ClockingRequiredSince.Should().BeNull();
+        settings[0].ClockingRequiredSince.Should().BeNull();
+    }
+
+    private static UpdateTimeClockSettingsRequest RequiredSettingsRequest() => new()
+    {
+        IsEnabled = true,
+        ClockingRequired = true,
+        GraceInMinutes = 5,
+        GraceOutMinutes = 5,
+        EarlyClockInToleranceMinutes = 10,
+        LateClockOutToleranceMinutes = 10,
+        GeofencingEnabled = false,
+        GeofenceRadiusMeters = 150,
+        BreakTrackingEnabled = true,
+        MaxBreakMinutes = 45,
+        RoundingMinutes = 0,
+        RequirePhoto = false
+    };
+
+    [Fact]
     public async Task CreateManualEntryAsync_Throws_WhenParticipantIsMissing()
     {
         var context = new ApplicationDbContextMockBuilder()
             .WithEmptySet(x => x.EventParticipants, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.CreateManualEntryAsync(7, 101, new CreateManualEntryRequest
         {
@@ -443,7 +699,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.EventParticipants, new List<EventParticipant> { eventParticipant }, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var act = () => service.CreateManualEntryAsync(7, 101, new CreateManualEntryRequest
         {
@@ -514,7 +770,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var report = await service.GetReportAsync(7, 3, new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31));
 
@@ -539,7 +795,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetAnomaliesAsync(7, branchId: 3, status: TimeClockAnomalyStatus.Open);
 
@@ -560,7 +816,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetMyAnomaliesAsync(11, 7, TimeClockAnomalyStatus.Open);
 
@@ -606,7 +862,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.ClockInAsync(11, 7, new ClockActionRequest());
 
@@ -663,7 +919,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -696,7 +952,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -728,7 +984,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -753,7 +1009,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -779,7 +1035,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeEntries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -825,7 +1081,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -868,7 +1124,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeEntries, entries, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -885,7 +1141,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var stats = await service.GetWellbeingStatsAsync(11, 7);
 
@@ -917,7 +1173,13 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = clockingRequired, LateClockOutToleranceMinutes = lateClockOutTolerance }
+            new()
+            {
+                Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true,
+                ClockingRequired = clockingRequired,
+                ClockingRequiredSince = clockingRequired ? new DateOnly(2026, 5, 1) : null,
+                LateClockOutToleranceMinutes = lateClockOutTolerance
+            }
         };
         return (participants, settings);
     }
@@ -939,7 +1201,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -970,7 +1232,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -995,7 +1257,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -1023,7 +1285,7 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1033,7 +1295,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 
@@ -1062,7 +1324,7 @@ public class TimeClockServiceTests
         var anomalies = new List<TimeClockAnomaly>();
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1072,7 +1334,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
 
@@ -1099,7 +1361,7 @@ public class TimeClockServiceTests
         var anomalies = new List<TimeClockAnomaly>();
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1109,7 +1371,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var first = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
         var second = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
@@ -1142,7 +1404,7 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1152,7 +1414,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
 
@@ -1200,7 +1462,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.ClockOutAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
 
@@ -1241,7 +1503,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.ClockInAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
 
@@ -1289,7 +1551,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.MerchantBranches, new List<MerchantBranch> { branch }, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.ClockOutAsync(11, 7, new ClockActionRequest { EventParticipantId = 501 });
 
@@ -1319,7 +1581,7 @@ public class TimeClockServiceTests
         var anomalies = new List<TimeClockAnomaly>();
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true }
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) }
         };
 
         var context = new ApplicationDbContextMockBuilder()
@@ -1329,7 +1591,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
 
@@ -1357,7 +1619,113 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(0);
+        anomalies.Should().BeEmpty();
+    }
+
+    // ── Decorrenza dell'obbligo: nessuna anomalia retroattiva ───────────────
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_IgnoresShiftsBeforeClockingRequiredSince()
+    {
+        // Obbligo attivato il 23/05: il turno del 22/05 non deve generare nulla,
+        // quello del 23/05 sì. Senza decorrenza, abilitare la timbratura
+        // riempirebbe la lista di anomalie da giustificare su tutto lo storico.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ", IsActive = true };
+        var employee = new Employee { Id = 11, Kind = EmployeeKind.Internal };
+        var beforeShift = new Event
+        {
+            Id = 100, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 22)
+        };
+        var afterShift = new Event
+        {
+            Id = 101, MerchantId = 7, BranchId = 3, Branch = branch, EventType = EventType.Turno,
+            StartDate = new DateOnly(2026, 5, 23)
+        };
+        var participants = new List<EventParticipant>
+        {
+            new() { Id = 501, EventId = 100, Event = beforeShift, EmployeeId = 11, Employee = employee },
+            new() { Id = 502, EventId = 101, Event = afterShift, EmployeeId = 11, Employee = employee }
+        };
+        var settings = new List<BranchTimeClockSettings>
+        {
+            new()
+            {
+                Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true,
+                ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 23)
+            }
+        };
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(1);
+        anomalies.Should().ContainSingle(a => a.EventParticipantId == 502);
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_SkipsShift_WhenClockingRequiredWithoutStartDate()
+    {
+        // Obbligo senza decorrenza (configurazione incoerente): non essendoci una
+        // data da cui far valere la regola, non si segnala nulla.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), new TimeOnly(17, 0));
+        settings[0].ClockingRequiredSince = null;
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
+
+        var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
+
+        created.Should().Be(0);
+        anomalies.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task RunMissingPunchDetectionForEmployeeAsync_SkipsShift_WhenClockingDisabledForBranch()
+    {
+        // Timbratura disattivata ma obbligo rimasto acceso in configurazione:
+        // finché la filiale non timbra non ci sono mancate timbrature.
+        _utcClock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Utc));
+        _wallClock.SetupGet(x => x.Now).Returns(new DateTime(2026, 5, 24, 10, 0, 0, DateTimeKind.Unspecified));
+
+        var (participants, settings) = YesterdayShift(new TimeOnly(9, 0), new TimeOnly(17, 0));
+        settings[0].IsEnabled = false;
+        var anomalies = new List<TimeClockAnomaly>();
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.EventParticipants, participants, x => [x.Id])
+            .WithSet(x => x.BranchTimeClockSettings, settings, x => [x.Id])
+            .WithEmptySet(x => x.TimeEntries, x => [x.Id])
+            .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
+            .Build();
+
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionForEmployeeAsync(11, 7);
 
@@ -1384,7 +1752,7 @@ public class TimeClockServiceTests
         };
         var settings = new List<BranchTimeClockSettings>
         {
-            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true },
+            new() { Id = 10, BranchId = 3, MerchantId = 7, IsEnabled = true, ClockingRequired = true, ClockingRequiredSince = new DateOnly(2026, 5, 1) },
             new() { Id = 11, BranchId = 4, MerchantId = 7, IsEnabled = true, ClockingRequired = false }
         };
         var anomalies = new List<TimeClockAnomaly>();
@@ -1396,7 +1764,7 @@ public class TimeClockServiceTests
             .WithSet(x => x.TimeClockAnomalies, anomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var created = await service.RunMissingPunchDetectionAsync(7, null);
 
@@ -1437,7 +1805,7 @@ public class TimeClockServiceTests
             .WithEmptySet(x => x.TimeClockAnomalies, x => [x.Id])
             .Build();
 
-        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object);
+        var service = new TimeClockService(context.Object, _utcClock.Object, _wallClock.Object, _notifications.Object);
 
         var result = await service.GetTodayShiftsAsync(11, 7);
 

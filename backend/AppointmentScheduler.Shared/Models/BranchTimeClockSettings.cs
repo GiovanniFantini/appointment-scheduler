@@ -25,6 +25,25 @@ public class BranchTimeClockSettings
     /// </summary>
     public bool ClockingRequired { get; set; } = false;
 
+    /// <summary>
+    /// Data di decorrenza dell'obbligo di timbratura. L'obbligo non è retroattivo:
+    /// i turni precedenti a questa data non generano anomalie di mancata timbratura.
+    /// Viene impostata quando la timbratura diventa obbligatoria e azzerata quando
+    /// l'obbligo (o la timbratura stessa) viene tolto, così una riattivazione
+    /// riparte dalla nuova data e il periodo di sospensione non viene segnalato.
+    /// Null = nessun obbligo, coerente con <see cref="ClockingRequired"/> a false.
+    /// </summary>
+    public DateOnly? ClockingRequiredSince { get; set; }
+
+    /// <summary>
+    /// Unico punto di verità sull'obbligo di timbratura per una data: la
+    /// timbratura dev'essere attiva, obbligatoria e già in vigore in quel giorno.
+    /// Da usare ovunque si decida se un turno non timbrato è un'anomalia.
+    /// </summary>
+    public bool IsClockingRequiredOn(DateOnly date)
+        => IsEnabled && ClockingRequired
+           && ClockingRequiredSince.HasValue && date >= ClockingRequiredSince.Value;
+
     // ── Tolleranze (in minuti) ────────────────────────────────────────────
 
     /// <summary>Ritardo tollerato in entrata prima di generare un'anomalia.</summary>

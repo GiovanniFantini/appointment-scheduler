@@ -5,6 +5,8 @@ export interface BranchTimeClockSettings {
   branchName: string
   isEnabled: boolean
   clockingRequired: boolean
+  /** Data (YYYY-MM-DD) da cui vale l'obbligo. Valorizzata dal server, sola lettura. */
+  clockingRequiredSince?: string | null
   graceInMinutes: number
   graceOutMinutes: number
   earlyClockInToleranceMinutes: number
@@ -21,7 +23,7 @@ export interface BranchTimeClockSettings {
 
 export type UpdateTimeClockSettingsRequest = Omit<
   BranchTimeClockSettings,
-  'branchId' | 'branchName' | 'branchLatitude' | 'branchLongitude'
+  'branchId' | 'branchName' | 'clockingRequiredSince' | 'branchLatitude' | 'branchLongitude'
 > & {
   /** Coordinate filiale per il geofence; null = lascia invariate. */
   branchLatitude?: number | null

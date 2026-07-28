@@ -238,4 +238,51 @@ public class EventServiceTests
         result.Should().BeTrue();
         tracker.Count.Should().Be(1);
     }
+
+    [Fact]
+    public async Task UpdateAssignmentsAsync_Throws_WhenRemovingParticipantWithTimeEntries()
+    {
+        var branch = new MerchantBranch { Id = 3, MerchantId = 7, Name = "HQ" };
+        var clockedIn = new EventParticipant { Id = 55, EventId = 100, EmployeeId = 12, IsOwner = true };
+        var shift = new Event
+        {
+            Id = 100,
+            MerchantId = 7,
+            BranchId = 3,
+            Branch = branch,
+            EventType = EventType.Turno,
+            Title = "Turno mattina",
+            StartDate = new DateOnly(2026, 6, 1),
+            StartTime = new TimeOnly(9, 0),
+            EndTime = new TimeOnly(17, 0),
+            NotificationEnabled = false,
+            Participants = new List<EventParticipant> { clockedIn },
+        };
+
+        var context = new ApplicationDbContextMockBuilder()
+            .WithSet(x => x.Events, new List<Event> { shift }, item => [item.Id])
+            .WithSet(x => x.EventParticipants, new List<EventParticipant> { clockedIn }, item => [item.Id])
+            .WithSet(x => x.TimeEntries, new List<TimeEntry>
+            {
+                new() { Id = 1, EventId = 100, EventParticipantId = 55, EmployeeId = 12 }
+            }, item => [item.Id])
+            .WithSet(x => x.Employees, new List<Employee>
+            {
+                new() { Id = 12, FirstName = "Angelo", LastName = "Molteni" }
+            }, item => [item.Id])
+            .Build(out var tracker);
+
+        _clock.SetupGet(x => x.UtcNow).Returns(new DateTime(2026, 6, 1, 10, 0, 0, DateTimeKind.Utc));
+
+        var service = new EventService(context.Object, _conflictValidator.Object, _notificationService.Object, _clock.Object);
+
+        var act = () => service.UpdateAssignmentsAsync(100, 7, new UpdateEventAssignmentsRequest
+        {
+            OwnerEmployeeIds = new List<int> { 34 },
+        });
+
+        (await act.Should().ThrowAsync<InvalidOperationException>())
+            .Which.Message.Should().Contain("Angelo Molteni").And.Contain("timbrature");
+        tracker.Count.Should().Be(0);
+    }
 }

@@ -255,27 +255,7 @@ public class EventService : IEventService
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
         var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
 
-        // Replace participants
-        _context.EventParticipants.RemoveRange(evt.Participants);
-        evt.Participants.Clear();
-
-        foreach (var empId in request.OwnerEmployeeIds.Distinct())
-        {
-            var p = BuildParticipant(empId, true, overrideMap, skillMap);
-            p.EventId = evt.Id;
-            evt.Participants.Add(p);
-        }
-
-        var ownerIds = new HashSet<int>(request.OwnerEmployeeIds);
-        foreach (var empId in request.CoOwnerEmployeeIds.Distinct())
-        {
-            if (!ownerIds.Contains(empId))
-            {
-                var p = BuildParticipant(empId, false, overrideMap, skillMap);
-                p.EventId = evt.Id;
-                evt.Participants.Add(p);
-            }
-        }
+        await SyncParticipantsAsync(evt, request.OwnerEmployeeIds, request.CoOwnerEmployeeIds, overrideMap, skillMap);
 
         // Replace RequiredSkills
         _context.EventRequiredSkills.RemoveRange(evt.RequiredSkills);
@@ -327,26 +307,7 @@ public class EventService : IEventService
         var overrideMap = BuildOverrideMap(request.ParticipantOverrides);
         var skillMap = BuildParticipantSkillMap(request.ParticipantSkills);
 
-        _context.EventParticipants.RemoveRange(evt.Participants);
-        evt.Participants.Clear();
-
-        foreach (var empId in request.OwnerEmployeeIds.Distinct())
-        {
-            var p = BuildParticipant(empId, true, overrideMap, skillMap);
-            p.EventId = evt.Id;
-            evt.Participants.Add(p);
-        }
-
-        var ownerIds = new HashSet<int>(request.OwnerEmployeeIds);
-        foreach (var empId in request.CoOwnerEmployeeIds.Distinct())
-        {
-            if (!ownerIds.Contains(empId))
-            {
-                var p = BuildParticipant(empId, false, overrideMap, skillMap);
-                p.EventId = evt.Id;
-                evt.Participants.Add(p);
-            }
-        }
+        await SyncParticipantsAsync(evt, request.OwnerEmployeeIds, request.CoOwnerEmployeeIds, overrideMap, skillMap);
 
         await ValidateBlockingConflictsAsync(evt, evt.Id);
 
@@ -790,18 +751,98 @@ public class EventService : IEventService
             EmployeeId = employeeId,
             IsOwner = isOwner
         };
-        if (overrideMap.TryGetValue(employeeId, out var ov))
-        {
-            p.StartTimeOverride = ov.StartTimeOverride;
-            p.EndTimeOverride = ov.EndTimeOverride;
-            p.ParticipantNotes = ov.ParticipantNotes;
-            p.DepartmentId = ov.DepartmentId;
-        }
-        if (skillMap.TryGetValue(employeeId, out var skillId))
-        {
-            p.SkillId = skillId;
-        }
+        ApplyParticipantDetails(p, overrideMap, skillMap);
         return p;
+    }
+
+    /// <summary>
+    /// Applica override, mansione e reparto a un partecipante. L'assenza di un
+    /// override nella richiesta significa "nessun override": va azzerato anche
+    /// su una riga preesistente, altrimenti resterebbe quello del salvataggio
+    /// precedente.
+    /// </summary>
+    private static void ApplyParticipantDetails(
+        EventParticipant p,
+        IReadOnlyDictionary<int, ParticipantOverride> overrideMap,
+        IReadOnlyDictionary<int, int?> skillMap)
+    {
+        overrideMap.TryGetValue(p.EmployeeId, out var ov);
+        p.StartTimeOverride = ov?.StartTimeOverride;
+        p.EndTimeOverride = ov?.EndTimeOverride;
+        p.ParticipantNotes = ov?.ParticipantNotes;
+        p.DepartmentId = ov?.DepartmentId;
+        p.SkillId = skillMap.TryGetValue(p.EmployeeId, out var skillId) ? skillId : null;
+    }
+
+    /// <summary>
+    /// Allinea i partecipanti dell'evento alla lista richiesta aggiornando in
+    /// place le righe già esistenti.
+    /// Le timbrature puntano a EventParticipant con FK RESTRICT: un
+    /// delete-and-recreate dell'intera lista farebbe fallire SaveChanges su
+    /// qualsiasi turno già iniziato, impedendo anche la semplice aggiunta di un
+    /// collaboratore. Solo i partecipanti effettivamente rimossi vengono
+    /// cancellati, e solo se non hanno ancora timbrato.
+    /// </summary>
+    private async Task SyncParticipantsAsync(
+        Event evt,
+        IEnumerable<int> ownerEmployeeIds,
+        IEnumerable<int> coOwnerEmployeeIds,
+        IReadOnlyDictionary<int, ParticipantOverride> overrideMap,
+        IReadOnlyDictionary<int, int?> skillMap)
+    {
+        // Un dipendente indicato sia come owner sia come co-owner resta owner.
+        var desired = new Dictionary<int, bool>();
+        foreach (var empId in ownerEmployeeIds)
+            desired[empId] = true;
+        foreach (var empId in coOwnerEmployeeIds)
+            desired.TryAdd(empId, false);
+
+        var existing = evt.Participants.ToList();
+        var removed = existing.Where(p => !desired.ContainsKey(p.EmployeeId)).ToList();
+
+        if (removed.Count > 0)
+        {
+            var removedIds = removed.Select(p => p.Id).ToList();
+            var clockedIn = await _context.TimeEntries
+                .Where(t => removedIds.Contains(t.EventParticipantId))
+                .Select(t => t.EventParticipantId)
+                .Distinct()
+                .ToListAsync();
+
+            if (clockedIn.Count > 0)
+            {
+                var blockedEmployeeIds = removed
+                    .Where(p => clockedIn.Contains(p.Id))
+                    .Select(p => p.EmployeeId)
+                    .ToList();
+                var names = await _context.Employees
+                    .Where(e => blockedEmployeeIds.Contains(e.Id))
+                    .Select(e => e.FirstName + " " + e.LastName)
+                    .ToListAsync();
+
+                throw new InvalidOperationException(
+                    "Impossibile rimuovere dal turno " + string.Join(", ", names) +
+                    ": sono presenti timbrature registrate. Correggi prima le timbrature collegate.");
+            }
+
+            _context.EventParticipants.RemoveRange(removed);
+            foreach (var p in removed)
+                evt.Participants.Remove(p);
+        }
+
+        foreach (var p in existing.Where(p => desired.ContainsKey(p.EmployeeId)))
+        {
+            p.IsOwner = desired[p.EmployeeId];
+            ApplyParticipantDetails(p, overrideMap, skillMap);
+        }
+
+        var existingEmployeeIds = existing.Select(p => p.EmployeeId).ToHashSet();
+        foreach (var (empId, isOwner) in desired.Where(d => !existingEmployeeIds.Contains(d.Key)))
+        {
+            var p = BuildParticipant(empId, isOwner, overrideMap, skillMap);
+            p.EventId = evt.Id;
+            evt.Participants.Add(p);
+        }
     }
 
     private static Dictionary<int, int?> BuildParticipantSkillMap(IEnumerable<ParticipantSkillAssignment>? assignments)

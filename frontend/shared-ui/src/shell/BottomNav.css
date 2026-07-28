@@ -20,7 +20,7 @@
     border-top: 1px solid var(--su-border);
     padding: 8px 0;
     padding-bottom: max(8px, env(safe-area-inset-bottom));
-    z-index: 1050;
+    z-index: var(--su-z-bottom-nav);
   }
 
   .su-bottomnav__item {
@@ -82,7 +82,7 @@
     justify-content: center;
     box-shadow: var(--su-shadow-elevated);
     cursor: pointer;
-    z-index: 1055;
+    z-index: var(--su-z-fab);
   }
   .su-fab:active {
     filter: brightness(1.08);

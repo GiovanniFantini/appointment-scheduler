@@ -203,6 +203,13 @@ public class BranchTimeClockSettingsDto
     public string BranchName { get; set; } = string.Empty;
     public bool IsEnabled { get; set; }
     public bool ClockingRequired { get; set; }
+
+    /// <summary>
+    /// Data di decorrenza dell'obbligo: i turni precedenti non sono segnalati come
+    /// mancata timbratura. Sola lettura, la valorizza il server all'attivazione.
+    /// </summary>
+    public DateOnly? ClockingRequiredSince { get; set; }
+
     public int GraceInMinutes { get; set; }
     public int GraceOutMinutes { get; set; }
     public int EarlyClockInToleranceMinutes { get; set; }

@@ -233,6 +233,8 @@ export interface BranchTimeClockSettingsDto {
   branchName: string
   isEnabled: boolean
   clockingRequired: boolean
+  /** Data (YYYY-MM-DD) da cui vale l'obbligo. Valorizzata dal server, sola lettura. */
+  clockingRequiredSince?: string | null
   graceInMinutes: number
   graceOutMinutes: number
   earlyClockInToleranceMinutes: number

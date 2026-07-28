@@ -71,11 +71,22 @@
   --su-space-6: 24px;
   --su-space-8: 32px;
 
-  /* z-index */
-  --su-z-dropdown: 1000;
-  --su-z-modal-backdrop: 1500;
+  /* z-index — scala unica per tutti i layer flottanti delle quattro app.
+     Ogni elemento sovrapposto usa uno di questi token, mai un numero letterale:
+     è l'unico modo per sapere, leggendo una regola, se finirà sopra o sotto la
+     chrome dell'app. In particolare qualsiasi dialog deve stare da
+     --su-z-modal-backdrop in su, altrimenti su mobile la bottom-nav (fissa in
+     fondo) ne copre il footer con i pulsanti di conferma. */
+  --su-z-sticky: 100;           /* header sticky, intestazioni di tabella */
+  --su-z-dropdown: 1000;        /* menu ancorati a un trigger (user menu) */
+  --su-z-popover: 1010;         /* popover informativi ancorati al contenuto */
+  --su-z-bottom-nav: 1050;      /* chrome mobile: bottom-nav… */
+  --su-z-fab: 1055;             /* …e FAB, che le sta sopra */
+  --su-z-drawer-backdrop: 1100; /* sidebar off-canvas mobile */
+  --su-z-drawer: 1150;
+  --su-z-modal-backdrop: 1500;  /* modali, bottom-sheet, wizard, dialog */
   --su-z-modal: 1510;
-  --su-z-toast: 2000;
+  --su-z-toast: 2000;           /* sopra a tutto, anche a un modale aperto */
 }
 
 /* Light theme: override quando l'utente sceglie "Chiaro" in Preferenze.

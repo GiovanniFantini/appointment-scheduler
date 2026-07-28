@@ -196,7 +196,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--su-z-modal-backdrop);
   padding: 20px;
 }
 
@@ -331,7 +331,7 @@
   background: rgba(0, 0, 0, 0.5);
   display: flex;
   justify-content: flex-end;
-  z-index: 1000;
+  z-index: var(--su-z-modal-backdrop);
 }
 
 .drawer {

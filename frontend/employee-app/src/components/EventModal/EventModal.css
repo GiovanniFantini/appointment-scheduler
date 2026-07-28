@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: var(--su-z-modal-backdrop);
   padding: 16px;
 }
 
@@ -368,6 +368,16 @@
   padding: 10px 14px;
   font-size: 13px;
   color: #ef4444;
+}
+
+.modal-notice {
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #93c5fd;
 }
 
 .section-sep {

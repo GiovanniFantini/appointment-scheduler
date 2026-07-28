@@ -234,6 +234,32 @@
   margin: 0 0 1rem;
 }
 
+/* Area di gestione (visibile a operatori/manager): raccoglie le assenze da
+   approvare e i giustificativi di timbratura in attesa di revisione. */
+.richieste-approvals-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  background-color: var(--su-surface-bg);
+  border: 1px solid var(--su-border-strong);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+}
+
+.richieste-subtitle {
+  font-size: 0.8125rem;
+  color: var(--su-text-secondary);
+}
+
+.richieste-group-title {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--su-text-secondary);
+  margin-top: 0.5rem;
+}
+
 /* Lista turni in conflitto nel dialog di approvazione ferie */
 .approval-conflict-list {
   margin: 0.5rem 0;

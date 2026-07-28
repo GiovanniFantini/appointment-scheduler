@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useToast } from '@scheduler/ui'
 import { useBranch } from '../../contexts/BranchContext'
 import {
   timeClockApi,
@@ -8,7 +7,8 @@ import {
   type TimeClockAnomaly,
   type TimeClockReportRow,
 } from '../../lib/api/timeClockManagement'
-import { anomalyReasonLabel } from '../../types/timbratura'
+import { anomalyReasonLabel, TimeClockAnomalyStatus } from '../../types/timbratura'
+import ReviewJustificationModal from '../../components/ReviewJustificationModal/ReviewJustificationModal'
 import { nativeDateInputProps } from '../../lib/dateUtils'
 import './TimbraturaGestionePage.css'
 
@@ -205,6 +205,15 @@ function ConfigTab({ branchId }: { branchId: number }) {
           onChange={v => update('clockingRequired', v)}
           disabled={!settings.isEnabled}
         />
+        {settings.clockingRequiredSince && (
+          <div className="tcm-config-note">
+            L'obbligo vale dai turni del{' '}
+            {new Date(settings.clockingRequiredSince).toLocaleDateString(undefined, {
+              day: '2-digit', month: '2-digit', year: 'numeric',
+            })}{' '}
+            in poi: i turni precedenti non generano anomalie da giustificare.
+          </div>
+        )}
       </div>
 
       <div className="tcm-card">
@@ -442,11 +451,10 @@ function PresenzeTab({ branchId }: { branchId: number }) {
 // ── Tab Anomalie ───────────────────────────────────────────────────────────
 
 function AnomalieTab({ branchId }: { branchId: number }) {
-  const toast = useToast()
   const [anomalies, setAnomalies] = useState<TimeClockAnomaly[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<number | ''>('')
-  const [actingId, setActingId] = useState<number | null>(null)
+  const [reviewing, setReviewing] = useState<TimeClockAnomaly | null>(null)
   const [detecting, setDetecting] = useState(false)
   const [info, setInfo] = useState('')
 
@@ -467,22 +475,9 @@ function AnomalieTab({ branchId }: { branchId: number }) {
 
   useEffect(() => { load() }, [load])
 
-  const review = async (id: number, approve: boolean) => {
-    const notes = window.prompt(approve
-      ? 'Note di approvazione (facoltative):'
-      : 'Motivo del rifiuto (facoltativo):') ?? undefined
-    setActingId(id)
-    try {
-      const updated = approve
-        ? await timeClockApi.approveAnomaly(id, notes)
-        : await timeClockApi.rejectAnomaly(id, notes)
-      setAnomalies(prev => prev.map(a => (a.id === id ? updated : a)))
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string } } }
-      toast.error(e.response?.data?.message ?? 'Errore durante la revisione.')
-    } finally {
-      setActingId(null)
-    }
+  const handleReviewed = (updated: TimeClockAnomaly) => {
+    setAnomalies(prev => prev.map(a => (a.id === updated.id ? updated : a)))
+    setReviewing(null)
   }
 
   const runDetection = async () => {
@@ -561,12 +556,9 @@ function AnomalieTab({ branchId }: { branchId: number }) {
                     : <span className="tcm-muted">—</span>}
                 </td>
                 <td>
-                  {a.status === 2 ? (
+                  {a.status === TimeClockAnomalyStatus.Justified ? (
                     <div className="tcm-action-buttons">
-                      <button className="tcm-btn-approve" disabled={actingId === a.id}
-                        onClick={() => review(a.id, true)}>Approva</button>
-                      <button className="tcm-btn-reject" disabled={actingId === a.id}
-                        onClick={() => review(a.id, false)}>Respingi</button>
+                      <button className="tcm-btn-approve" onClick={() => setReviewing(a)}>Revisiona</button>
                     </div>
                   ) : (
                     <span className="tcm-muted">—</span>
@@ -576,6 +568,14 @@ function AnomalieTab({ branchId }: { branchId: number }) {
             ))}
           </tbody>
         </table>
+      )}
+
+      {reviewing && (
+        <ReviewJustificationModal
+          anomaly={reviewing}
+          onClose={() => setReviewing(null)}
+          onReviewed={handleReviewed}
+        />
       )}
     </div>
   )

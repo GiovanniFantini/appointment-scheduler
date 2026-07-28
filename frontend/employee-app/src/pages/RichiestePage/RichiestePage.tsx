@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
+  useAuth,
   useConfirm,
   useToast,
   SegmentedTabs,
@@ -11,6 +12,10 @@ import {
 } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import CreateRequestModal from '../../components/CreateRequestModal/CreateRequestModal'
+import ReviewJustificationModal from '../../components/ReviewJustificationModal/ReviewJustificationModal'
+import { timeClockApi, type TimeClockAnomaly } from '../../lib/api/timeClockManagement'
+import { TimeClockAnomalyStatus, anomalyReasonLabel, anomalyTypeLabel } from '../../types/timbratura'
+import { hasFeatureLevel, type EmployeeUser } from '../../App'
 import { formatBrowserDate, parseDateOnly } from '../../lib/dateUtils'
 import './RichiestePage.css'
 
@@ -90,28 +95,24 @@ function formatDate(dateStr: string): string {
 export default function RichiestePage() {
   const toast = useToast()
   const confirm = useConfirm()
+  const { user } = useAuth<EmployeeUser>()
   const [requests, setRequests] = useState<ApiEmployeeRequest[]>([])
   const [approvals, setApprovals] = useState<ApiEmployeeRequest[]>([])
+  const [justifications, setJustifications] = useState<TimeClockAnomaly[]>([])
+  const [reviewing, setReviewing] = useState<TimeClockAnomaly | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadingApprovals, setLoadingApprovals] = useState(false)
   const [showApprovalsSection, setShowApprovalsSection] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [error, setError] = useState('')
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('Pending')
-  const approvalLevels = new Set(['Operator', 'Manager'])
 
-  const currentFeatureLevel = (() => {
-    try {
-      const raw = localStorage.getItem('user')
-      if (!raw) return undefined
-      const parsed = JSON.parse(raw) as { featureLevels?: Record<string, string> }
-      return parsed.featureLevels?.Richieste
-    } catch {
-      return undefined
-    }
-  })()
-
-  const canApproveRequests = approvalLevels.has(currentFeatureLevel ?? '')
+  const canApproveRequests = !!user && hasFeatureLevel(user, 'Richieste', 'Operator')
+  // I giustificativi di timbratura li decide chi ha la gestione della Timbratura,
+  // coerentemente con l'autorizzazione dell'endpoint di revisione.
+  const canReviewJustifications = !!user
+    && (user.activeFeatures?.includes('Timbratura') ?? false)
+    && hasFeatureLevel(user, 'Timbratura', 'Manager')
 
   const fetchRequests = useCallback(async () => {
     setLoading(true)
@@ -128,8 +129,10 @@ export default function RichiestePage() {
     }
   }, [])
 
+  // Caricate anche a sezione chiusa: il conteggio sul pulsante è ciò che segnala
+  // al responsabile che c'è qualcosa da decidere.
   const fetchApprovals = useCallback(async () => {
-    if (!canApproveRequests || !showApprovalsSection) {
+    if (!canApproveRequests) {
       setApprovals([])
       return
     }
@@ -145,18 +148,37 @@ export default function RichiestePage() {
     } finally {
       setLoadingApprovals(false)
     }
-  }, [canApproveRequests, showApprovalsSection])
+  }, [canApproveRequests])
+
+  // I giustificativi di mancata timbratura restano in attesa finché il responsabile
+  // non li decide: vengono elencati qui insieme alle richieste di assenza.
+  const fetchJustifications = useCallback(async () => {
+    if (!canReviewJustifications) {
+      setJustifications([])
+      return
+    }
+
+    try {
+      const data = await timeClockApi.getAnomalies({ status: TimeClockAnomalyStatus.Justified })
+      const items = Array.isArray(data) ? data : []
+      items.sort((a, b) => a.workDate < b.workDate ? 1 : -1)
+      setJustifications(items)
+    } catch {
+      setJustifications([])
+    }
+  }, [canReviewJustifications])
 
   useEffect(() => {
     fetchRequests()
     fetchApprovals()
-  }, [fetchApprovals, fetchRequests])
+    fetchJustifications()
+  }, [fetchApprovals, fetchJustifications, fetchRequests])
 
   useEffect(() => {
-    if (!canApproveRequests) {
+    if (!canApproveRequests && !canReviewJustifications) {
       setShowApprovalsSection(false)
     }
-  }, [canApproveRequests])
+  }, [canApproveRequests, canReviewJustifications])
 
   const handleApprove = async (id: number, force = false) => {
     try {
@@ -210,6 +232,14 @@ export default function RichiestePage() {
     }
   }
 
+  const handleReviewed = (updated: TimeClockAnomaly) => {
+    setJustifications(prev => prev.filter(a => a.id !== updated.id))
+    setReviewing(null)
+    toast.success(updated.status === TimeClockAnomalyStatus.Approved
+      ? 'Giustificativo approvato'
+      : 'Giustificativo respinto')
+  }
+
   const handleDelete = async (id: number) => {
     const ok = await confirm({
       title: 'Eliminare richiesta',
@@ -227,6 +257,8 @@ export default function RichiestePage() {
       toast.error('Errore durante l\'eliminazione della richiesta')
     }
   }
+
+  const pendingApprovalCount = approvals.length + justifications.length
 
   // Conteggi e filtro per le tab segmentate (puro filtro client).
   const counts = {
@@ -275,12 +307,13 @@ export default function RichiestePage() {
       <div className="richieste-header">
         <h1 className="richieste-title">Le mie richieste</h1>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-          {canApproveRequests && (
+          {(canApproveRequests || canReviewJustifications) && (
             <button
               className="btn-new-request-empty"
               onClick={() => setShowApprovalsSection(prev => !prev)}
             >
               {showApprovalsSection ? 'Nascondi gestione richieste' : 'Gestione richieste'}
+              {pendingApprovalCount > 0 && ` (${pendingApprovalCount})`}
             </button>
           )}
           <button className="btn-new-request" onClick={() => setShowModal(true)}>
@@ -292,34 +325,83 @@ export default function RichiestePage() {
 
       {error && <div className="richieste-error">{error}</div>}
 
-      {canApproveRequests && showApprovalsSection && (
+      {(canApproveRequests || canReviewJustifications) && showApprovalsSection && (
         <div className="richieste-approvals-section">
           <div className="richieste-header" style={{ marginTop: 0 }}>
             <h2 className="richieste-title" style={{ fontSize: '1.4rem' }}>Gestione richieste dipendenti</h2>
             <p className="richieste-subtitle">Area visibile a operatori e manager per approvare o rifiutare richieste</p>
           </div>
 
-          {loadingApprovals ? (
-            <div className="richieste-loading">
-              <div className="spinner" />
-            </div>
-          ) : approvals.length === 0 ? (
-            <div className="richieste-empty" style={{ marginTop: 0 }}>
-              <p className="empty-title">Nessuna richiesta in attesa</p>
-              <p className="empty-subtitle">Le richieste approvabili appariranno qui quando saranno presenti.</p>
-            </div>
-          ) : (
-            <div className="requests-list">
-              {approvals.map(req =>
-                renderCard(
-                  req,
-                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-                    <button className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
-                    <button className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
-                  </div>
-                )
+          {canApproveRequests && (
+            <>
+              <h3 className="richieste-group-title">Assenze</h3>
+              {loadingApprovals ? (
+                <div className="richieste-loading">
+                  <div className="spinner" />
+                </div>
+              ) : approvals.length === 0 ? (
+                <div className="richieste-empty" style={{ marginTop: 0 }}>
+                  <p className="empty-title">Nessuna richiesta in attesa</p>
+                  <p className="empty-subtitle">Le richieste approvabili appariranno qui quando saranno presenti.</p>
+                </div>
+              ) : (
+                <div className="requests-list">
+                  {approvals.map(req =>
+                    renderCard(
+                      req,
+                      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                        <button className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
+                        <button className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
+                      </div>
+                    )
+                  )}
+                </div>
               )}
-            </div>
+            </>
+          )}
+
+          {canReviewJustifications && (
+            <>
+              <h3 className="richieste-group-title">Giustificativi timbratura</h3>
+              {justifications.length === 0 ? (
+                <div className="richieste-empty" style={{ marginTop: 0 }}>
+                  <p className="empty-title">Nessun giustificativo in attesa</p>
+                  <p className="empty-subtitle">
+                    Le giustificazioni delle timbrature mancanti richiedono la tua approvazione e appariranno qui.
+                  </p>
+                </div>
+              ) : (
+                <div className="requests-list">
+                  {justifications.map(a => (
+                    <div key={a.id} className="request-card">
+                      <div className="request-card-top">
+                        <StatusChip variant="warning" icon={<TiClock size={12} />}>
+                          {anomalyTypeLabel(a.type, a.typeName)}
+                        </StatusChip>
+                        <StatusChip variant="neutral">In attesa</StatusChip>
+                      </div>
+                      <div className="request-card-dates">
+                        <div className="request-date">
+                          <span className="request-date-label">Dipendente</span>
+                          <span className="request-date-value">{a.employeeName}</span>
+                        </div>
+                        <div className="request-date">
+                          <span className="request-date-label">Giorno</span>
+                          <span className="request-date-value">{formatDate(a.workDate)}</span>
+                        </div>
+                      </div>
+                      <p className="request-notes">
+                        <strong>{anomalyReasonLabel(a.employeeReason ?? undefined, a.employeeReasonName ?? undefined)}</strong>
+                        {a.employeeNotes ? ` — ${a.employeeNotes}` : ''}
+                      </p>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
+                        <button className="btn-new-request" onClick={() => setReviewing(a)}>Revisiona</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -380,6 +462,14 @@ export default function RichiestePage() {
         <CreateRequestModal
           onClose={() => setShowModal(false)}
           onCreated={fetchRequests}
+        />
+      )}
+
+      {reviewing && (
+        <ReviewJustificationModal
+          anomaly={reviewing}
+          onClose={() => setReviewing(null)}
+          onReviewed={handleReviewed}
         />
       )}
     </div>
