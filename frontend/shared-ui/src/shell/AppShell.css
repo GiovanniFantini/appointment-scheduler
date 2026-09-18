@@ -1,10 +1,10 @@
 /* AppShell layout: sidebar a sinistra + header in alto + Outlet contenuto */
 .su-shell {
   display: flex;
-  min-height: 100vh;
+  min-height: 100dvh;
   background: var(--su-surface-bg);
   color: var(--su-text-primary);
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--su-font);
 }
 
 .su-shell__overlay {
@@ -27,11 +27,11 @@
 
 .su-shell__content {
   flex: 1;
-  padding: 24px;
+  padding: clamp(20px, 3vw, 44px);
   overflow-x: auto;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .su-shell__content {
     padding: 16px;
   }
@@ -46,13 +46,16 @@
 /* Spazio per la bottom-nav fissa (solo mobile, quando attiva). */
 @media (max-width: 767px) {
   .su-shell--has-bottomnav .su-shell__content {
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(100px + env(safe-area-inset-bottom));
   }
 }
 
 /* ===== Sidebar ===== */
 .su-sidebar {
-  width: 260px;
+  width: 248px;
+  position: sticky;
+  top: 0;
+  height: 100dvh;
   flex-shrink: 0;
   background: var(--su-surface);
   border-right: 1px solid var(--su-border);
@@ -119,14 +122,14 @@
 .su-sidebar__nav {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 8px;
+  padding: 20px 12px;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
 .su-sidebar__section-label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -138,7 +141,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 12px;
+  padding: 12px;
+  min-height: 46px;
   border-radius: var(--su-radius-md);
   color: var(--su-text-secondary);
   text-decoration: none;
@@ -152,7 +156,7 @@
   color: var(--su-text-primary);
 }
 .su-sidebar__item--active {
-  background: linear-gradient(90deg, var(--su-accent-primary-soft), var(--su-accent-primary-faint));
+  background: var(--su-accent-primary-soft);
   color: var(--su-text-primary);
   box-shadow: inset 3px 0 0 var(--su-accent-primary);
 }
@@ -185,16 +189,20 @@
 }
 
 /* Mobile responsive */
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .su-sidebar {
     position: fixed;
     top: 0;
     bottom: 0;
     left: 0;
     transform: translateX(-100%);
+    visibility: hidden;
+    width: min(320px, 88vw);
+    padding-top: env(safe-area-inset-top);
   }
   .su-sidebar--open {
     transform: translateX(0);
+    visibility: visible;
   }
   .su-sidebar__close {
     display: inline-flex;
@@ -203,7 +211,7 @@
 
 /* ===== TopHeader ===== */
 .su-header {
-  height: 64px;
+  height: 72px;
   border-bottom: 1px solid var(--su-border);
   background: var(--su-surface);
   display: flex;
@@ -226,7 +234,7 @@
 }
 .su-header__hamburger:hover { background: var(--su-surface-elevated); }
 
-@media (max-width: 768px) {
+@media (max-width: 767px) {
   .su-header__hamburger { display: inline-flex; }
 }
 
@@ -310,10 +318,33 @@
   right: 4px;
   background: var(--su-accent-danger);
   color: white;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   padding: 1px 5px;
   border-radius: var(--su-radius-pill);
   min-width: 16px;
   text-align: center;
+}
+
+.su-header__hamburger, .su-sidebar__close, .su-header__bell {
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+.su-shell__content > * { min-width: 0; }
+.su-shell__skip {
+  position: fixed;
+  top: 8px;
+  left: 12px;
+  z-index: var(--su-z-toast);
+  padding: 12px 18px;
+  background: var(--su-surface);
+  color: var(--su-text-primary);
+  border-radius: var(--su-radius-md);
+  transform: translateY(-200%);
+}
+.su-shell__skip:focus { transform: translateY(0); }
+@media (min-width: 768px) {
+  .su-shell__overlay--visible { display: none; }
 }

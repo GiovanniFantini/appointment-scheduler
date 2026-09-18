@@ -11,7 +11,8 @@
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease, transform 0.05s ease;
   white-space: nowrap;
   text-decoration: none;
-  line-height: 1;
+  line-height: 1.2;
+  min-height: 40px;
 }
 .su-btn:focus-visible {
   outline: 2px solid var(--su-accent-primary);
@@ -31,9 +32,9 @@
 
 .su-btn--full { width: 100%; }
 
-/* primary: gradiente cyber */
+/* Azione principale: contrasto stabile anche nel tema chiaro. */
 .su-btn--primary {
-  background: linear-gradient(135deg, var(--su-accent-primary), var(--su-accent-secondary));
+  background: var(--su-accent-primary);
   color: white;
   border-color: transparent;
 }
@@ -42,7 +43,7 @@
   box-shadow: 0 4px 18px var(--su-accent-primary-glow);
 }
 
-/* secondary: outline elegante */
+/* Azioni secondarie */
 .su-btn--secondary {
   background: var(--su-surface-elevated);
   color: var(--su-text-primary);
@@ -100,8 +101,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--su-radius-md);
   background: transparent;
   border: none;
@@ -117,4 +118,8 @@
 .su-iconbtn--danger:hover:not(:disabled) {
   background: var(--su-danger-soft);
   color: var(--su-accent-danger);
+}
+
+@media (pointer: coarse) {
+  .su-btn { min-height: 44px; white-space: normal; }
 }

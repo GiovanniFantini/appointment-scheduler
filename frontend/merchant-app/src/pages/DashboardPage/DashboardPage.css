@@ -1,5 +1,5 @@
 .dashboard-page {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--su-font);
   color: var(--su-text-primary);
 }
 
@@ -29,8 +29,8 @@
 
 .stat-card {
   background: var(--su-surface-elevated);
-  border: 1px solid var(--su-border-strong);
-  border-radius: 12px;
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
   padding: 20px;
   display: flex;
   align-items: center;
@@ -45,7 +45,7 @@ a.stat-card {
 }
 
 a.stat-card:hover {
-  border-color: var(--su-accent-primary);
+  border-color: var(--su-accent-secondary);
   background: var(--su-accent-primary-faint);
   transform: translateY(-2px);
 }
@@ -103,8 +103,8 @@ a.stat-card:hover {
 
 .quick-link-card {
   background: var(--su-surface-elevated);
-  border: 1px solid var(--su-border-strong);
-  border-radius: 12px;
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
   padding: 18px;
   text-decoration: none;
   display: flex;
@@ -116,7 +116,7 @@ a.stat-card:hover {
 }
 
 .quick-link-card:hover {
-  border-color: var(--su-accent-primary);
+  border-color: var(--su-accent-secondary);
   background: var(--su-accent-primary-faint);
   transform: translateY(-2px);
 }
@@ -173,4 +173,42 @@ a.stat-card:hover {
   .quick-links-grid {
     grid-template-columns: 1fr 1fr;
   }
+}
+
+.dashboard-page :is(.page-header, .dashboard-welcome) {
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-xl);
+  background: linear-gradient(115deg, var(--su-accent-primary-soft), var(--su-surface));
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.dashboard-page :is(.page-title, .dashboard-welcome h1, .dashboard-greeting) {
+  font-family: var(--su-font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+.dashboard-page :is(.stat-card, .dashboard-card, .section-card, .quick-link-card) {
+  min-width: 0;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 3%);
+}
+.dashboard-page :is(.stat-value, .stat-card-value) {
+  font-family: var(--su-font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+.dashboard-page :is(.stat-label, .stat-card-desc, .quick-link-desc) {
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 767px) {
+  .dashboard-page :is(.dashboard-grid, .stats-grid, .dashboard-stats) { min-width: 0; }
+  .dashboard-page .btn-sm { min-height: 44px; }
+  .dashboard-page .event-item-meta { flex-wrap: wrap; }
+}
+
+@media (max-width: 420px) {
+  .dashboard-page .stat-card { flex-direction: column; align-items: flex-start; }
+  .dashboard-page .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

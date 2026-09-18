@@ -3,28 +3,31 @@
  * Importati da ogni index.css via:
  *   @import '@scheduler/ui/tokens.css';
  *
- * Palette "Turnis" (mobile-first dark viola) — vedi docs/turnis-mockup.html.
+ * Palette Turnis: grafite, petrolio e superfici neutre, con contrasto per uso operativo.
  * I nomi restano semantici: ritarando qui si propaga a admin/merchant/employee.
  */
 :root {
+  color-scheme: dark;
+  --su-font: 'Aptos', 'Segoe UI Variable Text', 'Segoe UI', sans-serif;
+  --su-font-display: 'Bahnschrift', 'Aptos Display', 'Segoe UI', sans-serif;
   /* surfaces */
-  --su-surface-bg: #0E1116;
-  --su-surface: #14181F;
-  --su-surface-elevated: #1c2129;
+  --su-surface-bg: #10191d;
+  --su-surface: #162328;
+  --su-surface-elevated: #1c2c32;
   --su-surface-overlay: rgba(20, 24, 31, 0.6);
-  --su-border: #2a2f38;
-  --su-border-strong: #3a4150;
+  --su-border: #304249;
+  --su-border-strong: #486068;
 
   /* text */
-  --su-text-primary: #E6E8EC;
-  --su-text-secondary: #7d838e;
-  --su-text-muted: #555c6a;
+  --su-text-primary: #edf4f3;
+  --su-text-secondary: #b0c2c6;
+  --su-text-muted: #8fa7ae;
   --su-text-inverse: #0f172a;
 
   /* accents */
-  --su-accent-primary: #7F77DD;
-  --su-accent-primary-hover: #534AB7;
-  --su-accent-secondary: #AFA9EC;
+  --su-accent-primary: #087f75;
+  --su-accent-primary-hover: #06695f;
+  --su-accent-secondary: #73d6c4;
   --su-accent-success: #97C459;
   --su-accent-danger: #E24B4A;
   --su-accent-danger-soft-text: #F09595;
@@ -32,16 +35,16 @@
   --su-accent-info: #85B7EB;
 
   /* accent tints (riempimenti translucidi del mockup) */
-  --su-accent-primary-soft: rgba(127, 119, 221, 0.16);
-  --su-accent-primary-faint: rgba(127, 119, 221, 0.08);
-  --su-accent-primary-glow: rgba(127, 119, 221, 0.4);
+  --su-accent-primary-soft: rgba(58, 187, 162, 0.16);
+  --su-accent-primary-faint: rgba(58, 187, 162, 0.08);
+  --su-accent-primary-glow: rgba(8, 127, 117, 0.25);
   --su-success-soft: rgba(151, 196, 89, 0.16);
   --su-danger-soft: rgba(226, 75, 74, 0.16);
   --su-warning-soft: rgba(239, 159, 39, 0.16);
   --su-info-soft: rgba(133, 183, 235, 0.16);
 
   /* avatar palette (cerchi iniziali — Avatar/AvatarStack scelgono per hash) */
-  --su-avatar-1: #534AB7;
+  --su-avatar-1: #06695f;
   --su-avatar-2: #1D9E75;
   --su-avatar-3: #D85A30;
   --su-avatar-4: #BA7517;
@@ -50,10 +53,10 @@
   --su-avatar-7: #185FA5;
 
   /* radii */
-  --su-radius-sm: 4px;
-  --su-radius-md: 8px;
-  --su-radius-lg: 12px;
-  --su-radius-xl: 16px;
+  --su-radius-sm: 6px;
+  --su-radius-md: 12px;
+  --su-radius-lg: 18px;
+  --su-radius-xl: 24px;
   --su-radius-chip: 20px;
   --su-radius-sheet: 22px;
   --su-radius-pill: 999px;
@@ -89,28 +92,30 @@
   --su-z-toast: 2000;           /* sopra a tutto, anche a un modale aperto */
 }
 
-/* Light theme: override quando l'utente sceglie "Chiaro" in Preferenze.
-   Volutamente conservativo — superfici, testo, ombre e le tinte *-soft.
-   Gli accenti (primary/danger/success/warning/info) restano leggibili su bg chiaro;
-   --su-accent-secondary (#AFA9EC lavanda) ha contrasto basso come link su bianco,
-   quindi qui passa al viola scuro. */
+/* Superfici e testi tarati separatamente per mantenere leggibili entrambi i temi. */
 :root[data-theme='light'] {
-  --su-surface-bg: #f5f6fa;
+  color-scheme: light;
+  --su-surface-bg: #f2f5f3;
   --su-surface: #ffffff;
   --su-surface-elevated: #ffffff;
   --su-surface-overlay: rgba(255, 255, 255, 0.85);
-  --su-border: #e2e8f0;
-  --su-border-strong: #cbd5e1;
+  --su-border: #dce5e1;
+  --su-border-strong: #bdcec6;
 
   --su-text-primary: #0f172a;
   --su-text-secondary: #475569;
-  --su-text-muted: #94a3b8;
+  --su-text-muted: #63756e;
   --su-text-inverse: #ffffff;
 
-  --su-accent-secondary: #534AB7;
+  --su-accent-secondary: #06695f;
+  --su-accent-success: #15803d;
+  --su-accent-danger: #c52b36;
+  --su-accent-danger-soft-text: #a51d2d;
+  --su-accent-warning: #a66008;
+  --su-accent-info: #2563a5;
 
-  --su-accent-primary-soft: rgba(127, 119, 221, 0.12);
-  --su-accent-primary-faint: rgba(127, 119, 221, 0.06);
+  --su-accent-primary-soft: rgba(8, 127, 117, 0.10);
+  --su-accent-primary-faint: rgba(8, 127, 117, 0.05);
   --su-success-soft: rgba(120, 158, 60, 0.14);
   --su-danger-soft: rgba(226, 75, 74, 0.12);
   --su-warning-soft: rgba(239, 159, 39, 0.14);
@@ -119,4 +124,25 @@
   --su-shadow-card: 0 4px 16px rgba(15, 23, 42, 0.08);
   --su-shadow-elevated: 0 12px 32px rgba(15, 23, 42, 0.12);
   --su-shadow-overlay: 0 24px 64px rgba(15, 23, 42, 0.18);
+}
+
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--su-accent-secondary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  /* Evita lo zoom automatico di Safari quando si compila una form. */
+  body input:not([type='checkbox']):not([type='radio']), body select, body textarea {
+    font-size: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

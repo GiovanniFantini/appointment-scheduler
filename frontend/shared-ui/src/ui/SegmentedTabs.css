@@ -1,5 +1,7 @@
 .su-segtabs {
   display: flex;
+  max-width: 100%;
+  overflow-x: auto;
   background: var(--su-surface-elevated);
   border-radius: var(--su-radius-md);
   padding: 3px;
@@ -7,7 +9,8 @@
 }
 
 .su-segtabs__btn {
-  flex: 1;
+  flex: 1 0 auto;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

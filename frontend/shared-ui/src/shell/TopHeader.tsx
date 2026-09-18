@@ -5,11 +5,12 @@ interface TopHeaderProps {
   title?: string
   companyName?: string
   onHamburger: () => void
+  menuOpen?: boolean
   /** Slot azioni a destra (es. bell, UserMenu). */
   actions?: ReactNode
 }
 
-export function TopHeader({ title, companyName, onHamburger, actions }: TopHeaderProps) {
+export function TopHeader({ title, companyName, onHamburger, menuOpen = false, actions }: TopHeaderProps) {
   return (
     <header className="su-header">
       <button
@@ -17,6 +18,8 @@ export function TopHeader({ title, companyName, onHamburger, actions }: TopHeade
         className="su-header__hamburger"
         onClick={onHamburger}
         aria-label="Apri menu"
+        aria-expanded={menuOpen}
+        aria-controls="app-navigation"
       >
         <IconMenu size={20} />
       </button>

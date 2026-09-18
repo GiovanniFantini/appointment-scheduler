@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { NavLink } from 'react-router-dom'
 import { IconClose } from '../icons'
 
@@ -32,8 +32,42 @@ interface SidebarProps {
 }
 
 export function Sidebar({ sections, brand, open, onClose, onItemClick }: SidebarProps) {
+  const sidebarRef = useRef<HTMLElement>(null)
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
+
+  useEffect(() => {
+    if (!open) return
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const sidebar = sidebarRef.current
+    sidebar?.querySelector<HTMLButtonElement>('button')?.focus()
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') closeRef.current()
+      if (event.key !== 'Tab' || !sidebar) return
+      const items = Array.from(sidebar.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)'))
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last?.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first?.focus()
+      }
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      document.removeEventListener('keydown', handleKey)
+      if (previousFocus?.isConnected) previousFocus.focus()
+    }
+  }, [open])
+
   return (
-    <aside className={`su-sidebar ${open ? 'su-sidebar--open' : ''}`}>
+    <aside ref={sidebarRef} id="app-navigation" className={`su-sidebar ${open ? 'su-sidebar--open' : ''}`}
+      role={open ? 'dialog' : undefined} aria-modal={open ? true : undefined} aria-label="Menu principale">
       <div className="su-sidebar__brand">
         <div className="su-sidebar__brand-icon" aria-hidden>
           {brand.initial ?? brand.title.charAt(0).toUpperCase()}
@@ -47,7 +81,7 @@ export function Sidebar({ sections, brand, open, onClose, onItemClick }: Sidebar
         </button>
       </div>
 
-      <nav className="su-sidebar__nav">
+      <nav className="su-sidebar__nav" aria-label="Navigazione principale">
         {sections.map((section, sIdx) => {
           const visibleItems = section.items.filter((i) => i.visible !== false)
           if (visibleItems.length === 0) return null

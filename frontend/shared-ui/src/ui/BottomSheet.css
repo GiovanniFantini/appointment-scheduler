@@ -22,7 +22,7 @@
   border-top-left-radius: var(--su-radius-sheet);
   border-top-right-radius: var(--su-radius-sheet);
   box-shadow: var(--su-shadow-overlay);
-  max-height: 92vh;
+  max-height: 92dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -44,7 +44,7 @@
   .su-sheet {
     max-width: 560px;
     border-radius: var(--su-radius-lg);
-    max-height: 90vh;
+    max-height: 90dvh;
   }
   .su-sheet__handle {
     display: none;
@@ -84,10 +84,14 @@
   color: var(--su-text-secondary);
   cursor: pointer;
   padding: 2px;
+  min-width: 44px;
+  min-height: 44px;
 }
 .su-sheet__close:hover { color: var(--su-text-primary); }
 
 .su-sheet__body {
+  min-height: 0;
+  overscroll-behavior: contain;
   padding: 0 22px 22px;
   overflow-y: auto;
   flex: 1;
@@ -102,3 +106,5 @@
   gap: 10px;
 }
 .su-sheet__footer > * { flex: 1; }
+
+.su-sheet__header, .su-sheet__footer { flex-shrink: 0; }

@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { Outlet } from 'react-router-dom'
 import { Sidebar, type NavSection, type NavItem } from './Sidebar'
 import { TopHeader } from './TopHeader'
@@ -49,9 +50,15 @@ export function AppShell({
   fab
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const isCompact = useMediaQuery('(max-width: 767px)')
+
+  useEffect(() => {
+    if (!isCompact) setMobileOpen(false)
+  }, [isCompact])
 
   return (
     <div className={`su-shell ${bottomNav ? 'su-shell--has-bottomnav' : ''}`}>
+      <a className="su-shell__skip" href="#main-content">Vai al contenuto</a>
       <div
         className={`su-shell__overlay ${mobileOpen ? 'su-shell__overlay--visible' : ''}`}
         onClick={() => setMobileOpen(false)}
@@ -70,6 +77,7 @@ export function AppShell({
           title={headerTitle}
           companyName={companyName}
           onHamburger={() => setMobileOpen(true)}
+          menuOpen={mobileOpen}
           actions={
             <>
               {headerExtras}
@@ -77,7 +85,7 @@ export function AppShell({
             </>
           }
         />
-        <main className="su-shell__content">
+        <main id="main-content" className="su-shell__content" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

@@ -31,8 +31,8 @@
 
 .stat-card {
   background-color: var(--su-surface-elevated);
-  border: 1px solid var(--su-border-strong);
-  border-radius: 12px;
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
   padding: 20px;
   display: flex;
   flex-direction: column;
@@ -64,22 +64,22 @@
 
 .stat-card-icon.indigo {
   background-color: var(--su-accent-primary-soft);
-  color: var(--su-accent-primary);
+  color: var(--su-accent-secondary);
 }
 
 .stat-card-icon.green {
   background-color: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--su-accent-success);
 }
 
 .stat-card-icon.amber {
   background-color: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  color: var(--su-accent-warning);
 }
 
 .stat-card-icon.red {
   background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+  color: var(--su-accent-danger);
 }
 
 .stat-card-value {
@@ -97,8 +97,8 @@
 /* Pending approvals section */
 .section-card {
   background-color: var(--su-surface-elevated);
-  border: 1px solid var(--su-border-strong);
-  border-radius: 12px;
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-lg);
   overflow: hidden;
 }
 
@@ -125,7 +125,7 @@
 
 .badge-amber {
   background-color: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  color: var(--su-accent-warning);
 }
 
 .pending-list {
@@ -194,7 +194,7 @@
 
 .btn-approve {
   background-color: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  color: var(--su-accent-success);
   border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
@@ -205,7 +205,7 @@
 
 .btn-reject {
   background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  color: var(--su-accent-danger);
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
@@ -234,7 +234,7 @@
   text-align: center;
   font-size: 13px;
   font-weight: 500;
-  color: var(--su-accent-primary);
+  color: var(--su-accent-secondary);
   border-top: 1px solid var(--su-border-strong);
   transition: background-color 0.15s;
 }
@@ -267,4 +267,43 @@
     flex: 1;
     text-align: center;
   }
+}
+
+.dashboard-page :is(.page-header, .su-pageheader, .dashboard-welcome) {
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--su-border);
+  border-radius: var(--su-radius-xl);
+  background: linear-gradient(115deg, var(--su-accent-primary-soft), var(--su-surface));
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.dashboard-page :is(.page-title, .dashboard-welcome h1, .dashboard-greeting) {
+  font-family: var(--su-font-display);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+}
+.dashboard-page :is(.stat-card, .dashboard-card, .section-card, .quick-link-card) {
+  min-width: 0;
+  box-shadow: 0 2px 3px rgb(0 0 0 / 3%);
+}
+.dashboard-page :is(.stat-value, .stat-card-value) {
+  font-family: var(--su-font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+.dashboard-page :is(.stat-label, .stat-card-desc, .quick-link-desc) {
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 767px) {
+  .dashboard-page :is(.dashboard-grid, .stats-grid, .dashboard-stats) { min-width: 0; }
+  .dashboard-page .btn-sm { min-height: 44px; }
+  .dashboard-page .event-item-meta { flex-wrap: wrap; }
+}
+
+@media (min-width: 360px) and (max-width: 640px) {
+  .dashboard-page .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .dashboard-page .stat-card { padding: 16px; }
+  .dashboard-page .stat-card-header { flex-wrap: wrap; gap: 8px; }
 }

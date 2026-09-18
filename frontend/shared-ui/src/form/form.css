@@ -5,10 +5,10 @@
 }
 
 .su-field__label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--su-text-secondary);
-  text-transform: uppercase;
+  text-transform: none;
   letter-spacing: 0.4px;
 }
 .su-field__label-required {
@@ -17,13 +17,13 @@
 }
 
 .su-field__helper {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--su-text-muted);
   line-height: 1.4;
 }
 
 .su-field__error {
-  font-size: 11.5px;
+  font-size: 13px;
   color: var(--su-accent-danger);
   line-height: 1.4;
   display: flex;
@@ -35,6 +35,8 @@
 .su-select,
 .su-textarea {
   width: 100%;
+  min-width: 0;
+  min-height: 44px;
   background: var(--su-surface);
   border: 1px solid var(--su-border);
   color: var(--su-text-primary);

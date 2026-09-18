@@ -1,5 +1,5 @@
 .login-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +81,7 @@
 }
 
 .form-input:focus {
-  border-color: var(--su-accent-primary);
+  border-color: var(--su-accent-secondary);
 }
 
 .form-input::placeholder {
@@ -227,4 +227,22 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
+}
+
+.login-page {
+  background-image: radial-gradient(ellipse at 15% 15%, var(--su-accent-primary-soft), transparent 55%);
+}
+.login-card {
+  border-color: var(--su-border);
+  border-radius: var(--su-radius-xl);
+  box-shadow: var(--su-shadow-elevated);
+}
+.login-page :is(.login-title, .login-brand-title) {
+  font-family: var(--su-font-display);
+  font-size: 30px;
+  letter-spacing: -0.035em;
+}
+@media (max-width: 480px) {
+  .login-card { padding: 28px 20px; }
+  .login-page input:not([type='checkbox']), .login-page button[type='submit'] { min-height: 48px; }
 }
