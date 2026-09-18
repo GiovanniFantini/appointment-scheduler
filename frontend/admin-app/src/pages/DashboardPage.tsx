@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { EmptyState, PageHeader, Skeleton, useToast } from '@scheduler/ui'
+import { Button, EmptyState, PageHeader, Skeleton, useToast } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { formatBrowserDate } from '../lib/dateUtils'
 import './DashboardPage.css'
@@ -33,9 +33,12 @@ export default function DashboardPage() {
   const [merchants, setMerchants] = useState<Merchant[]>([])
   const [stats, setStats] = useState<Stats>({ total: 0, active: 0, pending: 0, totalEmployees: 0 })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [actionLoading, setActionLoading] = useState<number | null>(null)
 
   const fetchData = async () => {
+    setLoading(true)
+    setError(false)
     try {
       const res = await apiClient.get('/merchants?status=all')
       const data: Merchant[] = res.data?.data ?? res.data ?? []
@@ -47,7 +50,7 @@ export default function DashboardPage() {
         totalEmployees: data.reduce((sum, m) => sum + (m.employeeCount ?? 0), 0),
       })
     } catch {
-      // silently fail – stats stay at 0
+      setError(true)
     } finally {
       setLoading(false)
     }
@@ -134,6 +137,16 @@ export default function DashboardPage() {
       ),
     },
   ]
+
+  if (error) return (
+    <div className="dashboard-page">
+      <PageHeader title="Dashboard" subtitle="Panoramica della piattaforma" />
+      <div role="alert">
+        <p>Impossibile caricare i dati. I conteggi e le approvazioni non sono disponibili.</p>
+        <Button variant="secondary" onClick={() => void fetchData()}>Riprova</Button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="dashboard-page">
