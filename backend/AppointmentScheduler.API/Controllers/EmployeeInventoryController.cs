@@ -16,6 +16,7 @@ namespace AppointmentScheduler.API.Controllers;
 ///  - Operator → rettifiche stock e ricevimento merci
 ///  - Manager  → anche anagrafiche articoli/fornitori e gestione ordini di acquisto
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Magazzino)]
 [ApiController]
 [Route("api/employee/inventory")]
 [Authorize(Policy = "EmployeeOnly")]

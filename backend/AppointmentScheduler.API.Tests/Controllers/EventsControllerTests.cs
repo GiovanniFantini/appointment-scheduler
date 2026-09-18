@@ -166,6 +166,7 @@ public class EventsControllerTests
     [Fact]
     public async Task Update_ReturnsBadRequest_WhenServiceThrowsInvalidOperationException()
     {
+        _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync(new EventDto { Id = 5 });
         var request = new UpdateEventRequest();
         _eventService.Setup(service => service.UpdateAsync(5, 7, request)).ThrowsAsync(new InvalidOperationException("Filiale non valida"));
         var controller = CreateController(
@@ -182,6 +183,7 @@ public class EventsControllerTests
     [Fact]
     public async Task Update_ReturnsConflict_WhenServiceThrowsEventConflictException()
     {
+        _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync(new EventDto { Id = 5 });
         var request = new UpdateEventRequest();
         var conflicts = new List<ShiftConflictDto>
         {
@@ -220,6 +222,7 @@ public class EventsControllerTests
     [Fact]
     public async Task Update_ReturnsOk_WhenEventIsUpdated()
     {
+        _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync(new EventDto { Id = 5 });
         var request = new UpdateEventRequest();
         var evt = new EventDto { Id = 5 };
         _eventService.Setup(service => service.UpdateAsync(5, 7, request)).ReturnsAsync(evt);
@@ -237,6 +240,7 @@ public class EventsControllerTests
     [Fact]
     public async Task UpdateAssignments_ReturnsOk_WhenEventIsUpdated()
     {
+        _eventService.Setup(service => service.GetByIdAsync(5, 7)).ReturnsAsync(new EventDto { Id = 5 });
         var request = new UpdateEventAssignmentsRequest();
         var evt = new EventDto { Id = 5 };
         _eventService.Setup(service => service.UpdateAssignmentsAsync(5, 7, request)).ReturnsAsync(evt);

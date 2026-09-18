@@ -3,7 +3,7 @@ using AppointmentScheduler.Shared.Models;
 
 namespace AppointmentScheduler.Data;
 
-public class ApplicationDbContext : DbContext, IApplicationDbContext
+public partial class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     // Core
     public DbSet<User> Users { get; set; }
     public DbSet<Merchant> Merchants { get; set; }
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
     public DbSet<Employee> Employees { get; set; }
 
     // Branches & Departments (filiali / reparti)
@@ -67,6 +68,15 @@ public class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<SubscriptionPlan>(entity =>
+        {
+            entity.Property(p => p.Name).HasMaxLength(100).IsRequired();
+            entity.HasIndex(p => p.Name).IsUnique();
+            entity.Property(p => p.Description).HasMaxLength(1000);
+        });
+        modelBuilder.Entity<Merchant>().HasOne(m => m.SubscriptionPlan).WithMany()
+            .HasForeignKey(m => m.SubscriptionPlanId).OnDelete(DeleteBehavior.Restrict);
 
         // ── User ──────────────────────────────────────────────────────────────
         modelBuilder.Entity<User>(entity =>

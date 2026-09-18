@@ -4,6 +4,9 @@ public class Merchant
 {
     public int Id { get; set; }
     public int UserId { get; set; }
+    public int? SubscriptionPlanId { get; set; }
+    public SubscriptionPlan? SubscriptionPlan { get; set; }
+    public DateTime? TrialEndsAt { get; set; }
     public string CompanyName { get; set; } = string.Empty;
     public string? VatNumber { get; set; }
     public string? Address { get; set; }

@@ -72,7 +72,7 @@ public class AuthServiceTests
     [Fact]
     public async Task LoginMerchantAsync_ReturnsApprovedMerchantWithManagerFeatureLevels()
     {
-        var merchant = new Merchant { Id = 12, CompanyName = "Contoso", IsActive = true, IsApproved = true };
+        var merchant = new Merchant { Id = 12, CompanyName = "Contoso", IsActive = true, IsApproved = true, SubscriptionPlan = new SubscriptionPlan { Features = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] } };
         var users = new List<User>
         {
             new()
@@ -139,7 +139,7 @@ public class AuthServiceTests
                 new() { Feature = MerchantFeature.Filiali, IsEnabled = true }
             }
         };
-        var merchant = new Merchant { Id = 12, CompanyName = "Contoso", City = "Milan", IsApproved = true, IsActive = true };
+        var merchant = new Merchant { Id = 12, CompanyName = "Contoso", City = "Milan", IsApproved = true, IsActive = true, SubscriptionPlan = new SubscriptionPlan { Features = [5, 8, 10] } };
         var membership = new EmployeeMembership { MerchantId = 12, RoleId = 4, IsActive = true, Merchant = merchant, Role = role };
         var employee = new Employee { Id = 9, UserId = 3, Email = "employee@example.com", IsActive = true, Memberships = new List<EmployeeMembership> { membership } };
         var users = new List<User> { new() { Id = 3, Email = "employee@example.com", FirstName = "Eva", LastName = "Employee", AccountType = AccountType.Employee, IsActive = true } };

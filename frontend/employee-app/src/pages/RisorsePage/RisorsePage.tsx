@@ -1,3 +1,5 @@
+import { useAuth } from '@scheduler/ui'
+import type { EmployeeUser } from '../../App'
 import { useState, useEffect, FormEvent } from 'react'
 import { useConfirm, useToast, Avatar, StatusChip, TiPlus, TiBuildingStore } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
@@ -78,6 +80,8 @@ const emptyForm: NewEmployeeForm = {
 }
 
 export default function RisorsePage() {
+  const { user } = useAuth<EmployeeUser>()
+  const hasSkills = !!user?.activeFeatures.includes('Mansioni')
   const toast = useToast()
   const confirm = useConfirm()
   const { activeBranches, isMultiBranch } = useBranch()
@@ -128,7 +132,7 @@ export default function RisorsePage() {
   useEffect(() => {
     fetchEmployees()
     fetchRoles()
-    fetchSkills()
+    if (hasSkills) fetchSkills()
   }, [])
 
   const openAddModal = () => {
@@ -397,7 +401,7 @@ export default function RisorsePage() {
                 </div>
               )}
 
-              {emp.skills && emp.skills.length > 0 && (
+              {hasSkills && emp.skills && emp.skills.length > 0 && (
                 <div className="skill-chips">
                   {emp.skills.map(s => (
                     <span

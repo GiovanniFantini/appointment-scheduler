@@ -1,0 +1,32 @@
+.plans-page { max-width: 1200px; display: grid; gap: 24px; }
+.plans-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.plans-heading h1 { font-size: 30px; margin: 0 0 8px; }
+.plans-heading p { color: var(--su-text-secondary); max-width: 650px; }
+.plans-heading .plans-eyebrow { font-size: 11px; letter-spacing: .12em; color: var(--su-accent-secondary); margin-bottom: 8px; }
+.plans-catalog { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 310px), 1fr)); gap: 16px; }
+.plan-card, .plan-editor { background: var(--su-surface); border: 1px solid var(--su-border); border-radius: 12px; padding: 24px; }
+.plan-card { display: flex; flex-direction: column; gap: 18px; }
+.plan-card > button { align-self: flex-start; margin-top: auto; }
+.plan-card-heading { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: baseline; }
+.plan-card-heading h2, .plan-editor h2 { font-size: 19px; margin: 0; }
+.plan-card-heading > span { color: var(--su-text-secondary); font-size: 12px; }
+.plan-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.plan-tags span { padding: 4px 9px; border: 1px solid var(--su-border); border-radius: 5px; font-size: 12px; color: var(--su-text-primary); }
+.plan-limits { display: grid; gap: 8px; margin: 12px 0 20px; }
+.plan-limits > div { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; }
+.plan-limits dt { color: var(--su-text-secondary); }
+.plan-limits dd { margin: 0; font-variant-numeric: tabular-nums; }
+.plan-editor fieldset { border: 0; padding: 0; margin: 20px 0 0; min-width: 0; }
+.plan-editor h3 { font-size: 15px; margin: 24px 0 12px; }
+.plan-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 16px; }
+.plan-fields label, .plan-days { display: grid; gap: 8px; font-size: 13px; }
+.plan-editor input:not([type=checkbox]), .plan-editor select { width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid var(--su-border); background: var(--su-surface-bg); color: var(--su-text-primary); }
+.plan-editor input:focus-visible, .plan-editor select:focus-visible { outline: 2px solid var(--su-accent-primary); outline-offset: 2px; }
+.plan-feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+.plan-feature-grid label { display: flex; gap: 10px; align-items: center; font-size: 14px; }
+.plan-feature-grid input { accent-color: var(--su-accent-primary); width: 17px; height: 17px; }
+.plan-note { font-size: 13px; color: var(--su-text-secondary); line-height: 1.6; margin: 14px 0; }
+.plan-impact { padding: 12px; border-left: 3px solid var(--su-accent-warning); background: var(--su-warning-soft); font-size: 13px; margin: 20px 0; }
+.plan-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.plan-days { max-width: 240px; margin-top: 16px; }
+@media (max-width: 640px) { .plans-heading { flex-direction: column; } .plan-editor, .plan-card { padding: 18px; } }

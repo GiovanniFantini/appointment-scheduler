@@ -32,6 +32,8 @@ apiClient.interceptors.response.use(
       url: error.config?.url
     })
 
+    if (error.response?.status === 403) window.dispatchEvent(new Event('subscription-changed'))
+
     if (error.response?.status === 401) {
       const currentPath = window.location.pathname
       const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password']

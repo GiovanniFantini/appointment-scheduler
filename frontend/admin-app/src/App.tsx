@@ -1,3 +1,4 @@
+import SubscriptionPlansPage from './pages/SubscriptionPlansPage'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import AdminShell from './components/AdminShell'
@@ -107,6 +108,7 @@ function App() {
 
             <Route element={<Protected />}>
               <Route index element={<DashboardPage />} />
+              <Route path="packages" element={<SubscriptionPlansPage />} />
               <Route path="merchants" element={<MerchantsPage />} />
               <Route path="merchants/:id" element={<MerchantDetailPage />} />
               <Route path="reports" element={<ReportsPage />} />

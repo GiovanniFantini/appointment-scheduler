@@ -11,6 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Controller per la gestione degli eventi aziendali
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Calendario)]
 [ApiController]
 [Route("api/events")]
 [Authorize]
@@ -155,6 +156,9 @@ public class EventsController : ControllerBase
     [Authorize(Policy = "EmployeeOnly")]
     public async Task<ActionResult<EventDto>> Create([FromBody] CreateEventRequest request)
     {
+        if (!User.HasFeature(MerchantFeature.Mansioni)
+            && (request.RequiredSkills.Count > 0 || request.ParticipantSkills.Any(p => p.SkillId.HasValue)))
+            return Forbid();
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
 
@@ -196,6 +200,14 @@ public class EventsController : ControllerBase
         if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Manager))
             return Forbid();
 
+        if (!User.HasFeature(MerchantFeature.Mansioni))
+        {
+            var existing = await _eventService.GetByIdAsync(id, merchantId);
+            if (existing == null) return NotFound(new { message = "Evento non trovato o non autorizzato" });
+            request.RequiredSkills = existing.RequiredSkills.Select(s => new EventRequiredSkillInput { SkillId = s.SkillId, Quantity = s.Quantity }).ToList();
+            request.ParticipantSkills = PreserveParticipantSkills(existing, request.OwnerEmployeeIds.Concat(request.CoOwnerEmployeeIds));
+        }
+
         try
         {
             var evt = await _eventService.UpdateAsync(id, merchantId, request);
@@ -230,6 +242,13 @@ public class EventsController : ControllerBase
         if (!User.RequireFeatureLevel(MerchantFeature.Calendario, FeatureAccessLevel.Operator))
             return Forbid();
 
+        if (!User.HasFeature(MerchantFeature.Mansioni))
+        {
+            var existing = await _eventService.GetByIdAsync(id, merchantId);
+            if (existing == null) return NotFound(new { message = "Evento non trovato o non autorizzato" });
+            request.ParticipantSkills = PreserveParticipantSkills(existing, request.OwnerEmployeeIds.Concat(request.CoOwnerEmployeeIds));
+        }
+
         try
         {
             var evt = await _eventService.UpdateAssignmentsAsync(id, merchantId, request);
@@ -247,6 +266,14 @@ public class EventsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    // Senza Mansioni, un cambio partecipanti conserva solo le assegnazioni dei dipendenti rimasti nel turno.
+    private static List<ParticipantSkillAssignment> PreserveParticipantSkills(EventDto existing, IEnumerable<int> employeeIds)
+    {
+        var selected = employeeIds.ToHashSet();
+        return existing.Participants.Where(p => selected.Contains(p.EmployeeId) && p.SkillId.HasValue)
+            .Select(p => new ParticipantSkillAssignment { EmployeeId = p.EmployeeId, SkillId = p.SkillId }).ToList();
     }
 
     /// <summary>

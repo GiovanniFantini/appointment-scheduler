@@ -1,3 +1,5 @@
+import { useAuth } from '@scheduler/ui'
+import type { EmployeeUser } from '../../App'
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -297,6 +299,9 @@ function toFCEvent(e: ApiEvent, showBranchBadge: boolean): EventInput {
 }
 
 export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
+  const { user } = useAuth<EmployeeUser>()
+  const hasRequests = !!user?.activeFeatures.includes('Richieste')
+  const hasSkills = !!user?.activeFeatures.includes('Mansioni')
   const canOperate = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Operator
   const canManage = LEVEL_RANK[accessLevel] >= LEVEL_RANK.Manager
   const canCreate = canManage
@@ -320,7 +325,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
 
   useEffect(() => {
     let mounted = true
-    skillsApi.list().then(list => {
+    if (hasSkills) skillsApi.list().then(list => {
       if (mounted) setSkills(list.filter(s => s.isActive))
     }).catch(() => { /* feature opzionale */ })
     apiClient.get<EmployeeOption[]>('/employee-profile/colleagues').then(res => {
@@ -337,7 +342,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
 
       const [eventsRes, requestsRes] = await Promise.all([
         apiClient.get('/events/employee', { params: eventParams }),
-        apiClient.get(canOperate ? '/employee-requests/calendar' : '/employee-requests/my'),
+        hasRequests ? apiClient.get(canOperate ? '/employee-requests/calendar' : '/employee-requests/my') : Promise.resolve({ data: [] }),
       ])
 
       // Badge filiale solo quando si vedono più filiali insieme (vista "Tutte").
@@ -371,7 +376,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
     } catch {
       // silently fail
     }
-  }, [activeBranchId, activeDepartmentId, isMultiBranch, canOperate])
+  }, [activeBranchId, activeDepartmentId, isMultiBranch, canOperate, hasRequests])
 
   const handleDatesSet = (info: DatesSetArg) => {
     const from = info.startStr.split('T')[0]
@@ -583,7 +588,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
         <div className="fc-rich-event-resources" title={apiEvent.participants.map(p => p.fullName).join(', ')}>
           Risorse: {summarizeParticipants(apiEvent.participants)}
         </div>
-        {summarizeRequiredSkills(apiEvent.requiredSkills) && (
+        {hasSkills && summarizeRequiredSkills(apiEvent.requiredSkills) && (
           <div className="fc-rich-event-skills">
             {summarizeRequiredSkills(apiEvent.requiredSkills)}
           </div>
@@ -692,6 +697,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
           <span className="legend-dot" style={{ background: '#3b82f6', border: '2px dashed rgba(255,255,255,0.5)' }} />
           Turno in reperibilità
         </div>
+        {hasRequests && <>
         <div className="legend-item">
           <span className="legend-dot" style={{ background: 'transparent', border: '2px dashed #ec4899' }} />
           Richiesta in attesa
@@ -700,6 +706,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
           <span className="legend-dot" style={{ background: '#ec4899' }} />
           Richiesta approvata
         </div>
+        </>}
       </div>
 
       {(skills.length > 0 || employees.length > 0) && (
@@ -842,7 +849,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
             const apiEvent = arg.event.extendedProps.apiEvent as ApiEvent | undefined
             if (!apiEvent) return
             const dot = coverageDotColor(apiEvent.coverageStatusName)
-            if (dot && apiEvent.eventTypeName === 'Turno') {
+            if (hasSkills && dot && apiEvent.eventTypeName === 'Turno') {
               const span = document.createElement('span')
               span.className = 'fc-coverage-dot'
               span.style.background = dot
@@ -901,7 +908,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
               return null
             })()}
           </div>
-          {hoverInfo.apiEvent.requiredSkills && hoverInfo.apiEvent.requiredSkills.length > 0 && (
+          {hasSkills && hoverInfo.apiEvent.requiredSkills && hoverInfo.apiEvent.requiredSkills.length > 0 && (
             <div className="event-hover-section">
               <div className="event-hover-section-title">Mansioni richieste</div>
               <div className="event-hover-chips">
@@ -927,7 +934,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
                 {hoverInfo.apiEvent.participants.map(p => (
                   <li key={p.employeeId}>
                     {p.fullName}
-                    {p.skillName && (
+                    {hasSkills && p.skillName && (
                       <span
                         className="event-hover-chip-inline"
                         style={{ background: p.skillColor ?? '#94a3b8' }}
@@ -940,7 +947,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
               </ul>
             </div>
           )}
-          {hoverInfo.apiEvent.coverageStatusName && hoverInfo.apiEvent.coverageStatusName !== 'None' && (
+          {hasSkills && hoverInfo.apiEvent.coverageStatusName && hoverInfo.apiEvent.coverageStatusName !== 'None' && (
             <div className="event-hover-coverage">
               <span
                 className="event-hover-coverage-dot"

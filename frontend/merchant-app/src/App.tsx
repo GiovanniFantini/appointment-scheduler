@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, SubscriptionGate, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import MerchantShell from './components/MerchantShell'
 import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage/LoginPage'
@@ -66,10 +66,17 @@ function Protected() {
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />
   if (!user.isApproved) return <Navigate to="/pending-approval" replace />
   return (
+    <SubscriptionGate apiClient={apiClient}>
     <BranchProvider>
       <MerchantShell />
     </BranchProvider>
+    </SubscriptionGate>
   )
+}
+
+function FeatureRoute({ feature, children }: { feature: string; children: React.ReactNode }) {
+  const { user } = useAuth<MerchantUser>()
+  return user?.activeFeatures.includes(feature) ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function App() {
@@ -108,8 +115,8 @@ function App() {
 
             <Route element={<Protected />}>
               <Route path="/" element={<DashboardPageWrapper />} />
-              <Route path="/ruoli" element={<RuoliPage />} />
-              <Route path="/report" element={<ReportPage />} />
+              <Route path="/ruoli" element={<FeatureRoute feature="Ruoli"><RuoliPage /></FeatureRoute>} />
+              <Route path="/report" element={<FeatureRoute feature="Report"><ReportPage /></FeatureRoute>} />
               <Route path="/profile" element={<ProfileWrapper />} />
               <Route path="/preferences" element={<PreferencesPage />} />
             </Route>

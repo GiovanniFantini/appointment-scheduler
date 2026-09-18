@@ -11,6 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// Ruoli assegnabili alle risorse da parte dell'operativita' employee.
 /// La configurazione dei ruoli resta in merchant app.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Risorse)]
 [ApiController]
 [Route("api/employee/roles")]
 [Authorize(Policy = "EmployeeOnly")]

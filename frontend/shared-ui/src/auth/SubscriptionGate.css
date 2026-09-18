@@ -1,0 +1,7 @@
+.su-subscription-screen { min-height: 100svh; display: grid; place-items: center; padding: 24px; background: var(--su-surface-bg); color: var(--su-text-primary); }
+.su-subscription-card { width: 100%; max-width: 560px; border: 1px solid var(--su-border); border-top: 3px solid var(--su-accent-primary); border-radius: 12px; background: var(--su-surface); padding: clamp(24px, 5vw, 40px); }
+.su-subscription-card h1 { font-size: clamp(25px, 4vw, 32px); margin: 14px 0 12px; }
+.su-subscription-card > p { color: var(--su-text-secondary); line-height: 1.65; }
+.su-subscription-card .su-subscription-eyebrow { font-size: 11px; letter-spacing: .12em; color: var(--su-accent-secondary); margin: 0; }
+.su-subscription-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+.su-subscription-banner { padding: 10px 20px; background: var(--su-info-soft); color: var(--su-text-primary); font-size: 13px; }

@@ -43,8 +43,8 @@ export default function DashboardPage({ user }: DashboardPageProps) {
 
         const [empRes, evtRes, reqRes] = await Promise.allSettled([
           apiClient.get('/employees'),
-          apiClient.get(`/events?from=${from}&to=${to}`),
-          apiClient.get('/employee-requests?status=0'),
+          user.activeFeatures.includes('Calendario') ? apiClient.get(`/events?from=${from}&to=${to}`) : Promise.resolve({ data: [] }),
+          user.activeFeatures.includes('Richieste') ? apiClient.get('/employee-requests?status=0') : Promise.resolve({ data: [] }),
         ])
 
         const employees = empRes.status === 'fulfilled' ? (empRes.value.data as unknown[]) : []
@@ -92,29 +92,32 @@ export default function DashboardPage({ user }: DashboardPageProps) {
             <div className="stat-label">Dipendenti totali</div>
           </div>
         </div>
+        {user.activeFeatures.includes('Calendario') && (
         <div className="stat-card stat-card--static">
           <div className="stat-icon indigo">📅</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.upcomingEvents}</div>
             <div className="stat-label">Eventi questa settimana</div>
           </div>
-        </div>
+        </div>)}
+        {user.activeFeatures.includes('Richieste') && (
         <div className="stat-card stat-card--static">
           <div className="stat-icon amber">📋</div>
           <div className="stat-info">
             <div className="stat-value">{loadingStats ? '—' : stats.pendingRequests}</div>
             <div className="stat-label">Richieste in attesa</div>
           </div>
-        </div>
+        </div>)}
         <div className="stat-card stat-card--static">
           <div className="stat-icon green">✅</div>
           <div className="stat-info">
-            <div className="stat-value">{visibleLinks.length}</div>
+            <div className="stat-value">{user.activeFeatures.length}</div>
             <div className="stat-label">Funzionalità attive</div>
           </div>
         </div>
       </div>
 
+      {visibleLinks.length > 0 && <>
       <div className="section-title">Accesso rapido</div>
       <div className="quick-links-grid">
         {visibleLinks.map(link => (
@@ -125,6 +128,7 @@ export default function DashboardPage({ user }: DashboardPageProps) {
           </Link>
         ))}
       </div>
+      </>}
     </div>
   )
 }

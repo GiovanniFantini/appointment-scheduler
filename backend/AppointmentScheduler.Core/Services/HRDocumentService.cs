@@ -4,6 +4,7 @@ using AppointmentScheduler.Data;
 using AppointmentScheduler.Shared.DTOs;
 using AppointmentScheduler.Shared.Enums;
 using AppointmentScheduler.Shared.Models;
+using AppointmentScheduler.Shared.Helpers;
 
 namespace AppointmentScheduler.Core.Services;
 
@@ -278,6 +279,7 @@ public class HRDocumentService : IHRDocumentService
         HRDocumentCreateDto dto)
     {
         var now = _clock.UtcNow;
+        await CheckStorageCapacityAsync(tenantId);
         // Verifica che l'employee appartenga al tenant
         var employee = await _context.Employees
             .Include(e => e.Memberships)
@@ -409,7 +411,20 @@ public class HRDocumentService : IHRDocumentService
         document.Status = HRDocumentStatus.Published;
         document.UpdatedAt = now;
 
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (SubscriptionLimitException)
+        {
+            // Il file arriva direttamente sul blob: un superamento rilevato alla finalizzazione non deve lasciarlo utilizzabile.
+            _context.Entry(document).CurrentValues.SetValues(_context.Entry(document).OriginalValues);
+            version.UploadStatus = UploadStatus.Failed;
+            version.FileSizeBytes = 0;
+            await _context.SaveChangesAsync();
+            await _fileStorage.DeleteBlobAsync(version.BlobPath);
+            throw;
+        }
 
         if (document.Employee.UserId.HasValue)
         {
@@ -431,6 +446,7 @@ public class HRDocumentService : IHRDocumentService
         string? changeNotes = null)
     {
         var now = _clock.UtcNow;
+        await CheckStorageCapacityAsync(tenantId);
         var document = await _context.HRDocuments
             .Include(d => d.Versions)
             .Include(d => d.Employee)
@@ -740,6 +756,18 @@ public class HRDocumentService : IHRDocumentService
         return AllowedExtensions.Contains(extension)
             ? extension.ToLowerInvariant()
             : "pdf";
+    }
+
+    private async Task CheckStorageCapacityAsync(int tenantId)
+    {
+        var limit = await _context.Merchants.Where(m => m.Id == tenantId)
+            .Select(m => m.SubscriptionPlan == null ? (long?)null : m.SubscriptionPlan.MaxStorageBytes).SingleOrDefaultAsync();
+        if (!limit.HasValue) return;
+        var used = await _context.HRDocumentVersions
+            .Where(v => v.HRDocument.TenantId == tenantId && !v.HRDocument.IsDeleted && v.UploadStatus == UploadStatus.Completed)
+            .SumAsync(v => (long?)v.FileSizeBytes) ?? 0;
+        if (used >= limit.Value)
+            throw new SubscriptionLimitException("Spazio documenti del pacchetto esaurito. Contatta l’amministratore.");
     }
 
     private static bool IsFinalizePayloadValid(HRDocumentFinalizeDto dto)

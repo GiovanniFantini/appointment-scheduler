@@ -80,3 +80,5 @@ export * from './icons'
 
 // Icone Tabler (set del mockup Turnis)
 export * from './icons/tabler'
+
+export { SubscriptionGate } from './auth/SubscriptionGate'

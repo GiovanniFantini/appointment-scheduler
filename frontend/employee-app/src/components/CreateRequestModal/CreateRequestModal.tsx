@@ -1,3 +1,5 @@
+import { useAuth } from '@scheduler/ui'
+import type { EmployeeUser } from '../../App'
 import { useState, useEffect, FormEvent } from 'react'
 import { BottomSheet } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
@@ -30,6 +32,8 @@ interface ShiftOption {
 }
 
 export default function CreateRequestModal({ onClose, onCreated }: Props) {
+  const { user } = useAuth<EmployeeUser>()
+  const hasCalendar = !!user?.activeFeatures.includes('Calendario')
   const [tipo, setTipo] = useState<RequestType>('Ferie')
   const [dataInizio, setDataInizio] = useState('')
   const [dataFine, setDataFine] = useState('')
@@ -53,7 +57,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
 
   // Load shifts for the selected start date when the user wants to link a permesso to a specific shift.
   useEffect(() => {
-    if (tipo !== 'Permessi' || !dataInizio) {
+    if (!hasCalendar || tipo !== 'Permessi' || !dataInizio) {
       setAvailableShifts([])
       return
     }
@@ -74,7 +78,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
       setAvailableShifts([])
     })
     return () => ctrl.abort()
-  }, [tipo, dataInizio])
+  }, [tipo, dataInizio, hasCalendar])
 
   // Reset irrelevant fields when type changes
   useEffect(() => {

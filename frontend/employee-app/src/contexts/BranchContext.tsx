@@ -1,5 +1,6 @@
+import apiClient from '../lib/axios'
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
-import { branchesApi, type Branch } from '../lib/api/branches'
+import { type Branch } from '../lib/api/branches'
 
 const STORAGE_KEY_BRANCH = 'employee.activeBranchId'
 const STORAGE_KEY_DEPARTMENT = 'employee.activeDepartmentId'
@@ -48,7 +49,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await branchesApi.list(true)
+      const data = (await apiClient.get<Branch[]>('/subscription/branches')).data
       setBranches(data)
       // Se la filiale selezionata non esiste più o è stata disattivata,
       // ricade su "Tutte le filiali" e azzera il reparto collegato.

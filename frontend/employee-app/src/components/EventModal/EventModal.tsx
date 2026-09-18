@@ -1,3 +1,5 @@
+import { useAuth } from '@scheduler/ui'
+import type { EmployeeUser } from '../../App'
 import { useState, useEffect, useMemo } from 'react'
 import apiClient from '../../lib/axios'
 import { skillsApi, Skill, SuggestedEmployee } from '../../lib/api/skills'
@@ -126,6 +128,9 @@ function getApiErrorMessage(data: ApiErrorResponse | undefined): string | undefi
 }
 
 export default function EventModal({ event, defaultDate, mode = 'full', onClose, onSaved }: EventModalProps) {
+  const { user } = useAuth<EmployeeUser>()
+  const hasSkills = !!user?.activeFeatures.includes('Mansioni')
+  const hasResources = !!user?.activeFeatures.includes('Risorse')
   const isEdit = !!event?.id
   const assignmentOnly = mode === 'assign'
   const { activeBranches, isMultiBranch, defaultBranchId } = useBranch()
@@ -186,6 +191,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
   const isEmployeeAbsenceEvent = eventType === 'Ferie' || eventType === 'Permessi' || eventType === 'Malattia'
 
   const refreshSkills = async () => {
+    if (!hasSkills) return
     setSkillsLoading(true)
     setInlineSkillError('')
     try {
@@ -413,7 +419,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
   // Fetch suggerimenti per ogni mansione richiesta quando cambiano data/orari/fabbisogno
   useEffect(() => {
-    if (eventType !== 'Turno' || step !== 3) return
+    if (!hasSkills || eventType !== 'Turno' || step !== 3) return
     if (!startDate) return
     const target: Record<number, SuggestedEmployee[]> = {}
     let cancelled = false
@@ -431,7 +437,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
       if (!cancelled) setSuggestedBySkill(target)
     })
     return () => { cancelled = true }
-  }, [step, requiredSkills, startDate, startTime, endTime, isAllDay, eventType, event?.id])
+  }, [step, requiredSkills, startDate, startTime, endTime, isAllDay, eventType, event?.id, hasSkills])
 
   const computeRecurrence = (): string | undefined => {
     if (repeatWeekly && repeatUntil) return `WEEKLY;UNTIL=${repeatUntil}`
@@ -641,13 +647,15 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
             <div className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
               <span className="step-num">1</span><span className="step-label">{isMultiBranch ? 'Dove e quando' : 'Quando'}</span>
             </div>
+            {hasSkills && <>
             <div className="step-sep" />
             <div className={`step ${step === 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
               <span className="step-num">2</span><span className="step-label">Cosa serve</span>
             </div>
+            </>}
             <div className="step-sep" />
             <div className={`step ${step === 3 ? 'active' : ''}`} onClick={() => setStep(3)}>
-              <span className="step-num">3</span><span className="step-label">Chi</span>
+              <span className="step-num">{hasSkills ? 3 : 2}</span><span className="step-label">Chi</span>
             </div>
           </div>
         )}
@@ -884,7 +892,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
             </>
           )}
 
-          {eventType === 'Turno' && step === 2 && (
+          {hasSkills && eventType === 'Turno' && step === 2 && (
             <div className="wizard-step-content">
               <div className="step2-actions">
                 <button
@@ -1008,7 +1016,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
           {eventType === 'Turno' && step === 3 && (
             <div className="wizard-step-content">
-              {requiredSkills.length > 0 ? (
+              {hasSkills && requiredSkills.length > 0 ? (
                 <>
                   {requiredSkills.map(rs => {
                     const s = skills.find(x => x.id === rs.skillId)
@@ -1113,7 +1121,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   <p className="wizard-hint">Seleziona i partecipanti del turno.</p>
                 </>
               )}
-              {requiredSkills.length > 0 && (
+              {hasResources && hasSkills && requiredSkills.length > 0 && (
                 <button
                   type="button"
                   className="new-external-btn"
@@ -1127,7 +1135,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
           {(
             (eventType !== 'Turno' && employees.length > 0) ||
-            (eventType === 'Turno' && step === 3 && requiredSkills.length === 0 && employees.length > 0)
+            (eventType === 'Turno' && step === 3 && (!hasSkills || requiredSkills.length === 0) && employees.length > 0)
           ) && (
             <div className="modal-form-group">
               <label className="modal-label">
@@ -1171,7 +1179,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   Il dipendente selezionato ha {selectedEmployeeConflictCount} sovrapposizion{selectedEmployeeConflictCount === 1 ? 'e' : 'i'} bloccante{selectedEmployeeConflictCount === 1 ? '' : 'i'}.
                 </div>
               )}
-              {eventType === 'Turno' && (
+              {hasResources && eventType === 'Turno' && (
                 <button
                   type="button"
                   className="new-external-btn"
@@ -1360,7 +1368,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
           )}
           <div className="modal-footer-right">
             {eventType === 'Turno' && step > 1 && (
-              <button className="btn-cancel" onClick={() => setStep(prev => (prev > 1 ? (prev - 1) as 1 | 2 | 3 : prev))}>
+              <button className="btn-cancel" onClick={() => setStep(prev => (prev === 3 && !hasSkills ? 1 : prev > 1 ? (prev - 1) as 1 | 2 | 3 : prev))}>
                 ← Indietro
               </button>
             )}
@@ -1376,7 +1384,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     if (!endDate) setEndDate(startDate)
                   }
                   setError('')
-                  setStep(prev => (prev + 1) as 1 | 2 | 3)
+                  setStep(prev => (prev === 1 && !hasSkills ? 3 : prev + 1) as 1 | 2 | 3)
                 }}
               >
                 {step === 2 && requiredSkills.length === 0 ? 'Salta →' : 'Avanti →'}
@@ -1390,7 +1398,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
         </div>
       </div>
 
-      {showNewExternal && (
+      {hasResources && showNewExternal && (
         <div
           className="modal-overlay"
           onClick={e => { if (e.target === e.currentTarget) setShowNewExternal(false) }}

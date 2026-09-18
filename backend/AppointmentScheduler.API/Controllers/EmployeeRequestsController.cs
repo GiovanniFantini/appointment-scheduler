@@ -11,6 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Controller per la gestione delle richieste dei dipendenti (ferie, cambio turno, permessi, malattia)
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Richieste)]
 [ApiController]
 [Route("api/employee-requests")]
 [Authorize]

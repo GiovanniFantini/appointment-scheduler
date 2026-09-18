@@ -10,6 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Gestione operativa filiali e reparti lato employee app.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Filiali)]
 [ApiController]
 [Route("api/employee/branches")]
 [Authorize(Policy = "EmployeeOnly")]

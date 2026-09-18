@@ -1,3 +1,4 @@
+using AppointmentScheduler.API.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Timbratura lato dipendente: clock-in/out, pause, stato corrente, storico.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Timbratura)]
 [ApiController]
 [Route("api/time-clock")]
 [Authorize(Policy = "EmployeeOnly")]

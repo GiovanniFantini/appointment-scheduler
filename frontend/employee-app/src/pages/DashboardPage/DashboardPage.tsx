@@ -65,8 +65,9 @@ export default function DashboardPage({ user }: Props) {
   const weekEndStr = localDateStr(weekEnd)
 
   useEffect(() => {
-    fetchEvents()
-    fetchMySkills()
+    if (user.activeFeatures.includes('Calendario')) fetchEvents()
+    else setLoading(false)
+    if (user.activeFeatures.includes('Mansioni')) fetchMySkills()
   }, [])
 
   const fetchEvents = async () => {
@@ -126,7 +127,7 @@ export default function DashboardPage({ user }: Props) {
       )}
 
       {/* Le mie mansioni */}
-      {mySkills.length > 0 && (
+      {user.activeFeatures.includes('Mansioni') && mySkills.length > 0 && (
         <div className="my-skills-section">
           <div className="my-skills-label">Le mie mansioni</div>
           <div className="my-skills-chips">
@@ -145,21 +146,25 @@ export default function DashboardPage({ user }: Props) {
 
       {/* Stats row */}
       <div className="dashboard-stats">
+        {user.activeFeatures.includes('Calendario') && (
         <div className="stat-card">
           <div className="stat-value">{todayEvents.length}</div>
           <div className="stat-label">Oggi</div>
-        </div>
+        </div>)}
+        {user.activeFeatures.includes('Calendario') && (
         <div className="stat-card">
           <div className="stat-value">{weekEvents.length}</div>
           <div className="stat-label">Questa settimana</div>
-        </div>
+        </div>)}
+        {user.activeFeatures.includes('Richieste') && (
         <div className="stat-card">
           <div className="stat-value">{pendingRequests.length}</div>
           <div className="stat-label">Richieste</div>
-        </div>
+        </div>)}
       </div>
 
       <div className="dashboard-grid">
+        {user.activeFeatures.includes('Calendario') && (<>
         {/* Today's events */}
         <div className="dashboard-card">
           <div className="dashboard-card-header">
@@ -197,6 +202,7 @@ export default function DashboardPage({ user }: Props) {
           )}
         </div>
 
+        </>)}
         {/* Quick links */}
         <div className="dashboard-card">
           <div className="dashboard-card-header">

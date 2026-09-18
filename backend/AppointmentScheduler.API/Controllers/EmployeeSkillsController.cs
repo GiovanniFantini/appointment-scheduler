@@ -10,6 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Gestione operativa mansioni lato employee app.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Mansioni)]
 [ApiController]
 [Route("api/employee/skills")]
 [Authorize(Policy = "EmployeeOnly")]

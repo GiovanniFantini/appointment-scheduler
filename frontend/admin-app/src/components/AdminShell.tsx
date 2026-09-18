@@ -5,6 +5,7 @@ import {
   IconSettings,
   IconUser,
   TiHome,
+  TiBriefcase,
   TiBuildingStore,
   TiUsers,
   TiUserPlus,
@@ -21,6 +22,7 @@ import type { AdminUser } from '../App'
 /** Item piatti — esposti per riusarli nella derivazione del page title. */
 export const ADMIN_NAV: Array<NavItem & { section: string }> = [
   { section: 'Overview', path: '/', label: 'Dashboard', exact: true, icon: <TiHome size={18} /> },
+  { section: 'Management', path: '/packages', label: 'Pacchetti', icon: <TiBriefcase size={18} /> },
   { section: 'Management', path: '/merchants', label: 'Merchants', icon: <TiBuildingStore size={18} /> },
   { section: 'Management', path: '/users', label: 'Users', icon: <TiUsers size={18} /> },
   { section: 'Management', path: '/employees', label: 'Employees', icon: <TiUserPlus size={18} /> },

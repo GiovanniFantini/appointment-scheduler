@@ -1,3 +1,5 @@
+using AppointmentScheduler.API.Authorization;
+using AppointmentScheduler.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
@@ -38,6 +40,7 @@ public class EmployeeProfileController : ControllerBase
     /// <summary>
     /// Ritorna le mansioni dell'employee corrente sul merchant selezionato.
     /// </summary>
+    [RequiresPlanFeature(MerchantFeature.Mansioni)]
     [HttpGet("me/skills")]
     public async Task<ActionResult<List<EmployeeSkillDto>>> GetMySkills()
     {

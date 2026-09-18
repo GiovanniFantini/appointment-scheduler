@@ -11,6 +11,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Timbratura operativa lato employee app (configurazione e monitoraggio team).
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Timbratura)]
 [ApiController]
 [Route("api/employee/time-clock-management")]
 [Authorize(Policy = "EmployeeOnly")]

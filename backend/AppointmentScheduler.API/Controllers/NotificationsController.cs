@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
 using AppointmentScheduler.Shared.DTOs;
+using AppointmentScheduler.Shared.Enums;
 
 namespace AppointmentScheduler.API.Controllers;
 
@@ -38,7 +39,7 @@ public class NotificationsController : ControllerBase
             return BadRequest(new { message = "User ID non trovato nel token" });
 
         var notifications = await _notificationService.GetAllAsync(userId);
-        return Ok(notifications);
+        return Ok(VisibleNotifications(notifications));
     }
 
     /// <summary>
@@ -50,6 +51,11 @@ public class NotificationsController : ControllerBase
         if (!TryGetUserId(out int userId))
             return BadRequest(new { message = "User ID non trovato nel token" });
 
+        if (HttpContext.Items[typeof(SubscriptionAccessDto)] is SubscriptionAccessDto)
+        {
+            var visible = VisibleNotifications(await _notificationService.GetAllAsync(userId));
+            return Ok(new NotificationSummaryDto { UnreadCount = visible.Count(n => !n.IsRead), Recent = visible.Take(5).ToList() });
+        }
         var summary = await _notificationService.GetSummaryAsync(userId);
         return Ok(summary);
     }
@@ -78,5 +84,23 @@ public class NotificationsController : ControllerBase
 
         await _notificationService.MarkAllReadAsync(userId);
         return Ok(new { message = "Tutte le notifiche segnate come lette" });
+    }
+
+    private List<NotificationDto> VisibleNotifications(List<NotificationDto> notifications)
+    {
+        if (HttpContext.Items[typeof(SubscriptionAccessDto)] is not SubscriptionAccessDto state) return notifications;
+        return notifications.Where(n =>
+        {
+            var feature = n.Type switch
+            {
+                NotificationType.EventCreated or NotificationType.EventUpdated or NotificationType.EventDeleted => "Calendario",
+                NotificationType.DocumentPublished => "Documenti",
+                // Le notifiche storiche dei giustificativi usano lo stesso enum delle richieste, con titolo generato dal server.
+                NotificationType.RequestSubmitted or NotificationType.RequestApproved or NotificationType.RequestRejected
+                    => n.Title.StartsWith("Giustificativo timbratura", StringComparison.Ordinal) ? "Timbratura" : "Richieste",
+                _ => null
+            };
+            return feature == null || state.ActiveFeatures.Contains(feature);
+        }).ToList();
     }
 }

@@ -10,6 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Endpoint documentali self-service per il dipendente corrente.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Documenti)]
 [ApiController]
 [Route("api/employee/documents")]
 [Authorize(Policy = "EmployeeOnly")]
@@ -178,7 +179,7 @@ public class EmployeeDocumentsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not AppointmentScheduler.Shared.Helpers.SubscriptionLimitException)
         {
             return StatusCode(500, new { message = "Errore durante la creazione del documento", error = ex.Message });
         }
@@ -209,7 +210,7 @@ public class EmployeeDocumentsController : ControllerBase
         {
             return Forbid();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not AppointmentScheduler.Shared.Helpers.SubscriptionLimitException)
         {
             return StatusCode(500, new { message = "Errore durante l'aggiunta della versione", error = ex.Message });
         }
@@ -232,7 +233,7 @@ public class EmployeeDocumentsController : ControllerBase
 
             return Ok(new { success = true, documentId = id, status = "Published" });
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not AppointmentScheduler.Shared.Helpers.SubscriptionLimitException)
         {
             return StatusCode(500, new { message = "Errore durante la finalizzazione", error = ex.Message });
         }
@@ -255,7 +256,7 @@ public class EmployeeDocumentsController : ControllerBase
 
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not AppointmentScheduler.Shared.Helpers.SubscriptionLimitException)
         {
             return StatusCode(500, new { message = "Errore durante la cancellazione", error = ex.Message });
         }

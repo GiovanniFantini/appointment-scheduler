@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { AuthProvider, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
+import { AuthProvider, SubscriptionGate, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import apiClient from './lib/axios'
 import LoginPage from './pages/LoginPage/LoginPage'
 import RegisterPage from './pages/RegisterPage/RegisterPage'
@@ -81,9 +81,11 @@ function Protected() {
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />
   if (!user.merchantId) return <Navigate to="/select-company" replace />
   return (
+    <SubscriptionGate apiClient={apiClient} allowCompanySwitch>
     <BranchProvider>
       <EmployeeShell />
     </BranchProvider>
+    </SubscriptionGate>
   )
 }
 

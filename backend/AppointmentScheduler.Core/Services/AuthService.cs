@@ -92,6 +92,7 @@ public class AuthService : IAuthService
     {
         var user = await _context.Users
             .Include(u => u.Merchant)
+                .ThenInclude(m => m!.SubscriptionPlan)
             .FirstOrDefaultAsync(u => u.Email == request.Email.ToLower()
                                    && u.AccountType == AccountType.Merchant
                                    && u.IsActive);
@@ -104,8 +105,8 @@ public class AuthService : IAuthService
         var merchantOperational = (user!.Merchant?.IsActive ?? false)
                                   && (user.Merchant?.IsApproved ?? false);
 
-        var allFeatures = Enum.GetValues<MerchantFeature>().Select(f => f.ToString()).ToList();
-        var featureLevels = BuildMerchantFeatureLevels();
+        var allFeatures = EnabledPlanFeatures(user.Merchant);
+        var featureLevels = BuildMerchantFeatureLevels().Where(f => allFeatures.Contains(f.Key)).ToDictionary(f => f.Key, f => f.Value);
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", user.Merchant?.Id,
             features: allFeatures, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList(),
             merchantApproved: merchantOperational);
@@ -284,8 +285,8 @@ public class AuthService : IAuthService
         });
         await _context.SaveChangesAsync();
 
-        var featureNames = allFeatures.Select(f => f.ToString()).ToList();
-        var featureLevels = BuildMerchantFeatureLevels();
+        var featureNames = EnabledPlanFeatures(merchant);
+        var featureLevels = BuildMerchantFeatureLevels().Where(f => featureNames.Contains(f.Key)).ToDictionary(f => f.Key, f => f.Value);
         // Subito dopo la registrazione il merchant non è approvato: niente claim.
         var token = GenerateJwtToken(user.Id, user.Email, "Merchant", merchant.Id,
             features: featureNames, featureLevels: featureLevels.Select(kv => $"{kv.Key}:{kv.Value}").ToList(),
@@ -306,6 +307,7 @@ public class AuthService : IAuthService
             .Include(u => u.Employee)
                 .ThenInclude(e => e!.Memberships)
                     .ThenInclude(m => m.Merchant)
+                    .ThenInclude(m => m.SubscriptionPlan)
             .Include(u => u.Employee)
                 .ThenInclude(e => e!.Memberships)
                     .ThenInclude(m => m.Role)
@@ -419,6 +421,7 @@ public class AuthService : IAuthService
         var employee = await _context.Employees
             .Include(e => e.Memberships)
                 .ThenInclude(m => m.Merchant)
+                    .ThenInclude(m => m.SubscriptionPlan)
             .Include(e => e.Memberships)
                 .ThenInclude(m => m.Role)
                     .ThenInclude(r => r.Features)
@@ -437,7 +440,7 @@ public class AuthService : IAuthService
             return null;
 
         var enabledFeatures = membership.Role.Features
-            .Where(f => f.IsEnabled)
+            .Where(f => f.IsEnabled && EnabledPlanFeatures(membership.Merchant).Contains(f.Feature.ToString()))
             .ToList();
 
         var features = enabledFeatures
@@ -464,6 +467,13 @@ public class AuthService : IAuthService
         response.FeatureLevels = featureLevels;
         return response;
     }
+
+    private List<string> EnabledPlanFeatures(Merchant? merchant)
+        => merchant is { IsActive: true, IsApproved: true, SubscriptionPlan: not null }
+            && !(merchant.TrialEndsAt <= _clock.UtcNow)
+            ? merchant.SubscriptionPlan.Features.Where(f => Enum.IsDefined(typeof(MerchantFeature), f))
+                .Select(f => ((MerchantFeature)f).ToString()).ToList()
+            : [];
 
     // ── Feature Levels ─────────────────────────────────────────────────────
     /// <summary>

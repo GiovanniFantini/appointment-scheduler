@@ -217,6 +217,7 @@ try
     // Necessario per leggere IP / User-Agent dai servizi (AuthService userà
     // l'IP per audit log e per il rate limiting per-email applicativo).
     builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<SubscriptionAccess>();
 
     // ── Rate Limiting (endpoint auth) ──────────────────────────────────────
     // Politica per IP applicata a tutti gli endpoint di /api/auth/* tramite
@@ -327,6 +328,7 @@ try
 
     app.UseCors("AllowFrontend");
     app.UseAuthentication();
+    app.UseMiddleware<SubscriptionMiddleware>();
     app.UseAuthorization();
 
     // Rate limiter è dopo l'autenticazione così che eventuali politiche

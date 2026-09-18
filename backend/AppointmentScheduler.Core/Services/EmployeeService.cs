@@ -89,6 +89,9 @@ public class EmployeeService : IEmployeeService
     /// </summary>
     public async Task<EmployeeDto> CreateAsync(int merchantId, CreateEmployeeRequest request)
     {
+        // La quota viene verificata sulla membership: anche l'anagrafica appena creata deve essere annullata se il limite è raggiunto.
+        await using var transaction = _context is DbContext db && db.Database.IsRelational() && db.Database.CurrentTransaction == null
+            ? await db.Database.BeginTransactionAsync() : null;
         var isExternal = request.Kind == EmployeeKind.External;
         var providedEmail = request.Email?.Trim();
         var hasEmail = !string.IsNullOrWhiteSpace(providedEmail);
@@ -197,6 +200,7 @@ public class EmployeeService : IEmployeeService
         await SyncEmployeeSkillsAsync(employee.Id, merchantId, request.SkillIds);
         await SyncBranchAccessAsync(membershipEntity.Id, merchantId, homeBranchId, request.AllowedBranchIds);
 
+        if (transaction != null) await transaction.CommitAsync();
         return (await GetByIdAsync(employee.Id, merchantId))!;
     }
 

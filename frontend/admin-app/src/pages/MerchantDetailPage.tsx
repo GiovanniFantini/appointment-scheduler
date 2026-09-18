@@ -1,3 +1,4 @@
+import MerchantSubscriptionTab from './MerchantSubscriptionTab'
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { Breadcrumb, Skeleton } from '@scheduler/ui'
@@ -56,7 +57,7 @@ interface EditData {
   businessEmail: string
 }
 
-type TabKey = 'overview' | 'features' | 'employees'
+type TabKey = 'subscription' | 'overview' | 'features' | 'employees'
 
 export default function MerchantDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -204,6 +205,7 @@ export default function MerchantDetailPage() {
 
       {/* Tabs */}
       <div className="detail-tabs" role="tablist">
+        <button role="tab" aria-selected={activeTab === 'subscription'} className={`detail-tab${activeTab === 'subscription' ? ' active' : ''}`} onClick={() => setActiveTab('subscription')}>Pacchetto</button>
         <button
           role="tab"
           aria-selected={activeTab === 'overview'}
@@ -218,7 +220,7 @@ export default function MerchantDetailPage() {
           className={`detail-tab${activeTab === 'features' ? ' active' : ''}`}
           onClick={() => setActiveTab('features')}
         >
-          Features
+          Permessi ruolo predefinito
         </button>
         <button
           role="tab"
@@ -355,6 +357,8 @@ export default function MerchantDetailPage() {
           </div>
         </>
       )}
+
+      {activeTab === 'subscription' && <MerchantSubscriptionTab merchantId={Number(id)} />}
 
       {activeTab === 'features' && (
         <MerchantFeaturesTab merchantId={Number(id)} />

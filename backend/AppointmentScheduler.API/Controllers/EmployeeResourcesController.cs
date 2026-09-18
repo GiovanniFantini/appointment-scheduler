@@ -10,6 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Gestione operativa risorse lato employee app.
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Risorse)]
 [ApiController]
 [Route("api/employee/resources")]
 [Authorize(Policy = "EmployeeOnly")]
@@ -70,6 +71,8 @@ public class EmployeeResourcesController : ControllerBase
     {
         if (RequireFeature() is { } forbidden)
             return forbidden;
+        if (!User.HasFeature(MerchantFeature.Mansioni) && request.SkillIds.Count > 0)
+            return Forbid();
 
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
@@ -79,7 +82,7 @@ public class EmployeeResourcesController : ControllerBase
             var employee = await _employeeService.CreateAsync(merchantId, request);
             return CreatedAtAction(nameof(GetById), new { id = employee.Id }, employee);
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not AppointmentScheduler.Shared.Helpers.SubscriptionLimitException)
         {
             return BadRequest(new { message = $"Errore nella creazione del dipendente: {ex.Message}" });
         }
@@ -93,6 +96,14 @@ public class EmployeeResourcesController : ControllerBase
 
         if (!TryGetMerchantId(out int merchantId))
             return BadRequest(new { message = "Merchant ID non trovato nel token" });
+
+        if (!User.HasFeature(MerchantFeature.Mansioni))
+        {
+            var existing = await _employeeService.GetByIdAsync(id, merchantId);
+            if (existing == null) return NotFound();
+            // Il modulo escluso conserva i dati storici senza accettare modifiche tramite payload manuali.
+            request.SkillIds = existing.Skills.Select(s => s.SkillId).ToList();
+        }
 
         try
         {

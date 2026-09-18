@@ -1,5 +1,6 @@
+import type { MerchantUser } from '../../App'
 import { useState, useEffect, FormEvent } from 'react'
-import { EmptyState, PageHeader, Skeleton, useConfirm, useToast } from '@scheduler/ui'
+import { EmptyState, PageHeader, Skeleton, useAuth, useConfirm, useToast } from '@scheduler/ui'
 import apiClient from '../../lib/axios'
 import './RuoliPage.css'
 
@@ -90,6 +91,8 @@ const DEFAULT_ROLE_NAME = 'Responsabile App'
 type RoleFeatureLevels = Record<number, Record<number, FeatureAccessLevel>>
 
 export default function RuoliPage() {
+  const { user } = useAuth<MerchantUser>()
+  const visibleFeatures = ALL_FEATURES.filter(f => user?.activeFeatures.includes(f.name))
   const toast = useToast()
   const confirm = useConfirm()
   const [roles, setRoles] = useState<MerchantRole[]>([])
@@ -279,7 +282,7 @@ export default function RuoliPage() {
               </div>
               <div className="role-card-body">
                 <div className="features-label">Funzionalità</div>
-                {ALL_FEATURES.map(feat => {
+                {visibleFeatures.map(feat => {
                   const isEnabled = (localFeatures[role.id] ?? []).includes(feat.value)
                   const showLevelSelector = isLeveledFeature(feat.value) && isEnabled
                   return (

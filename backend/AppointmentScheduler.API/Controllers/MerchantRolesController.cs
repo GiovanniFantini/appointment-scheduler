@@ -1,3 +1,5 @@
+using AppointmentScheduler.Shared.Enums;
+using AppointmentScheduler.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using AppointmentScheduler.Core.Services;
@@ -8,6 +10,7 @@ namespace AppointmentScheduler.API.Controllers;
 /// <summary>
 /// Controller per la gestione dei ruoli del merchant
 /// </summary>
+[RequiresPlanFeature(MerchantFeature.Ruoli)]
 [ApiController]
 [Route("api/merchant-roles")]
 [Authorize(Policy = "ApprovedMerchantOnly")]
