@@ -88,11 +88,11 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
   }
 
   return (
-    <div className="copy-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.1" className="copy-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="copy-dialog">
         <div className="copy-header">
           <h2>Copia settimana scorsa</h2>
-          <button className="copy-close" onClick={onClose}>✕</button>
+          <button data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.2" className="copy-close" onClick={onClose}>✕</button>
         </div>
         <div className="copy-body">
           {conflicts ? (
@@ -153,13 +153,13 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
         </div>
         <div className="copy-footer">
           {conflicts ? (
-            <button className="btn-primary" onClick={onCopied}>
+            <button data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.3" className="btn-primary" onClick={onCopied}>
               Ho letto, chiudi
             </button>
           ) : (
             <>
-              <button className="btn-cancel" onClick={onClose}>Annulla</button>
-              <button
+              <button data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.4" className="btn-cancel" onClick={onClose}>Annulla</button>
+              <button data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.5"
                 className="btn-primary"
                 onClick={handleConfirm}
                 disabled={submitting || preview.length === 0}

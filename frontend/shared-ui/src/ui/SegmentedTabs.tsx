@@ -27,7 +27,7 @@ export function SegmentedTabs<T extends string = string>({
       {options.map((opt) => {
         const active = opt.value === value
         return (
-          <button
+          <button data-activity="shared-ui.ui.SegmentedTabs.1"
             key={opt.value}
             type="button"
             role="tab"

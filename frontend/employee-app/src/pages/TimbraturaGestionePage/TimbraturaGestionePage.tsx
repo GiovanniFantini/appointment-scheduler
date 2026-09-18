@@ -67,25 +67,25 @@ export default function TimbraturaGestionePage() {
       </div>
 
       <div className="tcm-tabs">
-        <button
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.1"
           className={`tcm-tab ${tab === 'config' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('config')}
         >
           Configurazione
         </button>
-        <button
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.2"
           className={`tcm-tab ${tab === 'presenze' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('presenze')}
         >
           Presenze
         </button>
-        <button
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.3"
           className={`tcm-tab ${tab === 'anomalie' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('anomalie')}
         >
           Anomalie
         </button>
-        <button
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.4"
           className={`tcm-tab ${tab === 'report' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('report')}
         >
@@ -95,7 +95,7 @@ export default function TimbraturaGestionePage() {
 
       <div className="tcm-branch-row">
         <label className="tcm-branch-label">Filiale</label>
-        <select
+        <select data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.5"
           className="tcm-branch-select"
           value={branchId ?? ''}
           onChange={e => setBranchId(e.target.value ? Number(e.target.value) : null)}
@@ -261,7 +261,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
             disabled={!settings.isEnabled || !settings.geofencingEnabled} />
           <div className="tcm-field">
             <label className="tcm-field-label">Latitudine filiale</label>
-            <input
+            <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.6"
               type="number" step="any" className="tcm-field-input"
               value={settings.branchLatitude ?? ''}
               disabled={!settings.isEnabled || !settings.geofencingEnabled}
@@ -270,7 +270,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
           </div>
           <div className="tcm-field">
             <label className="tcm-field-label">Longitudine filiale</label>
-            <input
+            <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.7"
               type="number" step="any" className="tcm-field-input"
               value={settings.branchLongitude ?? ''}
               disabled={!settings.isEnabled || !settings.geofencingEnabled}
@@ -279,7 +279,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
           </div>
         </div>
         {settings.isEnabled && settings.geofencingEnabled && (
-          <button
+          <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.8"
             type="button"
             className="tcm-geo-btn"
             onClick={() => {
@@ -305,7 +305,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
 
       <div className="tcm-save-row">
         {saved && <span className="tcm-saved">Configurazione salvata.</span>}
-        <button className="btn-primary" onClick={handleSave} disabled={saving}>
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.9" className="btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Salvataggio…' : 'Salva configurazione'}
         </button>
       </div>
@@ -324,7 +324,7 @@ function ToggleRow({ label, hint, checked, onChange, disabled }: {
         <span className="tcm-toggle-hint">{hint}</span>
       </div>
       <label className="toggle-switch">
-        <input type="checkbox" checked={checked} disabled={disabled}
+        <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.10" type="checkbox" checked={checked} disabled={disabled}
           onChange={e => onChange(e.target.checked)} />
         <span className="toggle-slider" />
       </label>
@@ -338,7 +338,7 @@ function NumberField({ label, value, onChange, disabled }: {
   return (
     <div className="tcm-field">
       <label className="tcm-field-label">{label}</label>
-      <input
+      <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.11"
         type="number"
         min={0}
         className="tcm-field-input"
@@ -388,12 +388,12 @@ function PresenzeTab({ branchId }: { branchId: number }) {
       <div className="tcm-filter-row">
         <div className="tcm-field">
           <label className="tcm-field-label">Da</label>
-          <input type="date" className="tcm-field-input" value={from}
+          <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.12" type="date" className="tcm-field-input" value={from}
             onChange={e => setFrom(e.target.value)} {...nativeDateInputProps} />
         </div>
         <div className="tcm-field">
           <label className="tcm-field-label">A</label>
-          <input type="date" className="tcm-field-input" value={to}
+          <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.13" type="date" className="tcm-field-input" value={to}
             onChange={e => setTo(e.target.value)} {...nativeDateInputProps} />
         </div>
       </div>
@@ -501,7 +501,7 @@ function AnomalieTab({ branchId }: { branchId: number }) {
       <div className="tcm-filter-row">
         <div className="tcm-field">
           <label className="tcm-field-label">Stato</label>
-          <select
+          <select data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.14"
             className="tcm-field-input"
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value ? Number(e.target.value) : '')}
@@ -513,7 +513,7 @@ function AnomalieTab({ branchId }: { branchId: number }) {
             <option value={4}>Respinte</option>
           </select>
         </div>
-        <button className="tcm-geo-btn" onClick={runDetection} disabled={detecting}
+        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.15" className="tcm-geo-btn" onClick={runDetection} disabled={detecting}
           style={{ marginTop: 'auto' }}>
           {detecting ? 'Controllo…' : 'Rileva timbrature mancanti'}
         </button>
@@ -558,7 +558,7 @@ function AnomalieTab({ branchId }: { branchId: number }) {
                 <td>
                   {a.status === TimeClockAnomalyStatus.Justified ? (
                     <div className="tcm-action-buttons">
-                      <button className="tcm-btn-approve" onClick={() => setReviewing(a)}>Revisiona</button>
+                      <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.16" className="tcm-btn-approve" onClick={() => setReviewing(a)}>Revisiona</button>
                     </div>
                   ) : (
                     <span className="tcm-muted">—</span>
@@ -615,12 +615,12 @@ function ReportTab({ branchId }: { branchId: number }) {
       <div className="tcm-filter-row">
         <div className="tcm-field">
           <label className="tcm-field-label">Da</label>
-          <input type="date" className="tcm-field-input" value={from}
+          <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.17" type="date" className="tcm-field-input" value={from}
             onChange={e => setFrom(e.target.value)} {...nativeDateInputProps} />
         </div>
         <div className="tcm-field">
           <label className="tcm-field-label">A</label>
-          <input type="date" className="tcm-field-input" value={to}
+          <input data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.18" type="date" className="tcm-field-input" value={to}
             onChange={e => setTo(e.target.value)} {...nativeDateInputProps} />
         </div>
       </div>

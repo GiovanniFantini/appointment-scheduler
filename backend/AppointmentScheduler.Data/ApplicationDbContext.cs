@@ -5,10 +5,14 @@ namespace AppointmentScheduler.Data;
 
 public partial class ApplicationDbContext : DbContext, IApplicationDbContext
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ActivityContext? activity = null)
         : base(options)
     {
+        Activity = activity ?? new ActivityContext();
     }
+
+    public ActivityContext Activity { get; }
+    public DbSet<ActivityEvent> ActivityEvents { get; set; }
 
     // Core
     public DbSet<User> Users { get; set; }
@@ -68,6 +72,23 @@ public partial class ApplicationDbContext : DbContext, IApplicationDbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Entity<ActivityEvent>(entity =>
+        {
+            entity.HasIndex(e => e.EventId).IsUnique();
+            entity.HasIndex(e => new { e.MerchantId, e.Id });
+            entity.HasIndex(e => new { e.UserId, e.Id });
+            entity.HasIndex(e => new { e.EntityType, e.EntityId, e.Id });
+            entity.HasIndex(e => e.OperationId);
+            entity.HasIndex(e => e.ReceivedAt);
+            entity.Property(e => e.Source).HasMaxLength(20);
+            entity.Property(e => e.App).HasMaxLength(20);
+            entity.Property(e => e.Category).HasMaxLength(30);
+            entity.Property(e => e.Action).HasMaxLength(180);
+            entity.Property(e => e.Outcome).HasMaxLength(30);
+            entity.Property(e => e.EntityType).HasMaxLength(100);
+            entity.Property(e => e.EntityId).HasMaxLength(150);
+            entity.Property(e => e.RequestId).HasMaxLength(100);
+        });
 
         modelBuilder.Entity<SubscriptionPlan>(entity =>
         {

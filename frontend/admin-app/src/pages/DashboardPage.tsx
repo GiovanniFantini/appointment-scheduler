@@ -143,7 +143,7 @@ export default function DashboardPage() {
       <PageHeader title="Dashboard" subtitle="Panoramica della piattaforma" />
       <div role="alert">
         <p>Impossibile caricare i dati. I conteggi e le approvazioni non sono disponibili.</p>
-        <Button variant="secondary" onClick={() => void fetchData()}>Riprova</Button>
+        <Button data-activity="admin.pages.DashboardPage.1" variant="secondary" onClick={() => void fetchData()}>Riprova</Button>
       </div>
     </div>
   )
@@ -195,14 +195,14 @@ export default function DashboardPage() {
                   </span>
                 </div>
                 <div className="pending-actions">
-                  <button
+                  <button data-activity="admin.pages.DashboardPage.2"
                     className="btn-sm btn-approve"
                     onClick={() => handleApprove(m.id)}
                     disabled={actionLoading === m.id}
                   >
                     {actionLoading === m.id ? '…' : 'Approve'}
                   </button>
-                  <button
+                  <button data-activity="admin.pages.DashboardPage.3"
                     className="btn-sm btn-reject"
                     onClick={() => handleReject(m.id)}
                     disabled={actionLoading === m.id}

@@ -35,11 +35,11 @@ export default function ReviewJustificationModal({ anomaly, onClose, onReviewed 
   }
 
   return (
-    <div className="rjm-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-activity="employee.components.ReviewJustificationModal.ReviewJustificationModal.1" className="rjm-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="rjm-box">
         <div className="rjm-header">
           <h2 className="rjm-title">Giustificativo timbratura</h2>
-          <button className="rjm-close" onClick={onClose}>✕</button>
+          <button data-activity="employee.components.ReviewJustificationModal.ReviewJustificationModal.2" className="rjm-close" onClick={onClose}>✕</button>
         </div>
 
         <div className="rjm-body">
@@ -66,7 +66,7 @@ export default function ReviewJustificationModal({ anomaly, onClose, onReviewed 
 
           <div className="rjm-field">
             <label className="rjm-label" htmlFor="rjm-review-notes">Note per il dipendente (facoltative)</label>
-            <textarea
+            <textarea data-activity="employee.components.ReviewJustificationModal.ReviewJustificationModal.3"
               id="rjm-review-notes"
               className="rjm-textarea"
               rows={3}
@@ -84,7 +84,7 @@ export default function ReviewJustificationModal({ anomaly, onClose, onReviewed 
         </div>
 
         <div className="rjm-footer">
-          <button
+          <button data-activity="employee.components.ReviewJustificationModal.ReviewJustificationModal.4"
             type="button"
             className="rjm-btn-reject"
             disabled={saving !== null}
@@ -92,7 +92,7 @@ export default function ReviewJustificationModal({ anomaly, onClose, onReviewed 
           >
             {saving === 'reject' ? 'Invio…' : 'Respingi'}
           </button>
-          <button
+          <button data-activity="employee.components.ReviewJustificationModal.ReviewJustificationModal.5"
             type="button"
             className="rjm-btn-approve"
             disabled={saving !== null}

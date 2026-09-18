@@ -162,7 +162,7 @@ export default function TimeClockWidget({ compact = false, onStatusChange }: Pro
 
       <div className="tcw-actions">
         {primaryKind && (
-          <button
+          <button data-activity="employee.components.TimeClockWidget.TimeClockWidget.1"
             className={`tcw-btn tcw-btn--primary ${primaryKind === 'clock-out' ? 'tcw-btn--out' : ''}`}
             disabled={working}
             onClick={() => handleAction(primaryKind!)}
@@ -172,7 +172,7 @@ export default function TimeClockWidget({ compact = false, onStatusChange }: Pro
         )}
         {/* Pausa: solo mentre si è in turno e non già in pausa */}
         {status.isClockedIn && !status.isOnBreak && (
-          <button
+          <button data-activity="employee.components.TimeClockWidget.TimeClockWidget.2"
             className="tcw-btn tcw-btn--secondary"
             disabled={working}
             onClick={() => handleAction('break-start')}

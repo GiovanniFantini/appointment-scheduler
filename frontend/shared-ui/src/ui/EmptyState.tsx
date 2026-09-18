@@ -19,7 +19,7 @@ export function EmptyState({ title, description, icon, action }: EmptyStateProps
       <h3 className="su-empty__title">{title}</h3>
       {description && <p className="su-empty__desc">{description}</p>}
       {action && (
-        <Button variant="primary" onClick={action.onClick}>
+        <Button data-activity="shared-ui.ui.EmptyState.1" variant="primary" onClick={action.onClick}>
           {action.label}
         </Button>
       )}

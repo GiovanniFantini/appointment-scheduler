@@ -107,14 +107,14 @@ export default function UsersPage() {
 
       {/* Filters */}
       <div className="users-filters">
-        <input
+        <input data-activity="admin.pages.UsersPage.1"
           type="search"
           className="users-filter-input"
           placeholder="Cerca per email o nome…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
-        <select
+        <select data-activity="admin.pages.UsersPage.2"
           className="users-filter-select"
           value={accountType}
           onChange={(e) => setAccountType(e.target.value)}
@@ -124,7 +124,7 @@ export default function UsersPage() {
           <option value="2">Merchant</option>
           <option value="3">Employee</option>
         </select>
-        <select
+        <select data-activity="admin.pages.UsersPage.3"
           className="users-filter-select"
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -134,7 +134,7 @@ export default function UsersPage() {
           <option value="inactive">Inactive</option>
         </select>
         {hasFilters && (
-          <button className="users-filter-reset" onClick={resetFilters}>Reset</button>
+          <button data-activity="admin.pages.UsersPage.4" className="users-filter-reset" onClick={resetFilters}>Reset</button>
         )}
       </div>
 
@@ -163,7 +163,7 @@ export default function UsersPage() {
           ) : (
             <div className="admin-card-grid">
               {items.map((u) => (
-                <button key={u.id} className="admin-list-card" onClick={() => navigate(`/users/${u.id}`)}>
+                <button data-activity="admin.pages.UsersPage.5" key={u.id} className="admin-list-card" onClick={() => navigate(`/users/${u.id}`)}>
                   <div className="admin-list-card-head">
                     <Avatar name={`${u.firstName} ${u.lastName}`} size="lg" />
                     <div className="admin-list-card-id">
@@ -193,8 +193,8 @@ export default function UsersPage() {
           <div className="users-pagination">
             <span>Pagina {page} di {totalPages}</span>
             <div className="users-pagination-buttons">
-              <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Indietro</button>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Avanti →</button>
+              <button data-activity="admin.pages.UsersPage.6" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Indietro</button>
+              <button data-activity="admin.pages.UsersPage.7" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Avanti →</button>
             </div>
           </div>
         )}

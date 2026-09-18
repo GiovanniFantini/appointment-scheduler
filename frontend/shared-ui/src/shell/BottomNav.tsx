@@ -43,7 +43,7 @@ export function BottomNav({ sections, maxItems = 4, onOverflowClick }: BottomNav
         </NavLink>
       ))}
       {hasOverflow && (
-        <button type="button" className="su-bottomnav__item" onClick={onOverflowClick}>
+        <button data-activity="shared-ui.shell.BottomNav.1" type="button" className="su-bottomnav__item" onClick={onOverflowClick}>
           <span className="su-bottomnav__icon" aria-hidden>
             <TiMenu2 size={20} />
           </span>
@@ -63,7 +63,7 @@ interface FabProps {
 /** Floating Action Button (mobile, <768px) — es. "nuovo turno". */
 export function Fab({ icon, label, onClick }: FabProps) {
   return (
-    <button type="button" className="su-fab" onClick={onClick} aria-label={label ?? 'Aggiungi'}>
+    <button data-activity="shared-ui.shell.BottomNav.2" type="button" className="su-fab" onClick={onClick} aria-label={label ?? 'Aggiungi'}>
       {icon}
     </button>
   )

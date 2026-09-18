@@ -1,3 +1,4 @@
+import { trackActivity } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react'
 import { type Branch } from '../lib/api/branches'
@@ -84,6 +85,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   useEffect(() => { load() }, [load])
 
   const setActiveBranch = useCallback((branchId: number | null) => {
+    trackActivity('context.change', `branch:${branchId ?? 'all'}`)
     setActiveBranchIdState(branchId)
     if (branchId == null) localStorage.removeItem(STORAGE_KEY_BRANCH)
     else localStorage.setItem(STORAGE_KEY_BRANCH, String(branchId))
@@ -93,6 +95,7 @@ export function BranchProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const setActiveDepartment = useCallback((departmentId: number | null) => {
+    trackActivity('context.change', `department:${departmentId ?? 'all'}`)
     setActiveDepartmentIdState(departmentId)
     if (departmentId == null) localStorage.removeItem(STORAGE_KEY_DEPARTMENT)
     else localStorage.setItem(STORAGE_KEY_DEPARTMENT, String(departmentId))

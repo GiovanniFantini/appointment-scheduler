@@ -9,6 +9,7 @@
     "employee-app"
   ],
   "scripts": {
+    "test:activity": "node --test scripts/activity.test.mjs && node scripts/activity-controls.mjs",
     "dev:admin": "npm run dev -w appointment-scheduler-admin",
     "dev:merchant": "npm run dev -w appointment-scheduler-merchant",
     "dev:employee": "npm run dev -w appointment-scheduler-employee",

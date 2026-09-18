@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { IconButton } from './IconButton'
 import { IconClose } from '../icons'
 import './Modal.css'
+import { trackActivity } from '../lib/activity'
 
 export type ModalSize = 'sm' | 'md' | 'lg' | 'xl'
 
@@ -28,6 +29,11 @@ export function Modal({
 }: ModalProps) {
   useEffect(() => {
     if (!open) return
+    trackActivity('dialog.open', 'modal')
+    return () => trackActivity('dialog.close', 'modal')
+  }, [open])
+  useEffect(() => {
+    if (!open) return
     function onEsc(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose()
     }
@@ -43,7 +49,7 @@ export function Modal({
   if (!open) return null
 
   return createPortal(
-    <div
+    <div data-activity="shared-ui.ui.Modal.1"
       className="su-modal__backdrop"
       onClick={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose()
@@ -54,7 +60,7 @@ export function Modal({
         {title !== undefined && (
           <div className="su-modal__header">
             <h2 className="su-modal__title">{title}</h2>
-            <IconButton icon={<IconClose />} ariaLabel="Chiudi" onClick={onClose} />
+            <IconButton data-activity="shared-ui.ui.Modal.2" icon={<IconClose />} ariaLabel="Chiudi" onClick={onClose} />
           </div>
         )}
         <div className="su-modal__body">{children}</div>

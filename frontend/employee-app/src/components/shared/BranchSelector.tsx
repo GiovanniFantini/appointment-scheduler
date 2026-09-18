@@ -42,7 +42,7 @@ export default function BranchSelector({ showDepartment = true, allowAll = true 
       {showBranchPicker && (
         <div className="branch-selector-field">
           <span className="branch-selector-icon">🏢</span>
-          <select
+          <select data-activity="employee.components.shared.BranchSelector.1"
             className="branch-selector-select"
             value={activeBranchId ?? ''}
             onChange={e => setActiveBranch(e.target.value ? Number(e.target.value) : null)}
@@ -61,7 +61,7 @@ export default function BranchSelector({ showDepartment = true, allowAll = true 
       {showDepartment && selectedBranch && departments.length > 0 && (
         <div className="branch-selector-field">
           <span className="branch-selector-icon">🗂</span>
-          <select
+          <select data-activity="employee.components.shared.BranchSelector.2"
             className="branch-selector-select"
             value={activeDepartmentId ?? ''}
             onChange={e => setActiveDepartment(e.target.value ? Number(e.target.value) : null)}

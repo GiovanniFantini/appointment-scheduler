@@ -84,13 +84,13 @@ export function Wizard({
       <div className="su-wizard__actions">
         <div>
           {onCancel && (
-            <Button variant="ghost" onClick={onCancel} disabled={completing || validating}>
+            <Button data-activity="shared-ui.wizard.Wizard.1" variant="ghost" onClick={onCancel} disabled={completing || validating}>
               Annulla
             </Button>
           )}
         </div>
         <div className="su-wizard__actions-right">
-          <Button
+          <Button data-activity="shared-ui.wizard.Wizard.2"
             variant="secondary"
             onClick={handleBack}
             disabled={current === 0 || completing || validating}
@@ -98,7 +98,7 @@ export function Wizard({
           >
             Indietro
           </Button>
-          <Button
+          <Button data-activity="shared-ui.wizard.Wizard.3"
             variant="primary"
             onClick={handleNext}
             loading={validating || completing}

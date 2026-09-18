@@ -36,6 +36,7 @@ interface EmpNavItem extends NavItem {
 const ICON_SIZE = 18
 
 const ALL_NAV: EmpNavItem[] = [
+  { path: '/activity', label: 'Registro attività', icon: <TiFileText size={18} /> },
   { path: '/', label: 'Dashboard', exact: true, icon: <TiHome size={ICON_SIZE} /> },
   { path: '/timbratura', label: 'Timbratura', feature: 'Timbratura', icon: <TiClock size={ICON_SIZE} /> },
   { path: '/calendario', label: 'Calendario', feature: 'Calendario', icon: <TiCalendar size={ICON_SIZE} /> },
@@ -169,7 +170,7 @@ export default function EmployeeShell() {
       headerTitle={deriveTitle(location.pathname)}
       companyName={user.companyName}
       headerExtras={
-        <button
+        <button data-activity="employee.components.EmployeeShell.1"
           type="button"
           className="su-header__bell"
           aria-label="Notifiche"

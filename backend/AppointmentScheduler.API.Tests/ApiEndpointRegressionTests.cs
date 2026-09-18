@@ -195,5 +195,8 @@ public sealed class ApiEndpointRegressionTests(ITestOutputHelper output)
         (await client.PostAsJsonAsync("/api/admin/subscription-plans", new { name = "Calendario aggiornato", features = new[] { 1 } })).StatusCode.Should().Be(HttpStatusCode.Conflict);
         output.WriteLine($"{actions.Length} azioni API, {requests + 7} richieste HTTP; probe autorizzazione, letture reali, scritture non valide e flusso admin pacchetti completo.");
         failures.Should().BeEmpty(string.Join(Environment.NewLine, failures));
+        foreach (var action in actions.Where(a => !(a.ControllerName == "Activity" && a.ActionName == "Collect")))
+            (await db.ActivityEvents.AnyAsync(e => e.Category == "request" && e.Action == action.ControllerName + "." + action.ActionName))
+                .Should().BeTrue($"l'endpoint {action.ControllerName}.{action.ActionName} deve produrre audit anche senza modifiche");
     }
 }

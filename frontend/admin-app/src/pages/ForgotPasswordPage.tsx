@@ -110,7 +110,7 @@ export default function ForgotPasswordPage() {
                   You can request a new link in {cooldown}s
                 </span>
               ) : (
-                <button
+                <button data-activity="admin.pages.ForgotPasswordPage.1"
                   type="button"
                   className="resend-btn"
                   onClick={handleResend}
@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
           </>
         ) : (
           <>
-            <form className="login-form" onSubmit={handleSubmit}>
+            <form data-activity="admin.pages.ForgotPasswordPage.2" className="login-form" onSubmit={handleSubmit}>
               {error && (
                 <div className="login-error">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
               )}
               <div className="form-group">
                 <label className="form-label" htmlFor="email">Email address</label>
-                <input
+                <input data-activity="admin.pages.ForgotPasswordPage.3"
                   id="email"
                   type="email"
                   className="form-input"
@@ -150,7 +150,7 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                 />
               </div>
-              <button type="submit" className="btn-login" disabled={loading}>
+              <button data-activity="admin.pages.ForgotPasswordPage.4" type="submit" className="btn-login" disabled={loading}>
                 {loading ? 'Sending…' : 'Send reset link'}
               </button>
             </form>

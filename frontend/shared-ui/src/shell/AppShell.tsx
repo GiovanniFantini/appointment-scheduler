@@ -58,8 +58,8 @@ export function AppShell({
 
   return (
     <div className={`su-shell ${bottomNav ? 'su-shell--has-bottomnav' : ''}`}>
-      <a className="su-shell__skip" href="#main-content">Vai al contenuto</a>
-      <div
+      <a data-activity="shared-ui.shell.AppShell.1" className="su-shell__skip" href="#main-content">Vai al contenuto</a>
+      <div data-activity="shared-ui.shell.AppShell.2"
         className={`su-shell__overlay ${mobileOpen ? 'su-shell__overlay--visible' : ''}`}
         onClick={() => setMobileOpen(false)}
       />
@@ -93,7 +93,7 @@ export function AppShell({
       {bottomNav && (
         <BottomNav sections={navSections} onOverflowClick={() => setMobileOpen(true)} />
       )}
-      {fab && <Fab icon={fab.icon} label={fab.label} onClick={fab.onClick} />}
+      {fab && <Fab data-activity="shared-ui.shell.AppShell.3" icon={fab.icon} label={fab.label} onClick={fab.onClick} />}
     </div>
   )
 }

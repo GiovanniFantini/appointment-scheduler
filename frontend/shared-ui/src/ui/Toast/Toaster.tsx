@@ -123,7 +123,7 @@ function ToastView({ item, onClose }: { item: ToastItem; onClose: () => void }) 
         {item.title && <div className="su-toast__title">{item.title}</div>}
         <div className="su-toast__msg">{item.message}</div>
       </div>
-      <button type="button" className="su-toast__close" onClick={onClose} aria-label="Chiudi notifica">
+      <button data-activity="shared-ui.ui.Toast.Toaster.1" type="button" className="su-toast__close" onClick={onClose} aria-label="Chiudi notifica">
         <IconClose size={14} />
       </button>
     </div>

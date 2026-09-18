@@ -180,22 +180,22 @@ function ShiftCard({
       {status.isActive ? (
         <div className="tsp-actions">
           {!status.isClockedIn && !status.isCompleted && (
-            <button className="tcw-btn tcw-btn--primary" disabled={anyBusy} onClick={() => onAction('clock-in')}>
+            <button data-activity="employee.components.TodayShiftsPanel.TodayShiftsPanel.1" className="tcw-btn tcw-btn--primary" disabled={anyBusy} onClick={() => onAction('clock-in')}>
               {busy ? 'Attendere…' : 'Timbra entrata'}
             </button>
           )}
           {status.isClockedIn && !status.isOnBreak && (
             <>
-              <button className="tcw-btn tcw-btn--primary tcw-btn--out" disabled={anyBusy} onClick={() => onAction('clock-out')}>
+              <button data-activity="employee.components.TodayShiftsPanel.TodayShiftsPanel.2" className="tcw-btn tcw-btn--primary tcw-btn--out" disabled={anyBusy} onClick={() => onAction('clock-out')}>
                 {busy ? 'Attendere…' : 'Timbra uscita'}
               </button>
-              <button className="tcw-btn tcw-btn--secondary" disabled={anyBusy} onClick={() => onAction('break-start')}>
+              <button data-activity="employee.components.TodayShiftsPanel.TodayShiftsPanel.3" className="tcw-btn tcw-btn--secondary" disabled={anyBusy} onClick={() => onAction('break-start')}>
                 Inizia pausa
               </button>
             </>
           )}
           {status.isOnBreak && (
-            <button className="tcw-btn tcw-btn--primary" disabled={anyBusy} onClick={() => onAction('break-end')}>
+            <button data-activity="employee.components.TodayShiftsPanel.TodayShiftsPanel.4" className="tcw-btn tcw-btn--primary" disabled={anyBusy} onClick={() => onAction('break-end')}>
               {busy ? 'Attendere…' : 'Termina pausa'}
             </button>
           )}

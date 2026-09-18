@@ -267,9 +267,9 @@ export default function PianificazionePage({ accessLevel }: Props) {
 
       <div className="pianif-toolbar">
         <div className="pianif-week-nav">
-          <button className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹ Settimana precedente</button>
-          <button className="btn-secondary" onClick={() => setWeekStart(mondayOf(new Date()))}>Oggi</button>
-          <button className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Settimana successiva ›</button>
+          <button data-activity="employee.pages.PianificazionePage.PianificazionePage.1" className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹ Settimana precedente</button>
+          <button data-activity="employee.pages.PianificazionePage.PianificazionePage.2" className="btn-secondary" onClick={() => setWeekStart(mondayOf(new Date()))}>Oggi</button>
+          <button data-activity="employee.pages.PianificazionePage.PianificazionePage.3" className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Settimana successiva ›</button>
           <span className="pianif-week-label">{formatWeekLabel()}</span>
         </div>
 
@@ -279,14 +279,14 @@ export default function PianificazionePage({ accessLevel }: Props) {
               Copia i turni della settimana in vista ({formatWeekLabel()}) →
             </span>
             <label className="form-label">a settimana (lun.)</label>
-            <input
+            <input data-activity="employee.pages.PianificazionePage.PianificazionePage.4"
               type="date"
               className="form-input"
               value={cloneTargetWeek}
               onChange={e => setCloneTargetWeek(e.target.value)}
               {...nativeDateInputProps}
             />
-            <input
+            <input data-activity="employee.pages.PianificazionePage.PianificazionePage.5"
               type="number"
               className="form-input pianif-clone-weeks"
               min={1}
@@ -295,7 +295,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
               onChange={e => setCloneWeeks(Math.max(1, Math.min(52, Number(e.target.value) || 1)))}
               title="Numero di settimane consecutive"
             />
-            <button className="btn-primary" disabled={cloneLoading} onClick={handleCloneWeek}>
+            <button data-activity="employee.pages.PianificazionePage.PianificazionePage.6" className="btn-primary" disabled={cloneLoading} onClick={handleCloneWeek}>
               {cloneLoading ? 'Clonazione...' : 'Clona'}
             </button>
             {cloneMessage && <span className="pianif-clone-msg">{cloneMessage}</span>}
@@ -307,7 +307,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
         <div className="pianif-conflict-banner" role="alert">
           <div className="pianif-conflict-head">
             <span>⚠ Conflitti rilevati nei turni clonati:</span>
-            <button
+            <button data-activity="employee.pages.PianificazionePage.PianificazionePage.7"
               className="pianif-conflict-close"
               onClick={() => setCloneConflicts([])}
               aria-label="Chiudi"
@@ -354,12 +354,12 @@ export default function PianificazionePage({ accessLevel }: Props) {
                     const key = `${emp.id}-${iso}`
                     const shifts = eventsByCell.get(key) ?? []
                     return (
-                      <td key={iso} className="pianif-cell" onClick={() => { if (canCreate && shifts.length === 0) openNewShift(emp.id, iso) }}>
+                      <td data-activity="employee.pages.PianificazionePage.PianificazionePage.8" key={iso} className="pianif-cell" onClick={() => { if (canCreate && shifts.length === 0) openNewShift(emp.id, iso) }}>
                         {shifts.length === 0 ? (
                           <div className="pianif-empty-cell">{canCreate ? '+' : ''}</div>
                         ) : (
                           shifts.map(s => (
-                            <div
+                            <div data-activity="employee.pages.PianificazionePage.PianificazionePage.9"
                               key={s.id}
                               className="pianif-pill"
                               onClick={e => { e.stopPropagation(); openEditShift(s.id) }}

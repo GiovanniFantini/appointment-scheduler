@@ -30,7 +30,7 @@ try
     });
 
     // Controllers
-    builder.Services.AddControllers()
+    builder.Services.AddControllers(options => options.Filters.Add<ActivityResultFilter>())
         .AddJsonOptions(options =>
         {
             // Normalizza la stringa vuota a null per i campi TimeOnly? (es. orari
@@ -114,6 +114,8 @@ try
         : "(null or empty)";
     Console.WriteLine($"Connection string source resolved. Preview: {maskedCs}");
 
+    builder.Services.AddScoped<ActivityContext>();
+    builder.Services.AddHostedService<ActivityRetentionWorker>();
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseNpgsql(connectionString));
     builder.Services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
@@ -171,11 +173,14 @@ try
     builder.Services.AddScoped<IInventoryReportingService, InventoryReportingService>();
 
     // HR Documents (Azure Blob)
-    builder.Services.AddScoped<IFileStorageService, AzureBlobStorageService>();
+    builder.Services.AddScoped<ActivityRecorder>();
+    builder.Services.AddScoped<AzureBlobStorageService>();
+    builder.Services.AddScoped<IFileStorageService, AuditedFileStorageService>();
     builder.Services.AddScoped<IHRDocumentService, HRDocumentService>();
 
     // Email + Password Reset
-    builder.Services.AddScoped<IEmailService, AzureEmailService>();
+    builder.Services.AddScoped<AzureEmailService>();
+    builder.Services.AddScoped<IEmailService, AuditedEmailService>();
     builder.Services.AddScoped<IPasswordResetService, PasswordResetService>();
 
     // ── JWT Authentication ─────────────────────────────────────────────────
@@ -227,6 +232,11 @@ try
     builder.Services.AddRateLimiter(options =>
     {
         options.RejectionStatusCode = (int)HttpStatusCode.TooManyRequests;
+        options.AddPolicy("activity", httpContext => RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown", _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120, Window = TimeSpan.FromMinutes(1), QueueLimit = 0, AutoReplenishment = true
+            }));
 
         options.AddPolicy("auth-ip", httpContext =>
         {
@@ -328,6 +338,7 @@ try
 
     app.UseCors("AllowFrontend");
     app.UseAuthentication();
+    app.UseMiddleware<ActivityMiddleware>();
     app.UseMiddleware<SubscriptionMiddleware>();
     app.UseAuthorization();
 

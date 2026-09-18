@@ -115,7 +115,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <div className="login-brand-subtitle">Platform administration panel</div>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form data-activity="admin.pages.LoginPage.1" className="login-form" onSubmit={handleSubmit}>
           {error && (
             <div className="login-error">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -129,7 +129,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
           <div className="form-group">
             <label className="form-label" htmlFor="email">Email address</label>
-            <input
+            <input data-activity="admin.pages.LoginPage.2"
               id="email"
               type="email"
               className="form-input"
@@ -143,7 +143,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
           <div className="form-group">
             <label className="form-label" htmlFor="password">Password</label>
-            <input
+            <input data-activity="admin.pages.LoginPage.3"
               id="password"
               type="password"
               className="form-input"
@@ -155,7 +155,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
             />
           </div>
 
-          <button type="submit" className="btn-login" disabled={loading}>
+          <button data-activity="admin.pages.LoginPage.4" type="submit" className="btn-login" disabled={loading}>
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
           <div style={{ textAlign: 'right', marginTop: -8 }}>
@@ -168,7 +168,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
 
       {/* System Status panel */}
       <div className="login-status">
-        <button
+        <button data-activity="admin.pages.LoginPage.5"
           className="login-status-toggle"
           onClick={() => setStatusOpen(o => !o)}
           type="button"
@@ -210,7 +210,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                 <StatusDot status={apiStatus} />
                 <span>{apiStatus}</span>
               </span>
-              <button className="login-status-ping" onClick={checkApi} type="button">
+              <button data-activity="admin.pages.LoginPage.6" className="login-status-ping" onClick={checkApi} type="button">
                 Ping
               </button>
             </div>

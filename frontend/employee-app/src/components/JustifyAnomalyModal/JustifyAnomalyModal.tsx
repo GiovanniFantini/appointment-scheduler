@@ -43,13 +43,13 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
   }
 
   return (
-    <div className="jam-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.1" className="jam-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="jam-box">
         <div className="jam-header">
           <h2 className="jam-title">Giustifica anomalia</h2>
-          <button className="jam-close" onClick={onClose}>✕</button>
+          <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.2" className="jam-close" onClick={onClose}>✕</button>
         </div>
-        <form className="jam-form" onSubmit={handleSubmit}>
+        <form data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.3" className="jam-form" onSubmit={handleSubmit}>
           <div className="jam-body">
             {error && <div className="jam-error">{error}</div>}
             <div className="jam-anomaly-info">
@@ -62,7 +62,7 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
             </div>
             <div className="jam-field">
               <label className="jam-label">Motivazione</label>
-              <select
+              <select data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.4"
                 className="jam-select"
                 value={reason}
                 onChange={e => setReason(Number(e.target.value) as TimeClockAnomalyReason)}
@@ -74,7 +74,7 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
             </div>
             <div className="jam-field">
               <label className="jam-label">Note (facoltative)</label>
-              <textarea
+              <textarea data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.5"
                 className="jam-textarea"
                 rows={3}
                 placeholder="Aggiungi un dettaglio per il responsabile…"
@@ -84,8 +84,8 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
             </div>
           </div>
           <div className="jam-footer">
-            <button type="button" className="jam-btn-cancel" onClick={onClose}>Annulla</button>
-            <button type="submit" className="jam-btn-primary" disabled={saving}>
+            <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.6" type="button" className="jam-btn-cancel" onClick={onClose}>Annulla</button>
+            <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.7" type="submit" className="jam-btn-primary" disabled={saving}>
               {saving ? 'Invio…' : 'Invia giustificazione'}
             </button>
           </div>

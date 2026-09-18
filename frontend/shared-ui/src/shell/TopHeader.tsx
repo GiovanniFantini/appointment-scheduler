@@ -13,7 +13,7 @@ interface TopHeaderProps {
 export function TopHeader({ title, companyName, onHamburger, menuOpen = false, actions }: TopHeaderProps) {
   return (
     <header className="su-header">
-      <button
+      <button data-activity="shared-ui.shell.TopHeader.1"
         type="button"
         className="su-header__hamburger"
         onClick={onHamburger}

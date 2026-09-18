@@ -16,7 +16,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(functio
     .filter(Boolean)
     .join(' ')
   return (
-    <button ref={ref} type={type} className={classes} aria-label={ariaLabel} {...rest}>
+    <button data-activity="shared-ui.ui.IconButton.1" ref={ref} type={type} className={classes} aria-label={ariaLabel} {...rest}>
       {icon}
     </button>
   )

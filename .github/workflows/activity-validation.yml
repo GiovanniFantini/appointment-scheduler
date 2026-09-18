@@ -1,0 +1,41 @@
+name: Validate activity tracking
+on:
+  pull_request:
+    paths: ['backend/**', 'frontend/**', '.github/workflows/activity-validation.yml']
+  push:
+    branches: ['codex/**']
+    paths: ['backend/**', 'frontend/**', '.github/workflows/activity-validation.yml']
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: activity_test
+          POSTGRES_PASSWORD: activity_test
+          POSTGRES_DB: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s
+          --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: dotnet build backend -c Release --warnaserror
+      - run: dotnet test backend -c Release --no-build
+        env:
+          SCHEDULER_TEST_POSTGRES: 'Host=localhost;Port=5432;Username=activity_test;Password=activity_test;Database=postgres'
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run test:activity
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

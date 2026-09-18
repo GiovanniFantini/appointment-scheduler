@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AuthContextValue, BaseUser } from './types'
+import { endActivityContext, trackActivity } from '../lib/activity'
 
 const AuthContext = createContext<AuthContextValue<any> | null>(null)
 
@@ -54,6 +55,7 @@ export function AuthProvider<TUser extends BaseUser>({
   )
 
   const logout = useCallback(() => {
+    endActivityContext()
     localStorage.removeItem(tokenKey)
     localStorage.removeItem(userKey)
     setUser(null)
@@ -65,6 +67,7 @@ export function AuthProvider<TUser extends BaseUser>({
       if (token) localStorage.setItem(tokenKey, token)
       localStorage.setItem(userKey, JSON.stringify(next))
       setUser(next)
+      if (token) trackActivity('context.change', 'account.update')
       onChange?.(next)
     },
     [tokenKey, userKey, onChange]

@@ -104,25 +104,25 @@ export default function ReportsPage() {
 
   return <div className="reports-page">
     <PageHeader title="Report amministrativo" subtitle="Aziende, persone e configurazioni da completare."
-      actions={<><Button variant="secondary" loading={loading} onClick={() => setRevision(v => v + 1)}>Aggiorna</Button>
-        <Button disabled={loading || error || filtered.length === 0} onClick={exportCsv}>Esporta CSV</Button></>} />
+      actions={<><Button data-activity="admin.pages.ReportsPage.1" variant="secondary" loading={loading} onClick={() => setRevision(v => v + 1)}>Aggiorna</Button>
+        <Button data-activity="admin.pages.ReportsPage.2" disabled={loading || error || filtered.length === 0} onClick={exportCsv}>Esporta CSV</Button></>} />
     <section className="reports-filters" aria-label="Filtri report">
-      <label className="reports-search">Cerca azienda o città<input type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Nome azienda o città…" /></label>
-      <label>Stato<select aria-label="Stato" value={status} onChange={e => setStatus(e.target.value as typeof status)}>
+      <label className="reports-search">Cerca azienda o città<input data-activity="admin.pages.ReportsPage.3" type="search" value={search} onChange={e => setSearch(e.target.value)} placeholder="Nome azienda o città…" /></label>
+      <label>Stato<select data-activity="admin.pages.ReportsPage.4" aria-label="Stato" value={status} onChange={e => setStatus(e.target.value as typeof status)}>
         <option value="all">Tutti gli stati</option>{Object.entries(labels).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
       </select></label>
-      <label>Da verificare<select aria-label="Da verificare" value={attention} onChange={e => setAttention(e.target.value as Attention)}>
+      <label>Da verificare<select data-activity="admin.pages.ReportsPage.5" aria-label="Da verificare" value={attention} onChange={e => setAttention(e.target.value as Attention)}>
         <option value="all">Tutte le aziende</option><option value="approval">Da approvare</option>
         <option value="branches">Attive senza filiali</option><option value="employees">Attive senza dipendenti</option>
       </select></label>
-      <label>Ordina per<select aria-label="Ordina per" value={sort} onChange={e => setSort(e.target.value)}>
+      <label>Ordina per<select data-activity="admin.pages.ReportsPage.6" aria-label="Ordina per" value={sort} onChange={e => setSort(e.target.value)}>
         <option value="newest">Registrazione più recente</option><option value="name">Nome azienda</option><option value="employees">Numero dipendenti</option>
       </select></label>
-      <Button variant="ghost" onClick={() => { setSearch(''); setStatus('all'); setAttention('all'); setSort('newest') }}>Azzera filtri</Button>
+      <Button data-activity="admin.pages.ReportsPage.7" variant="ghost" onClick={() => { setSearch(''); setStatus('all'); setAttention('all'); setSort('newest') }}>Azzera filtri</Button>
     </section>
     {error ? <section className="reports-error" role="alert"><h2>Report non disponibile</h2>
       <p>Non è stato possibile recuperare i dati aggiornati. Riprova per visualizzare ed esportare il report.</p>
-      <Button variant="secondary" onClick={() => setRevision(v => v + 1)}>Riprova</Button>
+      <Button data-activity="admin.pages.ReportsPage.8" variant="secondary" onClick={() => setRevision(v => v + 1)}>Riprova</Button>
     </section> : <>
       <div className="reports-metrics" aria-busy={loading}>{metrics.map(([label, value]) => <div className="reports-metric" key={label}>
         <span>{label}</span><strong>{loading ? <Skeleton variant="text" width="50%" /> : number.format(value)}</strong>

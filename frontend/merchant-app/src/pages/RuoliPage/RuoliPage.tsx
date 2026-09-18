@@ -244,7 +244,7 @@ export default function RuoliPage() {
         title="Ruoli"
         subtitle="Configura ruoli e funzionalità accessibili"
         actions={
-          <button className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
+          <button data-activity="merchant.pages.RuoliPage.RuoliPage.1" className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
             + Nuovo Ruolo
           </button>
         }
@@ -293,7 +293,7 @@ export default function RuoliPage() {
                           {feat.name}
                         </span>
                         <label className="toggle-switch">
-                          <input
+                          <input data-activity="merchant.pages.RuoliPage.RuoliPage.2"
                             type="checkbox"
                             checked={isEnabled}
                             onChange={() => toggleFeature(role.id, feat.value)}
@@ -305,7 +305,7 @@ export default function RuoliPage() {
                       {showLevelSelector && (
                         <div className="feature-level-row">
                           <span className="feature-level-label">Livello di accesso</span>
-                          <select
+                          <select data-activity="merchant.pages.RuoliPage.RuoliPage.3"
                             className="feature-level-select"
                             value={featureLevels[role.id]?.[feat.value] ?? FeatureAccessLevel.ReadOnly}
                             onChange={e => setFeatureLevel(role.id, feat.value, Number(e.target.value) as FeatureAccessLevel)}
@@ -322,7 +322,7 @@ export default function RuoliPage() {
                 })}
               </div>
               <div className="role-card-footer">
-                <button
+                <button data-activity="merchant.pages.RuoliPage.RuoliPage.4"
                   className="btn-delete-role"
                   onClick={() => handleDeleteRole(role)}
                   disabled={isDefaultRole(role)}
@@ -330,7 +330,7 @@ export default function RuoliPage() {
                 >
                   Elimina
                 </button>
-                <button
+                <button data-activity="merchant.pages.RuoliPage.RuoliPage.5"
                   className="btn-save-role"
                   onClick={() => handleSaveRole(role)}
                   disabled={savingId === role.id || isDefaultRole(role)}
@@ -344,18 +344,18 @@ export default function RuoliPage() {
       )}
 
       {showModal && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
+        <div data-activity="merchant.pages.RuoliPage.RuoliPage.6" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal-box">
             <div className="modal-header">
               <h2 className="modal-title">Nuovo Ruolo</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button data-activity="merchant.pages.RuoliPage.RuoliPage.7" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleCreateRole}>
+            <form data-activity="merchant.pages.RuoliPage.RuoliPage.8" onSubmit={handleCreateRole}>
               <div className="modal-body">
                 {createError && <div className="modal-error">{createError}</div>}
                 <div className="form-group">
                   <label className="form-label">Nome ruolo *</label>
-                  <input
+                  <input data-activity="merchant.pages.RuoliPage.RuoliPage.9"
                     type="text"
                     className="form-input"
                     placeholder="Es. Responsabile Turni"
@@ -367,8 +367,8 @@ export default function RuoliPage() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button type="submit" className="btn-primary" disabled={creating}>
+                <button data-activity="merchant.pages.RuoliPage.RuoliPage.10" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
+                <button data-activity="merchant.pages.RuoliPage.RuoliPage.11" type="submit" className="btn-primary" disabled={creating}>
                   {creating ? 'Creazione...' : 'Crea Ruolo'}
                 </button>
               </div>

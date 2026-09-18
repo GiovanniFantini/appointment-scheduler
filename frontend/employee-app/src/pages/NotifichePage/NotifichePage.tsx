@@ -126,7 +126,7 @@ export default function NotifichePage() {
           )}
         </div>
         {unreadCount > 0 && (
-          <button
+          <button data-activity="employee.pages.NotifichePage.NotifichePage.1"
             className="btn-mark-all"
             onClick={handleMarkAllRead}
             disabled={markingAll}
@@ -164,7 +164,7 @@ export default function NotifichePage() {
           {visibleNotifications.map(notif => {
             const isLinked = getNotificationLink(notif) !== null
             return (
-              <div
+              <div data-activity="employee.pages.NotifichePage.NotifichePage.2"
                 key={notif.id}
                 className={`notification-item ${!notif.isRead ? 'notification-item--unread' : ''} ${isLinked ? 'notification-item--linked' : ''}`}
                 onClick={() => handleNotificationClick(notif)}

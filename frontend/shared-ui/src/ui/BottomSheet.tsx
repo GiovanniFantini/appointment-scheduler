@@ -46,7 +46,7 @@ export function BottomSheet({
   if (!open) return null
 
   return createPortal(
-    <div
+    <div data-activity="shared-ui.ui.BottomSheet.1"
       className="su-sheet__backdrop"
       onClick={(e) => {
         if (closeOnBackdrop && e.target === e.currentTarget) onClose()
@@ -54,7 +54,7 @@ export function BottomSheet({
       role="presentation"
     >
       <div className="su-sheet" role="dialog" aria-modal="true" aria-label={title}>
-        <button
+        <button data-activity="shared-ui.ui.BottomSheet.2"
           type="button"
           className="su-sheet__handle"
           aria-label="Chiudi"
@@ -64,7 +64,7 @@ export function BottomSheet({
           <div className="su-sheet__header">
             <h2 className="su-sheet__title">{title}</h2>
             {!hideClose && (
-              <button type="button" className="su-sheet__close" aria-label="Chiudi" onClick={onClose}>
+              <button data-activity="shared-ui.ui.BottomSheet.3" type="button" className="su-sheet__close" aria-label="Chiudi" onClick={onClose}>
                 <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6l-12 12" />
                   <path d="M6 6l12 12" />

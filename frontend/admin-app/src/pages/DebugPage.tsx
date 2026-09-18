@@ -116,7 +116,7 @@ function CopyButton({ value }: { value: string }) {
     })
   }
   return (
-    <button className="dbg-copy-btn" onClick={copy} title="Copy">
+    <button data-activity="admin.pages.DebugPage.1" className="dbg-copy-btn" onClick={copy} title="Copy">
       {copied ? '✓' : '⎘'}
     </button>
   )
@@ -224,7 +224,7 @@ export default function DebugPage() {
       <section className="dbg-section">
         <div className="dbg-section-header">
           <h2 className="dbg-section-title">API Health Checks</h2>
-          <button className="dbg-run-btn" onClick={runChecks} disabled={running}>
+          <button data-activity="admin.pages.DebugPage.2" className="dbg-run-btn" onClick={runChecks} disabled={running}>
             {running ? 'Running…' : 'Run checks'}
           </button>
         </div>
@@ -264,7 +264,7 @@ export default function DebugPage() {
       <section className="dbg-section">
         <div className="dbg-section-header">
           <h2 className="dbg-section-title">Email Service (Azure Communication Services)</h2>
-          <button className="dbg-run-btn" onClick={loadEmailStatus} disabled={emailStatusLoading}>
+          <button data-activity="admin.pages.DebugPage.3" className="dbg-run-btn" onClick={loadEmailStatus} disabled={emailStatusLoading}>
             {emailStatusLoading ? 'Caricamento…' : 'Aggiorna'}
           </button>
         </div>

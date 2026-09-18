@@ -40,11 +40,11 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           <h1 className="login-title">Merchant App</h1>
           <p className="login-subtitle">Accedi al tuo account aziendale</p>
         </div>
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form data-activity="merchant.pages.LoginPage.LoginPage.1" className="login-form" onSubmit={handleSubmit}>
           {error && <div className="login-error">{error}</div>}
           <div className="form-group">
             <label className="form-label">Email</label>
-            <input
+            <input data-activity="merchant.pages.LoginPage.LoginPage.2"
               type="email"
               className="form-input"
               placeholder="nome@azienda.it"
@@ -56,7 +56,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
           </div>
           <div className="form-group">
             <label className="form-label">Password</label>
-            <input
+            <input data-activity="merchant.pages.LoginPage.LoginPage.3"
               type="password"
               className="form-input"
               placeholder="••••••••"
@@ -66,7 +66,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
               autoComplete="current-password"
             />
           </div>
-          <button type="submit" className="btn-primary" disabled={loading}>
+          <button data-activity="merchant.pages.LoginPage.LoginPage.4" type="submit" className="btn-primary" disabled={loading}>
             {loading ? 'Accesso in corso...' : 'Accedi'}
           </button>
           <div style={{ textAlign: 'right', marginTop: -8 }}>

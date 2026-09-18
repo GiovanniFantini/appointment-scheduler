@@ -194,7 +194,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
 
       {/* Avviso prioritario: timbrature da giustificare. Tap → giustifica la prima. */}
       {openAnomalies.length > 0 && (
-        <button
+        <button data-activity="employee.pages.TimbraturaPage.TimbraturaPage.1"
           type="button"
           className="tp-alert-banner"
           onClick={() => setJustifying(openAnomalies[0])}
@@ -215,7 +215,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
       {/* Andamento ore — consultazione, collassato di default. */}
       {wellbeing && (
         <details className="tp-section">
-          <summary className="tp-section-head">
+          <summary data-activity="employee.pages.TimbraturaPage.TimbraturaPage.2" className="tp-section-head">
             <span className="tp-section-title">Andamento ore</span>
             {wellbeing.hasWellbeingAlert && <span className="tp-section-flag">⚠</span>}
             <span className="tp-section-chevron">›</span>
@@ -244,7 +244,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
 
       {/* Storico timbrature — collassato di default, aggregato per giorno e sfogliabile. */}
       <details className="tp-section">
-        <summary className="tp-section-head">
+        <summary data-activity="employee.pages.TimbraturaPage.TimbraturaPage.3" className="tp-section-head">
           <span className="tp-section-title">Le mie timbrature</span>
           {entryDays.length > 0 && <span className="tp-section-count">{entryDays.length} gg</span>}
           <span className="tp-section-chevron">›</span>
@@ -263,7 +263,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
       {/* Anomalie già giustificate o risolte — collassate, aggregate per giorno e sfogliabili. */}
       {reviewedSlides.length > 0 && (
         <details className="tp-section">
-          <summary className="tp-section-head">
+          <summary data-activity="employee.pages.TimbraturaPage.TimbraturaPage.4" className="tp-section-head">
             <span className="tp-section-title">Anomalie in revisione</span>
             <span className="tp-section-count">{reviewedAnomalies.length}</span>
             <span className="tp-section-chevron">›</span>

@@ -662,12 +662,12 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
         <div className="calendario-actions">
           {isMultiBranch && <BranchSelector />}
           {canManage && currentView === 'timeGridWeek' && (
-            <button className="btn-secondary" onClick={() => setCopyDialogOpen(true)}>
+            <button data-activity="employee.pages.CalendarioPage.CalendarioPage.1" className="btn-secondary" onClick={() => setCopyDialogOpen(true)}>
               📋 Copia settimana scorsa
             </button>
           )}
           {canCreate && (
-            <button className="btn-new-event" onClick={handleNewEvent}>
+            <button data-activity="employee.pages.CalendarioPage.CalendarioPage.2" className="btn-new-event" onClick={handleNewEvent}>
               + Nuovo Turno
             </button>
           )}
@@ -718,7 +718,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
                 {skills.map(s => {
                   const active = skillFilter.has(s.id)
                   return (
-                    <button
+                    <button data-activity="employee.pages.CalendarioPage.CalendarioPage.3"
                       key={s.id}
                       type="button"
                       className={`skill-filter-chip ${active ? 'active' : ''}`}
@@ -731,7 +731,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
                   )
                 })}
                 {skillFilter.size > 0 && (
-                  <button
+                  <button data-activity="employee.pages.CalendarioPage.CalendarioPage.4"
                     type="button"
                     className="skill-filter-clear"
                     onClick={() => setSkillFilter(new Set())}
@@ -746,7 +746,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
           {employees.length > 0 && (
             <div className="calendar-filters-group">
               <span className="calendar-filters-label">Dipendente:</span>
-              <select
+              <select data-activity="employee.pages.CalendarioPage.CalendarioPage.5"
                 className="calendar-filter-select"
                 value={employeeFilter === '' ? '' : String(employeeFilter)}
                 onChange={(e) => setEmployeeFilter(e.target.value === '' ? '' : Number(e.target.value))}
@@ -765,7 +765,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
         <div className="conflict-banner" role="alert">
           <div className="conflict-banner-head">
             <span className="conflict-banner-title">⚠ {conflictBanner.heading}</span>
-            <button
+            <button data-activity="employee.pages.CalendarioPage.CalendarioPage.6"
               className="conflict-banner-close"
               onClick={() => setConflictBanner(null)}
               aria-label="Chiudi"

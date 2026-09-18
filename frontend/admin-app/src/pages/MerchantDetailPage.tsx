@@ -186,17 +186,17 @@ export default function MerchantDetailPage() {
 
         <div className="detail-actions">
           {status !== 'active' && (
-            <button className="btn-success" onClick={handleApprove} disabled={actionLoading}>
+            <button data-activity="admin.pages.MerchantDetailPage.1" className="btn-success" onClick={handleApprove} disabled={actionLoading}>
               Approve
             </button>
           )}
           {status !== 'inactive' && (
-            <button className="btn-danger" onClick={handleReject} disabled={actionLoading}>
+            <button data-activity="admin.pages.MerchantDetailPage.2" className="btn-danger" onClick={handleReject} disabled={actionLoading}>
               Deactivate
             </button>
           )}
           {activeTab === 'overview' && !editMode && (
-            <button className="btn-primary" onClick={startEdit}>
+            <button data-activity="admin.pages.MerchantDetailPage.3" className="btn-primary" onClick={startEdit}>
               Edit
             </button>
           )}
@@ -205,8 +205,8 @@ export default function MerchantDetailPage() {
 
       {/* Tabs */}
       <div className="detail-tabs" role="tablist">
-        <button role="tab" aria-selected={activeTab === 'subscription'} className={`detail-tab${activeTab === 'subscription' ? ' active' : ''}`} onClick={() => setActiveTab('subscription')}>Pacchetto</button>
-        <button
+        <button data-activity="admin.pages.MerchantDetailPage.4" role="tab" aria-selected={activeTab === 'subscription'} className={`detail-tab${activeTab === 'subscription' ? ' active' : ''}`} onClick={() => setActiveTab('subscription')}>Pacchetto</button>
+        <button data-activity="admin.pages.MerchantDetailPage.5"
           role="tab"
           aria-selected={activeTab === 'overview'}
           className={`detail-tab${activeTab === 'overview' ? ' active' : ''}`}
@@ -214,7 +214,7 @@ export default function MerchantDetailPage() {
         >
           Overview
         </button>
-        <button
+        <button data-activity="admin.pages.MerchantDetailPage.6"
           role="tab"
           aria-selected={activeTab === 'features'}
           className={`detail-tab${activeTab === 'features' ? ' active' : ''}`}
@@ -222,7 +222,7 @@ export default function MerchantDetailPage() {
         >
           Permessi ruolo predefinito
         </button>
-        <button
+        <button data-activity="admin.pages.MerchantDetailPage.7"
           role="tab"
           aria-selected={activeTab === 'employees'}
           className={`detail-tab${activeTab === 'employees' ? ' active' : ''}`}
@@ -258,7 +258,7 @@ export default function MerchantDetailPage() {
                   ).map(({ key, label }) => (
                     <div key={key} className="edit-field">
                       <label className="edit-field-label">{label}</label>
-                      <input
+                      <input data-activity="admin.pages.MerchantDetailPage.8"
                         className="edit-input"
                         value={editData[key]}
                         onChange={(e) => setEditData((prev) => ({ ...prev, [key]: e.target.value }))}
@@ -267,10 +267,10 @@ export default function MerchantDetailPage() {
                   ))}
                 </div>
                 <div className="edit-form-actions">
-                  <button className="btn-primary" onClick={saveEdit} disabled={saving}>
+                  <button data-activity="admin.pages.MerchantDetailPage.9" className="btn-primary" onClick={saveEdit} disabled={saving}>
                     {saving ? 'Saving…' : 'Save changes'}
                   </button>
-                  <button className="btn-secondary" onClick={cancelEdit} disabled={saving}>
+                  <button data-activity="admin.pages.MerchantDetailPage.10" className="btn-secondary" onClick={cancelEdit} disabled={saving}>
                     Cancel
                   </button>
                 </div>

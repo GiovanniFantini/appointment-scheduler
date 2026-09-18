@@ -64,13 +64,13 @@ export default function RegisterPage() {
             </Link>
           </div>
         ) : (
-          <form className="register-form" onSubmit={handleSubmit}>
+          <form data-activity="employee.pages.RegisterPage.RegisterPage.1" className="register-form" onSubmit={handleSubmit}>
             {error && <div className="register-error">{error}</div>}
 
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Nome *</label>
-                <input
+                <input data-activity="employee.pages.RegisterPage.RegisterPage.2"
                   type="text"
                   className="form-input"
                   placeholder="Mario"
@@ -82,7 +82,7 @@ export default function RegisterPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Cognome *</label>
-                <input
+                <input data-activity="employee.pages.RegisterPage.RegisterPage.3"
                   type="text"
                   className="form-input"
                   placeholder="Rossi"
@@ -96,7 +96,7 @@ export default function RegisterPage() {
 
             <div className="form-group">
               <label className="form-label">Email *</label>
-              <input
+              <input data-activity="employee.pages.RegisterPage.RegisterPage.4"
                 type="email"
                 className="form-input"
                 placeholder="mario.rossi@azienda.it"
@@ -109,7 +109,7 @@ export default function RegisterPage() {
 
             <div className="form-group">
               <label className="form-label">Password *</label>
-              <input
+              <input data-activity="employee.pages.RegisterPage.RegisterPage.5"
                 type="password"
                 className="form-input"
                 placeholder="••••••••••••"
@@ -128,7 +128,7 @@ export default function RegisterPage() {
 
             <div className="form-group">
               <label className="form-label">Telefono</label>
-              <input
+              <input data-activity="employee.pages.RegisterPage.RegisterPage.6"
                 type="tel"
                 className="form-input"
                 placeholder="+39 333 1234567"
@@ -138,7 +138,7 @@ export default function RegisterPage() {
               />
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <button data-activity="employee.pages.RegisterPage.RegisterPage.7" type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Registrazione in corso...' : 'Crea account'}
             </button>
           </form>

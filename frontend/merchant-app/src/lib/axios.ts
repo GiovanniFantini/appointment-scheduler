@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { initActivity, activityHeaders } from '@scheduler/ui'
 
 const apiURL = import.meta.env.PROD
   ? (import.meta.env.VITE_API_URL || 'https://appointment-scheduler-api.azurewebsites.net')
@@ -8,6 +9,8 @@ const baseURL = import.meta.env.PROD
   ? (apiURL.endsWith('/api') ? apiURL : `${apiURL}/api`)
   : '/api'
 
+initActivity('merchant', baseURL)
+
 const apiClient = axios.create({
   baseURL,
   headers: { 'Content-Type': 'application/json' },
@@ -16,6 +19,7 @@ const apiClient = axios.create({
 
 apiClient.interceptors.request.use(
   (config) => {
+    Object.entries(activityHeaders()).forEach(([name, value]) => config.headers.set(name, value))
     const token = localStorage.getItem('token')
     if (token) config.headers.Authorization = `Bearer ${token}`
     return config

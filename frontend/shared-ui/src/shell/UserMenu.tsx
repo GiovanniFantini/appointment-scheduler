@@ -47,7 +47,7 @@ export function UserMenu({ user, items, subtitle }: UserMenuProps) {
 
   return (
     <div className={`su-usermenu ${open ? 'su-usermenu--open' : ''}`} ref={rootRef}>
-      <button
+      <button data-activity="shared-ui.shell.UserMenu.1"
         type="button"
         className="su-usermenu__trigger"
         aria-haspopup="menu"
@@ -79,7 +79,7 @@ export function UserMenu({ user, items, subtitle }: UserMenuProps) {
           {items.map((item) => (
             <div key={item.id}>
               {item.separatorBefore && <div className="su-usermenu__sep" />}
-              <button
+              <button data-activity="shared-ui.shell.UserMenu.2"
                 type="button"
                 role="menuitem"
                 className={`su-usermenu__item ${item.danger ? 'su-usermenu__item--danger' : ''}`}

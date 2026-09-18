@@ -76,7 +76,7 @@ export function Sidebar({ sections, brand, open, onClose, onItemClick }: Sidebar
           <span className="su-sidebar__brand-name">{brand.title}</span>
           {brand.subtitle && <span className="su-sidebar__brand-sub">{brand.subtitle}</span>}
         </div>
-        <button type="button" className="su-sidebar__close" onClick={onClose} aria-label="Chiudi menu">
+        <button data-activity="shared-ui.shell.Sidebar.1" type="button" className="su-sidebar__close" onClick={onClose} aria-label="Chiudi menu">
           <IconClose size={18} />
         </button>
       </div>
@@ -89,7 +89,7 @@ export function Sidebar({ sections, brand, open, onClose, onItemClick }: Sidebar
             <div key={`s-${sIdx}`}>
               {section.label && <div className="su-sidebar__section-label">{section.label}</div>}
               {visibleItems.map((item) => (
-                <NavLink
+                <NavLink data-activity="shared-ui.shell.Sidebar.2"
                   key={item.path}
                   to={item.path}
                   end={item.exact ?? item.path === '/'}

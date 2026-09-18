@@ -86,12 +86,12 @@ export default function LoginPage({ onLogin }: Props) {
           <p className="login-subtitle">Accedi al tuo account</p>
         </div>
 
-        <form className="login-form" onSubmit={handleSubmit}>
+        <form data-activity="employee.pages.LoginPage.LoginPage.1" className="login-form" onSubmit={handleSubmit}>
           {error && <div className="login-error">{error}</div>}
 
           <div className="form-group">
             <label htmlFor="email" className="form-label">Email</label>
-            <input
+            <input data-activity="employee.pages.LoginPage.LoginPage.2"
               id="email"
               type="email"
               className="form-input"
@@ -105,7 +105,7 @@ export default function LoginPage({ onLogin }: Props) {
 
           <div className="form-group">
             <label htmlFor="password" className="form-label">Password</label>
-            <input
+            <input data-activity="employee.pages.LoginPage.LoginPage.3"
               id="password"
               type="password"
               className="form-input"
@@ -117,7 +117,7 @@ export default function LoginPage({ onLogin }: Props) {
             />
           </div>
 
-          <button type="submit" className="login-btn" disabled={loading}>
+          <button data-activity="employee.pages.LoginPage.LoginPage.4" type="submit" className="login-btn" disabled={loading}>
             {loading ? <span className="btn-spinner" /> : 'Accedi'}
           </button>
           <div style={{ textAlign: 'right', marginTop: -8 }}>

@@ -1,3 +1,4 @@
+import { ActivityObserver, ActivityPage } from '@scheduler/ui'
 import SubscriptionPlansPage from './pages/SubscriptionPlansPage'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
@@ -87,6 +88,7 @@ function App() {
       <Toaster>
         <ConfirmProvider>
         <Router>
+          <ActivityObserver />
           <Routes>
             <Route path="/login" element={<PublicLogin />} />
             <Route
@@ -119,6 +121,7 @@ function App() {
               <Route path="debug" element={<DebugPage />} />
               <Route path="tools/email" element={<EmailTestPage />} />
               <Route path="profile" element={<ProfileWrapper />} />
+              <Route path="activity" element={<ActivityPage apiClient={apiClient} />} />
               <Route path="preferences" element={<PreferencesPage />} />
             </Route>
 

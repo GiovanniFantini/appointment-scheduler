@@ -287,24 +287,24 @@ export default function RisorsePage() {
           <h1 className="page-title">Risorse</h1>
           <p className="page-subtitle">Gestisci i dipendenti della tua azienda</p>
         </div>
-        <button className="btn-primary" onClick={openAddModal}>
+        <button data-activity="employee.pages.RisorsePage.RisorsePage.1" className="btn-primary" onClick={openAddModal}>
           <TiPlus size={16} /> Aggiungi Dipendente
         </button>
       </div>
 
       <div className="risorse-filter-bar">
         <span className="filter-label">Filtra per tipo:</span>
-        <button
+        <button data-activity="employee.pages.RisorsePage.RisorsePage.2"
           type="button"
           className={`filter-chip ${filterKind == null ? 'active' : ''}`}
           onClick={() => setFilterKind(null)}
         >Tutti</button>
-        <button
+        <button data-activity="employee.pages.RisorsePage.RisorsePage.3"
           type="button"
           className={`filter-chip ${filterKind === EMPLOYEE_KIND.Internal ? 'active' : ''}`}
           onClick={() => setFilterKind(EMPLOYEE_KIND.Internal)}
         >Interni</button>
-        <button
+        <button data-activity="employee.pages.RisorsePage.RisorsePage.4"
           type="button"
           className={`filter-chip ${filterKind === EMPLOYEE_KIND.External ? 'active' : ''}`}
           onClick={() => setFilterKind(EMPLOYEE_KIND.External)}
@@ -314,13 +314,13 @@ export default function RisorsePage() {
       {isMultiBranch && (
         <div className="risorse-filter-bar">
           <span className="filter-label">Filtra per filiale:</span>
-          <button
+          <button data-activity="employee.pages.RisorsePage.RisorsePage.5"
             type="button"
             className={`filter-chip ${filterBranchId == null ? 'active' : ''}`}
             onClick={() => setFilterBranchId(null)}
           >Tutte</button>
           {activeBranches.map(b => (
-            <button
+            <button data-activity="employee.pages.RisorsePage.RisorsePage.6"
               key={b.id}
               type="button"
               className={`filter-chip ${filterBranchId === b.id ? 'active' : ''}`}
@@ -335,13 +335,13 @@ export default function RisorsePage() {
       {skills.length > 0 && (
         <div className="risorse-filter-bar">
           <span className="filter-label">Filtra per mansione:</span>
-          <button
+          <button data-activity="employee.pages.RisorsePage.RisorsePage.7"
             type="button"
             className={`filter-chip ${filterSkillId == null ? 'active' : ''}`}
             onClick={() => setFilterSkillId(null)}
           >Tutte</button>
           {skills.map(s => (
-            <button
+            <button data-activity="employee.pages.RisorsePage.RisorsePage.8"
               key={s.id}
               type="button"
               className={`filter-chip ${filterSkillId === s.id ? 'active' : ''}`}
@@ -417,8 +417,8 @@ export default function RisorsePage() {
               )}
 
               <div className="resource-card-actions">
-                <button className="btn-edit" onClick={() => openEditModal(emp)}>Modifica</button>
-                <button className="btn-remove" onClick={() => handleRemove(emp)}>Rimuovi</button>
+                <button data-activity="employee.pages.RisorsePage.RisorsePage.9" className="btn-edit" onClick={() => openEditModal(emp)}>Modifica</button>
+                <button data-activity="employee.pages.RisorsePage.RisorsePage.10" className="btn-remove" onClick={() => handleRemove(emp)}>Rimuovi</button>
               </div>
             </div>
           ))}
@@ -426,24 +426,24 @@ export default function RisorsePage() {
       )}
 
       {showModal && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
+        <div data-activity="employee.pages.RisorsePage.RisorsePage.11" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal-box">
             <div className="modal-header">
               <h2 className="modal-title">{editEmployee ? 'Modifica Dipendente' : 'Nuovo Dipendente'}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button data-activity="employee.pages.RisorsePage.RisorsePage.12" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form data-activity="employee.pages.RisorsePage.RisorsePage.13" onSubmit={handleSubmit}>
               <div className="modal-body">
                 {formError && <div className="modal-error">{formError}</div>}
                 <div className="form-group">
                   <label className="form-label">Tipo risorsa</label>
                   <div className="kind-toggle">
-                    <button
+                    <button data-activity="employee.pages.RisorsePage.RisorsePage.14"
                       type="button"
                       className={`filter-chip ${formData.kind === EMPLOYEE_KIND.Internal ? 'active' : ''}`}
                       onClick={() => setFormData(p => ({ ...p, kind: EMPLOYEE_KIND.Internal }))}
                     >Dipendente interno</button>
-                    <button
+                    <button data-activity="employee.pages.RisorsePage.RisorsePage.15"
                       type="button"
                       className={`filter-chip ${formData.kind === EMPLOYEE_KIND.External ? 'active' : ''}`}
                       onClick={() => setFormData(p => ({ ...p, kind: EMPLOYEE_KIND.External }))}
@@ -459,7 +459,7 @@ export default function RisorsePage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Nome *</label>
-                    <input
+                    <input data-activity="employee.pages.RisorsePage.RisorsePage.16"
                       type="text"
                       className="form-input"
                       placeholder="Mario"
@@ -470,7 +470,7 @@ export default function RisorsePage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Cognome *</label>
-                    <input
+                    <input data-activity="employee.pages.RisorsePage.RisorsePage.17"
                       type="text"
                       className="form-input"
                       placeholder="Rossi"
@@ -484,7 +484,7 @@ export default function RisorsePage() {
                   <label className="form-label">
                     Email {formData.kind === EMPLOYEE_KIND.Internal ? '*' : '(opzionale)'}
                   </label>
-                  <input
+                  <input data-activity="employee.pages.RisorsePage.RisorsePage.18"
                     type="email"
                     className="form-input"
                     placeholder="mario.rossi@azienda.it"
@@ -495,7 +495,7 @@ export default function RisorsePage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Ruolo</label>
-                  <select
+                  <select data-activity="employee.pages.RisorsePage.RisorsePage.19"
                     className="form-select"
                     value={formData.roleId}
                     onChange={e => setFormData(p => ({ ...p, roleId: e.target.value }))}
@@ -518,7 +518,7 @@ export default function RisorsePage() {
                         {activeBranches.length > 1 && (
                           <div className="form-group">
                             <label className="form-label">Sede principale</label>
-                            <select
+                            <select data-activity="employee.pages.RisorsePage.RisorsePage.20"
                               className="form-select"
                               value={formData.homeBranchId}
                               onChange={e => setFormData(p => ({
@@ -539,7 +539,7 @@ export default function RisorsePage() {
                         {homeDepts.length > 0 && (
                           <div className="form-group">
                             <label className="form-label">Reparto</label>
-                            <select
+                            <select data-activity="employee.pages.RisorsePage.RisorsePage.21"
                               className="form-select"
                               value={formData.homeDepartmentId}
                               onChange={e => setFormData(p => ({ ...p, homeDepartmentId: e.target.value }))}
@@ -559,7 +559,7 @@ export default function RisorsePage() {
                             {extraBranches.map(b => {
                               const selected = formData.allowedBranchIds.includes(b.id)
                               return (
-                                <button
+                                <button data-activity="employee.pages.RisorsePage.RisorsePage.22"
                                   key={b.id}
                                   type="button"
                                   className={`skill-pick-chip ${selected ? 'selected' : ''}`}
@@ -590,7 +590,7 @@ export default function RisorsePage() {
                       {skills.map(s => {
                         const selected = formData.skillIds.includes(s.id)
                         return (
-                          <button
+                          <button data-activity="employee.pages.RisorsePage.RisorsePage.23"
                             key={s.id}
                             type="button"
                             className={`skill-pick-chip ${selected ? 'selected' : ''}`}
@@ -610,7 +610,7 @@ export default function RisorsePage() {
                 )}
                 {formData.kind === EMPLOYEE_KIND.External && (
                   <div className="form-group">
-                    <button
+                    <button data-activity="employee.pages.RisorsePage.RisorsePage.24"
                       type="button"
                       className="external-details-toggle"
                       onClick={() => setShowExternalDetails(s => !s)}
@@ -621,7 +621,7 @@ export default function RisorsePage() {
                       <div className="external-details-box">
                         <div className="form-group">
                           <label className="form-label">Tipo di rapporto</label>
-                          <select
+                          <select data-activity="employee.pages.RisorsePage.RisorsePage.25"
                             className="form-select"
                             value={formData.contractType}
                             onChange={e => setFormData(p => ({ ...p, contractType: e.target.value }))}
@@ -635,7 +635,7 @@ export default function RisorsePage() {
                         <div className="form-row">
                           <div className="form-group">
                             <label className="form-label">Agenzia / Fornitore</label>
-                            <input
+                            <input data-activity="employee.pages.RisorsePage.RisorsePage.26"
                               type="text"
                               className="form-input"
                               placeholder="Es. Agenzia interinale XYZ"
@@ -645,7 +645,7 @@ export default function RisorsePage() {
                           </div>
                           <div className="form-group">
                             <label className="form-label">Costo orario (€)</label>
-                            <input
+                            <input data-activity="employee.pages.RisorsePage.RisorsePage.27"
                               type="number"
                               className="form-input"
                               placeholder="0,00"
@@ -658,7 +658,7 @@ export default function RisorsePage() {
                         </div>
                         <div className="form-group">
                           <label className="form-label">Note</label>
-                          <textarea
+                          <textarea data-activity="employee.pages.RisorsePage.RisorsePage.28"
                             className="form-input"
                             rows={3}
                             placeholder="Note libere sulla risorsa esterna"
@@ -672,8 +672,8 @@ export default function RisorsePage() {
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
+                <button data-activity="employee.pages.RisorsePage.RisorsePage.29" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
+                <button data-activity="employee.pages.RisorsePage.RisorsePage.30" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>

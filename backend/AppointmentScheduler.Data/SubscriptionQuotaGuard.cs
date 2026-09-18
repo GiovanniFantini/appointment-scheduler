@@ -7,15 +7,7 @@ namespace AppointmentScheduler.Data;
 
 public partial class ApplicationDbContext
 {
-    public override int SaveChanges() => SaveChanges(true);
-
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
-        => SaveChangesAsync(acceptAllChangesOnSuccess).GetAwaiter().GetResult();
-
-    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        => SaveChangesAsync(true, cancellationToken);
-
-    public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    private async Task<int> SaveWithQuotaAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken)
     {
         ChangeTracker.DetectChanges();
         var memberships = ChangeTracker.Entries<EmployeeMembership>().Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted).ToArray();

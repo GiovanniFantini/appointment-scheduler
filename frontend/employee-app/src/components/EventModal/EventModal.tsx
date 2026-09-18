@@ -635,26 +635,26 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
     : 0
 
   return (
-    <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
+    <div data-activity="employee.components.EventModal.EventModal.1" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="modal-container">
         <div className="modal-header">
           <h2 className="modal-title">{assignmentOnly ? 'Assegna Personale' : isEdit ? 'Modifica Turno' : 'Nuovo Turno'}</h2>
-          <button className="modal-close-btn" onClick={onClose}>✕</button>
+          <button data-activity="employee.components.EventModal.EventModal.2" className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
         {eventType === 'Turno' && (
           <div className="wizard-stepper">
-            <div className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
+            <div data-activity="employee.components.EventModal.EventModal.3" className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
               <span className="step-num">1</span><span className="step-label">{isMultiBranch ? 'Dove e quando' : 'Quando'}</span>
             </div>
             {hasSkills && <>
             <div className="step-sep" />
-            <div className={`step ${step === 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
+            <div data-activity="employee.components.EventModal.EventModal.4" className={`step ${step === 2 ? 'active' : ''} ${step > 2 ? 'done' : ''}`} onClick={() => setStep(2)}>
               <span className="step-num">2</span><span className="step-label">Cosa serve</span>
             </div>
             </>}
             <div className="step-sep" />
-            <div className={`step ${step === 3 ? 'active' : ''}`} onClick={() => setStep(3)}>
+            <div data-activity="employee.components.EventModal.EventModal.5" className={`step ${step === 3 ? 'active' : ''}`} onClick={() => setStep(3)}>
               <span className="step-num">{hasSkills ? 3 : 2}</span><span className="step-label">Chi</span>
             </div>
           </div>
@@ -698,7 +698,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 ))}
               </ul>
               <label className="checkbox-group">
-                <input
+                <input data-activity="employee.components.EventModal.EventModal.6"
                   type="checkbox"
                   className="modal-checkbox"
                   checked={warningsAcknowledged}
@@ -706,7 +706,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 />
                 <span className="checkbox-label">Ho letto gli avvisi, procedo comunque</span>
               </label>
-              <button
+              <button data-activity="employee.components.EventModal.EventModal.7"
                 className="btn-save"
                 disabled={!warningsAcknowledged}
                 onClick={dismissWarnings}
@@ -720,7 +720,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
             <>
               <div className="modal-form-group">
                 <label className="modal-label">Titolo</label>
-                <input
+                <input data-activity="employee.components.EventModal.EventModal.8"
                   type="text"
                   className="modal-input"
                   placeholder={eventType === 'Turno' ? 'Es. Mattina' : 'Inserisci titolo'}
@@ -731,7 +731,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
               <div className="modal-form-group">
                 <label className="modal-label">Tipologia *</label>
-                <select className="modal-select" value={eventType} onChange={e => setEventType(e.target.value as EventType)}>
+                <select data-activity="employee.components.EventModal.EventModal.9" className="modal-select" value={eventType} onChange={e => setEventType(e.target.value as EventType)}>
                   {EVENT_TYPES.map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}
@@ -745,7 +745,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   {activeBranches.length > 1 && (
                     <div className="modal-form-group">
                       <label className="modal-label">Filiale *</label>
-                      <select
+                      <select data-activity="employee.components.EventModal.EventModal.10"
                         className="modal-select"
                         value={branchId ?? ''}
                         onChange={e => {
@@ -775,7 +775,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     return (
                       <div className="modal-form-group">
                         <label className="modal-label">Reparto</label>
-                        <select
+                        <select data-activity="employee.components.EventModal.EventModal.11"
                           className="modal-select"
                           value={departmentId ?? ''}
                           onChange={e => setDepartmentId(e.target.value ? Number(e.target.value) : null)}
@@ -793,7 +793,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
               {isMultiBranch && eventType === 'ChiusuraAziendale' && (
                 <div className="checkbox-group">
-                  <input
+                  <input data-activity="employee.components.EventModal.EventModal.12"
                     type="checkbox"
                     id="appliesToAllBranches"
                     className="modal-checkbox"
@@ -808,7 +808,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
               <div className="toggle-group">
                 <label className="toggle-switch">
-                  <input type="checkbox" checked={isAllDay} onChange={e => setIsAllDay(e.target.checked)} />
+                  <input data-activity="employee.components.EventModal.EventModal.13" type="checkbox" checked={isAllDay} onChange={e => setIsAllDay(e.target.checked)} />
                   <span className="toggle-slider" />
                 </label>
                 <span className="toggle-label">Tutto il giorno</span>
@@ -817,11 +817,11 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
               <div className="modal-row">
                 <div className="modal-form-group">
                   <label className="modal-label">Data inizio *</label>
-                  <input type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} {...nativeDateInputProps} />
+                  <input data-activity="employee.components.EventModal.EventModal.14" type="date" className="modal-input" value={startDate} onChange={e => setStartDate(e.target.value)} {...nativeDateInputProps} />
                 </div>
                 <div className="modal-form-group">
                   <label className="modal-label">Data fine</label>
-                  <input type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} {...nativeDateInputProps} />
+                  <input data-activity="employee.components.EventModal.EventModal.15" type="date" className="modal-input" value={endDate} min={startDate || undefined} onChange={e => setEndDate(e.target.value)} {...nativeDateInputProps} />
                 </div>
               </div>
 
@@ -830,11 +830,11 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   <div className="modal-row">
                     <div className="modal-form-group">
                       <label className="modal-label">Orario da</label>
-                      <input type="time" className="modal-input" value={startTime} onChange={e => handleStartTimeChange(e.target.value)} />
+                      <input data-activity="employee.components.EventModal.EventModal.16" type="time" className="modal-input" value={startTime} onChange={e => handleStartTimeChange(e.target.value)} />
                     </div>
                     <div className="modal-form-group">
                       <label className="modal-label">Orario a</label>
-                      <input
+                      <input data-activity="employee.components.EventModal.EventModal.17"
                         type="time"
                         className={`modal-input${timeError ? ' modal-input--error' : ''}`}
                         value={endTime}
@@ -853,7 +853,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
               {eventType === 'Turno' && (
                 <>
                   <div className="checkbox-group">
-                    <input
+                    <input data-activity="employee.components.EventModal.EventModal.18"
                       type="checkbox"
                       id="isOnCall"
                       className="modal-checkbox"
@@ -864,7 +864,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   </div>
                   <div className="repeat-block">
                     <div className="checkbox-group">
-                      <input
+                      <input data-activity="employee.components.EventModal.EventModal.19"
                         type="checkbox"
                         id="repeatWeekly"
                         className="modal-checkbox"
@@ -876,7 +876,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     {repeatWeekly && (
                       <div className="modal-form-group">
                         <label className="modal-label">Fino al</label>
-                        <input
+                        <input data-activity="employee.components.EventModal.EventModal.20"
                           type="date"
                           className="modal-input"
                           min={startDate || undefined}
@@ -895,7 +895,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
           {hasSkills && eventType === 'Turno' && step === 2 && (
             <div className="wizard-step-content">
               <div className="step2-actions">
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.21"
                   type="button"
                   className="btn-cancel"
                   onClick={refreshSkills}
@@ -903,7 +903,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 >
                   {skillsLoading ? 'Aggiornamento...' : 'Aggiorna mansioni'}
                 </button>
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.22"
                   type="button"
                   className="btn-save"
                   onClick={() => {
@@ -921,7 +921,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   <div className="modal-row">
                     <div className="modal-form-group">
                       <label className="modal-label">Nome mansione</label>
-                      <input
+                      <input data-activity="employee.components.EventModal.EventModal.23"
                         type="text"
                         className="modal-input"
                         placeholder="Es. Cassiere"
@@ -931,7 +931,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     </div>
                     <div className="modal-form-group">
                       <label className="modal-label">Colore</label>
-                      <input
+                      <input data-activity="employee.components.EventModal.EventModal.24"
                         type="color"
                         className="modal-input inline-color-input"
                         value={inlineSkillColor}
@@ -941,7 +941,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   </div>
                   {inlineSkillError && <div className="modal-error">{inlineSkillError}</div>}
                   <div className="inline-skill-actions">
-                    <button
+                    <button data-activity="employee.components.EventModal.EventModal.25"
                       type="button"
                       className="btn-save"
                       onClick={handleCreateInlineSkill}
@@ -961,7 +961,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     Le mansioni servono a dichiarare di cosa ha bisogno il turno (es. 1 Cassiere + 1 Repartista).
                     Sono opzionali: se non ne hai bisogno, salta questo passaggio.
                   </p>
-                  <button
+                  <button data-activity="employee.components.EventModal.EventModal.26"
                     type="button"
                     className="link-button"
                     onClick={() => setInlineSkillOpen(true)}
@@ -979,7 +979,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                       const already = requiredSkills.some(r => r.skillId === s.id)
                       if (already) return null
                       return (
-                        <button
+                        <button data-activity="employee.components.EventModal.EventModal.27"
                           key={s.id}
                           type="button"
                           className="skill-pick-chip"
@@ -999,11 +999,11 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                             <span className="required-badge" style={{ background: s.color }}>{s.name.charAt(0)}</span>
                             <span className="required-name">{s.name}</span>
                             <div className="qty-control">
-                              <button type="button" onClick={() => updateRequiredQuantity(rs.skillId, -1)}>−</button>
+                              <button data-activity="employee.components.EventModal.EventModal.28" type="button" onClick={() => updateRequiredQuantity(rs.skillId, -1)}>−</button>
                               <span className="qty-value">{rs.quantity}</span>
-                              <button type="button" onClick={() => updateRequiredQuantity(rs.skillId, +1)}>+</button>
+                              <button data-activity="employee.components.EventModal.EventModal.29" type="button" onClick={() => updateRequiredQuantity(rs.skillId, +1)}>+</button>
                             </div>
-                            <button type="button" className="required-remove" onClick={() => removeRequiredSkill(rs.skillId)}>✕</button>
+                            <button data-activity="employee.components.EventModal.EventModal.30" type="button" className="required-remove" onClick={() => removeRequiredSkill(rs.skillId)}>✕</button>
                           </li>
                         )
                       })}
@@ -1049,7 +1049,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                                     <span className="suggested-reason">{emp.unavailableReason}</span>
                                   )}
                                 </div>
-                                <button
+                                <button data-activity="employee.components.EventModal.EventModal.31"
                                   type="button"
                                   className={`suggested-add ${isCoveringThis ? 'added' : ''}`}
                                   disabled={!emp.isAvailable && !isCoveringThis}
@@ -1089,7 +1089,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                                 {emp.kind === EMPLOYEE_KIND_EXTERNAL ? ' — Esterno' : ''}
                               </div>
                               {requiredSkills.length > 0 && (
-                                <select
+                                <select data-activity="employee.components.EventModal.EventModal.32"
                                   className="selected-participants-skill"
                                   value={selectedSkillId ?? ''}
                                   onChange={e => setParticipantSkill(empId, e.target.value === '' ? null : Number(e.target.value))}
@@ -1102,7 +1102,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                                   })}
                                 </select>
                               )}
-                              <button
+                              <button data-activity="employee.components.EventModal.EventModal.33"
                                 type="button"
                                 className="selected-participants-remove"
                                 onClick={() => removeSelectedParticipant(empId)}
@@ -1122,7 +1122,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 </>
               )}
               {hasResources && hasSkills && requiredSkills.length > 0 && (
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.34"
                   type="button"
                   className="new-external-btn"
                   onClick={() => { setNewExtError(''); setShowNewExternal(true) }}
@@ -1146,7 +1146,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     : 'Persone coinvolte (Ctrl+click per selezione multipla)'}
               </label>
               {isEmployeeAbsenceEvent ? (
-                <select
+                <select data-activity="employee.components.EventModal.EventModal.35"
                   className="modal-select"
                   value={selectedOwnerIds[0] ?? ''}
                   onChange={handleSingleEmployeeSelect}
@@ -1160,7 +1160,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   ))}
                 </select>
               ) : (
-                <select
+                <select data-activity="employee.components.EventModal.EventModal.36"
                   multiple
                   className="multi-select"
                   value={selectedOwnerIds.map(String)}
@@ -1180,7 +1180,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 </div>
               )}
               {hasResources && eventType === 'Turno' && (
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.37"
                   type="button"
                   className="new-external-btn"
                   onClick={() => { setNewExtError(''); setShowNewExternal(true) }}
@@ -1193,7 +1193,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
           {eventType === 'Turno' && step === 3 && selectedOwnerIds.length > 0 && !isAllDay && (
             <div className="checkbox-group">
-              <input
+              <input data-activity="employee.components.EventModal.EventModal.38"
                 type="checkbox"
                 id="showOverrides"
                 className="modal-checkbox"
@@ -1221,7 +1221,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     <div className="modal-row">
                       <div className="modal-form-group">
                         <label className="modal-label">Dalle</label>
-                        <input
+                        <input data-activity="employee.components.EventModal.EventModal.39"
                           type="time"
                           className="modal-input"
                           value={ov?.startTimeOverride ?? ''}
@@ -1230,7 +1230,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                       </div>
                       <div className="modal-form-group">
                         <label className="modal-label">Alle</label>
-                        <input
+                        <input data-activity="employee.components.EventModal.EventModal.40"
                           type="time"
                           className="modal-input"
                           value={ov?.endTimeOverride ?? ''}
@@ -1238,7 +1238,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                         />
                       </div>
                     </div>
-                    <input
+                    <input data-activity="employee.components.EventModal.EventModal.41"
                       type="text"
                       className="modal-input"
                       placeholder="Nota (es. rientra dopo visita)"
@@ -1256,7 +1256,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
               {eventType !== 'Turno' && (
                 <div className="modal-form-group">
                   <label className="modal-label">Ricorrenza</label>
-                  <select className="modal-select" value={recurrence} onChange={e => setRecurrence(e.target.value as RecurrenceType)}>
+                  <select data-activity="employee.components.EventModal.EventModal.42" className="modal-select" value={recurrence} onChange={e => setRecurrence(e.target.value as RecurrenceType)}>
                     {RECURRENCE_TYPES.map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
@@ -1265,7 +1265,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
               )}
 
               <div className="checkbox-group">
-                <input
+                <input data-activity="employee.components.EventModal.EventModal.43"
                   type="checkbox"
                   id="notificationEnabled"
                   className="modal-checkbox"
@@ -1277,7 +1277,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
               <div className="modal-form-group">
                 <label className="modal-label">Note</label>
-                <textarea
+                <textarea data-activity="employee.components.EventModal.EventModal.44"
                   className="modal-textarea"
                   placeholder="Note aggiuntive..."
                   value={notes}
@@ -1291,7 +1291,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
             <>
               <hr className="section-sep" />
               <div className="checkbox-group">
-                <input
+                <input data-activity="employee.components.EventModal.EventModal.45"
                   type="checkbox"
                   id="showClone"
                   className="modal-checkbox"
@@ -1305,7 +1305,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                   <div className="clone-section-title">Clonazione</div>
                   <div className="modal-form-group">
                     <label className="modal-label">Modalità</label>
-                    <select
+                    <select data-activity="employee.components.EventModal.EventModal.46"
                       className="modal-select"
                       value={cloneMode}
                       onChange={e => setCloneMode(e.target.value as 'daily' | 'weekly')}
@@ -1319,11 +1319,11 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                       <div className="modal-row">
                         <div className="modal-form-group">
                           <label className="modal-label">Da data</label>
-                          <input type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} {...nativeDateInputProps} />
+                          <input data-activity="employee.components.EventModal.EventModal.47" type="date" className="modal-input" value={cloneFrom} onChange={e => setCloneFrom(e.target.value)} {...nativeDateInputProps} />
                         </div>
                         <div className="modal-form-group">
                           <label className="modal-label">A data</label>
-                          <input type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} {...nativeDateInputProps} />
+                          <input data-activity="employee.components.EventModal.EventModal.48" type="date" className="modal-input" value={cloneTo} onChange={e => setCloneTo(e.target.value)} {...nativeDateInputProps} />
                         </div>
                       </div>
                     </>
@@ -1332,7 +1332,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                     <div className="modal-row">
                       <div className="modal-form-group">
                         <label className="modal-label">Settimana target (lun.)</label>
-                        <input
+                        <input data-activity="employee.components.EventModal.EventModal.49"
                           type="date"
                           className="modal-input"
                           value={cloneTargetWeek}
@@ -1342,7 +1342,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                       </div>
                       <div className="modal-form-group">
                         <label className="modal-label">N. settimane</label>
-                        <input
+                        <input data-activity="employee.components.EventModal.EventModal.50"
                           type="number"
                           className="modal-input"
                           min={1}
@@ -1353,7 +1353,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                       </div>
                     </div>
                   )}
-                  <button className="btn-clone" onClick={handleClone} disabled={loading}>
+                  <button data-activity="employee.components.EventModal.EventModal.51" className="btn-clone" onClick={handleClone} disabled={loading}>
                     Clona
                   </button>
                 </div>
@@ -1364,17 +1364,17 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
         <div className="modal-footer">
           {isEdit && !assignmentOnly && (
-            <button className="btn-delete" onClick={handleDelete} disabled={loading}>Elimina</button>
+            <button data-activity="employee.components.EventModal.EventModal.52" className="btn-delete" onClick={handleDelete} disabled={loading}>Elimina</button>
           )}
           <div className="modal-footer-right">
             {eventType === 'Turno' && step > 1 && (
-              <button className="btn-cancel" onClick={() => setStep(prev => (prev === 3 && !hasSkills ? 1 : prev > 1 ? (prev - 1) as 1 | 2 | 3 : prev))}>
+              <button data-activity="employee.components.EventModal.EventModal.53" className="btn-cancel" onClick={() => setStep(prev => (prev === 3 && !hasSkills ? 1 : prev > 1 ? (prev - 1) as 1 | 2 | 3 : prev))}>
                 ← Indietro
               </button>
             )}
-            <button className="btn-cancel" onClick={onClose}>Annulla</button>
+            <button data-activity="employee.components.EventModal.EventModal.54" className="btn-cancel" onClick={onClose}>Annulla</button>
             {eventType === 'Turno' && step < 3 ? (
-              <button
+              <button data-activity="employee.components.EventModal.EventModal.55"
                 className="btn-save"
                 onClick={() => {
                   if (step === 1) {
@@ -1390,7 +1390,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 {step === 2 && requiredSkills.length === 0 ? 'Salta →' : 'Avanti →'}
               </button>
             ) : (
-              <button className="btn-save" onClick={handleSave} disabled={loading}>
+              <button data-activity="employee.components.EventModal.EventModal.56" className="btn-save" onClick={handleSave} disabled={loading}>
                 {loading ? 'Salvataggio...' : 'Salva'}
               </button>
             )}
@@ -1399,14 +1399,14 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
       </div>
 
       {hasResources && showNewExternal && (
-        <div
+        <div data-activity="employee.components.EventModal.EventModal.57"
           className="modal-overlay"
           onClick={e => { if (e.target === e.currentTarget) setShowNewExternal(false) }}
         >
           <div className="modal-box new-external-dialog">
             <div className="modal-header">
               <h2 className="modal-title">Nuova risorsa esterna</h2>
-              <button className="modal-close" onClick={() => setShowNewExternal(false)}>✕</button>
+              <button data-activity="employee.components.EventModal.EventModal.58" className="modal-close" onClick={() => setShowNewExternal(false)}>✕</button>
             </div>
             <div className="modal-body">
               {newExtError && <div className="modal-error">{newExtError}</div>}
@@ -1417,7 +1417,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
               <div className="modal-row">
                 <div className="modal-form-group">
                   <label className="modal-label">Nome *</label>
-                  <input
+                  <input data-activity="employee.components.EventModal.EventModal.59"
                     type="text"
                     className="modal-input"
                     placeholder="Mario"
@@ -1428,7 +1428,7 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
                 </div>
                 <div className="modal-form-group">
                   <label className="modal-label">Cognome *</label>
-                  <input
+                  <input data-activity="employee.components.EventModal.EventModal.60"
                     type="text"
                     className="modal-input"
                     placeholder="Bianchi"
@@ -1440,12 +1440,12 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
             </div>
             <div className="modal-footer">
               <div className="modal-footer-right">
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.61"
                   className="btn-cancel"
                   onClick={() => setShowNewExternal(false)}
                   disabled={newExtSaving}
                 >Annulla</button>
-                <button
+                <button data-activity="employee.components.EventModal.EventModal.62"
                   className="btn-save"
                   onClick={handleCreateExternal}
                   disabled={newExtSaving}

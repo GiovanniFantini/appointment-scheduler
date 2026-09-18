@@ -27,7 +27,7 @@ export const DatePicker = forwardRef<HTMLInputElement, DatePickerProps>(function
   }
 
   return (
-    <input
+    <input data-activity="shared-ui.form.DatePicker.1"
       ref={(el) => {
         innerRef.current = el
         if (typeof ref === 'function') ref(el)

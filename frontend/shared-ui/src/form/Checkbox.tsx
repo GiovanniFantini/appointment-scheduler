@@ -11,7 +11,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
 ) {
   return (
     <label className={`su-checkbox ${disabled ? 'su-checkbox--disabled' : ''} ${className}`}>
-      <input ref={ref} type="checkbox" disabled={disabled} {...rest} />
+      <input data-activity="shared-ui.form.Checkbox.1" ref={ref} type="checkbox" disabled={disabled} {...rest} />
       <span>{label}</span>
     </label>
   )

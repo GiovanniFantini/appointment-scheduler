@@ -86,7 +86,7 @@ export default function ResetPasswordPage() {
           </>
         ) : (
           <>
-            <form className="login-form" onSubmit={handleSubmit}>
+            <form data-activity="admin.pages.ResetPasswordPage.1" className="login-form" onSubmit={handleSubmit}>
               {error && (
                 <div className="login-error">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
@@ -99,7 +99,7 @@ export default function ResetPasswordPage() {
               )}
               <div className="form-group">
                 <label className="form-label" htmlFor="newPassword">New password</label>
-                <input
+                <input data-activity="admin.pages.ResetPasswordPage.2"
                   id="newPassword"
                   type="password"
                   className="form-input"
@@ -116,7 +116,7 @@ export default function ResetPasswordPage() {
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="confirmPassword">Confirm password</label>
-                <input
+                <input data-activity="admin.pages.ResetPasswordPage.3"
                   id="confirmPassword"
                   type="password"
                   className="form-input"
@@ -128,7 +128,7 @@ export default function ResetPasswordPage() {
                   autoComplete="new-password"
                 />
               </div>
-              <button
+              <button data-activity="admin.pages.ResetPasswordPage.4"
                 type="submit"
                 className="btn-login"
                 disabled={loading || !passwordRulesMet(newPassword) || newPassword !== confirmPassword}

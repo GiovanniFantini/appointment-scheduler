@@ -1,3 +1,4 @@
+import { ActivityObserver, ActivityPage } from '@scheduler/ui'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, SubscriptionGate, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import MerchantShell from './components/MerchantShell'
@@ -85,6 +86,7 @@ function App() {
       <Toaster>
         <ConfirmProvider>
         <Router>
+          <ActivityObserver />
           <Routes>
             <Route path="/login" element={<PublicLogin />} />
             <Route
@@ -118,6 +120,7 @@ function App() {
               <Route path="/ruoli" element={<FeatureRoute feature="Ruoli"><RuoliPage /></FeatureRoute>} />
               <Route path="/report" element={<FeatureRoute feature="Report"><ReportPage /></FeatureRoute>} />
               <Route path="/profile" element={<ProfileWrapper />} />
+              <Route path="/activity" element={<ActivityPage apiClient={apiClient} />} />
               <Route path="/preferences" element={<PreferencesPage />} />
             </Route>
 

@@ -96,7 +96,7 @@ export default function ForgotPasswordPage() {
                   Puoi richiedere un nuovo link tra {cooldown}s
                 </span>
               ) : (
-                <button
+                <button data-activity="merchant.pages.ForgotPasswordPage.ForgotPasswordPage.1"
                   type="button"
                   className="resend-btn"
                   onClick={handleResend}
@@ -112,11 +112,11 @@ export default function ForgotPasswordPage() {
           </>
         ) : (
           <>
-            <form className="login-form" onSubmit={handleSubmit}>
+            <form data-activity="merchant.pages.ForgotPasswordPage.ForgotPasswordPage.2" className="login-form" onSubmit={handleSubmit}>
               {error && <div className="login-error">{error}</div>}
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input
+                <input data-activity="merchant.pages.ForgotPasswordPage.ForgotPasswordPage.3"
                   type="email"
                   className="form-input"
                   placeholder="nome@azienda.it"
@@ -126,7 +126,7 @@ export default function ForgotPasswordPage() {
                   autoComplete="email"
                 />
               </div>
-              <button type="submit" className="btn-primary" disabled={loading}>
+              <button data-activity="merchant.pages.ForgotPasswordPage.ForgotPasswordPage.4" type="submit" className="btn-primary" disabled={loading}>
                 {loading ? 'Invio in corso...' : 'Invia link di reset'}
               </button>
             </form>

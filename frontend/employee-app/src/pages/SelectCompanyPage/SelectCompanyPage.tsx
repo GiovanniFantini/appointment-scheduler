@@ -84,7 +84,7 @@ export default function SelectCompanyPage({ user, onCompanySelected, onLogout }:
         ) : (
         <div className="company-list">
           {(user.companies ?? []).map(company => (
-            <button
+            <button data-activity="employee.pages.SelectCompanyPage.SelectCompanyPage.1"
               key={company.merchantId}
               className="company-card"
               onClick={() => handleSelect(company.merchantId)}
@@ -113,7 +113,7 @@ export default function SelectCompanyPage({ user, onCompanySelected, onLogout }:
         </div>
         )}
 
-        <button className="logout-link" onClick={onLogout}>
+        <button data-activity="employee.pages.SelectCompanyPage.SelectCompanyPage.2" className="logout-link" onClick={onLogout}>
           Esci dall'account
         </button>
       </div>

@@ -146,7 +146,7 @@ export default function MerchantFeaturesTab({ merchantId }: Props) {
               </div>
               <div className="feature-controls">
                 {leveled && item.isEnabled && (
-                  <select
+                  <select data-activity="admin.pages.MerchantFeaturesTab.1"
                     className="feature-level"
                     value={item.accessLevel ?? 1}
                     onChange={(e) => setLevel(meta.id, Number(e.target.value) as AccessLevel)}
@@ -157,7 +157,7 @@ export default function MerchantFeaturesTab({ merchantId }: Props) {
                   </select>
                 )}
                 <label className="toggle">
-                  <input
+                  <input data-activity="admin.pages.MerchantFeaturesTab.2"
                     type="checkbox"
                     checked={item.isEnabled}
                     onChange={() => toggleEnabled(meta.id)}
@@ -171,7 +171,7 @@ export default function MerchantFeaturesTab({ merchantId }: Props) {
       </div>
 
       <div className="features-footer">
-        <button className="btn-primary" onClick={save} disabled={!dirty || saving}>
+        <button data-activity="admin.pages.MerchantFeaturesTab.3" className="btn-primary" onClick={save} disabled={!dirty || saving}>
           {saving ? 'Salvataggio…' : 'Salva modifiche'}
         </button>
         {dirty && <span className="features-dirty-hint">Modifiche non salvate</span>}

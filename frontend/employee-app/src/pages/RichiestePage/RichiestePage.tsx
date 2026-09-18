@@ -308,7 +308,7 @@ export default function RichiestePage() {
         <h1 className="richieste-title">Le mie richieste</h1>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {(canApproveRequests || canReviewJustifications) && (
-            <button
+            <button data-activity="employee.pages.RichiestePage.RichiestePage.1"
               className="btn-new-request-empty"
               onClick={() => setShowApprovalsSection(prev => !prev)}
             >
@@ -316,7 +316,7 @@ export default function RichiestePage() {
               {pendingApprovalCount > 0 && ` (${pendingApprovalCount})`}
             </button>
           )}
-          <button className="btn-new-request" onClick={() => setShowModal(true)}>
+          <button data-activity="employee.pages.RichiestePage.RichiestePage.2" className="btn-new-request" onClick={() => setShowModal(true)}>
             <TiPlus size={18} />
             Nuova richiesta
           </button>
@@ -350,8 +350,8 @@ export default function RichiestePage() {
                     renderCard(
                       req,
                       <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
-                        <button className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
-                        <button className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
+                        <button data-activity="employee.pages.RichiestePage.RichiestePage.3" className="btn-new-request" onClick={() => handleApprove(req.id)}>Approva</button>
+                        <button data-activity="employee.pages.RichiestePage.RichiestePage.4" className="btn-new-request-empty" onClick={() => handleReject(req.id)}>Rifiuta</button>
                       </div>
                     )
                   )}
@@ -395,7 +395,7 @@ export default function RichiestePage() {
                         {a.employeeNotes ? ` — ${a.employeeNotes}` : ''}
                       </p>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                        <button className="btn-new-request" onClick={() => setReviewing(a)}>Revisiona</button>
+                        <button data-activity="employee.pages.RichiestePage.RichiestePage.5" className="btn-new-request" onClick={() => setReviewing(a)}>Revisiona</button>
                       </div>
                     </div>
                   ))}
@@ -419,7 +419,7 @@ export default function RichiestePage() {
           </div>
           <p className="empty-title">Nessuna richiesta</p>
           <p className="empty-subtitle">Le tue richieste di ferie, permessi e malattia appariranno qui.</p>
-          <button className="btn-new-request-empty" onClick={() => setShowModal(true)}>
+          <button data-activity="employee.pages.RichiestePage.RichiestePage.6" className="btn-new-request-empty" onClick={() => setShowModal(true)}>
             Crea la prima richiesta
           </button>
         </div>
@@ -446,7 +446,7 @@ export default function RichiestePage() {
                   req,
                   req.statusName === 'Pending' ? (
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                      <button className="btn-new-request-empty" onClick={() => handleDelete(req.id)}>
+                      <button data-activity="employee.pages.RichiestePage.RichiestePage.7" className="btn-new-request-empty" onClick={() => handleDelete(req.id)}>
                         Elimina richiesta
                       </button>
                     </div>

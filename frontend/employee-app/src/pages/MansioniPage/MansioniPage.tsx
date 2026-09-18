@@ -125,7 +125,7 @@ export default function MansioniPage() {
             Sono opzionali: usale solo se ti servono.
           </p>
         </div>
-        <button className="btn-primary" onClick={openAdd}>+ Nuova mansione</button>
+        <button data-activity="employee.pages.MansioniPage.MansioniPage.1" className="btn-primary" onClick={openAdd}>+ Nuova mansione</button>
       </div>
 
       {loading ? (
@@ -137,13 +137,13 @@ export default function MansioniPage() {
           <div className="empty-text">
             Crea le mansioni della tua azienda per assegnarle ai dipendenti e definire il fabbisogno dei turni.
           </div>
-          <button className="btn-primary" onClick={openAdd}>Crea la prima mansione</button>
+          <button data-activity="employee.pages.MansioniPage.MansioniPage.2" className="btn-primary" onClick={openAdd}>Crea la prima mansione</button>
         </div>
       ) : (
         <div className="skills-grid">
           {skills.map(s => (
             <div key={s.id} className={`skill-card ${!s.isActive ? 'inactive' : ''}`}>
-              <div className="skill-card-top" onClick={() => openDrawer(s)}>
+              <div data-activity="employee.pages.MansioniPage.MansioniPage.3" className="skill-card-top" onClick={() => openDrawer(s)}>
                 <div className="skill-badge" style={{ background: s.color }}>{s.name.charAt(0).toUpperCase()}</div>
                 <div className="skill-meta">
                   <div className="skill-name">{s.name}</div>
@@ -152,8 +152,8 @@ export default function MansioniPage() {
                 {!s.isActive && <span className="skill-inactive-pill">disattivata</span>}
               </div>
               <div className="skill-card-actions">
-                <button className="btn-edit" onClick={() => openEdit(s)}>Modifica</button>
-                <button className="btn-remove" onClick={() => handleDelete(s)}>Elimina</button>
+                <button data-activity="employee.pages.MansioniPage.MansioniPage.4" className="btn-edit" onClick={() => openEdit(s)}>Modifica</button>
+                <button data-activity="employee.pages.MansioniPage.MansioniPage.5" className="btn-remove" onClick={() => handleDelete(s)}>Elimina</button>
               </div>
             </div>
           ))}
@@ -161,18 +161,18 @@ export default function MansioniPage() {
       )}
 
       {showModal && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
+        <div data-activity="employee.pages.MansioniPage.MansioniPage.6" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setShowModal(false) }}>
           <div className="modal-box">
             <div className="modal-header">
               <h2 className="modal-title">{editing ? 'Modifica mansione' : 'Nuova mansione'}</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <button data-activity="employee.pages.MansioniPage.MansioniPage.7" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleSubmit}>
+            <form data-activity="employee.pages.MansioniPage.MansioniPage.8" onSubmit={handleSubmit}>
               <div className="modal-body">
                 {error && <div className="modal-error">{error}</div>}
                 <div className="form-group">
                   <label className="form-label">Nome *</label>
-                  <input
+                  <input data-activity="employee.pages.MansioniPage.MansioniPage.9"
                     type="text"
                     className="form-input"
                     placeholder="es. Cassiere"
@@ -186,7 +186,7 @@ export default function MansioniPage() {
                   <label className="form-label">Colore</label>
                   <div className="color-palette">
                     {PRESET_COLORS.map(c => (
-                      <button
+                      <button data-activity="employee.pages.MansioniPage.MansioniPage.10"
                         key={c}
                         type="button"
                         className={`color-swatch ${form.color === c ? 'selected' : ''}`}
@@ -199,7 +199,7 @@ export default function MansioniPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-checkbox">
-                    <input
+                    <input data-activity="employee.pages.MansioniPage.MansioniPage.11"
                       type="checkbox"
                       checked={form.isActive}
                       onChange={e => setForm(p => ({ ...p, isActive: e.target.checked }))}
@@ -209,8 +209,8 @@ export default function MansioniPage() {
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
+                <button data-activity="employee.pages.MansioniPage.MansioniPage.12" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
+                <button data-activity="employee.pages.MansioniPage.MansioniPage.13" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>
@@ -220,7 +220,7 @@ export default function MansioniPage() {
       )}
 
       {drawerSkill && (
-        <div className="drawer-overlay" onClick={e => { if (e.target === e.currentTarget) setDrawerSkill(null) }}>
+        <div data-activity="employee.pages.MansioniPage.MansioniPage.14" className="drawer-overlay" onClick={e => { if (e.target === e.currentTarget) setDrawerSkill(null) }}>
           <aside className="drawer">
             <div className="drawer-header">
               <div className="drawer-title">
@@ -229,7 +229,7 @@ export default function MansioniPage() {
                 </span>
                 <h2>{drawerSkill.name}</h2>
               </div>
-              <button className="modal-close" onClick={() => setDrawerSkill(null)}>✕</button>
+              <button data-activity="employee.pages.MansioniPage.MansioniPage.15" className="modal-close" onClick={() => setDrawerSkill(null)}>✕</button>
             </div>
             <div className="drawer-body">
               <h3>Dipendenti con questa mansione</h3>

@@ -10,7 +10,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   ref
 ) {
   return (
-    <input
+    <input data-activity="shared-ui.form.Input.1"
       ref={ref}
       className={`su-input ${error ? 'su-input--error' : ''} ${className}`}
       {...rest}

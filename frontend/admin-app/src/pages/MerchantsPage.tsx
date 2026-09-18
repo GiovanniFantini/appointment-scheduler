@@ -156,7 +156,7 @@ export default function MerchantsPage() {
               {filtered.map((m) => {
                 const status = getMerchantStatus(m)
                 return (
-                  <div
+                  <div data-activity="admin.pages.MerchantsPage.1"
                     key={m.id}
                     className="admin-list-card"
                     role="button"
@@ -178,9 +178,9 @@ export default function MerchantsPage() {
                       <span>Registrato</span>
                       <span className="admin-list-card-date">{formatBrowserDate(new Date(m.createdAt))}</span>
                     </div>
-                    <div className="admin-list-card-actions" onClick={(e) => e.stopPropagation()}>
+                    <div data-activity="admin.pages.MerchantsPage.2" className="admin-list-card-actions" onClick={(e) => e.stopPropagation()}>
                         {status !== 'active' && (
-                          <button
+                          <button data-activity="admin.pages.MerchantsPage.3"
                             className="btn-icon btn-icon-approve"
                             title="Approve"
                             onClick={() => handleApprove(m.id)}
@@ -192,7 +192,7 @@ export default function MerchantsPage() {
                           </button>
                         )}
                         {status !== 'inactive' && (
-                          <button
+                          <button data-activity="admin.pages.MerchantsPage.4"
                             className="btn-icon btn-icon-reject"
                             title="Reject / Deactivate"
                             onClick={() => handleReject(m.id)}

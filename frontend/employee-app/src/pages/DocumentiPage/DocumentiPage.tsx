@@ -414,7 +414,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
       </div>
 
       {canUploadForOthers && (
-        <form className="documenti-upload-card" onSubmit={handleUploadSubmit}>
+        <form data-activity="employee.pages.DocumentiPage.DocumentiPage.1" className="documenti-upload-card" onSubmit={handleUploadSubmit}>
           <h2 className="documenti-upload-title">Carica documento per altra risorsa</h2>
 
           {targetsError && <div className="documenti-error">{targetsError}</div>}
@@ -422,7 +422,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
 
           <div className="documenti-upload-grid">
             <label className="documenti-filter-label" htmlFor="uploadEmployee">Destinatario</label>
-            <select
+            <select data-activity="employee.pages.DocumentiPage.DocumentiPage.2"
               id="uploadEmployee"
               className="documenti-filter-select"
               value={uploadForm.employeeId}
@@ -438,7 +438,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             </select>
 
             <label className="documenti-filter-label" htmlFor="uploadType">Tipo</label>
-            <select
+            <select data-activity="employee.pages.DocumentiPage.DocumentiPage.3"
               id="uploadType"
               className="documenti-filter-select"
               value={uploadForm.documentType}
@@ -450,7 +450,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             </select>
 
             <label className="documenti-filter-label" htmlFor="uploadTitle">Titolo</label>
-            <input
+            <input data-activity="employee.pages.DocumentiPage.DocumentiPage.4"
               id="uploadTitle"
               className="documenti-filter-select"
               value={uploadForm.title}
@@ -461,7 +461,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             />
 
             <label className="documenti-filter-label" htmlFor="uploadDescription">Descrizione</label>
-            <input
+            <input data-activity="employee.pages.DocumentiPage.DocumentiPage.5"
               id="uploadDescription"
               className="documenti-filter-select"
               value={uploadForm.description}
@@ -471,7 +471,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             />
 
             <label className="documenti-filter-label" htmlFor="uploadYear">Anno rif.</label>
-            <input
+            <input data-activity="employee.pages.DocumentiPage.DocumentiPage.6"
               id="uploadYear"
               type="number"
               className="documenti-filter-select"
@@ -483,7 +483,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             />
 
             <label className="documenti-filter-label" htmlFor="uploadMonth">Mese rif.</label>
-            <input
+            <input data-activity="employee.pages.DocumentiPage.DocumentiPage.7"
               id="uploadMonth"
               type="number"
               className="documenti-filter-select"
@@ -495,7 +495,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
             />
 
             <label className="documenti-filter-label" htmlFor="uploadFile">File</label>
-            <input
+            <input data-activity="employee.pages.DocumentiPage.DocumentiPage.8"
               id="uploadFile"
               className="documenti-filter-select"
               type="file"
@@ -505,7 +505,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
           </div>
 
           <div className="documenti-upload-actions">
-            <button className="btn-primary" type="submit" disabled={uploading}>
+            <button data-activity="employee.pages.DocumentiPage.DocumentiPage.9" className="btn-primary" type="submit" disabled={uploading}>
               {uploading ? 'Caricamento in corso...' : 'Carica documento'}
             </button>
           </div>
@@ -514,7 +514,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
 
       <div className="documenti-filters">
         <label className="documenti-filter-label" htmlFor="docTypeFilter">Tipo documento</label>
-        <select
+        <select data-activity="employee.pages.DocumentiPage.DocumentiPage.10"
           id="docTypeFilter"
           className="documenti-filter-select"
           value={selectedType}
@@ -531,7 +531,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
         </select>
 
         <label className="documenti-filter-label" htmlFor="docYearFilter">Anno</label>
-        <select
+        <select data-activity="employee.pages.DocumentiPage.DocumentiPage.11"
           id="docYearFilter"
           className="documenti-filter-select"
           value={selectedYear}
@@ -595,14 +595,14 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                 </div>
               </div>
               <div className="documenti-item-actions">
-                <button
+                <button data-activity="employee.pages.DocumentiPage.DocumentiPage.12"
                   className="btn-link"
                   type="button"
                   onClick={() => handleOpenDetail(doc.id)}
                 >
                   Dettaglio
                 </button>
-                <button
+                <button data-activity="employee.pages.DocumentiPage.DocumentiPage.13"
                   className="btn-primary"
                   type="button"
                   onClick={() => handleDownload(doc.id)}
@@ -617,11 +617,11 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
       )}
 
       {selectedDetail && (
-        <div className="documenti-modal-backdrop" role="presentation" onClick={() => setSelectedDetail(null)}>
-          <div className="documenti-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+        <div data-activity="employee.pages.DocumentiPage.DocumentiPage.14" className="documenti-modal-backdrop" role="presentation" onClick={() => setSelectedDetail(null)}>
+          <div data-activity="employee.pages.DocumentiPage.DocumentiPage.15" className="documenti-modal" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
             <div className="documenti-modal-header">
               <h2>{selectedDetail.title}</h2>
-              <button type="button" className="btn-link" onClick={() => setSelectedDetail(null)}>Chiudi</button>
+              <button data-activity="employee.pages.DocumentiPage.DocumentiPage.16" type="button" className="btn-link" onClick={() => setSelectedDetail(null)}>Chiudi</button>
             </div>
             <div className="documenti-versions-list">
               {selectedDetail.versions.map(version => (
@@ -651,7 +651,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                     </div>
                   </div>
                   <div className="documenti-version-actions">
-                    <button
+                    <button data-activity="employee.pages.DocumentiPage.DocumentiPage.17"
                       className="btn-primary"
                       type="button"
                       onClick={() => handleDownload(selectedDetail.id, version.versionNumber)}
@@ -660,7 +660,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                       Scarica
                     </button>
                     {!version.acknowledgedAt && (
-                      <button
+                      <button data-activity="employee.pages.DocumentiPage.DocumentiPage.18"
                         className="btn-link"
                         type="button"
                         onClick={() => handleAcknowledge(selectedDetail.id, version.versionNumber)}
@@ -710,7 +710,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                   <div className="documenti-upload-title">Nuova versione</div>
                   <div className="documenti-upload-grid">
                     <label className="documenti-filter-label" htmlFor="versionNotes">Note</label>
-                    <input
+                    <input data-activity="employee.pages.DocumentiPage.DocumentiPage.19"
                       id="versionNotes"
                       className="documenti-filter-select"
                       value={versionNotes}
@@ -719,7 +719,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                       maxLength={500}
                     />
                     <label className="documenti-filter-label" htmlFor="versionFile">File</label>
-                    <input
+                    <input data-activity="employee.pages.DocumentiPage.DocumentiPage.20"
                       id="versionFile"
                       className="documenti-filter-select"
                       type="file"
@@ -727,7 +727,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
                     />
                   </div>
                   <div className="documenti-upload-actions">
-                    <button
+                    <button data-activity="employee.pages.DocumentiPage.DocumentiPage.21"
                       className="btn-primary"
                       type="button"
                       onClick={() => handleAddVersion(selectedDetail.id)}
@@ -740,7 +740,7 @@ export default function DocumentiPage({ accessLevel = 'ReadOnly' }: DocumentiPag
               )}
               {canDeleteDocuments && (
                 <div className="documenti-modal-footer">
-                  <button
+                  <button data-activity="employee.pages.DocumentiPage.DocumentiPage.22"
                     className="btn-danger"
                     type="button"
                     onClick={() => handleDeleteDocument(selectedDetail.id)}

@@ -27,7 +27,7 @@ export default function PendingApprovalPage({ user, onLogout }: PendingApprovalP
           Riceverai accesso completo non appena l'azienda sarà attivata. Riprova ad
           accedere più tardi.
         </p>
-        <button type="button" className="pending-logout" onClick={onLogout}>
+        <button data-activity="merchant.pages.PendingApprovalPage.PendingApprovalPage.1" type="button" className="pending-logout" onClick={onLogout}>
           Esci
         </button>
       </div>

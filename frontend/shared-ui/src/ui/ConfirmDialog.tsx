@@ -35,10 +35,10 @@ export function ConfirmDialog({
       closeOnBackdrop={!loading}
       footer={
         <>
-          <Button variant="secondary" onClick={onCancel} disabled={loading}>
+          <Button data-activity="shared-ui.ui.ConfirmDialog.1" variant="secondary" onClick={onCancel} disabled={loading}>
             {cancelLabel}
           </Button>
-          <Button variant={variant === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
+          <Button data-activity="shared-ui.ui.ConfirmDialog.2" variant={variant === 'danger' ? 'danger' : 'primary'} onClick={onConfirm} loading={loading}>
             {confirmLabel}
           </Button>
         </>

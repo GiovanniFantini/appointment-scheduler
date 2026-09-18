@@ -83,9 +83,9 @@ export function SubscriptionGate({ children, apiClient, allowCompanySwitch }: Pr
       {(access || error) && <>
         <p>{error ? 'Riprova per riprendere il lavoro.' : 'Contatta l’amministratore per attivare o prorogare l’accesso. I dati sono conservati.'}</p>
         <div className="su-subscription-actions">
-          <Button onClick={() => setAttempt(n => n + 1)}>Riprova</Button>
-          {allowCompanySwitch && user && <Button variant="secondary" onClick={() => updateUser({ ...user, merchantId: undefined, activeFeatures: [], featureLevels: {} })}>Cambia azienda</Button>}
-          <Button variant="ghost" onClick={logout}>Esci</Button>
+          <Button data-activity="shared-ui.auth.SubscriptionGate.1" onClick={() => setAttempt(n => n + 1)}>Riprova</Button>
+          {allowCompanySwitch && user && <Button data-activity="shared-ui.auth.SubscriptionGate.2" variant="secondary" onClick={() => updateUser({ ...user, merchantId: undefined, activeFeatures: [], featureLevels: {} })}>Cambia azienda</Button>}
+          <Button data-activity="shared-ui.auth.SubscriptionGate.3" variant="ghost" onClick={logout}>Esci</Button>
         </div>
       </>}
     </section></main>

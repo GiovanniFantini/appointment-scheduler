@@ -203,7 +203,7 @@ export default function FilialiPage() {
             Gestisci i punti vendita / sedi della tua azienda e i reparti al loro interno.
           </p>
         </div>
-        <button className="btn-primary" onClick={openAddBranch}>+ Nuova filiale</button>
+        <button data-activity="employee.pages.FilialiPage.FilialiPage.1" className="btn-primary" onClick={openAddBranch}>+ Nuova filiale</button>
       </div>
 
       {loading ? (
@@ -216,7 +216,7 @@ export default function FilialiPage() {
             Aggiungi una filiale per gestire più punti vendita: ogni turno potrà essere
             assegnato a una sede e a un reparto specifici.
           </div>
-          <button className="btn-primary" onClick={() => setShowWizard(true)}>
+          <button data-activity="employee.pages.FilialiPage.FilialiPage.2" className="btn-primary" onClick={() => setShowWizard(true)}>
             Configura le filiali
           </button>
         </div>
@@ -241,11 +241,11 @@ export default function FilialiPage() {
                 </div>
                 <div className="branch-actions">
                   {!b.isHeadquarters && b.isActive && (
-                    <button className="btn-ghost" onClick={() => handleSetHq(b)}>Imposta come sede principale</button>
+                    <button data-activity="employee.pages.FilialiPage.FilialiPage.3" className="btn-ghost" onClick={() => handleSetHq(b)}>Imposta come sede principale</button>
                   )}
-                  <button className="btn-edit" onClick={() => openEditBranch(b)}>Modifica</button>
+                  <button data-activity="employee.pages.FilialiPage.FilialiPage.4" className="btn-edit" onClick={() => openEditBranch(b)}>Modifica</button>
                   {!b.isHeadquarters && (
-                    <button className="btn-remove" onClick={() => handleDeleteBranch(b)}>Elimina</button>
+                    <button data-activity="employee.pages.FilialiPage.FilialiPage.5" className="btn-remove" onClick={() => handleDeleteBranch(b)}>Elimina</button>
                   )}
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function FilialiPage() {
               <div className="branch-departments">
                 <div className="dept-header">
                   <span className="dept-label">Reparti</span>
-                  <button className="btn-add-dept" onClick={() => openAddDept(b.id)}>+ Reparto</button>
+                  <button data-activity="employee.pages.FilialiPage.FilialiPage.6" className="btn-add-dept" onClick={() => openAddDept(b.id)}>+ Reparto</button>
                 </div>
                 {b.departments.length === 0 ? (
                   <div className="dept-empty">
@@ -269,8 +269,8 @@ export default function FilialiPage() {
                       >
                         <span className="dept-dot" style={{ background: d.color }} />
                         <span className="dept-chip-name">{d.name}</span>
-                        <button className="dept-chip-btn" onClick={() => openEditDept(b.id, d)} title="Modifica">✎</button>
-                        <button className="dept-chip-btn" onClick={() => handleDeleteDept(d)} title="Elimina">✕</button>
+                        <button data-activity="employee.pages.FilialiPage.FilialiPage.7" className="dept-chip-btn" onClick={() => openEditDept(b.id, d)} title="Modifica">✎</button>
+                        <button data-activity="employee.pages.FilialiPage.FilialiPage.8" className="dept-chip-btn" onClick={() => handleDeleteDept(d)} title="Elimina">✕</button>
                       </div>
                     ))}
                   </div>
@@ -283,18 +283,18 @@ export default function FilialiPage() {
 
       {/* Modale filiale */}
       {branchModal && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setBranchModal(false) }}>
+        <div data-activity="employee.pages.FilialiPage.FilialiPage.9" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setBranchModal(false) }}>
           <div className="modal-box">
             <div className="modal-header">
               <h2 className="modal-title">{editingBranch ? 'Modifica filiale' : 'Nuova filiale'}</h2>
-              <button className="modal-close" onClick={() => setBranchModal(false)}>✕</button>
+              <button data-activity="employee.pages.FilialiPage.FilialiPage.10" className="modal-close" onClick={() => setBranchModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleBranchSubmit}>
+            <form data-activity="employee.pages.FilialiPage.FilialiPage.11" onSubmit={handleBranchSubmit}>
               <div className="modal-body">
                 {error && <div className="modal-error">{error}</div>}
                 <div className="form-group">
                   <label className="form-label">Nome *</label>
-                  <input
+                  <input data-activity="employee.pages.FilialiPage.FilialiPage.12"
                     type="text" className="form-input" placeholder="es. Milano Centro"
                     value={branchForm.name} autoFocus required
                     onChange={e => setBranchForm(p => ({ ...p, name: e.target.value }))}
@@ -303,7 +303,7 @@ export default function FilialiPage() {
                 <div className="form-row">
                   <div className="form-group">
                     <label className="form-label">Codice</label>
-                    <input
+                    <input data-activity="employee.pages.FilialiPage.FilialiPage.13"
                       type="text" className="form-input" placeholder="es. MI01"
                       value={branchForm.code}
                       onChange={e => setBranchForm(p => ({ ...p, code: e.target.value }))}
@@ -311,7 +311,7 @@ export default function FilialiPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Città</label>
-                    <input
+                    <input data-activity="employee.pages.FilialiPage.FilialiPage.14"
                       type="text" className="form-input"
                       value={branchForm.city}
                       onChange={e => setBranchForm(p => ({ ...p, city: e.target.value }))}
@@ -319,10 +319,10 @@ export default function FilialiPage() {
                   </div>
                 </div>
                 <details className="form-details">
-                  <summary>Dettagli opzionali</summary>
+                  <summary data-activity="employee.pages.FilialiPage.FilialiPage.15">Dettagli opzionali</summary>
                   <div className="form-group">
                     <label className="form-label">Indirizzo</label>
-                    <input
+                    <input data-activity="employee.pages.FilialiPage.FilialiPage.16"
                       type="text" className="form-input"
                       value={branchForm.address}
                       onChange={e => setBranchForm(p => ({ ...p, address: e.target.value }))}
@@ -331,7 +331,7 @@ export default function FilialiPage() {
                   <div className="form-row">
                     <div className="form-group">
                       <label className="form-label">CAP</label>
-                      <input
+                      <input data-activity="employee.pages.FilialiPage.FilialiPage.17"
                         type="text" className="form-input"
                         value={branchForm.postalCode}
                         onChange={e => setBranchForm(p => ({ ...p, postalCode: e.target.value }))}
@@ -339,7 +339,7 @@ export default function FilialiPage() {
                     </div>
                     <div className="form-group">
                       <label className="form-label">Paese</label>
-                      <input
+                      <input data-activity="employee.pages.FilialiPage.FilialiPage.18"
                         type="text" className="form-input"
                         value={branchForm.country}
                         onChange={e => setBranchForm(p => ({ ...p, country: e.target.value }))}
@@ -348,7 +348,7 @@ export default function FilialiPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Telefono</label>
-                    <input
+                    <input data-activity="employee.pages.FilialiPage.FilialiPage.19"
                       type="text" className="form-input"
                       value={branchForm.phone}
                       onChange={e => setBranchForm(p => ({ ...p, phone: e.target.value }))}
@@ -358,7 +358,7 @@ export default function FilialiPage() {
                 {editingBranch && !editingBranch.isHeadquarters && (
                   <div className="form-group">
                     <label className="form-checkbox">
-                      <input
+                      <input data-activity="employee.pages.FilialiPage.FilialiPage.20"
                         type="checkbox"
                         checked={branchForm.isActive}
                         onChange={e => setBranchForm(p => ({ ...p, isActive: e.target.checked }))}
@@ -369,8 +369,8 @@ export default function FilialiPage() {
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setBranchModal(false)}>Annulla</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
+                <button data-activity="employee.pages.FilialiPage.FilialiPage.21" type="button" className="btn-cancel" onClick={() => setBranchModal(false)}>Annulla</button>
+                <button data-activity="employee.pages.FilialiPage.FilialiPage.22" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>
@@ -381,18 +381,18 @@ export default function FilialiPage() {
 
       {/* Modale reparto */}
       {deptModal && (
-        <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setDeptModal(false) }}>
+        <div data-activity="employee.pages.FilialiPage.FilialiPage.23" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) setDeptModal(false) }}>
           <div className="modal-box">
             <div className="modal-header">
               <h2 className="modal-title">{editingDept ? 'Modifica reparto' : 'Nuovo reparto'}</h2>
-              <button className="modal-close" onClick={() => setDeptModal(false)}>✕</button>
+              <button data-activity="employee.pages.FilialiPage.FilialiPage.24" className="modal-close" onClick={() => setDeptModal(false)}>✕</button>
             </div>
-            <form onSubmit={handleDeptSubmit}>
+            <form data-activity="employee.pages.FilialiPage.FilialiPage.25" onSubmit={handleDeptSubmit}>
               <div className="modal-body">
                 {deptError && <div className="modal-error">{deptError}</div>}
                 <div className="form-group">
                   <label className="form-label">Nome *</label>
-                  <input
+                  <input data-activity="employee.pages.FilialiPage.FilialiPage.26"
                     type="text" className="form-input" placeholder="es. Produzione"
                     value={deptName} autoFocus required
                     onChange={e => setDeptName(e.target.value)}
@@ -402,7 +402,7 @@ export default function FilialiPage() {
                   <label className="form-label">Colore</label>
                   <div className="color-palette">
                     {DEPT_COLORS.map(c => (
-                      <button
+                      <button data-activity="employee.pages.FilialiPage.FilialiPage.27"
                         key={c} type="button"
                         className={`color-swatch ${deptColor === c ? 'selected' : ''}`}
                         style={{ background: c }}
@@ -415,7 +415,7 @@ export default function FilialiPage() {
                 {editingDept && (
                   <div className="form-group">
                     <label className="form-checkbox">
-                      <input
+                      <input data-activity="employee.pages.FilialiPage.FilialiPage.28"
                         type="checkbox"
                         checked={deptActive}
                         onChange={e => setDeptActive(e.target.checked)}
@@ -426,8 +426,8 @@ export default function FilialiPage() {
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn-cancel" onClick={() => setDeptModal(false)}>Annulla</button>
-                <button type="submit" className="btn-primary" disabled={saving}>
+                <button data-activity="employee.pages.FilialiPage.FilialiPage.29" type="button" className="btn-cancel" onClick={() => setDeptModal(false)}>Annulla</button>
+                <button data-activity="employee.pages.FilialiPage.FilialiPage.30" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>

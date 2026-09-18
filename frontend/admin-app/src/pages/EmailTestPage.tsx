@@ -101,7 +101,7 @@ export default function EmailTestPage() {
       <section className="et-section">
         <div className="et-section-header">
           <h2 className="et-section-title">Stato servizio email</h2>
-          <button className="et-refresh-btn" onClick={loadStatus} disabled={statusLoading}>
+          <button data-activity="admin.pages.EmailTestPage.1" className="et-refresh-btn" onClick={loadStatus} disabled={statusLoading}>
             {statusLoading ? 'Caricamento…' : 'Aggiorna'}
           </button>
         </div>
@@ -161,7 +161,7 @@ export default function EmailTestPage() {
         <div className="et-card">
           <label className="et-field">
             <span className="et-label">Destinatario</span>
-            <input
+            <input data-activity="admin.pages.EmailTestPage.2"
               type="email"
               className="et-input"
               value={recipient}
@@ -176,7 +176,7 @@ export default function EmailTestPage() {
           </label>
 
           <div className="et-actions">
-            <button className="et-send-btn" onClick={handleSend} disabled={!canSend}>
+            <button data-activity="admin.pages.EmailTestPage.3" className="et-send-btn" onClick={handleSend} disabled={!canSend}>
               {sending ? 'Invio in corso…' : 'Invia test'}
             </button>
             {!status?.isConfigured && (

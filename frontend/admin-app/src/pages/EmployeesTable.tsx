@@ -107,30 +107,30 @@ export default function EmployeesTable({ merchantId, showFilters = true }: Emplo
     <div className="employees-table-wrap">
       {showFilters && (
         <div className="employees-filters">
-          <input
+          <input data-activity="admin.pages.EmployeesTable.1"
             type="search"
             className="employees-filter-input"
             placeholder="Cerca per email o nome…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className="employees-filter-select" value={kind} onChange={(e) => setKind(e.target.value)}>
+          <select data-activity="admin.pages.EmployeesTable.2" className="employees-filter-select" value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="">Tutti i tipi</option>
             <option value="0">Interno</option>
             <option value="1">Esterno</option>
           </select>
-          <select className="employees-filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select data-activity="admin.pages.EmployeesTable.3" className="employees-filter-select" value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="">Tutti gli stati</option>
             <option value="active">Active</option>
             <option value="inactive">Inactive</option>
           </select>
-          <select className="employees-filter-select" value={hasAccount} onChange={(e) => setHasAccount(e.target.value)}>
+          <select data-activity="admin.pages.EmployeesTable.4" className="employees-filter-select" value={hasAccount} onChange={(e) => setHasAccount(e.target.value)}>
             <option value="">Con/senza account</option>
             <option value="true">Con account</option>
             <option value="false">Senza account</option>
           </select>
           {hasFilters && (
-            <button className="employees-filter-reset" onClick={resetFilters}>Reset</button>
+            <button data-activity="admin.pages.EmployeesTable.5" className="employees-filter-reset" onClick={resetFilters}>Reset</button>
           )}
         </div>
       )}
@@ -155,7 +155,7 @@ export default function EmployeesTable({ merchantId, showFilters = true }: Emplo
           ) : (
             <div className="admin-card-grid">
               {items.map((e) => (
-                <button key={e.id} className="admin-list-card" onClick={() => navigate(`/employees/${e.id}`)}>
+                <button data-activity="admin.pages.EmployeesTable.6" key={e.id} className="admin-list-card" onClick={() => navigate(`/employees/${e.id}`)}>
                   <div className="admin-list-card-head">
                     <Avatar name={`${e.firstName} ${e.lastName}`} size="lg" />
                     <div className="admin-list-card-id">
@@ -190,8 +190,8 @@ export default function EmployeesTable({ merchantId, showFilters = true }: Emplo
           <div className="employees-pagination">
             <span>Pagina {page} di {totalPages}</span>
             <div className="employees-pagination-buttons">
-              <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Indietro</button>
-              <button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Avanti →</button>
+              <button data-activity="admin.pages.EmployeesTable.7" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>← Indietro</button>
+              <button data-activity="admin.pages.EmployeesTable.8" disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Avanti →</button>
             </div>
           </div>
         )}

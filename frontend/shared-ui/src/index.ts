@@ -72,6 +72,9 @@ export { useIsMobile } from './hooks/useIsMobile'
 
 // Lib
 export { extractApiError } from './lib/apiError'
+export { initActivity, activityHeaders, trackActivity } from './lib/activity'
+export { ActivityObserver } from './lib/ActivityObserver'
+export { ActivityPage } from './pages/ActivityPage'
 
 // Icons re-export di comodo (singolo punto di import)
 

@@ -1,3 +1,4 @@
+import { ActivityObserver, ActivityPage } from '@scheduler/ui'
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, SubscriptionGate, ConfirmProvider, PreferencesPage, ProfilePage, Toaster, useAuth } from '@scheduler/ui'
 import apiClient from './lib/axios'
@@ -116,6 +117,7 @@ function App() {
       <Toaster>
         <ConfirmProvider>
         <Router>
+          <ActivityObserver />
           <Routes>
             <Route path="/login" element={<PublicLogin />} />
             <Route
@@ -228,6 +230,7 @@ function App() {
               />
               <Route path="notifiche" element={<NotifichePage />} />
               <Route path="profile" element={<ProfileWrapper />} />
+              <Route path="activity" element={<ActivityPage apiClient={apiClient} />} />
               <Route path="preferences" element={<PreferencesPage />} />
             </Route>
 

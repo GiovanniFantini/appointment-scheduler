@@ -60,14 +60,14 @@ export default function RegisterPage() {
             </Link>
           </div>
         ) : (
-          <form className="register-form" onSubmit={handleSubmit}>
+          <form data-activity="merchant.pages.RegisterPage.RegisterPage.1" className="register-form" onSubmit={handleSubmit}>
             {error && <div className="register-error">{error}</div>}
 
             <div className="section-divider">Dati Personali</div>
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Nome *</label>
-                <input
+                <input data-activity="merchant.pages.RegisterPage.RegisterPage.2"
                   type="text"
                   className="form-input"
                   placeholder="Mario"
@@ -78,7 +78,7 @@ export default function RegisterPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Cognome *</label>
-                <input
+                <input data-activity="merchant.pages.RegisterPage.RegisterPage.3"
                   type="text"
                   className="form-input"
                   placeholder="Rossi"
@@ -90,7 +90,7 @@ export default function RegisterPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Email *</label>
-              <input
+              <input data-activity="merchant.pages.RegisterPage.RegisterPage.4"
                 type="email"
                 className="form-input"
                 placeholder="mario.rossi@azienda.it"
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Password *</label>
-              <input
+              <input data-activity="merchant.pages.RegisterPage.RegisterPage.5"
                 type="password"
                 className="form-input"
                 placeholder="••••••••••••"
@@ -121,7 +121,7 @@ export default function RegisterPage() {
             <div className="section-divider">Dati Aziendali</div>
             <div className="form-group">
               <label className="form-label">Ragione Sociale *</label>
-              <input
+              <input data-activity="merchant.pages.RegisterPage.RegisterPage.6"
                 type="text"
                 className="form-input"
                 placeholder="Azienda S.r.l."
@@ -132,7 +132,7 @@ export default function RegisterPage() {
             </div>
             <div className="form-group">
               <label className="form-label">Partita IVA *</label>
-              <input
+              <input data-activity="merchant.pages.RegisterPage.RegisterPage.7"
                 type="text"
                 className="form-input"
                 placeholder="IT12345678901"
@@ -144,7 +144,7 @@ export default function RegisterPage() {
             <div className="form-row">
               <div className="form-group">
                 <label className="form-label">Città *</label>
-                <input
+                <input data-activity="merchant.pages.RegisterPage.RegisterPage.8"
                   type="text"
                   className="form-input"
                   placeholder="Milano"
@@ -155,7 +155,7 @@ export default function RegisterPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">Indirizzo *</label>
-                <input
+                <input data-activity="merchant.pages.RegisterPage.RegisterPage.9"
                   type="text"
                   className="form-input"
                   placeholder="Via Roma 1"
@@ -166,7 +166,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary" disabled={loading}>
+            <button data-activity="merchant.pages.RegisterPage.RegisterPage.10" type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Invio in corso...' : 'Registra Azienda'}
             </button>
           </form>

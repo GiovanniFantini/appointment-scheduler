@@ -40,7 +40,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     .join(' ')
 
   return (
-    <button ref={ref} type={type} className={classes} disabled={disabled || loading} {...rest}>
+    <button data-activity="shared-ui.ui.Button.1" ref={ref} type={type} className={classes} disabled={disabled || loading} {...rest}>
       {loading ? <span className="su-btn__spinner" aria-hidden /> : leftIcon}
       {children && <span>{children}</span>}
       {!loading && rightIcon}

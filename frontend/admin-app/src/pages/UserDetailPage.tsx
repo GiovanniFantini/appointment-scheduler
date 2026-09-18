@@ -164,14 +164,14 @@ export default function UserDetailPage() {
         </div>
 
         <div className="detail-actions">
-          <button
+          <button data-activity="admin.pages.UserDetailPage.1"
             className="btn-secondary"
             onClick={handleSendReset}
             disabled={actionLoading}
           >
             Invia reset password
           </button>
-          <button
+          <button data-activity="admin.pages.UserDetailPage.2"
             className={user.isActive ? 'btn-danger' : 'btn-success'}
             onClick={handleToggleActive}
             disabled={actionLoading || isSelf}

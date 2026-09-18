@@ -10,7 +10,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select
   ref
 ) {
   return (
-    <select
+    <select data-activity="shared-ui.form.Select.1"
       ref={ref}
       className={`su-select ${error ? 'su-select--error' : ''} ${className}`}
       {...rest}

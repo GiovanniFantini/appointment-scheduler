@@ -152,27 +152,27 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
 
               <div className="su-form-grid">
                 <FormField label="Nome">
-                  <Input value={profile.firstName} disabled readOnly />
+                  <Input data-activity="shared-ui.pages.ProfilePage.1" value={profile.firstName} disabled readOnly />
                 </FormField>
                 <FormField label="Cognome">
-                  <Input value={profile.lastName} disabled readOnly />
+                  <Input data-activity="shared-ui.pages.ProfilePage.2" value={profile.lastName} disabled readOnly />
                 </FormField>
                 <FormField label="Email">
-                  <Input value={profile.email} disabled readOnly />
+                  <Input data-activity="shared-ui.pages.ProfilePage.3" value={profile.email} disabled readOnly />
                 </FormField>
                 <FormField label="Telefono">
-                  <Input value={profile.phoneNumber ?? '—'} disabled readOnly />
+                  <Input data-activity="shared-ui.pages.ProfilePage.4" value={profile.phoneNumber ?? '—'} disabled readOnly />
                 </FormField>
               </div>
             </div>
           ) : (
-            <form className="su-page__section" onSubmit={handleSaveProfile}>
+            <form data-activity="shared-ui.pages.ProfilePage.5" className="su-page__section" onSubmit={handleSaveProfile}>
               <h2 className="su-page__section-title">Dati personali</h2>
               <p className="su-page__section-desc">L'email non è modificabile.</p>
 
               <div className="su-form-grid">
                 <FormField label="Nome" required htmlFor="firstName">
-                  <Input
+                  <Input data-activity="shared-ui.pages.ProfilePage.6"
                     id="firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -180,7 +180,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                   />
                 </FormField>
                 <FormField label="Cognome" required htmlFor="lastName">
-                  <Input
+                  <Input data-activity="shared-ui.pages.ProfilePage.7"
                     id="lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -188,10 +188,10 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                   />
                 </FormField>
                 <FormField label="Email" htmlFor="email">
-                  <Input id="email" value={profile.email} disabled readOnly />
+                  <Input data-activity="shared-ui.pages.ProfilePage.8" id="email" value={profile.email} disabled readOnly />
                 </FormField>
                 <FormField label="Telefono" htmlFor="phone">
-                  <Input
+                  <Input data-activity="shared-ui.pages.ProfilePage.9"
                     id="phone"
                     type="tel"
                     value={phoneNumber}
@@ -202,7 +202,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
               </div>
 
               <div className="su-form-actions">
-                <Button type="submit" variant="primary" loading={saving}>
+                <Button data-activity="shared-ui.pages.ProfilePage.10" type="submit" variant="primary" loading={saving}>
                   Salva modifiche
                 </Button>
               </div>
@@ -210,7 +210,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
           )}
 
           {/* Sezione password */}
-          <form className="su-page__section" onSubmit={handleChangePassword}>
+          <form data-activity="shared-ui.pages.ProfilePage.11" className="su-page__section" onSubmit={handleChangePassword}>
             <h2 className="su-page__section-title">Cambia password</h2>
             <p className="su-page__section-desc">
               Per sicurezza inserisci la password attuale prima di sceglierne una nuova.
@@ -218,7 +218,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
 
             <div className="su-form-grid">
               <FormField label="Password attuale" required htmlFor="curPwd" className="su-form-grid__full">
-                <Input
+                <Input data-activity="shared-ui.pages.ProfilePage.12"
                   id="curPwd"
                   type="password"
                   autoComplete="current-password"
@@ -233,7 +233,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                 htmlFor="newPwd"
                 error={pwdError && !passwordRulesMet(newPassword) ? pwdError : undefined}
               >
-                <Input
+                <Input data-activity="shared-ui.pages.ProfilePage.13"
                   id="newPwd"
                   type="password"
                   autoComplete="new-password"
@@ -250,7 +250,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
                 htmlFor="confirmPwd"
                 error={pwdError && newPassword === confirmPassword ? undefined : pwdError}
               >
-                <Input
+                <Input data-activity="shared-ui.pages.ProfilePage.14"
                   id="confirmPwd"
                   type="password"
                   autoComplete="new-password"
@@ -263,7 +263,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
             </div>
 
             <div className="su-form-actions">
-              <Button type="submit" variant="primary" loading={changingPwd}>
+              <Button data-activity="shared-ui.pages.ProfilePage.15" type="submit" variant="primary" loading={changingPwd}>
                 Aggiorna password
               </Button>
             </div>

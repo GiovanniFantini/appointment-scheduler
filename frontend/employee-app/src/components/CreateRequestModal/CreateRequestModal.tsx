@@ -143,22 +143,22 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
       title="Nuova richiesta"
       footer={
         <>
-          <button type="button" className="btn-secondary" onClick={onClose}>Annulla</button>
+          <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.1" type="button" className="btn-secondary" onClick={onClose}>Annulla</button>
           {/* Il footer dello sheet è fuori dal <form>: l'attributo form= collega il submit. */}
-          <button type="submit" form={FORM_ID} className="btn-primary" disabled={loading}>
+          <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.2" type="submit" form={FORM_ID} className="btn-primary" disabled={loading}>
             {loading ? <span className="btn-spinner" /> : 'Invia richiesta'}
           </button>
         </>
       }
     >
-      <form id={FORM_ID} className="create-request-form" onSubmit={handleSubmit}>
+      <form data-activity="employee.components.CreateRequestModal.CreateRequestModal.3" id={FORM_ID} className="create-request-form" onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
 
         <div className="form-group">
           <label className="form-label">Tipo richiesta</label>
           <div className="tipo-selector">
             {(['Ferie', 'Permessi', 'Malattia'] as RequestType[]).map(t => (
-              <button
+              <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.4"
                 key={t}
                 type="button"
                 className={`tipo-btn ${tipo === t ? 'tipo-btn--active' : ''}`}
@@ -173,7 +173,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
         <div className="form-row">
           <div className="form-group">
             <label className="form-label">Data inizio *</label>
-            <input
+            <input data-activity="employee.components.CreateRequestModal.CreateRequestModal.5"
               type="date"
               className="form-input"
               value={dataInizio}
@@ -184,7 +184,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
           </div>
           <div className="form-group">
             <label className="form-label">Data fine</label>
-            <input
+            <input data-activity="employee.components.CreateRequestModal.CreateRequestModal.6"
               type="date"
               className="form-input"
               value={dataFine}
@@ -199,7 +199,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
           <div className="form-group">
             <label className="toggle-row">
               <span className="form-label">Tutto il giorno</span>
-              <div className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
+              <div data-activity="employee.components.CreateRequestModal.CreateRequestModal.7" className={`toggle ${tuttoIlGiorno ? 'toggle--on' : ''}`} onClick={() => setTuttoIlGiorno(v => !v)}>
                 <div className="toggle-thumb" />
               </div>
             </label>
@@ -210,7 +210,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Dalle</label>
-              <input
+              <input data-activity="employee.components.CreateRequestModal.CreateRequestModal.8"
                 type="time"
                 className="form-input"
                 value={orarioDa}
@@ -220,7 +220,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
             </div>
             <div className="form-group">
               <label className="form-label">Alle</label>
-              <input
+              <input data-activity="employee.components.CreateRequestModal.CreateRequestModal.9"
                 type="time"
                 className="form-input"
                 value={orarioA}
@@ -234,7 +234,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
         {supportsHourly && availableShifts.length > 0 && (
           <div className="form-group">
             <label className="form-label">Collega a un turno (opzionale)</label>
-            <select
+            <select data-activity="employee.components.CreateRequestModal.CreateRequestModal.10"
               className="form-input"
               value={linkedEventId ?? ''}
               onChange={e => setLinkedEventId(e.target.value ? Number(e.target.value) : null)}
@@ -249,7 +249,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
 
         <div className="form-group">
           <label className="form-label">Note</label>
-          <textarea
+          <textarea data-activity="employee.components.CreateRequestModal.CreateRequestModal.11"
             className="form-input form-textarea"
             placeholder="Eventuali note..."
             value={note}

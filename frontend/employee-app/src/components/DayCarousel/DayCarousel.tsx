@@ -48,7 +48,7 @@ export default function DayCarousel({ slides }: Props) {
     <div className="dc">
       {!single && (
         <div className="dc-nav">
-          <button
+          <button data-activity="employee.components.DayCarousel.DayCarousel.1"
             type="button"
             className="dc-arrow"
             onClick={() => goTo(index - 1)}
@@ -58,7 +58,7 @@ export default function DayCarousel({ slides }: Props) {
             ‹
           </button>
           <span className="dc-day-label">{slides[index]?.label}</span>
-          <button
+          <button data-activity="employee.components.DayCarousel.DayCarousel.2"
             type="button"
             className="dc-arrow"
             onClick={() => goTo(index + 1)}
@@ -82,7 +82,7 @@ export default function DayCarousel({ slides }: Props) {
       {!single && (
         <div className="dc-dots">
           {slides.map((s, i) => (
-            <button
+            <button data-activity="employee.components.DayCarousel.DayCarousel.3"
               type="button"
               key={s.key}
               className={`dc-dot ${i === index ? 'dc-dot--active' : ''}`}

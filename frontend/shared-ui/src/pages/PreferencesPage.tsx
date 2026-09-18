@@ -61,7 +61,7 @@ export function PreferencesPage() {
           {OPTIONS.map((opt) => {
             const active = theme === opt.value
             return (
-              <button
+              <button data-activity="shared-ui.pages.PreferencesPage.1"
                 type="button"
                 key={opt.value}
                 role="radio"
