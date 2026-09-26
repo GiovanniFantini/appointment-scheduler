@@ -171,6 +171,7 @@ try
     builder.Services.AddScoped<ISupplierService, SupplierService>();
     builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
     builder.Services.AddScoped<IInventoryReportingService, InventoryReportingService>();
+    builder.Services.AddScoped<IMerchantReportingService, MerchantReportingService>();
 
     // HR Documents (Azure Blob)
     builder.Services.AddScoped<ActivityRecorder>();

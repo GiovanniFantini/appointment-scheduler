@@ -52,6 +52,7 @@ public class DiRegressionTests : IClassFixture<ApiWebApplicationFactory>
             typeof(ISupplierService),
             typeof(IPurchaseOrderService),
             typeof(IInventoryReportingService),
+            typeof(IMerchantReportingService),
             typeof(IFileStorageService),
             typeof(IHRDocumentService),
             typeof(IEmailService),
