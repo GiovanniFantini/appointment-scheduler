@@ -120,6 +120,7 @@ public sealed class ApiEndpointRegressionTests(ITestOutputHelper output)
                 "EmployeeRequests" => MerchantFeature.Richieste,
                 "EmployeeResources" or "EmployeeRoles" => MerchantFeature.Risorse,
                 "MerchantRoles" => MerchantFeature.Ruoli,
+                "MerchantReports" => MerchantFeature.Report,
                 "EmployeeDocuments" => MerchantFeature.Documenti,
                 "Skills" or "EmployeeSkills" => MerchantFeature.Mansioni,
                 "EmployeeProfile" when action.ActionName == "GetMySkills" => MerchantFeature.Mansioni,
