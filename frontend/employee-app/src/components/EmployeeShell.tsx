@@ -36,7 +36,6 @@ interface EmpNavItem extends NavItem {
 const ICON_SIZE = 18
 
 const ALL_NAV: EmpNavItem[] = [
-  { path: '/activity', label: 'Registro attività', icon: <TiFileText size={18} /> },
   { path: '/', label: 'Dashboard', exact: true, icon: <TiHome size={ICON_SIZE} /> },
   { path: '/timbratura', label: 'Timbratura', feature: 'Timbratura', icon: <TiClock size={ICON_SIZE} /> },
   { path: '/calendario', label: 'Calendario', feature: 'Calendario', icon: <TiCalendar size={ICON_SIZE} /> },
@@ -51,6 +50,7 @@ const ALL_NAV: EmpNavItem[] = [
 ]
 
 function deriveTitle(pathname: string): string {
+  if (pathname === '/activity') return 'Registro attività'
   if (pathname === '/') return 'Dashboard'
   const it = ALL_NAV.find((i) => i.path !== '/' && pathname.startsWith(i.path))
   return it?.label ?? 'Employee Portal'

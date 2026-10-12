@@ -19,13 +19,13 @@ interface MerchantNavItem extends NavItem {
 }
 
 const ALL_NAV: MerchantNavItem[] = [
-  { path: '/activity', label: 'Registro attività', icon: <TiFileText size={18} /> },
   { path: '/', label: 'Dashboard', exact: true, icon: <TiHome size={18} /> },
   { path: '/ruoli', label: 'Ruoli', feature: 'Ruoli', icon: <TiBriefcase size={18} /> },
   { path: '/report', label: 'Report', feature: 'Report', icon: <TiFileText size={18} /> }
 ]
 
 function pageTitleFor(pathname: string): string {
+  if (pathname === '/activity') return 'Registro attività'
   if (pathname === '/') return 'Dashboard'
   const it = ALL_NAV.find((i) => i.path !== '/' && pathname.startsWith(i.path))
   return it?.label ?? 'Merchant App'

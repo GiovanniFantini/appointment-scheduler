@@ -26,7 +26,6 @@ export const ADMIN_NAV: Array<NavItem & { section: string }> = [
   { section: 'Management', path: '/merchants', label: 'Merchants', icon: <TiBuildingStore size={18} /> },
   { section: 'Management', path: '/users', label: 'Users', icon: <TiUsers size={18} /> },
   { section: 'Management', path: '/employees', label: 'Employees', icon: <TiUserPlus size={18} /> },
-  { section: 'Analytics', path: '/activity', label: 'Registro attività', icon: <TiFileText size={18} /> },
   { section: 'Analytics', path: '/reports', label: 'Reports', icon: <TiFileText size={18} /> },
   { section: 'Developer', path: '/debug', label: 'Debug', icon: <TiSparkles size={18} /> },
   { section: 'Developer', path: '/tools/email', label: 'Email Test', icon: <TiSend size={18} /> }
@@ -41,6 +40,7 @@ function buildSections(): NavSection[] {
 }
 
 function deriveTitle(pathname: string): string {
+  if (pathname === '/activity') return 'Registro attività'
   if (pathname === '/') return 'Dashboard'
   if (pathname.startsWith('/merchants/')) return 'Merchant Detail'
   if (pathname.startsWith('/users/')) return 'User Detail'
