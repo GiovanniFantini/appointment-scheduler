@@ -1,3 +1,7 @@
+import { PageGuide, accountPageGuides, type PageGuideDefinition } from '@scheduler/ui'
+import DashboardGuide from '../pages/DashboardPage/DashboardPage.guide'
+import RuoliGuide from '../pages/RuoliPage/RuoliPage.guide'
+import ReportGuide from '../pages/ReportPage/ReportPage.guide'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   AppShell,
@@ -13,6 +17,13 @@ import {
   type UserMenuItem
 } from '@scheduler/ui'
 import type { MerchantUser } from '../App'
+
+const PAGE_GUIDES: Record<string, PageGuideDefinition> = {
+  ...accountPageGuides,
+  '/': DashboardGuide,
+  '/ruoli': RuoliGuide,
+  '/report': ReportGuide
+}
 
 interface MerchantNavItem extends NavItem {
   feature?: string
@@ -81,6 +92,10 @@ export default function MerchantShell() {
         subtitle: 'Area gestione',
         initial: (user.companyName ?? 'M').charAt(0).toUpperCase()
       }}
+      pageGuide={PAGE_GUIDES[location.pathname] && <PageGuide
+        key={JSON.stringify([location.pathname, user.userId, user.merchantId, user.activeFeatures, undefined])}
+        app="merchant" page={PAGE_GUIDES[location.pathname]} user={user}
+      />}
       navSections={sections}
       bottomNav
       headerTitle={pageTitleFor(location.pathname)}

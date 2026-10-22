@@ -281,18 +281,18 @@ export default function RisorsePage() {
   })
 
   return (
-    <div className="risorse-page">
+    <div data-guide="people.page" className="risorse-page">
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Risorse</h1>
           <p className="page-subtitle">Gestisci i dipendenti della tua azienda</p>
         </div>
-        <button data-activity="employee.pages.RisorsePage.RisorsePage.1" className="btn-primary" onClick={openAddModal}>
+        <button data-guide="people.new" data-activity="employee.pages.RisorsePage.RisorsePage.1" className="btn-primary" onClick={openAddModal}>
           <TiPlus size={16} /> Aggiungi Dipendente
         </button>
       </div>
 
-      <div className="risorse-filter-bar">
+      <div data-guide="people.filters" className="risorse-filter-bar">
         <span className="filter-label">Filtra per tipo:</span>
         <button data-activity="employee.pages.RisorsePage.RisorsePage.2"
           type="button"
@@ -432,7 +432,7 @@ export default function RisorsePage() {
               <h2 className="modal-title">{editEmployee ? 'Modifica Dipendente' : 'Nuovo Dipendente'}</h2>
               <button data-activity="employee.pages.RisorsePage.RisorsePage.12" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form data-activity="employee.pages.RisorsePage.RisorsePage.13" onSubmit={handleSubmit}>
+            <form data-guide="people.form" data-activity="employee.pages.RisorsePage.RisorsePage.13" onSubmit={handleSubmit}>
               <div className="modal-body">
                 {formError && <div className="modal-error">{formError}</div>}
                 <div className="form-group">
@@ -484,7 +484,7 @@ export default function RisorsePage() {
                   <label className="form-label">
                     Email {formData.kind === EMPLOYEE_KIND.Internal ? '*' : '(opzionale)'}
                   </label>
-                  <input data-activity="employee.pages.RisorsePage.RisorsePage.18"
+                  <input data-guide="people.email" data-activity="employee.pages.RisorsePage.RisorsePage.18"
                     type="email"
                     className="form-input"
                     placeholder="mario.rossi@azienda.it"
@@ -495,7 +495,7 @@ export default function RisorsePage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Ruolo</label>
-                  <select data-activity="employee.pages.RisorsePage.RisorsePage.19"
+                  <select data-guide="people.role" data-activity="employee.pages.RisorsePage.RisorsePage.19"
                     className="form-select"
                     value={formData.roleId}
                     onChange={e => setFormData(p => ({ ...p, roleId: e.target.value }))}
@@ -673,7 +673,7 @@ export default function RisorsePage() {
               </div>
               <div className="modal-footer">
                 <button data-activity="employee.pages.RisorsePage.RisorsePage.29" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button data-activity="employee.pages.RisorsePage.RisorsePage.30" type="submit" className="btn-primary" disabled={saving}>
+                <button data-guide="people.save" data-activity="employee.pages.RisorsePage.RisorsePage.30" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>

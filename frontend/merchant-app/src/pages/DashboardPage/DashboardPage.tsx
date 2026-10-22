@@ -78,13 +78,13 @@ export default function DashboardPage({ user }: DashboardPageProps) {
   }
 
   return (
-    <div className="dashboard-page">
+    <div data-guide="merchantDashboard.page" className="dashboard-page">
       <div className="dashboard-welcome">
         <h1>{greeting()}, {user.firstName}!</h1>
         <p>{user.companyName ? `Benvenuto su ${user.companyName}` : 'Benvenuto nella tua dashboard aziendale'}</p>
       </div>
 
-      <div className="stats-grid">
+      <div data-guide="merchantDashboard.stats" className="stats-grid">
         <div className="stat-card stat-card--static">
           <div className="stat-icon blue">👥</div>
           <div className="stat-info">

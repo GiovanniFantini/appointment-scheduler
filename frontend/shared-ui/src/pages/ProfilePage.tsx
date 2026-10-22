@@ -130,7 +130,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
   }
 
   return (
-    <div className="su-page">
+    <div data-guide="profile.page" className="su-page">
       <PageHeader
         title="Il mio profilo"
         subtitle="Gestisci le tue informazioni e la password di accesso"
@@ -210,7 +210,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
           )}
 
           {/* Sezione password */}
-          <form data-activity="shared-ui.pages.ProfilePage.11" className="su-page__section" onSubmit={handleChangePassword}>
+          <form data-guide="profile.password" data-activity="shared-ui.pages.ProfilePage.11" className="su-page__section" onSubmit={handleChangePassword}>
             <h2 className="su-page__section-title">Cambia password</h2>
             <p className="su-page__section-desc">
               Per sicurezza inserisci la password attuale prima di sceglierne una nuova.
@@ -263,7 +263,7 @@ export function ProfilePage({ apiClient, onProfileUpdated, readOnlyProfile }: Pr
             </div>
 
             <div className="su-form-actions">
-              <Button data-activity="shared-ui.pages.ProfilePage.15" type="submit" variant="primary" loading={changingPwd}>
+              <Button data-guide="profile.passwordSave" data-activity="shared-ui.pages.ProfilePage.15" type="submit" variant="primary" loading={changingPwd}>
                 Aggiorna password
               </Button>
             </div>

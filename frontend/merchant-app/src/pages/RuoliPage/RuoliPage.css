@@ -377,6 +377,17 @@
   padding: 40px;
 }
 
+.feature-level-description {
+  margin: 4px 0 0;
+  flex-basis: 100%;
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--su-text-secondary);
+  white-space: normal;
+}
+.feature-level-row { flex-wrap: wrap; }
+
 .modal-error {
   background: rgba(239, 68, 68, 0.1);
   border: 1px solid rgba(239, 68, 68, 0.3);

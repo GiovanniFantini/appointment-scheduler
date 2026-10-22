@@ -145,18 +145,18 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
         <>
           <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.1" type="button" className="btn-secondary" onClick={onClose}>Annulla</button>
           {/* Il footer dello sheet è fuori dal <form>: l'attributo form= collega il submit. */}
-          <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.2" type="submit" form={FORM_ID} className="btn-primary" disabled={loading}>
+          <button data-guide="requests.submit" data-activity="employee.components.CreateRequestModal.CreateRequestModal.2" type="submit" form={FORM_ID} className="btn-primary" disabled={loading}>
             {loading ? <span className="btn-spinner" /> : 'Invia richiesta'}
           </button>
         </>
       }
     >
-      <form data-activity="employee.components.CreateRequestModal.CreateRequestModal.3" id={FORM_ID} className="create-request-form" onSubmit={handleSubmit}>
+      <form data-guide="requests.form" data-activity="employee.components.CreateRequestModal.CreateRequestModal.3" id={FORM_ID} className="create-request-form" onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
 
         <div className="form-group">
           <label className="form-label">Tipo richiesta</label>
-          <div className="tipo-selector">
+          <div data-guide="requests.type" className="tipo-selector">
             {(['Ferie', 'Permessi', 'Malattia'] as RequestType[]).map(t => (
               <button data-activity="employee.components.CreateRequestModal.CreateRequestModal.4"
                 key={t}
@@ -170,7 +170,7 @@ export default function CreateRequestModal({ onClose, onCreated }: Props) {
           </div>
         </div>
 
-        <div className="form-row">
+        <div data-guide="requests.dates" className="form-row">
           <div className="form-group">
             <label className="form-label">Data inizio *</label>
             <input data-activity="employee.components.CreateRequestModal.CreateRequestModal.5"

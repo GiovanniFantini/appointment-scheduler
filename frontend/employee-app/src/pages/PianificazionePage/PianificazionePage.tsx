@@ -256,7 +256,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
   }
 
   return (
-    <div className="pianificazione-page">
+    <div data-guide="planning.page" className="pianificazione-page">
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Pianificazione</h1>
@@ -266,7 +266,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
       </div>
 
       <div className="pianif-toolbar">
-        <div className="pianif-week-nav">
+        <div data-guide="planning.week" className="pianif-week-nav">
           <button data-activity="employee.pages.PianificazionePage.PianificazionePage.1" className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, -7))}>‹ Settimana precedente</button>
           <button data-activity="employee.pages.PianificazionePage.PianificazionePage.2" className="btn-secondary" onClick={() => setWeekStart(mondayOf(new Date()))}>Oggi</button>
           <button data-activity="employee.pages.PianificazionePage.PianificazionePage.3" className="btn-secondary" onClick={() => setWeekStart(addDays(weekStart, 7))}>Settimana successiva ›</button>
@@ -279,14 +279,14 @@ export default function PianificazionePage({ accessLevel }: Props) {
               Copia i turni della settimana in vista ({formatWeekLabel()}) →
             </span>
             <label className="form-label">a settimana (lun.)</label>
-            <input data-activity="employee.pages.PianificazionePage.PianificazionePage.4"
+            <input data-guide="planning.destination" data-activity="employee.pages.PianificazionePage.PianificazionePage.4"
               type="date"
               className="form-input"
               value={cloneTargetWeek}
               onChange={e => setCloneTargetWeek(e.target.value)}
               {...nativeDateInputProps}
             />
-            <input data-activity="employee.pages.PianificazionePage.PianificazionePage.5"
+            <input data-guide="planning.count" data-activity="employee.pages.PianificazionePage.PianificazionePage.5"
               type="number"
               className="form-input pianif-clone-weeks"
               min={1}
@@ -295,7 +295,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
               onChange={e => setCloneWeeks(Math.max(1, Math.min(52, Number(e.target.value) || 1)))}
               title="Numero di settimane consecutive"
             />
-            <button data-activity="employee.pages.PianificazionePage.PianificazionePage.6" className="btn-primary" disabled={cloneLoading} onClick={handleCloneWeek}>
+            <button data-guide="planning.clone" data-activity="employee.pages.PianificazionePage.PianificazionePage.6" className="btn-primary" disabled={cloneLoading} onClick={handleCloneWeek}>
               {cloneLoading ? 'Clonazione...' : 'Clona'}
             </button>
             {cloneMessage && <span className="pianif-clone-msg">{cloneMessage}</span>}
@@ -331,7 +331,7 @@ export default function PianificazionePage({ accessLevel }: Props) {
         <div className="pianif-empty">Nessun dipendente attivo.</div>
       ) : (
         <div className="pianif-table-wrap">
-          <table className="pianif-table">
+          <table data-guide="planning.grid" className="pianif-table">
             <thead>
               <tr>
                 <th className="pianif-th-name">Risorsa</th>

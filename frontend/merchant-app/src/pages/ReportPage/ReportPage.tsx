@@ -99,12 +99,12 @@ export default function ReportPage() {
     <div className="report-page">
       <header className="report-heading">
         <div><span className="report-eyebrow">ANALISI AZIENDALE</span><h1>Report</h1><p>Turni, richieste e ore lavorate in un unico riepilogo.</p></div>
-        <button data-activity="merchant.pages.ReportPage.ReportPage.1" type="button" onClick={downloadSummary} disabled={!report || loading || !valid}>Esporta riepilogo CSV</button>
+        <button data-guide="reports.export" data-activity="merchant.pages.ReportPage.ReportPage.1" type="button" onClick={downloadSummary} disabled={!report || loading || !valid}>Esporta riepilogo CSV</button>
       </header>
-      <section className="report-filters" aria-label="Filtri report">
+      <section data-guide="reports.filters" className="report-filters" aria-label="Filtri report">
         <label>Dal<input data-activity="merchant.pages.ReportPage.ReportPage.2" type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)} {...nativeDateInputProps} /></label>
         <label>Al<input data-activity="merchant.pages.ReportPage.ReportPage.3" type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)} {...nativeDateInputProps} /></label>
-        <label>Filiale<select data-activity="merchant.pages.ReportPage.ReportPage.4" aria-label="Filiale" value={branchId ?? ''} onChange={e => setBranchId(e.target.value ? Number(e.target.value) : null)}><option value="">Tutte le filiali</option>{branches.map(b => <option key={b.id} value={b.id}>{b.name}{!b.isActive ? ' (inattiva)' : ''}</option>)}</select></label>
+        <label>Filiale<select data-guide="reports.branch" data-activity="merchant.pages.ReportPage.ReportPage.4" aria-label="Filiale" value={branchId ?? ''} onChange={e => setBranchId(e.target.value ? Number(e.target.value) : null)}><option value="">Tutte le filiali</option>{branches.map(b => <option key={b.id} value={b.id}>{b.name}{!b.isActive ? ' (inattiva)' : ''}</option>)}</select></label>
         <div className="report-presets"><button data-activity="merchant.pages.ReportPage.ReportPage.5" type="button" onClick={() => preset(false)}>Questo mese</button><button data-activity="merchant.pages.ReportPage.ReportPage.6" type="button" onClick={() => preset(true)}>Mese scorso</button><button data-activity="merchant.pages.ReportPage.ReportPage.7" type="button" onClick={() => setReload(n => n + 1)} disabled={loading || !valid}>Aggiorna</button></div>
       </section>
       {!valid && <p role="alert" className="report-message">Seleziona un intervallo valido di massimo 366 giorni.</p>}
@@ -112,7 +112,7 @@ export default function ReportPage() {
       {loading && <p role="status" className="report-message">Caricamento dei report…</p>}
       {report && valid && !loading && <>
         <div className="report-period">{dateLabel(report.from)} — {dateLabel(report.to)} · {branches.find(b => b.id === branchId)?.name ?? 'Tutte le filiali'}</div>
-        <div className="report-stats">
+        <div data-guide="reports.stats" className="report-stats">
           <article><span>Turni pianificati</span><strong>{report.shiftCount}</strong><small>{report.assignedShiftCount} assegnazioni ai dipendenti</small></article>
           <article><span>Ore lavorate</span><strong>{hours(totals.worked)} <em>h</em></strong><small>Pause escluse · da timbrature registrate</small></article>
           <article><span>Straordinario rilevato</span><strong>{hours(totals.overtime)} <em>h</em></strong><small>{totals.anomalies} turni timbrati con anomalie aperte</small></article>
@@ -128,7 +128,7 @@ export default function ReportPage() {
           <section className="report-panel"><h2>Stato delle richieste</h2><p>Richieste che interessano il periodo selezionato.</p><dl className="report-requests"><div><dt>Approvate</dt><dd>{report.approvedRequests}</dd></div><div><dt>Respinte</dt><dd>{report.rejectedRequests}</dd></div><div><dt>In attesa</dt><dd>{report.pendingRequests}</dd></div></dl></section>
         </div>
         <section className="report-panel">
-          <div className="report-table-heading"><div><h2>Dettaglio ore lavorate</h2><p>Una riga per dipendente, turno e giornata di lavoro.</p></div><button data-activity="merchant.pages.ReportPage.ReportPage.9" type="button" onClick={downloadEntries} disabled={!entries.length}>Esporta dettaglio CSV</button></div>
+          <div data-guide="reports.detail" className="report-table-heading"><div><h2>Dettaglio ore lavorate</h2><p>Una riga per dipendente, turno e giornata di lavoro.</p></div><button data-guide="reports.detailExport" data-activity="merchant.pages.ReportPage.ReportPage.9" type="button" onClick={downloadEntries} disabled={!entries.length}>Esporta dettaglio CSV</button></div>
           <label className="report-search">Cerca nel dettaglio<input data-activity="merchant.pages.ReportPage.ReportPage.10" type="search" placeholder="Dipendente, turno o filiale" value={search} onChange={e => { setSearch(e.target.value); setPage(1) }} /></label>
           {entries.length === 0 ? <p className="report-empty">{search ? 'Nessun risultato per la ricerca.' : 'Nessuna timbratura registrata nel periodo selezionato.'}</p> : <>
             <div className="report-table-scroll"><table><caption className="report-sr-only">Ore lavorate dal {dateLabel(from)} al {dateLabel(to)}</caption><thead><tr>{['Data / turno', 'Dipendente', 'Filiale', 'Entrata', 'Uscita', 'Ore lavorate', 'Pausa', 'Straordinario', 'Stato'].map(label => <th key={label} scope="col">{label}</th>)}</tr></thead><tbody>

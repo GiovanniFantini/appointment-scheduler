@@ -195,7 +195,7 @@ export default function FilialiPage() {
   }
 
   return (
-    <div className="filiali-page">
+    <div data-guide="branches.page" className="filiali-page">
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Filiali</h1>
@@ -203,7 +203,7 @@ export default function FilialiPage() {
             Gestisci i punti vendita / sedi della tua azienda e i reparti al loro interno.
           </p>
         </div>
-        <button data-activity="employee.pages.FilialiPage.FilialiPage.1" className="btn-primary" onClick={openAddBranch}>+ Nuova filiale</button>
+        <button data-guide="branches.new" data-activity="employee.pages.FilialiPage.FilialiPage.1" className="btn-primary" onClick={openAddBranch}>+ Nuova filiale</button>
       </div>
 
       {loading ? (
@@ -253,7 +253,7 @@ export default function FilialiPage() {
               <div className="branch-departments">
                 <div className="dept-header">
                   <span className="dept-label">Reparti</span>
-                  <button data-activity="employee.pages.FilialiPage.FilialiPage.6" className="btn-add-dept" onClick={() => openAddDept(b.id)}>+ Reparto</button>
+                  <button data-guide="branches.department" data-activity="employee.pages.FilialiPage.FilialiPage.6" className="btn-add-dept" onClick={() => openAddDept(b.id)}>+ Reparto</button>
                 </div>
                 {b.departments.length === 0 ? (
                   <div className="dept-empty">
@@ -289,7 +289,7 @@ export default function FilialiPage() {
               <h2 className="modal-title">{editingBranch ? 'Modifica filiale' : 'Nuova filiale'}</h2>
               <button data-activity="employee.pages.FilialiPage.FilialiPage.10" className="modal-close" onClick={() => setBranchModal(false)}>✕</button>
             </div>
-            <form data-activity="employee.pages.FilialiPage.FilialiPage.11" onSubmit={handleBranchSubmit}>
+            <form data-guide="branches.form" data-activity="employee.pages.FilialiPage.FilialiPage.11" onSubmit={handleBranchSubmit}>
               <div className="modal-body">
                 {error && <div className="modal-error">{error}</div>}
                 <div className="form-group">
@@ -387,7 +387,7 @@ export default function FilialiPage() {
               <h2 className="modal-title">{editingDept ? 'Modifica reparto' : 'Nuovo reparto'}</h2>
               <button data-activity="employee.pages.FilialiPage.FilialiPage.24" className="modal-close" onClick={() => setDeptModal(false)}>✕</button>
             </div>
-            <form data-activity="employee.pages.FilialiPage.FilialiPage.25" onSubmit={handleDeptSubmit}>
+            <form data-guide="branches.departmentForm" data-activity="employee.pages.FilialiPage.FilialiPage.25" onSubmit={handleDeptSubmit}>
               <div className="modal-body">
                 {deptError && <div className="modal-error">{deptError}</div>}
                 <div className="form-group">
@@ -427,7 +427,7 @@ export default function FilialiPage() {
               </div>
               <div className="modal-footer">
                 <button data-activity="employee.pages.FilialiPage.FilialiPage.29" type="button" className="btn-cancel" onClick={() => setDeptModal(false)}>Annulla</button>
-                <button data-activity="employee.pages.FilialiPage.FilialiPage.30" type="submit" className="btn-primary" disabled={saving}>
+                <button data-guide="branches.departmentSave" data-activity="employee.pages.FilialiPage.FilialiPage.30" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>

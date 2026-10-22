@@ -109,7 +109,7 @@ export default function DashboardPage({ user }: Props) {
   const dateStr = formatBrowserDate(today)
 
   return (
-    <div className="dashboard-page">
+    <div data-guide="dashboard.page" className="dashboard-page">
       {/* Welcome section */}
       <div className="dashboard-welcome">
         <div className="dashboard-welcome-text">
@@ -145,7 +145,7 @@ export default function DashboardPage({ user }: Props) {
       )}
 
       {/* Stats row */}
-      <div className="dashboard-stats">
+      <div data-guide="dashboard.stats" className="dashboard-stats">
         {user.activeFeatures.includes('Calendario') && (
         <div className="stat-card">
           <div className="stat-value">{todayEvents.length}</div>
@@ -163,7 +163,7 @@ export default function DashboardPage({ user }: Props) {
         </div>)}
       </div>
 
-      <div className="dashboard-grid">
+      <div data-guide="dashboard.content" className="dashboard-grid">
         {user.activeFeatures.includes('Calendario') && (<>
         {/* Today's events */}
         <div className="dashboard-card">

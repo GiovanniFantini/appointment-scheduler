@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { GuideHint } from '@scheduler/ui'
 import { branchesApi } from '../../lib/api/branches'
 import './BranchWizard.css'
 
@@ -77,6 +78,11 @@ export default function BranchWizard({ onClose, onDone }: BranchWizardProps) {
         </div>
 
         <div className="wizard-body">
+          <GuideHint key={step}>
+            {step === 1 ? 'Scegli se l’azienda usa più sedi. Con una sola sede puoi chiudere questa configurazione.'
+              : step === 2 ? 'Assegna alla filiale un nome riconoscibile e indica la città, se utile.'
+              : 'I reparti sono facoltativi. Seleziona quelli utili o aggiungine uno. La conferma crea la filiale e i reparti scelti.'}
+          </GuideHint>
           {error && <div className="modal-error">{error}</div>}
 
           {step === 1 && (

@@ -116,7 +116,7 @@ export default function MansioniPage() {
   }
 
   return (
-    <div className="mansioni-page">
+    <div data-guide="skills.page" className="mansioni-page">
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Mansioni</h1>
@@ -125,7 +125,7 @@ export default function MansioniPage() {
             Sono opzionali: usale solo se ti servono.
           </p>
         </div>
-        <button data-activity="employee.pages.MansioniPage.MansioniPage.1" className="btn-primary" onClick={openAdd}>+ Nuova mansione</button>
+        <button data-guide="skills.new" data-activity="employee.pages.MansioniPage.MansioniPage.1" className="btn-primary" onClick={openAdd}>+ Nuova mansione</button>
       </div>
 
       {loading ? (
@@ -167,7 +167,7 @@ export default function MansioniPage() {
               <h2 className="modal-title">{editing ? 'Modifica mansione' : 'Nuova mansione'}</h2>
               <button data-activity="employee.pages.MansioniPage.MansioniPage.7" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form data-activity="employee.pages.MansioniPage.MansioniPage.8" onSubmit={handleSubmit}>
+            <form data-guide="skills.form" data-activity="employee.pages.MansioniPage.MansioniPage.8" onSubmit={handleSubmit}>
               <div className="modal-body">
                 {error && <div className="modal-error">{error}</div>}
                 <div className="form-group">
@@ -210,7 +210,7 @@ export default function MansioniPage() {
               </div>
               <div className="modal-footer">
                 <button data-activity="employee.pages.MansioniPage.MansioniPage.12" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button data-activity="employee.pages.MansioniPage.MansioniPage.13" type="submit" className="btn-primary" disabled={saving}>
+                <button data-guide="skills.save" data-activity="employee.pages.MansioniPage.MansioniPage.13" type="submit" className="btn-primary" disabled={saving}>
                   {saving ? 'Salvataggio...' : 'Salva'}
                 </button>
               </div>

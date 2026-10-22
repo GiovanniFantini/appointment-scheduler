@@ -723,14 +723,14 @@ export default function MagazzinoPage({ accessLevel }: Props) {
             <p>SKU, barcode, soglie di riordino e distribuzione stock per filiale.</p>
           </div>
           <div className="inventory-toolbar-row">
-            <input data-activity="employee.pages.MagazzinoPage.MagazzinoPage.3"
+            <input data-guide="inventory.search" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.3"
               className="inventory-search"
               placeholder="Cerca per SKU, nome o barcode"
               value={itemSearch}
               onChange={event => setItemSearch(event.target.value)}
             />
             {canManage && (
-              <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.4" className="inventory-primary-btn" onClick={openCreateItem}>+ Nuovo articolo</button>
+              <button data-guide="inventory.newItem" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.4" className="inventory-primary-btn" onClick={openCreateItem}>+ Nuovo articolo</button>
             )}
           </div>
         </div>
@@ -823,7 +823,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
   const renderMovements = () => (
     <div className="inventory-stack">
       {canOperate && accessibleBranches.length === 0 && (
-        <div className="inventory-empty-inline">
+        <div data-guide="inventory.noBranches" className="inventory-empty-inline">
           Nessuna filiale assegnata: non è possibile registrare rettifiche. Contatta l'amministratore.
         </div>
       )}
@@ -837,7 +837,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
             </div>
           </div>
 
-          <form data-activity="employee.pages.MagazzinoPage.MagazzinoPage.7" className="inventory-form-grid" onSubmit={handleAdjustmentSubmit}>
+          <form data-guide="inventory.adjustment" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.7" className="inventory-form-grid" onSubmit={handleAdjustmentSubmit}>
             <label>
               Filiale
               <select data-activity="employee.pages.MagazzinoPage.MagazzinoPage.8"
@@ -854,7 +854,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
             <label>
               Articolo
-              <select data-activity="employee.pages.MagazzinoPage.MagazzinoPage.9"
+              <select data-guide="inventory.adjustmentItem" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.9"
                 value={adjustmentForm.itemId}
                 onChange={event => setAdjustmentForm(prev => ({ ...prev, itemId: event.target.value }))}
                 required
@@ -868,7 +868,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
             <label>
               Delta quantità
-              <input data-activity="employee.pages.MagazzinoPage.MagazzinoPage.10"
+              <input data-guide="inventory.delta" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.10"
                 type="number"
                 step="0.001"
                 value={adjustmentForm.quantityDelta}
@@ -900,7 +900,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
             </label>
 
             <div className="inventory-form-actions inventory-form-grid-full">
-              <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.13" className="inventory-primary-btn" type="submit" disabled={adjustmentSaving}>
+              <button data-guide="inventory.adjustmentSave" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.13" className="inventory-primary-btn" type="submit" disabled={adjustmentSaving}>
                 {adjustmentSaving ? 'Salvataggio...' : 'Registra rettifica'}
               </button>
             </div>
@@ -960,7 +960,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
           <p>Rubrica acquisti con stato attivo e contatti operativi.</p>
         </div>
         {canManage && (
-          <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.14" className="inventory-primary-btn" onClick={openCreateSupplier}>+ Nuovo fornitore</button>
+          <button data-guide="inventory.newSupplier" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.14" className="inventory-primary-btn" onClick={openCreateSupplier}>+ Nuovo fornitore</button>
         )}
       </div>
 
@@ -993,7 +993,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
   )
 
   const renderOrders = () => (
-    <section className="inventory-panel">
+    <section data-guide="inventory.orders" className="inventory-panel">
       <div className="inventory-section-head">
         <div>
           <h2>Ordini acquisto</h2>
@@ -1002,7 +1002,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
         <div className="inventory-toolbar-row">
           {draftOrders.length > 0 && <span className="inventory-muted-chip">{draftOrders.length} in bozza</span>}
           {canManage && (
-            <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.16" className="inventory-primary-btn" onClick={openCreateOrder}>+ Nuovo ordine</button>
+            <button data-guide="inventory.newOrder" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.16" className="inventory-primary-btn" onClick={openCreateOrder}>+ Nuovo ordine</button>
           )}
         </div>
       </div>
@@ -1077,7 +1077,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
                 {hasActions && (
                   <div className="inventory-order-actions">
                     {canSend && <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.17" className="inventory-secondary-btn" onClick={() => handleSendOrder(order)}>Conferma ordine</button>}
-                    {canReceiveOrder && <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.18" className="inventory-primary-btn" onClick={() => openReceiveOrder(order)}>Registra ricezione</button>}
+                    {canReceiveOrder && <button data-guide="inventory.receive" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.18" className="inventory-primary-btn" onClick={() => openReceiveOrder(order)}>Registra ricezione</button>}
                     {canCancel && <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.19" className="inventory-danger-btn" onClick={() => handleCancelOrder(order)}>Annulla</button>}
                   </div>
                 )}
@@ -1090,7 +1090,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
   )
 
   return (
-    <div className="magazzino-page">
+    <div data-guide="inventory.page" className="magazzino-page">
       <div className="magazzino-hero">
         <div>
           <h1 className="page-title">Magazzino</h1>
@@ -1109,7 +1109,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
           </span>
           <div className="inventory-context-box">
             <span>Filiale operativa</span>
-            <select data-activity="employee.pages.MagazzinoPage.MagazzinoPage.20"
+            <select data-guide="inventory.branch" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.20"
               value={selectedBranchId ?? ''}
               onChange={event => setSelectedBranchId(event.target.value ? Number(event.target.value) : null)}
             >
@@ -1146,10 +1146,10 @@ export default function MagazzinoPage({ accessLevel }: Props) {
         </div>
       )}
 
-      <div className="magazzino-tabs">
+      <div data-guide="inventory.tabs" className="magazzino-tabs">
         {ALL_TABS.map(tab => (
           <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.23"
-            key={tab.key}
+            data-guide={`inventory.tab.${tab.key}`} key={tab.key}
             className={`magazzino-tab ${activeTab === tab.key ? 'is-active' : ''}`}
             onClick={() => setActiveTab(tab.key)}
           >
@@ -1183,7 +1183,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </div>
               <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.26" className="inventory-link-btn" onClick={() => setItemModalOpen(false)}>Chiudi</button>
             </div>
-            <form data-activity="employee.pages.MagazzinoPage.MagazzinoPage.27" className="inventory-form-grid" onSubmit={handleItemSubmit}>
+            <form data-guide="inventory.itemForm" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.27" className="inventory-form-grid" onSubmit={handleItemSubmit}>
               <label>
                 SKU
                 <input data-activity="employee.pages.MagazzinoPage.MagazzinoPage.28" value={itemForm.sku} onChange={event => setItemForm(prev => ({ ...prev, sku: event.target.value }))} required />
@@ -1216,7 +1216,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </label>
               <div className="inventory-form-actions inventory-form-grid-full">
                 <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.35" type="button" className="inventory-secondary-btn" onClick={() => setItemModalOpen(false)}>Annulla</button>
-                <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.36" type="submit" className="inventory-primary-btn" disabled={itemSaving}>{itemSaving ? 'Salvataggio...' : 'Salva articolo'}</button>
+                <button data-guide="inventory.itemSave" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.36" type="submit" className="inventory-primary-btn" disabled={itemSaving}>{itemSaving ? 'Salvataggio...' : 'Salva articolo'}</button>
               </div>
             </form>
           </div>
@@ -1233,7 +1233,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </div>
               <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.39" className="inventory-link-btn" onClick={() => setSupplierModalOpen(false)}>Chiudi</button>
             </div>
-            <form data-activity="employee.pages.MagazzinoPage.MagazzinoPage.40" className="inventory-form-grid" onSubmit={handleSupplierSubmit}>
+            <form data-guide="inventory.supplierForm" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.40" className="inventory-form-grid" onSubmit={handleSupplierSubmit}>
               <label>
                 Ragione sociale
                 <input data-activity="employee.pages.MagazzinoPage.MagazzinoPage.41" value={supplierForm.name} onChange={event => setSupplierForm(prev => ({ ...prev, name: event.target.value }))} required />
@@ -1266,7 +1266,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </label>
               <div className="inventory-form-actions inventory-form-grid-full">
                 <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.48" type="button" className="inventory-secondary-btn" onClick={() => setSupplierModalOpen(false)}>Annulla</button>
-                <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.49" type="submit" className="inventory-primary-btn" disabled={supplierSaving}>{supplierSaving ? 'Salvataggio...' : 'Salva fornitore'}</button>
+                <button data-guide="inventory.supplierSave" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.49" type="submit" className="inventory-primary-btn" disabled={supplierSaving}>{supplierSaving ? 'Salvataggio...' : 'Salva fornitore'}</button>
               </div>
             </form>
           </div>
@@ -1283,7 +1283,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               </div>
               <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.52" className="inventory-link-btn" onClick={() => setOrderModalOpen(false)}>Chiudi</button>
             </div>
-            <form data-activity="employee.pages.MagazzinoPage.MagazzinoPage.53" className="inventory-form-grid" onSubmit={handleOrderSubmit}>
+            <form data-guide="inventory.orderForm" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.53" className="inventory-form-grid" onSubmit={handleOrderSubmit}>
               <label className="inventory-form-field">
                 Filiale
                 <select data-activity="employee.pages.MagazzinoPage.MagazzinoPage.54" value={orderForm.branchId} onChange={event => setOrderForm(prev => ({ ...prev, branchId: event.target.value }))} required>
@@ -1343,7 +1343,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
               <div className="inventory-form-actions inventory-form-grid-full">
                 <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.63" type="button" className="inventory-secondary-btn" onClick={() => setOrderModalOpen(false)}>Annulla</button>
-                <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.64" type="submit" className="inventory-primary-btn" disabled={orderSaving}>{orderSaving ? 'Creazione...' : 'Crea ordine'}</button>
+                <button data-guide="inventory.orderSave" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.64" type="submit" className="inventory-primary-btn" disabled={orderSaving}>{orderSaving ? 'Creazione...' : 'Crea ordine'}</button>
               </div>
             </form>
           </div>
@@ -1361,7 +1361,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
               <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.67" className="inventory-link-btn" onClick={() => setReceivingOrder(null)}>Chiudi</button>
             </div>
 
-            <form data-activity="employee.pages.MagazzinoPage.MagazzinoPage.68" className="inventory-form-grid" onSubmit={handleReceiptSubmit}>
+            <form data-guide="inventory.receiptForm" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.68" className="inventory-form-grid" onSubmit={handleReceiptSubmit}>
               <div className="inventory-line-items inventory-form-grid-full">
                 {receivingOrder.lines.map(line => {
                   const remaining = line.quantityOrdered - line.quantityReceived
@@ -1376,7 +1376,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
                       </div>
                       <label className="inventory-receipt-field">
                         Quantità ricevuta
-                        <input data-activity="employee.pages.MagazzinoPage.MagazzinoPage.69" type="number" step="0.001" value={draft.quantityReceived} onChange={event => updateReceiptLine(line.id, { quantityReceived: event.target.value })} required />
+                        <input data-guide="inventory.receivedQuantity" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.69" type="number" step="0.001" value={draft.quantityReceived} onChange={event => updateReceiptLine(line.id, { quantityReceived: event.target.value })} required />
                       </label>
                       <label className="inventory-receipt-field">
                         Costo unitario
@@ -1394,7 +1394,7 @@ export default function MagazzinoPage({ accessLevel }: Props) {
 
               <div className="inventory-form-actions inventory-form-grid-full">
                 <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.72" type="button" className="inventory-secondary-btn" onClick={() => setReceivingOrder(null)}>Annulla</button>
-                <button data-activity="employee.pages.MagazzinoPage.MagazzinoPage.73" type="submit" className="inventory-primary-btn" disabled={receiptSaving}>{receiptSaving ? 'Registrazione...' : 'Registra ricezione'}</button>
+                <button data-guide="inventory.receiptSave" data-activity="employee.pages.MagazzinoPage.MagazzinoPage.73" type="submit" className="inventory-primary-btn" disabled={receiptSaving}>{receiptSaving ? 'Registrazione...' : 'Registra ricezione'}</button>
               </div>
             </form>
           </div>

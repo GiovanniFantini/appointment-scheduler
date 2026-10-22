@@ -239,12 +239,12 @@ export default function RuoliPage() {
   const isDefaultRole = (role: MerchantRole) => role.name === DEFAULT_ROLE_NAME || role.isDefault
 
   return (
-    <div className="ruoli-page">
+    <div data-guide="roles.page" className="ruoli-page">
       <PageHeader
         title="Ruoli"
         subtitle="Configura ruoli e funzionalità accessibili"
         actions={
-          <button data-activity="merchant.pages.RuoliPage.RuoliPage.1" className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
+          <button data-guide="roles.new" data-activity="merchant.pages.RuoliPage.RuoliPage.1" className="btn-primary" onClick={() => { setNewRoleName(''); setCreateError(''); setShowModal(true) }}>
             + Nuovo Ruolo
           </button>
         }
@@ -287,7 +287,7 @@ export default function RuoliPage() {
                   const showLevelSelector = isLeveledFeature(feat.value) && isEnabled
                   return (
                     <div key={feat.name}>
-                      <div className="feature-toggle-row">
+                      <div data-guide="roles.feature" className="feature-toggle-row">
                         <span className="feature-name">
                           <span className="feature-icon">{feat.icon}</span>
                           {feat.name}
@@ -305,7 +305,9 @@ export default function RuoliPage() {
                       {showLevelSelector && (
                         <div className="feature-level-row">
                           <span className="feature-level-label">Livello di accesso</span>
-                          <select data-activity="merchant.pages.RuoliPage.RuoliPage.3"
+                          <select data-guide="roles.level" data-activity="merchant.pages.RuoliPage.RuoliPage.3"
+                            aria-label={`${feat.name}: livello di accesso per ${role.name}`}
+                            aria-describedby={`role-${role.id}-feature-${feat.value}-description`}
                             className="feature-level-select"
                             value={featureLevels[role.id]?.[feat.value] ?? FeatureAccessLevel.ReadOnly}
                             onChange={e => setFeatureLevel(role.id, feat.value, Number(e.target.value) as FeatureAccessLevel)}
@@ -315,6 +317,9 @@ export default function RuoliPage() {
                               <option key={level.value} value={level.value}>{level.label}</option>
                             ))}
                           </select>
+                          <p id={`role-${role.id}-feature-${feat.value}-description`} className="feature-level-description" aria-live="polite">
+                            {LEVELED_FEATURES[feat.value].find(level => level.value === (featureLevels[role.id]?.[feat.value] ?? FeatureAccessLevel.ReadOnly))?.label}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -330,7 +335,7 @@ export default function RuoliPage() {
                 >
                   Elimina
                 </button>
-                <button data-activity="merchant.pages.RuoliPage.RuoliPage.5"
+                <button data-guide="roles.save" data-activity="merchant.pages.RuoliPage.RuoliPage.5"
                   className="btn-save-role"
                   onClick={() => handleSaveRole(role)}
                   disabled={savingId === role.id || isDefaultRole(role)}
@@ -350,12 +355,12 @@ export default function RuoliPage() {
               <h2 className="modal-title">Nuovo Ruolo</h2>
               <button data-activity="merchant.pages.RuoliPage.RuoliPage.7" className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <form data-activity="merchant.pages.RuoliPage.RuoliPage.8" onSubmit={handleCreateRole}>
+            <form data-guide="roles.form" data-activity="merchant.pages.RuoliPage.RuoliPage.8" onSubmit={handleCreateRole}>
               <div className="modal-body">
                 {createError && <div className="modal-error">{createError}</div>}
                 <div className="form-group">
                   <label className="form-label">Nome ruolo *</label>
-                  <input data-activity="merchant.pages.RuoliPage.RuoliPage.9"
+                  <input data-guide="roles.name" data-activity="merchant.pages.RuoliPage.RuoliPage.9"
                     type="text"
                     className="form-input"
                     placeholder="Es. Responsabile Turni"
@@ -368,7 +373,7 @@ export default function RuoliPage() {
               </div>
               <div className="modal-footer">
                 <button data-activity="merchant.pages.RuoliPage.RuoliPage.10" type="button" className="btn-cancel" onClick={() => setShowModal(false)}>Annulla</button>
-                <button data-activity="merchant.pages.RuoliPage.RuoliPage.11" type="submit" className="btn-primary" disabled={creating}>
+                <button data-guide="roles.create" data-activity="merchant.pages.RuoliPage.RuoliPage.11" type="submit" className="btn-primary" disabled={creating}>
                   {creating ? 'Creazione...' : 'Crea Ruolo'}
                 </button>
               </div>

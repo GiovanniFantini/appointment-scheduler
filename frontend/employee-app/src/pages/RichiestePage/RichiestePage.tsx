@@ -303,12 +303,12 @@ export default function RichiestePage() {
   )
 
   return (
-    <div className="richieste-page">
+    <div data-guide="requests.page" className="richieste-page">
       <div className="richieste-header">
         <h1 className="richieste-title">Le mie richieste</h1>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           {(canApproveRequests || canReviewJustifications) && (
-            <button data-activity="employee.pages.RichiestePage.RichiestePage.1"
+            <button data-guide="requests.manage" data-activity="employee.pages.RichiestePage.RichiestePage.1"
               className="btn-new-request-empty"
               onClick={() => setShowApprovalsSection(prev => !prev)}
             >
@@ -316,7 +316,7 @@ export default function RichiestePage() {
               {pendingApprovalCount > 0 && ` (${pendingApprovalCount})`}
             </button>
           )}
-          <button data-activity="employee.pages.RichiestePage.RichiestePage.2" className="btn-new-request" onClick={() => setShowModal(true)}>
+          <button data-guide="requests.new" data-activity="employee.pages.RichiestePage.RichiestePage.2" className="btn-new-request" onClick={() => setShowModal(true)}>
             <TiPlus size={18} />
             Nuova richiesta
           </button>
@@ -334,7 +334,7 @@ export default function RichiestePage() {
 
           {canApproveRequests && (
             <>
-              <h3 className="richieste-group-title">Assenze</h3>
+              <h3 data-guide="requests.team" className="richieste-group-title">Assenze</h3>
               {loadingApprovals ? (
                 <div className="richieste-loading">
                   <div className="spinner" />
@@ -362,7 +362,7 @@ export default function RichiestePage() {
 
           {canReviewJustifications && (
             <>
-              <h3 className="richieste-group-title">Giustificativi timbratura</h3>
+              <h3 data-guide="requests.justifications" className="richieste-group-title">Giustificativi timbratura</h3>
               {justifications.length === 0 ? (
                 <div className="richieste-empty" style={{ marginTop: 0 }}>
                   <p className="empty-title">Nessun giustificativo in attesa</p>
@@ -395,7 +395,7 @@ export default function RichiestePage() {
                         {a.employeeNotes ? ` — ${a.employeeNotes}` : ''}
                       </p>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.75rem' }}>
-                        <button data-activity="employee.pages.RichiestePage.RichiestePage.5" className="btn-new-request" onClick={() => setReviewing(a)}>Revisiona</button>
+                        <button data-guide="requests.review" data-activity="employee.pages.RichiestePage.RichiestePage.5" className="btn-new-request" onClick={() => setReviewing(a)}>Revisiona</button>
                       </div>
                     </div>
                   ))}

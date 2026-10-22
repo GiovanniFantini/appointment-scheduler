@@ -89,7 +89,7 @@ export default function CopyWeekDialog({ currentWeekStart, onClose, onCopied }: 
 
   return (
     <div data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.1" className="copy-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="copy-dialog">
+      <div data-guide="calendar.copyForm" className="copy-dialog">
         <div className="copy-header">
           <h2>Copia settimana scorsa</h2>
           <button data-activity="employee.components.CopyWeekDialog.CopyWeekDialog.2" className="copy-close" onClick={onClose}>✕</button>

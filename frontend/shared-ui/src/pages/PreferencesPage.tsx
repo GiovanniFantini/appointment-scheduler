@@ -45,7 +45,7 @@ export function PreferencesPage() {
   }, [theme])
 
   return (
-    <div className="su-page">
+    <div data-guide="preferences.page" className="su-page">
       <PageHeader
         title="Preferenze"
         subtitle="Personalizza l'interfaccia. Le modifiche vengono salvate automaticamente."
@@ -57,7 +57,7 @@ export function PreferencesPage() {
           Cambia l'aspetto dell'applicazione. La preferenza viene memorizzata in questo browser.
         </p>
 
-        <div className="su-theme-toggle" role="radiogroup" aria-label="Tema interfaccia">
+        <div data-guide="preferences.theme" className="su-theme-toggle" role="radiogroup" aria-label="Tema interfaccia">
           {OPTIONS.map((opt) => {
             const active = theme === opt.value
             return (

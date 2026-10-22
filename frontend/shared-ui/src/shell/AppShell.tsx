@@ -35,6 +35,8 @@ export interface AppShellProps {
   bottomNav?: boolean
   /** Se valorizzato, mostra un FAB in basso a destra (mobile <768px). */
   fab?: AppShellFab
+  /** Contextual help for the current route. */
+  pageGuide?: ReactNode
 }
 
 export function AppShell({
@@ -47,7 +49,8 @@ export function AppShell({
   companyName,
   headerExtras,
   bottomNav = false,
-  fab
+  fab,
+  pageGuide
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const isCompact = useMediaQuery('(max-width: 767px)')
@@ -86,6 +89,7 @@ export function AppShell({
           }
         />
         <main id="main-content" className="su-shell__content" tabIndex={-1}>
+          {pageGuide}
           <Outlet />
         </main>
       </div>

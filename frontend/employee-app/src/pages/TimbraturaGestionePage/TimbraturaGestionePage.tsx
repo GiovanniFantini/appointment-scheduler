@@ -56,7 +56,7 @@ export default function TimbraturaGestionePage() {
   }, [activeBranches, branchId])
 
   return (
-    <div className="timbratura-page">
+    <div data-guide="clockManagement.page" className="timbratura-page">
       <div className="page-header-row">
         <div>
           <h1 className="page-title">Timbratura</h1>
@@ -66,26 +66,26 @@ export default function TimbraturaGestionePage() {
         </div>
       </div>
 
-      <div className="tcm-tabs">
-        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.1"
+      <div data-guide="clockManagement.tabs" className="tcm-tabs">
+        <button data-guide="clockManagement.config" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.1"
           className={`tcm-tab ${tab === 'config' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('config')}
         >
           Configurazione
         </button>
-        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.2"
+        <button data-guide="clockManagement.presences" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.2"
           className={`tcm-tab ${tab === 'presenze' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('presenze')}
         >
           Presenze
         </button>
-        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.3"
+        <button data-guide="clockManagement.anomalies" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.3"
           className={`tcm-tab ${tab === 'anomalie' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('anomalie')}
         >
           Anomalie
         </button>
-        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.4"
+        <button data-guide="clockManagement.report" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.4"
           className={`tcm-tab ${tab === 'report' ? 'tcm-tab--active' : ''}`}
           onClick={() => setTab('report')}
         >
@@ -95,7 +95,7 @@ export default function TimbraturaGestionePage() {
 
       <div className="tcm-branch-row">
         <label className="tcm-branch-label">Filiale</label>
-        <select data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.5"
+        <select data-guide="clockManagement.branch" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.5"
           className="tcm-branch-select"
           value={branchId ?? ''}
           onChange={e => setBranchId(e.target.value ? Number(e.target.value) : null)}
@@ -118,7 +118,7 @@ export default function TimbraturaGestionePage() {
       ) : tab === 'anomalie' ? (
         <AnomalieTab branchId={branchId} />
       ) : (
-        <ReportTab branchId={branchId} />
+        <div data-guide="clockManagement.totals"><ReportTab branchId={branchId} /></div>
       )}
     </div>
   )
@@ -190,7 +190,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
   if (!settings) return null
 
   return (
-    <div className="tcm-config">
+    <div data-guide="clockManagement.settings" className="tcm-config">
       <div className="tcm-card">
         <ToggleRow
           label="Timbratura attiva"
@@ -305,7 +305,7 @@ function ConfigTab({ branchId }: { branchId: number }) {
 
       <div className="tcm-save-row">
         {saved && <span className="tcm-saved">Configurazione salvata.</span>}
-        <button data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.9" className="btn-primary" onClick={handleSave} disabled={saving}>
+        <button data-guide="clockManagement.save" data-activity="employee.pages.TimbraturaGestionePage.TimbraturaGestionePage.9" className="btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? 'Salvataggio…' : 'Salva configurazione'}
         </button>
       </div>
@@ -384,7 +384,7 @@ function PresenzeTab({ branchId }: { branchId: number }) {
   }, [to, load])
 
   return (
-    <div className="tcm-presenze">
+    <div data-guide="clockManagement.entries" className="tcm-presenze">
       <div className="tcm-filter-row">
         <div className="tcm-field">
           <label className="tcm-field-label">Da</label>
@@ -497,7 +497,7 @@ function AnomalieTab({ branchId }: { branchId: number }) {
   }
 
   return (
-    <div className="tcm-presenze">
+    <div data-guide="clockManagement.review" className="tcm-presenze">
       <div className="tcm-filter-row">
         <div className="tcm-field">
           <label className="tcm-field-label">Stato</label>

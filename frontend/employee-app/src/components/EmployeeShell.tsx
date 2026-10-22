@@ -1,3 +1,16 @@
+import { PageGuide, accountPageGuides, type PageGuideDefinition } from '@scheduler/ui'
+import DashboardGuide from '../pages/DashboardPage/DashboardPage.guide'
+import TimbraturaGuide from '../pages/TimbraturaPage/TimbraturaPage.guide'
+import TimbraturaGestioneGuide from '../pages/TimbraturaGestionePage/TimbraturaGestionePage.guide'
+import CalendarioGuide from '../pages/CalendarioPage/CalendarioPage.guide'
+import PianificazioneGuide from '../pages/PianificazionePage/PianificazionePage.guide'
+import RichiesteGuide from '../pages/RichiestePage/RichiestePage.guide'
+import RisorseGuide from '../pages/RisorsePage/RisorsePage.guide'
+import MansioniGuide from '../pages/MansioniPage/MansioniPage.guide'
+import FilialiGuide from '../pages/FilialiPage/FilialiPage.guide'
+import MagazzinoGuide from '../pages/MagazzinoPage/MagazzinoPage.guide'
+import DocumentiGuide from '../pages/DocumentiPage/DocumentiPage.guide'
+import NotificheGuide from '../pages/NotifichePage/NotifichePage.guide'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
@@ -26,6 +39,22 @@ import {
 } from '@scheduler/ui'
 import apiClient from '../lib/axios'
 import { hasFeatureLevel, type EmployeeUser } from '../App'
+
+const PAGE_GUIDES: Record<string, PageGuideDefinition> = {
+  ...accountPageGuides,
+  '/': DashboardGuide,
+  '/timbratura': TimbraturaGuide,
+  '/timbratura-gestione': TimbraturaGestioneGuide,
+  '/calendario': CalendarioGuide,
+  '/pianificazione': PianificazioneGuide,
+  '/richieste': RichiesteGuide,
+  '/risorse': RisorseGuide,
+  '/mansioni': MansioniGuide,
+  '/filiali': FilialiGuide,
+  '/magazzino': MagazzinoGuide,
+  '/documenti': DocumentiGuide,
+  '/notifiche': NotificheGuide
+}
 
 interface EmpNavItem extends NavItem {
   feature?: string
@@ -164,6 +193,10 @@ export default function EmployeeShell() {
         subtitle: 'Area dipendente',
         initial: (user.companyName ?? 'E').charAt(0).toUpperCase()
       }}
+      pageGuide={PAGE_GUIDES[location.pathname] && <PageGuide
+        key={JSON.stringify([location.pathname, user.userId, user.merchantId, user.activeFeatures, user.featureLevels])}
+        app="employee" page={PAGE_GUIDES[location.pathname]} user={user}
+      />}
       navSections={sections}
       bottomNav
       fab={fab}

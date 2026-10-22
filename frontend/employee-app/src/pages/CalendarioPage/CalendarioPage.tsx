@@ -662,19 +662,19 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
         <div className="calendario-actions">
           {isMultiBranch && <BranchSelector />}
           {canManage && currentView === 'timeGridWeek' && (
-            <button data-activity="employee.pages.CalendarioPage.CalendarioPage.1" className="btn-secondary" onClick={() => setCopyDialogOpen(true)}>
+            <button data-guide="calendar.copy" data-activity="employee.pages.CalendarioPage.CalendarioPage.1" className="btn-secondary" onClick={() => setCopyDialogOpen(true)}>
               📋 Copia settimana scorsa
             </button>
           )}
           {canCreate && (
-            <button data-activity="employee.pages.CalendarioPage.CalendarioPage.2" className="btn-new-event" onClick={handleNewEvent}>
+            <button data-guide="calendar.new" data-activity="employee.pages.CalendarioPage.CalendarioPage.2" className="btn-new-event" onClick={handleNewEvent}>
               + Nuovo Turno
             </button>
           )}
         </div>
       </div>
 
-      <div className="legend">
+      <div data-guide="calendar.legend" className="legend">
         {LEGEND_ITEMS.map(item => {
           // Quando il merchant ha configurato delle mansioni, i Turni con fabbisogno
           // mostrano il colore della mansione: chiariamolo nella legenda.
@@ -783,7 +783,7 @@ export default function CalendarioPage({ accessLevel }: CalendarioPageProps) {
         </div>
       )}
 
-      <div className="calendar-wrapper">
+      <div data-guide="calendar.grid" className="calendar-wrapper">
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}

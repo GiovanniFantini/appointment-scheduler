@@ -51,10 +51,10 @@ export function ActivityPage({ apiClient }: { apiClient: Api }) {
     } catch { setError('Esportazione non riuscita.') }
     finally { setExporting(false) }
   }
-  return <section className="activity-page">
+  return <section data-guide="activity.page" className="activity-page">
     <header><p className="activity-eyebrow">TRACCIABILITÀ</p><h1>Registro attività</h1>
       <p>Richieste, modifiche salvate e interazioni delle applicazioni.</p></header>
-    <div className="activity-controls">
+    <div data-guide="activity.filters" className="activity-controls">
       <label>Categoria<select data-activity="shared-ui.pages.ActivityPage.1" value={category} onChange={e => { setCategory(e.target.value); setCursor(null) }}>
         <option value="">Tutte</option><option value="change">Modifiche</option><option value="request">Richieste</option><option value="interaction">Interazioni</option><option value="external">Servizi esterni</option><option value="maintenance">Manutenzione</option>
       </select></label>
@@ -65,7 +65,7 @@ export function ActivityPage({ apiClient }: { apiClient: Api }) {
       <button data-activity="activity.export" disabled={loading || exporting || !rows.length} onClick={() => void exportPage()}>{exporting ? 'Esportazione…' : 'Esporta pagina JSON'}</button>
       {operation && <button data-activity="shared-ui.pages.ActivityPage.4" onClick={() => { setOperation(''); setCursor(null) }}>Rimuovi filtro operazione</button>}
     </div>
-    <details className="activity-advanced"><summary data-activity="activity.filters.open">Filtri avanzati{Object.keys(filters).length ? ` (${Object.keys(filters).length})` : ''}</summary>
+    <details data-guide="activity.advanced" className="activity-advanced"><summary data-activity="activity.filters.open">Filtri avanzati{Object.keys(filters).length ? ` (${Object.keys(filters).length})` : ''}</summary>
     <form data-activity="activity.filters" className="activity-controls" onSubmit={event => {
       event.preventDefault()
       const data = new FormData(event.currentTarget)

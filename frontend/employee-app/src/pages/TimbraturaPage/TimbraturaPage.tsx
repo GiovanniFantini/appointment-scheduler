@@ -179,7 +179,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
   }))
 
   return (
-    <div className="timbratura-page">
+    <div data-guide="clock.page" className="timbratura-page">
       <div className="tp-header">
         <div className="tp-header-top">
           <h1 className="tp-title">Timbratura</h1>
@@ -194,7 +194,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
 
       {/* Avviso prioritario: timbrature da giustificare. Tap → giustifica la prima. */}
       {openAnomalies.length > 0 && (
-        <button data-activity="employee.pages.TimbraturaPage.TimbraturaPage.1"
+        <button data-guide="clock.anomaly" data-activity="employee.pages.TimbraturaPage.TimbraturaPage.1"
           type="button"
           className="tp-alert-banner"
           onClick={() => setJustifying(openAnomalies[0])}
@@ -210,7 +210,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
       )}
 
       {/* Azione primaria: timbra. Resta sempre in cima, sopra la piega. */}
-      <TodayShiftsPanel onChange={loadHistory} />
+      <div data-guide="clock.today"><TodayShiftsPanel onChange={loadHistory} /></div>
 
       {/* Andamento ore — consultazione, collassato di default. */}
       {wellbeing && (
@@ -244,7 +244,7 @@ export default function TimbraturaPage({ accessLevel = 'ReadOnly' }: Props) {
 
       {/* Storico timbrature — collassato di default, aggregato per giorno e sfogliabile. */}
       <details className="tp-section">
-        <summary data-activity="employee.pages.TimbraturaPage.TimbraturaPage.3" className="tp-section-head">
+        <summary data-guide="clock.history" data-activity="employee.pages.TimbraturaPage.TimbraturaPage.3" className="tp-section-head">
           <span className="tp-section-title">Le mie timbrature</span>
           {entryDays.length > 0 && <span className="tp-section-count">{entryDays.length} gg</span>}
           <span className="tp-section-chevron">›</span>

@@ -49,7 +49,7 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
           <h2 className="jam-title">Giustifica anomalia</h2>
           <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.2" className="jam-close" onClick={onClose}>✕</button>
         </div>
-        <form data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.3" className="jam-form" onSubmit={handleSubmit}>
+        <form data-guide="clock.justification" data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.3" className="jam-form" onSubmit={handleSubmit}>
           <div className="jam-body">
             {error && <div className="jam-error">{error}</div>}
             <div className="jam-anomaly-info">
@@ -85,7 +85,7 @@ export default function JustifyAnomalyModal({ anomaly, onClose, onJustified }: P
           </div>
           <div className="jam-footer">
             <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.6" type="button" className="jam-btn-cancel" onClick={onClose}>Annulla</button>
-            <button data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.7" type="submit" className="jam-btn-primary" disabled={saving}>
+            <button data-guide="clock.justificationSave" data-activity="employee.components.JustifyAnomalyModal.JustifyAnomalyModal.7" type="submit" className="jam-btn-primary" disabled={saving}>
               {saving ? 'Invio…' : 'Invia giustificazione'}
             </button>
           </div>

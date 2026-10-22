@@ -1,4 +1,4 @@
-import { useAuth } from '@scheduler/ui'
+import { GuideHint, useAuth } from '@scheduler/ui'
 import type { EmployeeUser } from '../../App'
 import { useState, useEffect, useMemo } from 'react'
 import apiClient from '../../lib/axios'
@@ -636,14 +636,14 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
 
   return (
     <div data-activity="employee.components.EventModal.EventModal.1" className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose() }}>
-      <div className="modal-container">
+      <div data-guide="shift.form" className="modal-container">
         <div className="modal-header">
           <h2 className="modal-title">{assignmentOnly ? 'Assegna Personale' : isEdit ? 'Modifica Turno' : 'Nuovo Turno'}</h2>
           <button data-activity="employee.components.EventModal.EventModal.2" className="modal-close-btn" onClick={onClose}>✕</button>
         </div>
 
         {eventType === 'Turno' && (
-          <div className="wizard-stepper">
+          <div data-guide="shift.steps" className="wizard-stepper">
             <div data-activity="employee.components.EventModal.EventModal.3" className={`step ${step === 1 ? 'active' : ''} ${step > 1 ? 'done' : ''}`} onClick={() => setStep(1)}>
               <span className="step-num">1</span><span className="step-label">{isMultiBranch ? 'Dove e quando' : 'Quando'}</span>
             </div>
@@ -660,7 +660,14 @@ export default function EventModal({ event, defaultDate, mode = 'full', onClose,
           </div>
         )}
 
-        <div className="modal-body">
+        <div data-guide="shift.body" className="modal-body">
+          <GuideHint key={step}>
+            {eventType !== 'Turno' ? 'Indica tipo di evento, periodo e dettagli richiesti. Controlla i dati prima di confermare il salvataggio.'
+              : assignmentOnly ? 'Seleziona le risorse da assegnare al turno. Controlla eventuali conflitti prima di confermare.'
+              : step === 1 ? 'Imposta data e orari del turno. Se disponibili, scegli filiale e reparto. La ricorrenza ripete il turno nel periodo indicato.'
+              : step === 2 ? 'Indica le mansioni richieste e quante persone servono per ciascuna. Serviranno a verificare la copertura.'
+              : 'Scegli i partecipanti e controlla mansioni e orari individuali. Il turno viene salvato solo con il comando di conferma.'}
+          </GuideHint>
           {error && <div className="modal-error">{error}</div>}
 
           {shiftAlreadyStarted && (

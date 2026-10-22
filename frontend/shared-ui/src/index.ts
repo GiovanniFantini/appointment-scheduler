@@ -85,3 +85,7 @@ export * from './icons'
 export * from './icons/tabler'
 
 export { SubscriptionGate } from './auth/SubscriptionGate'
+export { PageGuide, GuideHint } from './guides/PageGuide'
+export { availableGuideTours, canUseGuide, guideStorageKey } from './guides/types'
+export type { GuideAccess, GuideStep, GuideTour, PageGuideDefinition } from './guides/types'
+export { accountPageGuides } from './guides/sharedPages'

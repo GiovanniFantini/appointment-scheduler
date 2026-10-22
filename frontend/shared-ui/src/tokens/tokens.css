@@ -90,6 +90,7 @@
   --su-z-modal-backdrop: 1500;  /* modali, bottom-sheet, wizard, dialog */
   --su-z-modal: 1510;
   --su-z-toast: 2000;           /* sopra a tutto, anche a un modale aperto */
+  --su-z-guide: 2100;           /* aiuti contestuali sopra modali e notifiche */
 }
 
 /* Superfici e testi tarati separatamente per mantenere leggibili entrambi i temi. */
