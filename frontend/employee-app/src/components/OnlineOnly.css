@@ -1,0 +1,39 @@
+.online-only {
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  border: 0;
+  color: var(--su-text-primary);
+  background: var(--su-surface-bg);
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px;
+}
+
+.online-only[open] { display: grid; }
+
+.online-only-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+  border: 1px solid var(--su-border);
+  border-radius: 16px;
+  background: var(--su-surface);
+}
+
+.online-only-card h1 { font-size: 1.4rem; }
+.online-only-card p { margin-top: 16px; line-height: 1.6; color: var(--su-text-secondary); }
+.online-only-card button {
+  margin-top: 24px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--su-accent-primary);
+  color: #fff;
+  font-size: 1rem;
+}
+
+.online-only-card button:focus-visible { outline: 2px solid var(--su-accent-secondary); outline-offset: 3px; }

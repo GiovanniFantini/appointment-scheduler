@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Portale Dipendenti",
+  "short_name": "Dipendenti",
+  "description": "Turni, timbrature, richieste e documenti. Connessione Internet necessaria.",
+  "lang": "it",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#10191d",
+  "theme_color": "#087f75",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/app-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -9,6 +9,7 @@
     "employee-app"
   ],
   "scripts": {
+    "test:pwa": "node --test scripts/employee-online.test.mjs",
     "test:guides": "node --test scripts/guides.test.mjs scripts/guides-runtime.test.mjs",
     "test:activity": "node --test scripts/activity.test.mjs && node scripts/activity-controls.mjs",
     "dev:admin": "npm run dev -w appointment-scheduler-admin",
